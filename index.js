@@ -25,7 +25,6 @@ module.exports = (app) => {
 
       if (!license) {
         // If issue has been created, create one
-
         const title = "No license file found";
         const body =
         `To make your software reusable a license file is expected at the root level of your repository, as recommended in [FAIR-BioRS Guidelines](https://fair-biors.org). 
@@ -39,17 +38,40 @@ module.exports = (app) => {
         if (!verify) {
           await createIssue(context, owner, repo, title, body);
         }
-      }
-
-      if (!citation) {
-        const title = "No citation file found";
-        const body =
-          "No citation was found in your repository, please reply with YES and mention 'license-test-probot' to generate a CITATION.cff file for you.";
-        let verify = await verifyFirstIssue(context, owner, repo, title);
-        if (!verify) {
-          await createIssue(context, owner, repo, title, body);
+      } else {
+        // Check if issue is open and close it
+        const issue = await context.octokit.issues.listForRepo({
+          owner,
+          repo: repo,
+          state: "open",
+          creator: "license-test-probot[bot]",
+          title: "No license file found",
+        });
+  
+        if (issue.data.length > 0) {
+          // If title if issue is found, close the issue
+          for (let i = 0; i < issue.data.length; i++) {
+            if (issue.data[i].title === "No license file found") {
+              await context.octokit.issues.update({
+                repo,
+                owner,
+                issue_number: issue.data[i].number,
+                state: "closed",
+              });
+            }
+          }
         }
       }
+
+      // if (!citation) {
+      //   const title = "No citation file found";
+      //   const body =
+      //     "No citation was found in your repository, please reply with YES and mention 'codefair-bot' to generate a CITATION.cff file for you.";
+      //   let verify = await verifyFirstIssue(context, owner, repo, title);
+      //   if (!verify) {
+      //     await createIssue(context, owner, repo, title, body);
+      //   }
+      // }
     }
   });
 
@@ -66,6 +88,7 @@ module.exports = (app) => {
       let citation = await checkForCitation(context, owner, repo);
 
       if (!license) {
+        // If issue has been created, create one
         const title = "No license file found";
         const body =
         `To make your software reusable a license file is expected at the root level of your repository, as recommended in [FAIR-BioRS Guidelines](https://fair-biors.org). 
@@ -79,17 +102,40 @@ module.exports = (app) => {
         if (!verify) {
           await createIssue(context, owner, repo, title, body);
         }
-      }
-
-      if (!citation) {
-        const title = "No citation file found";
-        const body =
-          "No citation was found in your repository, please reply with YES and mention 'license-test-probot' to generate a CITATION.cff file for you.";
-        let verify = await verifyFirstIssue(context, owner, repo, title);
-        if (!verify) {
-          await createIssue(context, owner, repo, title, body);
+      } else {
+        // Check if issue is open and close it
+        const issue = await context.octokit.issues.listForRepo({
+          owner,
+          repo: repo,
+          state: "open",
+          creator: "license-test-probot[bot]",
+          title: "No license file found",
+        });
+  
+        if (issue.data.length > 0) {
+          // If title if issue is found, close the issue
+          for (let i = 0; i < issue.data.length; i++) {
+            if (issue.data[i].title === "No license file found") {
+              await context.octokit.issues.update({
+                repo,
+                owner,
+                issue_number: issue.data[i].number,
+                state: "closed",
+              });
+            }
+          }
         }
       }
+
+      // if (!citation) {
+      //   const title = "No citation file found";
+      //   const body =
+      //     "No citation was found in your repository, please reply with YES and mention 'codefair-bot' to generate a CITATION.cff file for you.";
+      //   let verify = await verifyFirstIssue(context, owner, repo, title);
+      //   if (!verify) {
+      //     await createIssue(context, owner, repo, title, body);
+      //   }
+      // }
     }
   });
 
@@ -142,38 +188,38 @@ module.exports = (app) => {
       }
     }
 
-    if (!citation) {
-      const title = "No citation file found";
-      const body =
-        "No citation was found in your repository, please reply with YES and mention 'license-test-probot' to generate a CITATION.cff file for you.";
-      let verify = await verifyFirstIssue(context, owner, repo, title);
-      if (!verify) {
-        await createIssue(context, owner, repo, title, body);
-      }
-    } else {
-      // Check if issue is open and close it
-      const issue = await context.octokit.issues.listForRepo({
-        owner,
-        repo: repo,
-        state: "open",
-        creator: "license-test-probot[bot]",
-        title: "No citation file found",
-      });
+    // if (!citation) {
+    //   const title = "No citation file found";
+    //   const body =
+    //     "No citation was found in your repository, please reply with YES and mention 'codefair-bot' to generate a CITATION.cff file for you.";
+    //   let verify = await verifyFirstIssue(context, owner, repo, title);
+    //   if (!verify) {
+    //     await createIssue(context, owner, repo, title, body);
+    //   }
+    // } else {
+    //   // Check if issue is open and close it
+    //   const issue = await context.octokit.issues.listForRepo({
+    //     owner,
+    //     repo: repo,
+    //     state: "open",
+    //     creator: "license-test-probot[bot]",
+    //     title: "No citation file found",
+    //   });
 
-      if (issue.data.length > 0) {
-        // If title if issue is found, close the issue
-        for (let i = 0; i < issue.data.length; i++) {
-          if (issue.data[i].title === "No citation file found") {
-            await context.octokit.issues.update({
-              repo,
-              owner,
-              issue_number: issue.data[i].number,
-              state: "closed",
-            });
-          }
-        }
-      }
-    }
+    //   if (issue.data.length > 0) {
+    //     // If title if issue is found, close the issue
+    //     for (let i = 0; i < issue.data.length; i++) {
+    //       if (issue.data[i].title === "No citation file found") {
+    //         await context.octokit.issues.update({
+    //           repo,
+    //           owner,
+    //           issue_number: issue.data[i].number,
+    //           state: "closed",
+    //         });
+    //       }
+    //     }
+    //   }
+    // }
   });
 
   app.on("issue_comment.created", async (context) => {
@@ -184,7 +230,7 @@ module.exports = (app) => {
     if (
       context.payload.issue.title === "No license file found" &&
       comment.user.login === owner &&
-      comment.body.includes("license-test-probot")
+      comment.body.includes("codefair-bot")
     ) {
       // Check the comment to see if the user has replied with a license
       const userComment = comment.body;
@@ -199,7 +245,7 @@ module.exports = (app) => {
 
 
       // Select the element after the mention of the bot
-      const selection = splitComment[splitComment.indexOf("@license-test-probot") + 1];
+      const selection = splitComment[splitComment.indexOf("@codefair-bot") + 1];
       console.log(selection);
       // If owner of repo replies then check comment and check if 'license-test-probot' is mentioned
 
@@ -212,7 +258,7 @@ module.exports = (app) => {
     if (
       context.payload.issue.title === "No citation file found" &&
       comment.user.login === owner &&
-      comment.body.includes("license-test-probot")
+      comment.body.includes("codefair-bot")
     ) {
       const userComment = comment.body;
 
