@@ -1,0 +1,35 @@
+{
+  "name": "codeFAIR",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Checks for License and Citation in a Github repo",
+  "author": "slugb0t",
+  "license": "ISC",
+  "homepage": "https://github.com//",
+  "keywords": [
+    "probot",
+    "github",
+    "probot-app"
+  ],
+  "scripts": {
+    "start": "probot run ./index.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "humanparser": "^2.7.0",
+    "js-yaml": "^4.1.0",
+    "probot": "^13.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "nock": "^14.0.0-beta.5",
+    "smee-client": "^2.0.0"
+  },
+  "engines": {
+    "node": ">= 18"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}
