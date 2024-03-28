@@ -1,6 +1,6 @@
 const axios = require("axios");
 const human = require("humanparser");
-const licensesAvail = require("./assets/data/licenses.json");
+const licensesAvail = require("./public/assets/data/licenses.json");
 const yaml = require("js-yaml");
 const { parsed } = require("yargs");
 

@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "start": "probot run ./index.js",
-    "build-css": "tailwindcss build -i ./assets/tailwind.css -o ./public/css/styles.css",
+    "build-css": "tailwindcss build -i ./public/assets/tailwind.css -o ./public/css/styles.css",
     "build": "npm run build-css",
     "test": "jest"
   },
