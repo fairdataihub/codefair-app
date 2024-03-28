@@ -4,7 +4,7 @@
   "private": true,
   "description": "Checks for License and Citation in a Github repo",
   "author": "slugb0t",
-  "license": "ISC",
+  "license": "MIT",
   "homepage": "https://github.com//",
   "keywords": [
     "probot",
@@ -13,18 +13,23 @@
   ],
   "scripts": {
     "start": "probot run ./index.js",
+    "build-css": "tailwindcss build -i ./assets/tailwind.css -o ./public/css/styles.css",
+    "build": "npm run build-css",
     "test": "jest"
   },
   "dependencies": {
     "axios": "^1.6.8",
     "humanparser": "^2.7.0",
     "js-yaml": "^4.1.0",
-    "probot": "^13.0.1"
+    "probot": "^12.2.4"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.19",
     "jest": "^29.0.0",
     "nock": "^14.0.0-beta.5",
-    "smee-client": "^2.0.0"
+    "postcss": "^8.4.38",
+    "smee-client": "^2.0.0",
+    "tailwindcss": "^3.4.3"
   },
   "engines": {
     "node": ">= 18"
