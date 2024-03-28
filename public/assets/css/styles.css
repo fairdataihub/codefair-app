@@ -578,6 +578,10 @@ video {
   top: 1rem;
 }
 
+.top-10 {
+  top: 2.5rem;
+}
+
 .col-span-full {
   grid-column: 1 / -1;
 }
