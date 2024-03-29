@@ -198,7 +198,7 @@ module.exports = (app) => {
         await createIssue(context, owner, repo, title, body);
       }
     } else {
-      // Check if issue is open and close it
+      // License was found, close the issue if one was created
       const issue = await context.octokit.issues.listForRepo({
         owner,
         repo: repo,
@@ -271,11 +271,9 @@ module.exports = (app) => {
       const splitComment = userComment.split(" ");
       const selection = splitComment[splitComment.indexOf("@codefair-bot") + 1];
 
-      console.log(selection);
+      console.log("License user responded with: " + selection);
 
-      // Check if the user has replied with a license
       // Create a new file with the license on the new branch and open pull request
-      context.log.info("Owner responded, creating a new one in a new branch!");
       await createLicense(context, owner, repo, selection);
     }
 
