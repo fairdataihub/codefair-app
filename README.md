@@ -1,4 +1,4 @@
-# codeFAIR
+# codefair
 
 > A GitHub App built with [Probot](https://github.com/probot/probot) that Checks for License and Citation in a Github repo
 
@@ -16,7 +16,7 @@ npm start
 
 ```sh
 # 1. Build container
-docker build -t codeFAIR .
+docker build -t codefair .
 
 # 2. Start container
 docker run -e APP_ID=<app-id> -e PRIVATE_KEY=<pem-value> codeFAIR
