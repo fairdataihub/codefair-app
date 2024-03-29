@@ -1349,6 +1349,10 @@ video {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .lg\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
   .lg\:flex-row {
     flex-direction: row;
   }
@@ -1363,6 +1367,10 @@ video {
 
   .lg\:gap-8 {
     gap: 2rem;
+  }
+
+  .lg\:gap-16 {
+    gap: 4rem;
   }
 
   .lg\:py-12 {
