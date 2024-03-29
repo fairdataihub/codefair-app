@@ -38,7 +38,7 @@ module.exports = (app) => {
           owner,
           repo: repo,
           state: "open",
-          creator: "license-test-probot[bot]",
+          creator: "codefair-bot[bot]",
           title: "No license file found",
         });
 
@@ -96,7 +96,7 @@ module.exports = (app) => {
           owner,
           repo: repo,
           state: "open",
-          creator: "license-test-probot[bot]",
+          creator: "codefair-bot[bot]",
           title: "No license file found",
         });
 
@@ -201,7 +201,7 @@ module.exports = (app) => {
         owner,
         repo: repo,
         state: "open",
-        creator: "license-test-probot[bot]",
+        creator: "codefair-bot[bot]",
         title: "No license file found",
       });
 
@@ -234,7 +234,7 @@ module.exports = (app) => {
     //     owner,
     //     repo: repo,
     //     state: "open",
-    //     creator: "license-test-probot[bot]",
+    //     creator: "codefair-bot[bot]",
     //     title: "No citation file found",
     //   });
 
@@ -297,7 +297,7 @@ async function verifyFirstIssue(context, owner, repo, title) {
   const issues = await context.octokit.issues.listForRepo({
     owner,
     repo,
-    creator: "license-test-probot[bot]",
+    creator: "codefair-bot[bot]",
     state: "all",
   });
 
@@ -361,7 +361,7 @@ async function createIssue(context, owner, repo, title, body) {
     owner,
     repo: repo,
     state: "open",
-    creator: "license-test-probot[bot]",
+    creator: "codefair-bot[bot]",
     title: title,
   });
 
