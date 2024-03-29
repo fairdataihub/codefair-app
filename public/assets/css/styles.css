@@ -571,8 +571,20 @@ video {
   left: -12rem;
 }
 
+.-top-40 {
+  top: -10rem;
+}
+
 .left-4 {
   left: 1rem;
+}
+
+.left-\[calc\(50\%\+3rem\)\] {
+  left: calc(50% + 3rem);
+}
+
+.left-\[calc\(50\%-11rem\)\] {
+  left: calc(50% - 11rem);
 }
 
 .top-10 {
@@ -583,88 +595,8 @@ video {
   top: 1rem;
 }
 
-.-top-40 {
-  top: -10rem;
-}
-
-.left-\[calc\(50\%-11rem\)\] {
-  left: calc(50% - 11rem);
-}
-
-.-bottom-40 {
-  bottom: -10rem;
-}
-
-.top-40 {
-  top: 10rem;
-}
-
-.bottom-40 {
-  bottom: 10rem;
-}
-
-.right-\[calc\(50\%-11rem\)\] {
-  right: calc(50% - 11rem);
-}
-
-.-left-\[calc\(50\%-11rem\)\] {
-  left: calc(calc(50% - 11rem) * -1);
-}
-
-.left-\[calc\(100\%-11rem\)\] {
-  left: calc(100% - 11rem);
-}
-
-.left-\[calc\(0\%-11rem\)\] {
-  left: calc(0% - 11rem);
-}
-
-.right-16 {
-  right: 4rem;
-}
-
-.left-16 {
-  left: 4rem;
-}
-
-.left-40 {
-  left: 10rem;
-}
-
-.right-40 {
-  right: 10rem;
-}
-
-.left-\[calc\(50\%\+3rem\)\] {
-  left: calc(50% + 3rem);
-}
-
-.top-\[calc\(100\%-13rem\)\] {
-  top: calc(100% - 13rem);
-}
-
-.top-\[calc\(50\%-13rem\)\] {
-  top: calc(50% - 13rem);
-}
-
-.bottom-\[calc\(50\%-13rem\)\] {
-  bottom: calc(50% - 13rem);
-}
-
-.bottom-\[calc\(100\%-13rem\)\] {
-  bottom: calc(100% - 13rem);
-}
-
-.-bottom-\[calc\(100\%-13rem\)\] {
-  bottom: calc(calc(100% - 13rem) * -1);
-}
-
 .top-\[calc\(80\%-13rem\)\] {
   top: calc(80% - 13rem);
-}
-
-.top-\[calc\(30\%-13rem\)\] {
-  top: calc(30% - 13rem);
 }
 
 .-z-10 {
@@ -702,10 +634,6 @@ video {
 
 .ml-4 {
   margin-left: 1rem;
-}
-
-.mt-14 {
-  margin-top: 3.5rem;
 }
 
 .mt-16 {
@@ -772,12 +700,12 @@ video {
   width: 1.5rem;
 }
 
-.w-full {
-  width: 100%;
-}
-
 .w-\[36\.125rem\] {
   width: 36.125rem;
+}
+
+.w-full {
+  width: 100%;
 }
 
 .max-w-screen-2xl {
@@ -790,10 +718,6 @@ video {
 
 .max-w-screen-xl {
   max-width: 1280px;
-}
-
-.max-w-screen-lg {
-  max-width: 1024px;
 }
 
 .-translate-x-1\/2 {
@@ -874,11 +798,6 @@ video {
 .bg-indigo-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(99 102 241 / var(--tw-bg-opacity));
-}
-
-.bg-white {
-  --tw-bg-opacity: 1;
-  background-color: rgb(255 255 255 / var(--tw-bg-opacity));
 }
 
 .bg-gradient-to-tr {
@@ -1044,18 +963,8 @@ video {
   opacity: 0.3;
 }
 
-.opacity-45 {
-  opacity: 0.45;
-}
-
 .opacity-40 {
   opacity: 0.4;
-}
-
-.shadow-md {
-  --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
 .outline-none {
@@ -1141,72 +1050,16 @@ video {
     top: -20rem;
   }
 
-  .sm\:left-\[calc\(50\%-30rem\)\] {
-    left: calc(50% - 30rem);
-  }
-
-  .sm\:top-80 {
-    top: 20rem;
-  }
-
-  .sm\:bottom-80 {
-    bottom: 20rem;
-  }
-
-  .sm\:right-\[calc\(50\%-30rem\)\] {
-    right: calc(50% - 30rem);
-  }
-
-  .sm\:right-\[calc\(50\%-20rem\)\] {
-    right: calc(50% - 20rem);
-  }
-
-  .sm\:left-\[calc\(100\%-30rem\)\] {
-    left: calc(100% - 30rem);
-  }
-
-  .sm\:-bottom-80 {
-    bottom: -20rem;
-  }
-
   .sm\:left-\[calc\(50\%\+36rem\)\] {
     left: calc(50% + 36rem);
   }
 
-  .sm\:top-\[calc\(100\%-30rem\)\] {
-    top: calc(100% - 30rem);
-  }
-
-  .sm\:bottom-\[calc\(100\%-30rem\)\] {
-    bottom: calc(100% - 30rem);
-  }
-
-  .sm\:top-\[calc\(30\%-30rem\)\] {
-    top: calc(30% - 30rem);
-  }
-
-  .sm\:top-\[calc\(50\%-30rem\)\] {
-    top: calc(50% - 30rem);
-  }
-
-  .sm\:top-\[calc\(80\%-30rem\)\] {
-    top: calc(80% - 30rem);
-  }
-
-  .sm\:left-\[calc\(40\%\+36rem\)\] {
-    left: calc(40% + 36rem);
-  }
-
-  .sm\:top-\[calc\(85\%-30rem\)\] {
-    top: calc(85% - 30rem);
+  .sm\:left-\[calc\(50\%-30rem\)\] {
+    left: calc(50% - 30rem);
   }
 
   .sm\:top-\[calc\(90\%-30rem\)\] {
     top: calc(90% - 30rem);
-  }
-
-  .sm\:mt-0 {
-    margin-top: 0px;
   }
 
   .sm\:w-\[72\.1875rem\] {
@@ -1345,10 +1198,6 @@ video {
     list-style-type: disc;
   }
 
-  .lg\:grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .lg\:grid-cols-5 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
@@ -1363,10 +1212,6 @@ video {
 
   .lg\:justify-start {
     justify-content: flex-start;
-  }
-
-  .lg\:gap-8 {
-    gap: 2rem;
   }
 
   .lg\:gap-16 {
