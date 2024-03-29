@@ -13,10 +13,9 @@ module.exports = (app) => {
   // On adding the app to a repo
   // TODO: If issue is closed without a license or citation, don't create the issue again
   app.on("installation.created", async (context) => {
-    // shows all repos you've installed the app on
-
     const owner = context.payload.installation.account.login;
 
+    // shows all repos you've installed the app on
     for (const repository of context.payload.repositories) {
       const repo = repository.name;
 
@@ -33,7 +32,7 @@ module.exports = (app) => {
           await createIssue(context, owner, repo, title, body);
         }
       } else {
-        // Check if issue is open and close it
+        // License was found, close the issue if one was created
         const issue = await context.octokit.issues.listForRepo({
           owner,
           repo: repo,
@@ -43,7 +42,7 @@ module.exports = (app) => {
         });
 
         if (issue.data.length > 0) {
-          // If title if issue is found, close the issue
+          // If title issue is found, close the issue
           for (let i = 0; i < issue.data.length; i++) {
             if (issue.data[i].title === "No license file found") {
               await context.octokit.issues.update({
@@ -70,20 +69,19 @@ module.exports = (app) => {
   });
 
   app.on("installation_repositories.added", async (context) => {
-    // context.log.info(context.payload.repositories_added);
-    context.log.info("TESTING HERE DATA fasdklfjas;ldkfjas");
-
+    // Event for when github app is alredy installed but a new repository is added
     const owner = context.payload.installation.account.login;
 
     for (const repository of context.payload.repositories_added) {
+      // Loop through the added respotories
       const repo = repository.name;
-
-      let license = await checkForLicense(context, owner, repo);
-      let citation = await checkForCitation(context, owner, repo);
+      const license = await checkForLicense(context, owner, repo);
+      const citation = await checkForCitation(context, owner, repo);
 
       if (!license) {
+        // No license was found, make an issue if one was never made before
+        // If the issue was close, don't make another
         console.log("No license file found");
-        // If issue has been created, create one
         const title = "No license file found";
         const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software’s dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@codefair-bot MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com.`;
         let verify = await verifyFirstIssue(context, owner, repo, title);
@@ -128,20 +126,14 @@ module.exports = (app) => {
   });
 
   app.on("push", async (context) => {
-    // context.log.info(context.payload.repositories);
-
+    // Event for when a push is made to the repository (listens to all branches)
     const owner = context.payload.repository.owner.login;
     const repo = context.payload.repository.name;
-
-    // Check what is being pushed to the repo
-    const commits = context.payload.commits;
-    console.log(commits);
-    console.log("COMMITS AOBVE AND PAYLOAD BELOW");
-    console.log(context.payload);
 
     // Check if push is going to the default branch
     let default_branch;
     try {
+      // Get the default branch of the repository
       default_branch = await context.octokit.repos.getBranch({
         owner,
         repo,
@@ -155,13 +147,23 @@ module.exports = (app) => {
 
     console.log("DEFAULT BELOW");
     console.log(default_branch.data.name);
+    // If push is not going to the default branch don't do anything
     if (context.payload.ref != `refs/heads/${default_branch.data.name}`) {
       console.log("Not pushing to default branch");
       return;
     }
 
+    // Grab the commits being pushed
+    const commits = context.payload.commits;
+    console.log(commits);
+    console.log("COMMITS AOBVE AND PAYLOAD BELOW");
+    console.log(context.payload);
+
+    // Check if there is a license file in the repository
     let license = await checkForLicense(context, owner, repo);
     let citation = await checkForCitation(context, owner, repo);
+
+    // Check if any of the commits added a LICENSE file
     if (commits.length > 0) {
       let licenseBeingPushed = false;
       let citationBeingPushed = false;
@@ -169,7 +171,7 @@ module.exports = (app) => {
       for (let i = 0; i < commits.length; i++) {
         if (commits[i].added.includes("LICENSE")) {
           console.log("LICENSE file added");
-          beingPushed = true;
+          licenseBeingPushed = true;
           continue;
         }
         if (commits[i].added.includes("CITATION.cff")) {
@@ -177,7 +179,7 @@ module.exports = (app) => {
           citationBeingPushed = true;
           continue;
         }
-        if (beingPushed) {
+        if (licenseBeingPushed) {
           license = true;
         }
         if (citationBeingPushed) {
@@ -301,8 +303,8 @@ async function verifyFirstIssue(context, owner, repo, title) {
     state: "all",
   });
 
-  console.log("VERIFY FIRST ISSUE (OPEN OR CLOSE)")
-  console.log(issues.data)
+  console.log("VERIFY FIRST ISSUE (OPEN OR CLOSE)");
+  console.log(issues.data);
 
   if (issues.data.length > 0) {
     // iterate through issues to see if there is an issue with the same title
@@ -365,6 +367,7 @@ async function createIssue(context, owner, repo, title, body) {
     title: title,
   });
 
+  console.log("ISSUE DATA");
   console.log(issue.data);
 
   if (issue.data.length > 0) {
@@ -462,7 +465,7 @@ async function createLicense(context, owner, repo, license) {
       }
 
       // Create a new branch base off the default branch
-      console.log(default_branch)
+      console.log(default_branch);
       console.log("Creating branch");
       await context.octokit.git.createRef({
         repo,
