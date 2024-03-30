@@ -734,6 +734,42 @@ video {
   transform: translate3d(var(--tw-translate-x), var(--tw-translate-y), 0) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
+@keyframes float {
+  0% {
+    transform: translatey(0px);
+  }
+
+  50% {
+    transform: translatey(-20px);
+  }
+
+  100% {
+    transform: translatey(0px);
+  }
+}
+
+.animate-float-item {
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes float-diff {
+  0% {
+    transform: translatey(0px);
+  }
+
+  50% {
+    transform: translatey(-17px);
+  }
+
+  100% {
+    transform: translatey(0px);
+  }
+}
+
+.animate-float-opposite {
+  animation: float-diff 4s ease-in-out infinite;
+}
+
 .grid-cols-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }

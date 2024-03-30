@@ -1,5 +1,5 @@
 {
-  "name": "codeFAIR",
+  "name": "codefair",
   "version": "1.0.0",
   "private": true,
   "description": "Checks for License and Citation in a Github repo",
