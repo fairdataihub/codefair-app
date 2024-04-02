@@ -258,6 +258,15 @@ module.exports = (app) => {
     const repo = context.payload.repository.name;
     const { comment } = context.payload;
 
+    console.log(comment.author_association);
+    console.log(comment.author_association in ["MEMBER", "OWNER"])
+    console.log(comment.body);
+    console.log(comment.body.includes("codefair-app"))
+    console.log(context.payload.issue.title);
+    console.log(context.payload.issue.title === "No license file found")
+
+    console.log("should all be true above")
+
     if (
       context.payload.issue.title === "No license file found" &&
       comment.author_association in ["MEMBER", "OWNER"] &&
