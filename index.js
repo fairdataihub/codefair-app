@@ -260,7 +260,7 @@ module.exports = (app) => {
 
     if (
       context.payload.issue.title === "No license file found" &&
-      comment.author_association === "MEMBER" &&
+      comment.author_association in ["MEMBER", "OWNER"] &&
       comment.body.includes("codefair-app")
     ) {
       // Check the comment to see if the user has replied with a license
@@ -276,7 +276,7 @@ module.exports = (app) => {
 
     if (
       context.payload.issue.title === "No citation file found" &&
-      comment.author_association === "MEMBER" &&
+      comment.author_association in ["MEMBER", "OWNER"] &&
       comment.body.includes("codefair-app")
     ) {
       const userComment = comment.body;
