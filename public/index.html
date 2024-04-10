@@ -19,7 +19,7 @@
   <body class="relative">
     <!-- TOP GRADIENT -->
     <div
-      class="fixed inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+      class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
       aria-hidden="true"
     >
       <div
@@ -189,31 +189,25 @@
             <h1
               class="font-inter mb-4 text-6xl font-bold text-black sm:text-5xl md:mb-4 md:text-6xl"
             >
-              Make<br />Software Fair
+            Make your research software reusable without breaking a sweat!
             </h1>
 
             <div class="font-inter">
               <p class="leading-relaxed text-gray-500 lg:w-4/5 xl:text-lg">
-                An open source project dedicated to making software:
+                codefair is a free and open source Github app that acts as your
+                personal coding assigtant to help you make your software
+                reusable in line with the FAIR Principles for research software
+                (FAIR4RS Principles)
               </p>
-
-              <ul
-                class="lg:ml-4 mb-8 lg:list-disc items-start lg:items-center text-gray-500 md:mb-12 lg:w-4/5 xl:text-lg"
-              >
-                <li>Findable</li>
-                <li>Accessible</li>
-                <li>Interoperable</li>
-                <li>Reusable</li>
-              </ul>
             </div>
 
             <div
-              class="flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
+              class="flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start md:mt-8"
             >
               <a
                 href="https://github.com/marketplace/codefair-app"
                 class="font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
-                >Get Started</a
+                >Get codefair -></a
               >
 
               <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
@@ -244,7 +238,7 @@
     </div>
     <!-- BOTTOM GRADIENT -->
     <div
-      class="fixed inset-x-0 top-[calc(80%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(90%-30rem)]"
+      class="absolute inset-x-0 top-[calc(80%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(90%-30rem)]"
       aria-hidden="true"
     >
       <div
@@ -267,7 +261,7 @@
 
     <!-- SUBSECTIONS -->
     <section id="information-section">
-      <div class="bg-[#e7ddfa4f]">
+      <!-- <div class="bg-[#e7ddfa4f]">
         <div class="flex flex-row mx-auto max-w-screen-xl container">
           <div class="flex-1 flex flex-col justify-evenly">
             <div>
@@ -292,7 +286,7 @@
                 >Get codefair -></a
               >
 
-              <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
+              
             </div>
           </div>
           <div>
@@ -304,8 +298,8 @@
             />
           </div>
         </div>
-      </div>
-      <div>
+      </div> -->
+      <div class="bg-[#e7ddfa4f]">
         <div
           class="flex flex-row mx-auto max-w-screen-xl container justify-between"
         >
@@ -342,7 +336,7 @@
           </div>
         </div>
       </div>
-      <div class="bg-[#e7ddfa4f]">
+      <div>
         <div
           class="flex flex-row mx-auto max-w-screen-xl container justify-between"
         >
@@ -384,7 +378,7 @@
           </div>
         </div>
       </div>
-      <div>
+      <div class="bg-[#e7ddfa4f]">
         <div
           class="flex flex-row mx-auto max-w-screen-xl container flex-between"
         >
@@ -428,7 +422,7 @@
           </div>
         </div>
       </div>
-      <div class="bg-[#e7ddfa4f]">
+      <div>
         <div
           class="flex flex-row mx-auto max-w-screen-xl container justify-between"
         >
@@ -473,7 +467,7 @@
           </div>
         </div>
       </div>
-      <div>
+      <div class="bg-[#e7ddfa4f]">
         <div
           class="flex flex-row mx-auto max-w-screen-xl container justify-between"
         >
@@ -514,8 +508,8 @@
     </section>
 
     <!-- FOOTER -->
-    <footer id="contact" class="pt-4 sm:pt-6 lg:pt-8">
-      <div class="pt-12">
+    <footer id="contact">
+      <div>
         <div class="mx-auto max-w-screen-xl border-t px-4 md:px-8">
           <div
             class="mb-16 mt-16 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 lg:gap-16"
