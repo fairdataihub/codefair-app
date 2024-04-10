@@ -17,8 +17,9 @@
     <script src="./assets/js/scripts.js" defer></script>
   </head>
   <body class="relative">
+    <!-- TOP GRADIENT -->
     <div
-      class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+      class="fixed inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
       aria-hidden="true"
     >
       <div
@@ -45,8 +46,10 @@
         "
       ></div>
     </div>
-    <div class="pb-6 sm:pb-8 lg:pb-12">
-      <div class="mx-auto max-w-screen-2xl px-4 md:px-8">
+
+    <!-- HERO SECTION -->
+    <div class="pb-6 sm:pb-8 lg:pb-12 lg:h-[calc(100vh-2rem)]">
+      <div class="container mx-auto max-w-screen-2xl px-4 md:px-8">
         <header
           class="mb-8 flex items-center justify-between py-4 md:mb-12 md:py-8 xl:mb-16"
         >
@@ -68,8 +71,18 @@
 
           <!-- nav - start -->
           <nav class="hidden gap-12 lg:flex">
-            <a
+            <!-- <a
               href="#about"
+              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              >About</a
+            > -->
+            <a
+              href="fairsoftware.html"
+              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              >FAIR Software</a
+            >
+            <a
+              href="codefair.html"
               class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
               >About</a
             >
@@ -112,44 +125,47 @@
             id="mobile-menu"
             class="hidden fixed inset-0 bg-purple-50 z-50 flex flex-col items-center justify-center gap-6 max-h-56"
           >
-            <div>
-              <a
-                href="/"
-                class="font-inter absolute top-4 left-4 inline-flex items-center gap-2.5 text-2xl font-bold text-black"
-                aria-label="logo"
-              >
-                <img
-                  src="./assets/images/codefair_logo.png"
-                  alt="codefair"
-                  class="w-10 h-10"
-                />
+            <a
+              href="/"
+              class="font-inter absolute top-4 left-4 inline-flex items-center gap-2.5 text-2xl font-bold text-black"
+              aria-label="logo"
+            >
+              <img
+                src="./assets/images/codefair_logo.png"
+                alt="codefair"
+                class="w-10 h-10"
+              />
 
-                codefair
-              </a>
-              
-              <button
-                id="mobile-menu-close"
-                type="button"
-                class="absolute top-6 right-4 text-gray-500"
+              codefair
+            </a>
+
+            <button
+              id="mobile-menu-close"
+              type="button"
+              class="absolute top-6 right-4 text-gray-500"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                viewBox="0 0 20 20"
+                fill="currentColor"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M14.95 5.05a1 1 0 00-1.41 0L10 8.59 6.46 5.05a1 1 0 00-1.41 1.41L8.59 10 5.05 13.54a1 1 0 001.41 1.41L10 11.41l3.54 3.54a1 1 0 001.41-1.41L11.41 10l3.54-3.54a1 1 0 000-1.41z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </button>
-            </div>
+                <path
+                  fill-rule="evenodd"
+                  d="M14.95 5.05a1 1 0 00-1.41 0L10 8.59 6.46 5.05a1 1 0 00-1.41 1.41L8.59 10 5.05 13.54a1 1 0 001.41 1.41L10 11.41l3.54 3.54a1 1 0 001.41-1.41L11.41 10l3.54-3.54a1 1 0 000-1.41z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
 
             <nav class="flex flex-col gap-6">
               <a
-                href="#about"
+                href="fairsoftware.html"
+                class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+                >FAIR Software</a
+              >
+              <a
+                href="codefair.html"
                 class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
                 >About</a
               >
@@ -158,7 +174,7 @@
                 class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
                 >Contact</a
               >
-
+            </nav>
           </div>
           <!-- buttons - end -->
         </header>
@@ -195,7 +211,7 @@
               class="flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
             >
               <a
-                href="https://github.com/apps/codefairapp"
+                href="https://github.com/marketplace/codefair-app"
                 class="font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
                 >Get Started</a
               >
@@ -206,7 +222,9 @@
           <!-- content - end -->
 
           <!-- image - start -->
-          <div class="animate-float-item hidden lg:flex h-48 lg:h-auto xl:w-5/12 relative">
+          <div
+            class="animate-float-item hidden lg:flex h-48 lg:h-auto xl:w-5/12 relative"
+          >
             <img
               src="./assets/images/second_layer_hero.png"
               loading="lazy"
@@ -224,8 +242,9 @@
         </section>
       </div>
     </div>
+    <!-- BOTTOM GRADIENT -->
     <div
-      class="absolute inset-x-0 top-[calc(80%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(90%-30rem)]"
+      class="fixed inset-x-0 top-[calc(80%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(90%-30rem)]"
       aria-hidden="true"
     >
       <div
@@ -245,35 +264,259 @@
         "
       ></div>
     </div>
-    <div id="about" class="py-6 sm:py-8 lg:py-12">
-      <div class="mx-auto max-w-screen-xl px-4 md:px-8">
-        <!-- text - start -->
-        <div class="mb-0">
-          <h2 class="mb-4 text-center text-2xl font-bold text-gray-800 md:mb-6 lg:text-3xl">About</h2>
-    
-          <div>
-            <p
-              class="mx-auto max-w-screen-md text-center text-gray-500 md:text-lg"
-            >
-              By communicating with you through GitHub issues and submitting pull requests, codefair will make sure that your software follows best coding practices, provides metadata in standard format, includes a license file, is archived on Zenodo, and much more. All you need to do is:
-            </p>
-            
-            <ul class="lg:mx-auto my-4 mx-8 text-center text-gray-500 md:text-lg list-decimal md:max-w-[40rem]">
-              <li>Install codefair-app on the GitHub organizations or repositories of your choice</li>
-              <li>After installation code as usual</li>
-              <li>Follow codefair-app's instructions when it opens an issue or submit a pull request</li>
-            </ul>
 
-            <p class="mx-auto max-w-screen-md text-center text-gray-500 md:text-lg">With codefair by your side, you're not just developing software but you're advocating for better software practices.</p>
+    <!-- SUBSECTIONS -->
+    <section id="information-section">
+      <div class="bg-[#e7ddfa4f]">
+        <div class="flex flex-row mx-auto max-w-screen-xl container">
+          <div class="flex-1 flex flex-col justify-evenly">
+            <div>
+              <h2
+                class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              >
+                Make your research software reusable without breaking a sweat!
+              </h2>
+              <p>
+                codefair is a free and open source Github app that acts as your
+                personal coding assigtant to help you make your software
+                reusable in line with the FAIR Principles for research software
+                (FAIR4RS Principles)
+              </p>
+            </div>
+            <div
+              class="flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
+            >
+              <a
+                href="https://github.com/marketplace/codefair-app"
+                class="font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                >Get codefair -></a
+              >
+
+              <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
+            </div>
           </div>
-            
+          <div>
+            <img
+              src="./assets/images/Saly-13.png"
+              loading="lazy"
+              alt="Info image"
+              class="w-[32rem] h-[32rem]"
+            />
+          </div>
         </div>
-        <!-- text - end -->
       </div>
-    </div>
+      <div>
+        <div
+          class="flex flex-row mx-auto max-w-screen-xl container justify-between"
+        >
+          <div class="flex-2">
+            <img
+              src="./assets/images/Saly-38.png"
+              loading="lazy"
+              alt="Info image"
+              class="w-[30rem] h-[30rem]"
+            />
+          </div>
+          <div class="flex flex-col justify-evenly flex-1 p-4 max-w-2xl">
+            <p>
+              codefair is a free and open source GitHub app that acts as your
+              personal assistant when it comes to making your research software
+              reusable and especially complying with the Findable, Accessible,
+              Interoperable, Reusable (FAIR) Principles for Research Software
+              (FAIR4RS Principles). Whether you are developing artificial
+              intelligence (AI)/machine learning (ML) models with Python, data
+              visualization tools with Jupyter notebook, or data analysis code
+              with R, codefair is here to assist you.
+            </p>
+            <div
+              class="flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
+            >
+              <a
+                href="https://github.com/fairdataihub/codefair-app"
+                class="font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                >View the source code -></a
+              >
+
+              <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-[#e7ddfa4f]">
+        <div
+          class="flex flex-row mx-auto max-w-screen-xl container justify-between"
+        >
+          <div class="flex flex-col justify-evenly flex-1 p-4 max-w-2xl">
+            <div class="flex flex-col">
+              <h2
+                class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              >
+                Why make research software reusable?
+              </h2>
+              <p>
+                Making research software FAIR, i.e. optimally reusable, is
+                critical to enable reproducible and transparent research,
+                prevent duplicate effort and ultimately increase the pace of new
+                scientific discoveries. Also, more and more funding agencies
+                such as the NIH and NSF are requiring research software to be
+                reusable (cha-ching).
+              </p>
+            </div>
+            <div
+              class="flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
+            >
+              <a
+                href="fairsoftware.html"
+                class="font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                >Learn more about FAIR software -></a
+              >
+
+              <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
+            </div>
+          </div>
+          <div class="m-4">
+            <img
+              src="./assets/images/Other 08.png"
+              loading="lazy"
+              alt="Info image"
+              class="w-[30rem] h-[30rem]"
+            />
+          </div>
+        </div>
+      </div>
+      <div>
+        <div
+          class="flex flex-row mx-auto max-w-screen-xl container flex-between"
+        >
+          <div class="flex-2 m-4">
+            <img
+              src="./assets/images/Saly-16.png"
+              loading="lazy"
+              alt="Info image"
+              class="w-[30rem] h-[30rem]"
+            />
+          </div>
+          <div class="flex flex-col justify-evenly flex-1 p-4">
+            <div class="flex flex-col">
+              <h2
+                class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              >
+                Why should you use codefair?
+              </h2>
+              <p>
+                With codefair, you do not have to think about making your
+                software FAIR. Just install codefair from the GitHub marketplace
+                on your software's GitHub repository. By communicating with you
+                through GitHub issues and submitting pull requests, codefair
+                will then make sure that your software follows best coding
+                practices, provides metadata in standard format, includes a
+                license file, is archived on Zenodo, and much more to align with
+                the FAIR4RS principles.
+              </p>
+            </div>
+            <div
+              class="flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
+            >
+              <a
+                href="codefair.html"
+                class="font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                >Learn more about codefair -></a
+              >
+
+              <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-[#e7ddfa4f]">
+        <div
+          class="flex flex-row mx-auto max-w-screen-xl container justify-between"
+        >
+          <div class="flex-1 flex flex-col justify-evenly p-4 max-w-2xl">
+            <div>
+              <h2
+                class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              >
+                Who are we?
+              </h2>
+              <p>
+                codefair is being developed by the team at the FAIR Data
+                Innovations Hub, a division of the non profit biomedical
+                research institue called California Medical Innovations
+                Institute. As developers of research software, we experienced
+                firsthand the challenges of making software FAIR which prompted
+                us to develop codefair. The project is not receiving any
+                financial support yet, but we are hoping we will in the future
+                so we can dedicate more time and effort to this much needed
+                tool. We would also love if others would join us in this effort!
+              </p>
+            </div>
+            <div
+              class="flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
+            >
+              <a
+                href="https://github.com/apps/codefairapp"
+                class="font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                >Learn more about FAIR software -></a
+              >
+
+              <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
+            </div>
+          </div>
+          <div class="">
+            <img
+              src="./assets/images/DRIP_18.png"
+              loading="lazy"
+              alt="Info image"
+              class="w-[30rem] h-[30rem]"
+            />
+          </div>
+        </div>
+      </div>
+      <div>
+        <div
+          class="flex flex-row mx-auto max-w-screen-xl container justify-between"
+        >
+          <div class="flex-2">
+            <img
+              src="./assets/images/Other 02.png"
+              loading="lazy"
+              alt="Info image"
+              class="w-[30rem] h-[30rem]"
+            />
+          </div>
+          <div class="flex-1 flex flex-col justify-evenly p-4 max-w-2xl">
+            <div>
+              <h2
+                class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              >
+                Need help? Have suggestions? Want to contribute?
+              </h2>
+              <p>
+                Reach out to us via the GitHub issues of the codefair repo and
+                we will be happy to connect with you.
+              </p>
+            </div>
+            <div
+              class="flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
+            >
+              <a
+                href="https://github.com/fairdataihub/codefair-app/issues"
+                class="font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                >Open a GitHub issue -></a
+              >
+
+              <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
     <footer id="contact" class="pt-4 sm:pt-6 lg:pt-8">
       <div class="pt-12">
-        <div class="mx-auto max-w-screen-2xl border-t px-4 md:px-8">
+        <div class="mx-auto max-w-screen-xl border-t px-4 md:px-8">
           <div
             class="mb-16 mt-16 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 lg:gap-16"
           >
