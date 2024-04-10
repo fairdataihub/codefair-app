@@ -1389,6 +1389,18 @@ video {
     height: auto;
   }
 
+  .lg\:h-\[calc\(100vh-5rem\)\] {
+    height: calc(100vh - 5rem);
+  }
+
+  .lg\:h-\[calc\(100vh-8rem\)\] {
+    height: calc(100vh - 8rem);
+  }
+
+  .lg\:h-\[calc\(100vh-10rem\)\] {
+    height: calc(100vh - 10rem);
+  }
+
   .lg\:w-full {
     width: 100%;
   }
