@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>codefair.io</title>
+
+    <link href="./assets/css/styles.css" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/x-icon" href="./assets/images/favicon.ico" />
+    <script src="./assets/js/scripts.js" defer></script>
+  </head>
+  <body class="relative">
+    <!-- TOP GRADIENT -->
+    <div
+      class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+      aria-hidden="true"
+    >
+      <div
+        class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+        style="
+          clip-path: polygon(
+            74.1% 44.1%,
+            100% 61.6%,
+            97.5% 26.9%,
+            85.5% 0.1%,
+            80.7% 2%,
+            72.5% 32.5%,
+            60.2% 62.4%,
+            52.4% 68.1%,
+            47.5% 58.3%,
+            45.2% 34.5%,
+            27.5% 76.7%,
+            0.1% 64.9%,
+            17.9% 100%,
+            27.6% 76.8%,
+            76.1% 97.7%,
+            74.1% 44.1%
+          );
+        "
+      ></div>
+    </div>
+
+    <!-- NAV SECTION -->
+    <div class="pb-10 sm:pb-8 lg:pb-12">
+      <div class="container mx-auto max-w-screen-xl px-4 md:px-8">
+        <header
+          class="mb-8 flex items-center justify-between py-4 md:mb-12 md:py-8 xl:mb-16"
+        >
+          <!-- logo - start -->
+          <a
+            href="/"
+            class="font-inter inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
+            aria-label="logo"
+          >
+            <img
+              src="./assets/images/codefair_logo.png"
+              alt="codefair"
+              class="w-10 h-10 md:w-12 md:h-12"
+            />
+
+            codefair
+          </a>
+          <!-- logo - end -->
+
+          <!-- nav - start -->
+          <nav class="hidden gap-12 lg:flex">
+            <!-- <a
+              href="#about"
+              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              >About</a
+            > -->
+            <a
+              href="codefair.html"
+              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              >About</a
+            >
+            <a
+              href="fairsoftware.html"
+              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              >FAIR Software</a
+            >
+            <a
+              href="#contact"
+              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              >Contact</a
+            >
+            <a
+              href="https://github.com/fairdataihub/codefair-app"
+              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              >GitHub</a
+            >
+          </nav>
+          <!-- nav - end -->
+
+          <!-- buttons - start -->
+          <!-- <a
+            href="#"
+            class="hidden rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base lg:inline-block"
+            >Log In</a
+          > -->
+
+          <button
+            id="mobile-menu-button"
+            type="button"
+            class="inline-flex items-center gap-2 rounded-lg bg-gray-200 px-2.5 py-2 text-sm font-semibold text-gray-500 ring-indigo-300 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base lg:hidden"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+
+            Menu
+          </button>
+          <div
+            id="mobile-menu"
+            class="hidden fixed inset-0 bg-purple-50 z-50 flex flex-col items-center justify-center gap-6"
+            style="height: fit-content; padding: 6rem;"
+          >
+            <a
+              href="/"
+              class="font-inter absolute top-4 left-4 inline-flex items-center gap-2.5 text-2xl font-bold text-black"
+              aria-label="logo"
+            >
+              <img
+                src="./assets/images/codefair_logo.png"
+                alt="codefair"
+                class="w-10 h-10"
+              />
+
+              codefair
+            </a>
+
+            <button
+              id="mobile-menu-close"
+              type="button"
+              class="absolute top-6 right-4 text-gray-500"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M14.95 5.05a1 1 0 00-1.41 0L10 8.59 6.46 5.05a1 1 0 00-1.41 1.41L8.59 10 5.05 13.54a1 1 0 001.41 1.41L10 11.41l3.54 3.54a1 1 0 001.41-1.41L11.41 10l3.54-3.54a1 1 0 000-1.41z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+
+            <nav class="flex flex-col gap-6">
+              <a
+              href="codefair.html"
+              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              >About</a
+            >
+              <a
+                href="fairsoftware.html"
+                class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+                >FAIR Software</a
+              >
+              <a
+                href="#contact"
+                class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+                >Contact</a
+              >
+              <a
+                href="https://github.com/fairdataihub/codefair-app"
+                class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+                >GitHub</a
+              >
+            </nav>
+          </div>
+          <!-- buttons - end -->
+        </header>
+      </div>
+      <div class="bg-[#e7ddfa4f] py-8">
+        <div class="max-w-screen-xl mx-auto px-4 md:px-8">
+          <div class="flex justify-start">
+            <h1
+              class="font-inter mb-4 text-4xl font-bold text-black sm:text-5xl md:mb-4 md:text-5xl"
+            >
+              About codefair
+            </h1>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM GRADIENT -->
+    <div
+      class="absolute inset-x-0 top-[calc(80%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(90%-30rem)]"
+      aria-hidden="true"
+    >
+      <div
+        class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-40 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
+        style="
+          clip-path: polygon(
+            20% 7%,
+            88% 10%,
+            91% 46%,
+            29% 53%,
+            79% 78%,
+            14% 22%,
+            93% 93%,
+            25% 88%,
+            90% 59%
+          );
+        "
+      ></div>
+    </div>
+
+    <!-- BODY TEXT -->
+    <section>
+      <div class="">
+        <div class="flex justify-start max-w-screen-xl px-4 md:px-8 mx-auto">
+          <div class="flex flex-col max-w-screen-xl py-8">
+            <div class="flex flex-col">
+              <h2
+                class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              >
+                What is codefair?
+              </h2>
+              <p>
+                codefair is a free and open source GitHub app that acts as your
+                personal assistant when it comes to making your research
+                software reusable and especially complying with the Findable,
+                Accessible, Interoperable, Reusable (FAIR) Principles for
+                Research Software (FAIR4RS Principles).
+              </p>
+            </div>
+            <div
+              class="py-8 flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
+            >
+              <a
+                href="https://doi.org/10.1038/s41597-022-01710-x"
+                class="self-center w-auto font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                >Learn more about the FAIR4RS principles -></a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-[#e7ddfa4f]">
+        <div class="flex justify-start max-w-screen-xl px-4 md:px-8 mx-auto">
+          <div class="flex flex-col my-8 max-w-screen-xl py-8 h-auto">
+            <div class="flex flex-col">
+              <h2
+                class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              >
+                How does codefair work?
+              </h2>
+              <p>
+                Just install codefair from the GitHub marketplace on your
+                software’s GitHub repository. By communicating with you through
+                GitHub issues and submitting pull requests, codefair will then
+                make sure that your software follows best coding practices,
+                provides metadata in standard format, includes a license file,
+                is archived on Zenodo, and much more to align with the FAIR4RS
+                principles.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="">
+        <div class="flex justify-start max-w-screen-xl px-4 md:px-8 mx-auto">
+          <div class="flex flex-col my-8 max-w-screen-xl py-8 h-auto">
+            <div class="flex flex-col">
+              <h2
+                class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              >
+                Who should use codefair?
+              </h2>
+              <div>
+                <p>
+                  Currently, codefair helps make software FAIR by following the
+                  FAIR Biomedical Research software (FAIR-BioRS) guidelines.
+                  Therefore it is design mainly for biomedical research
+                  software. However, most of the steps of the FAIR-BioRS
+                  guidelines are applicable to any research software
+                  irrespective of the field of research. Therefore, anyone
+                  developing a research software can use codefair. Whether you
+                  are developing artificial intelligence (AI)/machine learning
+                  (ML) models with Python, data visualization tools with Jupyter
+                  notebook, or data analysis code with R, codefair is here to
+                  assist you.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-[#e7ddfa4f]">
+        <div class="flex justify-start max-w-screen-xl px-4 md:px-8 mx-auto">
+          <div class="flex flex-col my-8 py-8 max-w-lg">
+            <h2
+              class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+            >
+              How is codefair developed?
+            </h2>
+            <p>
+              codefair is developed using Probot and is deployed on Vercel as a serverless function. The GitHub app is configured to receive webhooks for important actions such as pushing code, opening or closing issues, opening or merging pull requests, and commenting on discussions.
+
+              By leveraging a serverless environment on Vercel, codefair can automatically scale to handle the workload of the GitHub app. The app is written in Node.js and utilizes the Octokit library to interact with the GitHub API, enabling seamless integration with GitHub's features and functionality.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer id="contact">
+      <div>
+        <div class="mx-auto max-w-screen-xl border-t px-4 md:px-8">
+          <div
+            class="my-4 md:my-20 gap-12 grid items-center grid-rows-2 md:grid-cols-3 md:grid-rows-1"
+          >
+            <div class="lg:my-0 my-8 md:col-span-2">
+              <!-- logo - start -->
+              <div class="mb-4 lg:-mt-2">
+                <a
+                  href="/"
+                  class="font-inter inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
+                  aria-label="logo"
+                >
+                  <img
+                    src="./assets/images/codefair_logo.png"
+                    alt="codefair"
+                    class="w-10 h-10 md:w-12 md:h-12"
+                  />
+
+                  codefair
+                </a>
+              </div>
+              <!-- logo - end -->
+
+              <p class="mb-6 text-gray-500 sm:pr-8">
+                With Codefair by your side, you're not just managing
+                repositories; you're advocating for FAIR software development.
+              </p>
+
+              <!-- social - start -->
+              <div class="flex gap-4">
+                <a
+                  href="#"
+                  target="_blank"
+                  class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
+                >
+                  <svg
+                    class="h-5 w-5"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"
+                    />
+                  </svg>
+                </a>
+
+                <a
+                  href="#"
+                  target="_blank"
+                  class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
+                >
+                  <svg
+                    class="h-5 w-5"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                    />
+                  </svg>
+                </a>
+              </div>
+              <!-- social - end -->
+            </div>
+
+            <!-- nav - start -->
+            <div class="mb-4 tracking-widest text-gray-800">
+              <div
+                class="mb-4 font-bold uppercase tracking-widest text-gray-800"
+              >
+                Legal
+              </div>
+
+              <nav class="flex flex-col gap-4">
+                <div>
+                  <a
+                    href="#"
+                    class="text-gray-500 transition duration-100 hover:text-indigo-500 active:text-indigo-600"
+                    >Terms of Service</a
+                  >
+                </div>
+
+                <div>
+                  <a
+                    href="#"
+                    class="text-gray-500 transition duration-100 hover:text-indigo-500 active:text-indigo-600"
+                    >Privacy Policy</a
+                  >
+                </div>
+
+                <div>
+                  <a
+                    href="#"
+                    class="text-gray-500 transition duration-100 hover:text-indigo-500 active:text-indigo-600"
+                    >Cookie settings</a
+                  >
+                </div>
+              </nav>
+            </div>
+            <!-- nav - end -->
+          </div>
+
+          <div class="border-t py-8 text-center text-sm text-gray-400">
+            © 2024 - FAIR Data Innovations Hub. All rights reserved.
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
