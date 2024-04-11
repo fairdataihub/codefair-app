@@ -657,12 +657,32 @@ video {
   top: calc(80% - 13rem);
 }
 
+.-left-\[12rem\] {
+  left: -12rem;
+}
+
+.top-10 {
+  top: 2.5rem;
+}
+
+.top-14 {
+  top: 3.5rem;
+}
+
+.top-8 {
+  top: 2rem;
+}
+
 .-z-10 {
   z-index: -10;
 }
 
 .z-50 {
   z-index: 50;
+}
+
+.col-span-full {
+  grid-column: 1 / -1;
 }
 
 .mx-auto {
@@ -680,6 +700,11 @@ video {
   margin-bottom: 2rem;
 }
 
+.mx-8 {
+  margin-left: 2rem;
+  margin-right: 2rem;
+}
+
 .mb-4 {
   margin-bottom: 1rem;
 }
@@ -694,6 +719,22 @@ video {
 
 .mt-8 {
   margin-top: 2rem;
+}
+
+.mb-0 {
+  margin-bottom: 0px;
+}
+
+.mb-16 {
+  margin-bottom: 4rem;
+}
+
+.mt-16 {
+  margin-top: 4rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
 }
 
 .inline-block {
@@ -744,6 +785,10 @@ video {
   height: 25rem;
 }
 
+.h-full {
+  height: 100%;
+}
+
 .max-h-56 {
   max-height: 14rem;
 }
@@ -780,12 +825,24 @@ video {
   width: auto;
 }
 
+.w-full {
+  width: 100%;
+}
+
 .max-w-2xl {
   max-width: 42rem;
 }
 
 .max-w-screen-xl {
   max-width: 1280px;
+}
+
+.max-w-screen-2xl {
+  max-width: 1536px;
+}
+
+.max-w-screen-md {
+  max-width: 768px;
 }
 
 .flex-1 {
@@ -842,6 +899,14 @@ video {
   animation: float-diff 4s ease-in-out infinite;
 }
 
+.list-decimal {
+  list-style-type: decimal;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .grid-rows-2 {
   grid-template-rows: repeat(2, minmax(0, 1fr));
 }
@@ -852,6 +917,10 @@ video {
 
 .flex-col-reverse {
   flex-direction: column-reverse;
+}
+
+.items-start {
+  align-items: flex-start;
 }
 
 .items-center {
@@ -993,8 +1062,25 @@ video {
   padding-bottom: 2rem;
 }
 
+.py-6 {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
 .pb-10 {
   padding-bottom: 2.5rem;
+}
+
+.pb-6 {
+  padding-bottom: 1.5rem;
+}
+
+.pt-12 {
+  padding-top: 3rem;
+}
+
+.pt-4 {
+  padding-top: 1rem;
 }
 
 .text-center {
@@ -1032,6 +1118,11 @@ video {
 .text-xl {
   font-size: 1.25rem;
   line-height: 1.75rem;
+}
+
+.text-6xl {
+  font-size: 3.75rem;
+  line-height: 1;
 }
 
 .font-bold {
@@ -1203,12 +1294,21 @@ video {
     gap: 2.5rem;
   }
 
+  .sm\:py-8 {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
   .sm\:pb-8 {
     padding-bottom: 2rem;
   }
 
   .sm\:pr-8 {
     padding-right: 2rem;
+  }
+
+  .sm\:pt-6 {
+    padding-top: 1.5rem;
   }
 
   .sm\:text-center {
@@ -1243,6 +1343,10 @@ video {
     margin-top: 2rem;
   }
 
+  .md\:mb-6 {
+    margin-bottom: 1.5rem;
+  }
+
   .md\:h-12 {
     height: 3rem;
   }
@@ -1263,8 +1367,16 @@ video {
     width: auto;
   }
 
+  .md\:max-w-\[40rem\] {
+    max-width: 40rem;
+  }
+
   .md\:grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .md\:grid-rows-1 {
@@ -1313,16 +1425,39 @@ video {
     font-size: 1rem;
     line-height: 1.5rem;
   }
+
+  .md\:text-6xl {
+    font-size: 3.75rem;
+    line-height: 1;
+  }
+
+  .md\:text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
 }
 
 @media (min-width: 1024px) {
+  .lg\:col-span-2 {
+    grid-column: span 2 / span 2;
+  }
+
   .lg\:my-0 {
     margin-top: 0px;
     margin-bottom: 0px;
   }
 
+  .lg\:mx-auto {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   .lg\:-mt-2 {
     margin-top: -0.5rem;
+  }
+
+  .lg\:ml-4 {
+    margin-left: 1rem;
   }
 
   .lg\:inline-block {
@@ -1345,12 +1480,32 @@ video {
     width: 100%;
   }
 
+  .lg\:w-4\/5 {
+    width: 80%;
+  }
+
+  .lg\:list-disc {
+    list-style-type: disc;
+  }
+
+  .lg\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
   .lg\:flex-row {
     flex-direction: row;
   }
 
+  .lg\:items-center {
+    align-items: center;
+  }
+
   .lg\:justify-start {
     justify-content: flex-start;
+  }
+
+  .lg\:gap-16 {
+    gap: 4rem;
   }
 
   .lg\:py-0 {
@@ -1367,8 +1522,17 @@ video {
     padding-bottom: 3rem;
   }
 
+  .lg\:pt-8 {
+    padding-top: 2rem;
+  }
+
   .lg\:text-left {
     text-align: left;
+  }
+
+  .lg\:text-3xl {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
   }
 }
 
@@ -1388,6 +1552,11 @@ video {
 
   .xl\:text-xl {
     font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
+  .xl\:text-lg {
+    font-size: 1.125rem;
     line-height: 1.75rem;
   }
 }
