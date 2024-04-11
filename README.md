@@ -52,6 +52,19 @@ With codefair by your side, you're not just developing software but you're advoc
 2. After installation code as usual
 3. Follow codefair-app's instructions when it opens an issue or submit a pull request
 
+#### Permissions Required:
+codefair requires a few repository permissions to be able to listen to events happening on a repository.
+These permissions required include:
+- Read access to:
+  - Repository contents
+  - Repository metadata
+  - Repository pull requests
+  - Repository issues
+- Write access to:
+  - Repository pull requests
+  - Repository issues
+  - Repository contents
+
 ## Run Locally
 ### Setup
 
@@ -72,6 +85,11 @@ docker build -t codefair .
 # 2. Start container
 docker run -e APP_ID=<app-id> -e PRIVATE_KEY=<pem-value> codeFAIR
 ```
+
+## How codefair is developed
+
+codefair is developed using Probot and is deployed on Vercel as a serverless function. The GitHub app is configured to receive webhooks for imoprtants actions such as pushing code, opening or closing issues, opening or merging pull requests and commenting on discussions.
+By leveraging a serverless environment on Vercel, codefair can automatically scale to handle the workload of the GitHub app. The app is written in Node.js and utilizes the Octokit library to interact with the GitHub APIenabling seamless integration with GitHub's features and functionality.
 
 ## Contributing
 
