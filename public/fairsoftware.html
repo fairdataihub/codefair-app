@@ -16,7 +16,7 @@
     <link rel="icon" type="image/x-icon" href="./assets/images/favicon.ico" />
     <script src="./assets/js/scripts.js" defer></script>
   </head>
-  <body class="relative">
+  <body class="relative font-inter">
     <!-- TOP GRADIENT -->
     <div
       class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
@@ -228,7 +228,7 @@
     <section>
       <div class="">
         <div class="flex justify-start max-w-screen-xl px-4 md:px-8 mx-auto">
-          <div class="flex flex-col max-w-screen-xl h-auto">
+          <div class="flex flex-col max-w-screen-xl py-8">
             <div class="flex flex-col">
               <h2
                 class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
@@ -254,7 +254,7 @@
       </div>
       <div class="bg-[#e7ddfa4f]">
         <div class="flex justify-start max-w-screen-xl px-4 md:px-8 mx-auto">
-          <div class="flex flex-col mt-8 max-w-screen-xl h-auto">
+          <div class="flex flex-col mt-8 max-w-screen-xl py-8 h-auto">
             <div class="flex flex-col">
               <h2
                 class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
@@ -279,34 +279,36 @@
       </div>
       <div class="">
         <div class="flex justify-start max-w-screen-xl px-4 md:px-8 mx-auto">
-          <div class="flex flex-col my-8 max-w-screen-xl h-auto">
+          <div class="flex flex-col my-8 max-w-screen-xl py-8 h-auto">
             <div class="flex flex-col">
               <h2
                 class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
               >
                 Why should you make your research software FAIR?
               </h2>
-              <p>
-                Making software reusable is critical for many reason including to:
-                <ul class="list-disc">
+              <div>
+                <p>
+                  Making software reusable is critical for many reason including to:
+                </p>
+                <ul class="list-disc list-inside">
                   <li>Enable reproducible, transparent research</li>
                   <li>Prevent duplicate effort</li>
                   <li>Increase the pace of scientific discoveries and innovations</li>
                 </ul>
-                In addition to promoting software development practices, making software FAIR can also benefit you personally:
-                <ul class="list-disc">
+                <p>In addition to promoting software development practices, making software FAIR can also benefit you personally:</p>
+                <ol class="list-disc list-inside">
                   <li>Get recognition when your software is reused through proper citation</li>
                   <li>Increase collaboration opportunities</li>
                   <li>Position yourself for more funding opportunities as funding agencies such as NIH and NSF are progressively requiring funded projects to make their software FAIR</li>
-                </ul>
-              </p>
+                </ol>
+              </div>
             </div>
           </div>
         </div>
       </div>
       <div class="bg-[#e7ddfa4f]">
         <div class="flex justify-start max-w-screen-xl px-4 md:px-8 mx-auto">
-          <div class="flex flex-col my-8 max-w-lg">
+          <div class="flex flex-col my-8 py-8 max-w-lg">
             <h2
               class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
             >
@@ -327,9 +329,9 @@
       <div>
         <div class="mx-auto max-w-screen-xl border-t px-4 md:px-8">
           <div
-            class="my-4 md:mt-12 grid items-center grid-rows-2 md:grid-cols-3"
+            class="my-4 md:my-20 gap-12 grid items-center grid-rows-2 md:grid-cols-3 md:grid-rows-1"
           >
-            <div class="lg:my-0 lg:col-span-2 my-8">
+            <div class="lg:my-0 my-8 md:col-span-2">
               <!-- logo - start -->
               <div class="mb-4 lg:-mt-2">
                 <a
@@ -350,7 +352,8 @@
 
               <p class="mb-6 text-gray-500 sm:pr-8">
                 With Codefair by your side, you're not just managing
-                repositories; you're advocating for FAIR software development.
+                repositories; you're advocating for FAIR software
+                development.
               </p>
 
               <!-- social - start -->
@@ -397,7 +400,9 @@
             </div>
 
             <!-- nav - start -->
-            <div class="mb-4 tracking-widest text-gray-800 lg:col-span-1">
+            <div
+              class="mb-4 tracking-widest text-gray-800"
+            >
               <div
                 class="mb-4 font-bold uppercase tracking-widest text-gray-800"
               >
