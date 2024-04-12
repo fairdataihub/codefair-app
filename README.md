@@ -52,8 +52,8 @@ With codefair by your side, you're not just developing software but you're advoc
 2. After installation code as usual
 3. Follow codefair-app's instructions when it opens an issue or submit a pull request
 
-#### Permissions Required:
-codefair requires a few repository permissions to be able to listen to events happening on a repository.
+### Permissions Required:
+codefair requires a few repository permissions to be able to listen to events happening on a repository and act accordingly.
 These permissions required include:
 - Read access to:
   - Repository contents
