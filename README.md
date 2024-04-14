@@ -7,9 +7,16 @@
 <h1>codefair</h1>
 
 <p>
-Make your research software reusable without breaking a sweat!
+Your coding assistant to make research software reusable without breaking a sweat!
 </p>
 
+<br />
+    <a href="https://github.com/marketplace/codefair-app"><strong> Get the app »</strong></a>
+    <br />
+<br />
+    <a href="https://codefair.io/"><strong>Learn more »</strong></a>
+
+<br />    
 <br />
 
 <p>
@@ -38,9 +45,7 @@ Make your research software reusable without breaking a sweat!
 
 ## Description
 
-codefair is your personal assistant when it comes to making your research software reusable and especially complying with the [Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software](https://doi.org/10.1038/s41597-022-01710-x). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, codefair is here to assist you. By communicating with you through GitHub issues and submitting pull requests, codefair will make sure that your software follows best coding practices, provides metadata in standard format, includes a license file, is archived on Zenodo, and much more.
-
-With codefair by your side, you're not just developing software but you're advocating for better software practices.  
+codefair is your personal assistant when it comes to making your research software reusable and especially complying with the [Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software](https://doi.org/10.1038/s41597-022-01710-x). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, codefair is here to assist you. By communicating with you through GitHub issues and submitting pull requests, codefair will make sure that your software follows best coding practices, provides metadata in standard format, includes a license file, is archived on Zenodo, and much more. With codefair by your side, you're not just developing software but you're advocating for better software practices. Learn more on the app's website [codefair.io](https://codefair.io/).
 
 ![screenshot of the License issue up to where is it closed with the PR](https://i.imgur.com/JamRWHF.png)
 
