@@ -70,14 +70,36 @@ The permissions required include:
   - Repository issues
   - Repository contents
 
+### Features
+List of features:
+- License checker (released): This feature checks for a LICENSE file in repositories that have at lease one commit and opens a GitHub issue if no LICENSE file is found. Users can find helpful ressources for selecting a license in the issue message. Users can also reply with the name of the desired license and the app automatically submits a pull request with a LICENSE file that contains license terms associated with the desired license.
+- CITATION.cff generator (upcoming): This features checks for a CITATION.cff file in repositories that have a LICENSE file and opens a GitHub issue if no CITATION.cff file is found. Users can find helpful ressources for preparing a CITATION.cff file in the issue message. Users can also request the app to create one for them.
+- Zenodo archival (upcoming): This feature checks if a GitHub repository is already archived on Zenodo. If not, the app open a Github issue that guides users into linking their GitHub repository with their Zenodo account so every GitHub release of the software is automatically archived on Zenodo by the app with CITATION.cff file updated before the release.
+
+More features are in the work!
+
+## Testing
+
+You can follow these steps for testing the app:
+- Create a GitHub repository with e.g., a README file or some other code files included but no LICENSE specified
+- Install codefair on that repository from the GitHub markplace: https://github.com/marketplace/codefair-app
+- Check the GitHub issue opened by the app about missing license file.
+- Interact with the app by replying to the issue. E.g., reply with a non existing license name first like "@codefair-app random license" and then with an existing one like "@codefair-app MIT".
+- Check out and merge the pull request opened by the app to see the issue being closed automatically.
+
+A demo video is available [here](https://youtu.be/_fjUz52mKwM).
+
 ## Run Locally
 ### Setup
+To run locally you will need to create a GitHub app from an account.
 
 ```sh
 # Install dependencies
 npm install
+```
 
-# Run the bot
+```sh
+# Run the bot and visit localhost:3000 to connect Probot to your GitHub app
 npm start
 ```
 
