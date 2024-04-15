@@ -54,7 +54,7 @@ codefair is your personal assistant when it comes to making your research softwa
 ### Installing
 
 1. Install codefair-app on the GitHub organizations or repositories of your choice
-2. After installation code as usual
+2. Code and develop your software as usual
 3. Follow codefair-app's instructions when it opens an issue or submit a pull request
 
 ### Permissions Required
