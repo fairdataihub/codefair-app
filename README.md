@@ -87,7 +87,7 @@ You can follow these steps for testing the app:
 - Interact with the app by replying to the issue. E.g., reply with a non existing license name first like "@codefair-app random license" and then with an existing one like "@codefair-app MIT".
 - Check out and merge the pull request opened by the app to see the issue being closed automatically.
 
-A demo video is available [here](./public/assets/images/video/codefair-example.mp4).
+A demo video is available [here](https://youtu.be/_fjUz52mKwM).
 
 ## Run Locally
 ### Setup
