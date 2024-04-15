@@ -81,7 +81,7 @@ More features are in the work!
 ## Testing
 
 You can follow these steps for testing the app:
-- Create a GitHub repository with e.g., a README file or some other code files included but no LICENSE specified (alternatively, you can fork this repository: https://github.com/fairdataihub/codefair-testing-repo).
+- Create a GitHub repository with e.g., a README file or some other code files included but no LICENSE specified
 - Install codefair on that repository from the GitHub markplace: https://github.com/marketplace/codefair-app
 - Check the GitHub issue opened by the app about missing license file.
 - Interact with the app by replying to the issue. E.g., reply with a non existing license name first like "@codefair-app random license" and then with an existing one like "@codefair-app MIT".
@@ -91,12 +91,15 @@ A demo video is available [here](video.mp4).
 
 ## Run Locally
 ### Setup
+To run locally you will need to create a GitHub app from an account.
 
 ```sh
 # Install dependencies
 npm install
+```
 
-# Run the bot
+```sh
+# Run the bot and visit localhost:3000 to connect Probot to your GitHub app
 npm start
 ```
 
