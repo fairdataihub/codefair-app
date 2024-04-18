@@ -239,47 +239,6 @@ module.exports = (app) => {
         // Gather the information for the CITATION.cff file
         await gatherCitationInfo(context, owner, repo);
       }
-
-      if (userComment.includes("UPDATE")) {
-        // Create a new file with the CITATION.cff file
-        // Get the yaml context from the userComment
-        let start = userComment.indexOf("- ");
-        let end = userComment.indexOf("@codefair-app UPDATE");
-        let yamlContext = userComment.substring(start, end);
-        // Load the input string into a JavaScript object
-        // Split yamlContext into an array of strings based on hyphen
-        let splitContext = yamlContext.split("\r\n").map((item) => item.trim());
-        console.log(splitContext);
-
-        // await createCitationFile(context, owner, repo, yaml.dump(mergedObject));
-        // console.log(userComment);
-      }
-
-      if (userComment.includes("CONTINUE")) {
-        // Create a new file with the yaml context created by the bot
-        // Get all comments on the issue
-        const comments = await context.octokit.issues.listComments({
-          repo,
-          owner,
-          issue_number: context.payload.issue.number,
-        });
-        // console.log(comments.data);
-
-        // Get the yaml context from the bot's comment
-        let yamlContext;
-        comments.data.map((comment) => {
-          if (
-            comment.performed_via_github_app != null &&
-            comment.user.login === "codefair-app[bot]" &&
-            comment.body.includes("Here is the information")
-          ) {
-            let start = comment.body.indexOf("```yaml") + 7;
-            let end = comment.body.indexOf("```", start);
-            yamlContext = comment.body.substring(start, end);
-          }
-        });
-        await createCitationFile(context, owner, repo, yamlContext.trim());
-      }
     }
 
     if (context.payload.issue.title === "No codemeta.json file found [codefair-app]" &&
