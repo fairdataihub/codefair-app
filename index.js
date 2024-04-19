@@ -48,18 +48,18 @@ module.exports = (app) => {
         await closeOpenIssue(context, owner, repo, title);
       }
 
-      // if (!codemeta && license) {
-      //   // License was found but no codemeta.json exists
-      //   const title = "No codemeta.json file found [codefair-app]";
-      //   const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@codefair-app Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
-      //   const verify = await verifyFirstIssue(context, owner, repo, title);
-      //   if (!verify) {
-      //     await createIssue(context, owner, repo, title, body);
-      //   }
-      // } else if (codemeta) {
-      //   const title = "No codemeta.json file found [codefair-app]";
-      //   await closeOpenIssue(context, owner, repo, title);
-      // }
+      if (!codemeta && license) {
+        // License was found but no codemeta.json exists
+        const title = "No codemeta.json file found [codefair-app]";
+        const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@codefair-app Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
+        const verify = await verifyFirstIssue(context, owner, repo, title);
+        if (!verify) {
+          await createIssue(context, owner, repo, title, body);
+        }
+      } else if (codemeta) {
+        const title = "No codemeta.json file found [codefair-app]";
+        await closeOpenIssue(context, owner, repo, title);
+      }
     }
   });
 
@@ -101,15 +101,15 @@ module.exports = (app) => {
         }
       }
 
-      // if (!codemeta && license) {
-      //   // License was found but no codemeta.json exists
-      //   const title = "No codemeta.json file found [codefair-app]";
-      //   const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@codefair-app Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
-      //   const verify = await verifyFirstIssue(context, owner, repo, title);
-      //   if (!verify) {
-      //     await createIssue(context, owner, repo, title, body);
-      //   }
-      // }
+      if (!codemeta && license) {
+        // License was found but no codemeta.json exists
+        const title = "No codemeta.json file found [codefair-app]";
+        const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@codefair-app Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
+        const verify = await verifyFirstIssue(context, owner, repo, title);
+        if (!verify) {
+          await createIssue(context, owner, repo, title, body);
+        }
+      }
     }
   });
 
@@ -193,18 +193,18 @@ module.exports = (app) => {
       await closeOpenIssue(context, owner, repo, title);
     }
 
-    // if (!codemeta && license) {
-    //   // License was found but no codemeta.json exists
-    //   const title = "No codemeta.json file found [codefair-app]";
-    //   const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@codefair-app Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
-    //   const verify = await verifyFirstIssue(context, owner, repo, title);
-    //   if (!verify) {
-    //     await createIssue(context, owner, repo, title, body);
-    //   }
-    // } else if (codemeta) {
-    //   const title = "No codemeta.json file found [codefair-app]";
-    //   await closeOpenIssue(context, owner, repo, title);
-    // }
+    if (!codemeta && license) {
+      // License was found but no codemeta.json exists
+      const title = "No codemeta.json file found [codefair-app]";
+      const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@codefair-app Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
+      const verify = await verifyFirstIssue(context, owner, repo, title);
+      if (!verify) {
+        await createIssue(context, owner, repo, title, body);
+      }
+    } else if (codemeta) {
+      const title = "No codemeta.json file found [codefair-app]";
+      await closeOpenIssue(context, owner, repo, title);
+    }
   });
 
   app.on("issue_comment.created", async (context) => {
