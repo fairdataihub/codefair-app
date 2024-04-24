@@ -1,3 +1,4 @@
 packages:
-  - 'packages/bot'
-  - 'packages/ui'
+  - bot
+  - ui
+  - 'packages/*'
