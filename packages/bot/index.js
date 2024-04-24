@@ -234,16 +234,18 @@ module.exports = (app) => {
       ["MEMBER", "OWNER"].includes(authorAssociation) &&
       userComment.includes("codefair-app")
     ) {
-
       if (userComment.includes("Yes")) {
         // Gather the information for the CITATION.cff file
         await gatherCitationInfo(context, owner, repo);
       }
     }
 
-    if (context.payload.issue.title === "No codemeta.json file found [codefair-app]" &&
-    ["MEMBER", "OWNER"].includes(authorAssociation) &&
-    userComment.includes("codefair-app")) {
+    if (
+      context.payload.issue.title ===
+        "No codemeta.json file found [codefair-app]" &&
+      ["MEMBER", "OWNER"].includes(authorAssociation) &&
+      userComment.includes("codefair-app")
+    ) {
       if (userComment.includes("Yes")) {
         // Gather the information for the codemeta.json file
         await gatherCodeMetaInfo(context, owner, repo);
@@ -440,7 +442,7 @@ async function gatherRepoAuthors(context, owner, repo, fileType) {
       }
 
       let authorObj = {
-        "orcid": "",
+        orcid: "",
       };
       const parsedNames = human.parseName(author.data.name);
       if (author.data.company && fileType === "citation") {
@@ -450,8 +452,8 @@ async function gatherRepoAuthors(context, owner, repo, fileType) {
       if (author.data.company && fileType == "codemeta") {
         authorObj["affiliation"] = {
           "@type": "Organization",
-          "name": author.data.company,
-        }
+          name: author.data.company,
+        };
       }
 
       if (parsedNames.firstName) {
@@ -691,7 +693,9 @@ async function createCodeMetaFile(context, owner, repo, codeMetaText) {
     owner,
     path: "codemeta.json",
     message: `feat: ✨ add codemeta.json file`,
-    content: Buffer.from(JSON.stringify(codeMetaText, null, 2)).toString("base64"),
+    content: Buffer.from(JSON.stringify(codeMetaText, null, 2)).toString(
+      "base64"
+    ),
     branch,
   });
 
@@ -893,7 +897,7 @@ async function gatherCodeMetaInfo(context, owner, repo) {
 
   // Get the languages used in the repo
   console.log(repoData.data);
-  
+
   const languagesUsed = await gatherLanguagesUsed(context, owner, repo);
   const authors = await gatherRepoAuthors(context, owner, repo, "codemeta");
   const codeRepository = repoData.data.html_url;
@@ -910,7 +914,7 @@ async function gatherCodeMetaInfo(context, owner, repo) {
   let metadata = {
     "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
     "@type": "SoftwareSourceCode",
-  }
+  };
 
   if (license != null || license != "") {
     metadata["license"] = `https://spdx.org/licenses/${license}`;
