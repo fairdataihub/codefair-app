@@ -1,61 +1,52 @@
 <template>
-  <div class="pb-10 sm:pb-8 lg:pb-12">
-    <div class="container mx-auto max-w-screen-xl px-4 md:px-8">
-      <section
-        class="flex flex-col justify-between gap-6 sm:gap-10 md:gap-16 lg:flex-row"
+  <section
+    class="container mx-auto flex max-w-screen-xl flex-col justify-between gap-6 px-4 sm:gap-10 md:gap-16 md:px-8 lg:flex-row"
+  >
+    <div
+      class="flex flex-col justify-center sm:text-center lg:py-12 lg:text-left xl:w-5/12 xl:py-24"
+    >
+      <h1
+        class="mb-4 text-4xl font-bold text-black sm:text-5xl md:mb-4 md:text-5xl"
       >
-        <!-- content - start -->
-        <div
-          class="flex flex-col justify-center sm:text-center lg:py-12 lg:text-left xl:w-5/12 xl:py-24"
+        Make your research software reusable without breaking a sweat!
+      </h1>
+
+      <div class="text-justify">
+        <p class="text-gray-500 lg:w-full xl:text-xl">
+          Let codefair handle the complexities of making your research software
+          FAIR, so you can focus on what matters most.
+        </p>
+      </div>
+
+      <div
+        class="mt-8 flex flex-col gap-2.5 sm:flex-row sm:justify-center md:mt-8 lg:justify-start"
+      >
+        <a
+          href="https://github.com/marketplace/codefair-app"
+          class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+          >Get codefair -></a
         >
-          <h1
-            class="font-inter mb-4 text-4xl font-bold text-black sm:text-5xl md:mb-4 md:text-5xl"
-          >
-            Make your research software reusable without breaking a sweat!
-          </h1>
-
-          <div class="font-inter text-justify">
-            <p class="leading-relaxed text-gray-500 lg:w-full xl:text-xl">
-              Let codefair handle the complexities of making your research
-              software FAIR, so you can focus on what matters most.
-            </p>
-          </div>
-
-          <div
-            class="mt-8 flex flex-col gap-2.5 sm:flex-row sm:justify-center md:mt-8 lg:justify-start"
-          >
-            <a
-              href="https://github.com/marketplace/codefair-app"
-              class="font-inter inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
-              >Get codefair -></a
-            >
-
-            <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
-          </div>
-        </div>
-        <!-- content - end -->
-
-        <!-- image - start -->
-        <div
-          class="animate-float-item relative hidden h-48 lg:flex lg:h-auto xl:w-5/12"
-        >
-          <img
-            src="/assets/images/second_layer_hero.png"
-            loading="lazy"
-            alt="Hero image"
-            class="animate-float-opposite absolute left-24 top-8 h-[25rem] w-[25rem] object-cover object-center"
-          />
-          <img
-            src="/assets/images/first_layer_hero.png"
-            loading="lazy"
-            alt="Hero image"
-            class="animate-float-item h[25rem]- absolute -left-[4rem] top-10 w-[25rem] object-cover object-center"
-          />
-        </div>
-        <!-- image - end -->
-      </section>
+      </div>
     </div>
-  </div>
+
+    <div
+      class="animate-float-item relative hidden h-48 lg:flex lg:h-auto xl:w-5/12"
+    >
+      <img
+        src="/assets/images/second_layer_hero.png"
+        loading="lazy"
+        alt="Hero image"
+        class="animate-float-opposite absolute left-24 top-8 h-[25rem] w-[25rem] object-cover object-center"
+      />
+      <img
+        src="/assets/images/first_layer_hero.png"
+        loading="lazy"
+        alt="Hero image"
+        class="animate-float-item h[25rem]- absolute -left-[4rem] top-10 w-[25rem] object-cover object-center"
+      />
+    </div>
+    <!-- image - end -->
+  </section>
 
   <section id="information-section">
     <div class="bg-[#e7ddfa4f] py-4 md:py-8">
@@ -73,7 +64,7 @@
         <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
           <div class="flex flex-col">
             <h2
-              class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
             >
               What is codefair?
             </h2>
@@ -93,11 +84,9 @@
           >
             <a
               href="https://github.com/fairdataihub/codefair-app"
-              class="font-inter inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+              class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
               >View the source code -></a
             >
-
-            <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
           </div>
         </div>
       </div>
@@ -109,7 +98,7 @@
         <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
           <div class="flex flex-col">
             <h2
-              class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
             >
               Why make research software reusable?
             </h2>
@@ -127,11 +116,9 @@
           >
             <a
               href="fairsoftware.html"
-              class="font-inter inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
               >Learn more about FAIR software -></a
             >
-
-            <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
           </div>
         </div>
         <div class="flex-2 self-center">
@@ -159,7 +146,7 @@
         <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
           <div class="flex flex-col">
             <h2
-              class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
             >
               Why should you use codefair?
             </h2>
@@ -179,11 +166,9 @@
           >
             <a
               href="codefair.html"
-              class="font-inter inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
               >Learn more about codefair -></a
             >
-
-            <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
           </div>
         </div>
       </div>
@@ -195,7 +180,7 @@
         <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
           <div>
             <h2
-              class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
             >
               Who are we?
             </h2>
@@ -216,11 +201,9 @@
           >
             <a
               href="https://fairdataihub.org/"
-              class="font-inter inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+              class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
               >Learn more about us -></a
             >
-
-            <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
           </div>
         </div>
         <div class="self-center">
@@ -248,7 +231,7 @@
         <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
           <div>
             <h2
-              class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
             >
               Need help? Have suggestions? Want to contribute?
             </h2>
@@ -262,11 +245,9 @@
           >
             <a
               href="https://github.com/fairdataihub/codefair-app/issues"
-              class="font-inter inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+              class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
               >Open a GitHub issue -></a
             >
-
-            <!-- <a href="#" class="inline-block rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base">Take tour</a> -->
           </div>
         </div>
       </div>

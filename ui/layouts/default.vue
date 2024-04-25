@@ -37,15 +37,43 @@ const links = [
     class="relative mx-auto flex h-screen w-full flex-col"
     :class="{ 'debug-screens': devMode }"
   >
-    <div class="pb-10 sm:pb-8 lg:pb-12">
-      <div class="container mx-auto max-w-screen-xl px-4 md:px-8">
+    <div class="relative pb-10 sm:pb-8 lg:pb-12">
+      <div
+        class="ransform-gpu absolute inset-x-0 -top-40 z-0 overflow-hidden blur-3xl sm:-top-80"
+        aria-hidden="true"
+      >
+        <div
+          class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+          style="
+            clip-path: polygon(
+              74.1% 44.1%,
+              100% 61.6%,
+              97.5% 26.9%,
+              85.5% 0.1%,
+              80.7% 2%,
+              72.5% 32.5%,
+              60.2% 62.4%,
+              52.4% 68.1%,
+              47.5% 58.3%,
+              45.2% 34.5%,
+              27.5% 76.7%,
+              0.1% 64.9%,
+              17.9% 100%,
+              27.6% 76.8%,
+              76.1% 97.7%,
+              74.1% 44.1%
+            );
+          "
+        ></div>
+      </div>
+
+      <div class="container relative z-10 mx-auto max-w-screen-xl px-4 md:px-8">
         <header
           class="mb-8 flex items-center justify-between py-4 md:mb-12 md:py-8 xl:mb-16"
         >
-          <!-- logo - start -->
           <a
             href="/"
-            class="font-inter inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
+            class="inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
             aria-label="logo"
           >
             <img
@@ -56,44 +84,29 @@ const links = [
 
             codefair
           </a>
-          <!-- logo - end -->
 
-          <!-- nav - start -->
           <nav class="hidden gap-12 lg:flex">
-            <!-- <a
-              href="#about"
-              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-              >About</a
-            > -->
             <a
               href="codefair"
-              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
               >About</a
             >
             <a
               href="fairsoftware"
-              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
               >FAIR Software</a
             >
             <a
               href="#contact"
-              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
               >Contact</a
             >
             <a
               href="https://github.com/fairdataihub/codefair-app"
-              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
               >GitHub</a
             >
           </nav>
-          <!-- nav - end -->
-
-          <!-- buttons - start -->
-          <!-- <a
-            href="#"
-            class="hidden rounded-lg bg-gray-200 px-8 py-3 text-center text-sm font-semibold text-gray-500 outline-none ring-indigo-300 transition duration-100 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base lg:inline-block"
-            >Log In</a
-          > -->
 
           <button
             id="mobile-menu-button"
@@ -117,16 +130,16 @@ const links = [
           </button>
           <div
             id="mobile-menu"
-            class="fixed inset-0 z-50 flex hidden flex-col items-center justify-center gap-6 bg-purple-50"
+            class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-purple-50 sm:hidden"
             style="height: fit-content; padding: 6rem"
           >
             <a
               href="/"
-              class="font-inter absolute left-4 top-4 inline-flex items-center gap-2.5 text-2xl font-bold text-black"
+              class="absolute left-4 top-4 inline-flex items-center gap-2.5 text-2xl font-bold text-black"
               aria-label="logo"
             >
               <img
-                src="./assets/images/codefair_logo.png"
+                src="/assets/images/codefair_logo.png"
                 alt="codefair"
                 class="h-10 w-10"
               />
@@ -156,29 +169,29 @@ const links = [
             <nav class="flex flex-col gap-6">
               <a
                 href="codefair.html"
-                class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+                class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
                 >About</a
               >
               <a
                 href="fairsoftware.html"
-                class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+                class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
                 >FAIR Software</a
               >
               <a
                 href="#contact"
-                class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+                class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
                 >Contact</a
               >
               <a
                 href="https://github.com/fairdataihub/codefair-app"
-                class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+                class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
                 >GitHub</a
               >
             </nav>
           </div>
-          <!-- buttons - end -->
         </header>
       </div>
+
       <slot />
 
       <footer id="contact">
@@ -188,11 +201,10 @@ const links = [
               class="my-4 grid grid-rows-1 items-center gap-12 md:my-20 md:grid-cols-3 md:grid-rows-1"
             >
               <div class="my-8 md:col-span-2 lg:my-0">
-                <!-- logo - start -->
                 <div class="mb-4 lg:-mt-2">
                   <a
                     href="/"
-                    class="font-inter inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
+                    class="inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
                     aria-label="logo"
                   >
                     <img
@@ -204,7 +216,6 @@ const links = [
                     codefair
                   </a>
                 </div>
-                <!-- logo - end -->
 
                 <p class="mb-6 text-gray-500 sm:pr-8">
                   With codefair by your side, you're not just managing
@@ -212,10 +223,9 @@ const links = [
                   FAIR software
                 </p>
 
-                <!-- social - start -->
                 <div class="flex gap-4">
                   <a
-                    href="#"
+                    href="https://twitter.com/fairdataihub"
                     target="_blank"
                     class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
                   >
@@ -234,7 +244,7 @@ const links = [
                   </a>
 
                   <a
-                    href="#"
+                    href="https://github.com/fairdataihub"
                     target="_blank"
                     class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
                   >
@@ -252,10 +262,7 @@ const links = [
                     </svg>
                   </a>
                 </div>
-                <!-- social - end -->
               </div>
-
-              <!-- nav - end -->
             </div>
 
             <div class="border-t py-8 text-center text-sm text-gray-400">

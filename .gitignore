@@ -8,3 +8,4 @@ lib
 bot/node_modules
 public/assets/css/styles.css
 .DS_Store
+nuxt-app/.nuxt/

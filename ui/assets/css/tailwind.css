@@ -8,8 +8,8 @@ body {
   height: 100vh;
   margin: 0px;
   padding: 0px;
-
-  overflow: auto @apply bg-slate-50;
+  overflow: auto;
+  @apply bg-slate-50;
   @apply text-slate-700;
 }
 
@@ -28,32 +28,32 @@ body {
 
   /* #region  /**=========== Typography =========== */
   .h0 {
-    @apply font-sans text-3xl font-bold md:text-5xl;
+    @apply font-inter text-3xl font-bold md:text-5xl;
   }
 
   h1,
   .h1 {
-    @apply font-sans text-2xl font-bold md:text-3xl;
+    @apply font-inter text-2xl font-bold md:text-3xl;
   }
 
   h2,
   .h2 {
-    @apply font-sans text-xl font-bold md:text-2xl;
+    @apply font-inter text-xl font-bold md:text-2xl;
   }
 
   h3,
   .h3 {
-    @apply font-sans text-lg font-bold md:text-xl;
+    @apply font-inter text-lg font-bold md:text-xl;
   }
 
   h4,
   .h4 {
-    @apply font-sans text-base font-bold md:text-lg;
+    @apply font-inter text-base font-bold md:text-lg;
   }
 
   body,
   p {
-    @apply font-sans text-sm md:text-base;
+    @apply font-inter text-base;
   }
 
   pre {
@@ -218,7 +218,7 @@ body {
   list-style-type: circle;
 }
 
-.list{
+.list {
   list-style-type: disc;
 }
 
@@ -231,32 +231,32 @@ body {
 /*}*/
 
 .content {
-    position: relative;
-    overflow: hidden;
-    z-index: 1;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
 }
 
 .content::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url("../../public/images/Meteor.svg");
-    background-size: cover;
-    background-position: center;
-    mask-image: linear-gradient(0deg, white 40%, transparent);
-    z-index: -1;
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("../../public/images/Meteor.svg");
+  background-size: cover;
+  background-position: center;
+  mask-image: linear-gradient(0deg, white 40%, transparent);
+  z-index: -1;
 }
 
-.router-link-active .menu-header,.menu-header:hover{
+.router-link-active .menu-header,
+.menu-header:hover {
   color: #0284c7;
 }
 
-.n-alert__icon .n-base-icon svg{
-    color: #0284c7
-;
+.n-alert__icon .n-base-icon svg {
+  color: #0284c7;
 }
 .n-alert .n-alert-body .n-alert-body__title {
   font-weight: bold;
@@ -265,6 +265,6 @@ body {
   margin-top: 4px;
 }
 
-.n-tree-node-content__text{
+.n-tree-node-content__text {
   min-width: 19rem;
 }
