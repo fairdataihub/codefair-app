@@ -1,35 +1,5 @@
 <script setup lang="ts">
 const devMode = process.env.NODE_ENV === "development";
-
-const navCollapsed = ref(false);
-
-const links = [
-  {
-    title: "Find Datasets",
-
-    href: "/",
-  },
-  {
-    title: "Share datasets",
-
-    href: "/submit",
-  },
-  {
-    title: "About",
-
-    href: "/about",
-  },
-  {
-    title: "Documentation",
-
-    href: "https://docs.fairhub.io",
-  },
-  {
-    title: "Contact",
-
-    href: "/contact",
-  },
-];
 </script>
 
 <template>
@@ -206,7 +176,7 @@ const links = [
         <slot />
       </div>
 
-      <footer id="contact">
+      <footer id="contact" class="hidden">
         <div>
           <div class="mx-auto max-w-screen-xl border-t px-4 md:px-8">
             <div

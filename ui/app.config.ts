@@ -23,31 +23,31 @@ export default defineAppConfig({
       padded: true,
       fluid: true,
     },
-    header: {
-      logo: true,
-      title: "codefair",
-      showLinkIcon: true,
-      exclude: [],
-      fluid: true,
-    },
-    footer: {
-      credits: {
-        icon: "IconDocus",
-        text: "Powered by Docus",
-        href: "https://docus.dev",
-      },
-      textLinks: [
-        {
-          text: "Made with ❤️ by fairdataihub",
-          href: "https://fairdataihub.org",
-        },
-      ],
-      iconLinks: [
-        {
-          href: "https://nuxt.com",
-          icon: "simple-icons:nuxtdotjs",
-        },
-      ],
-    },
+    // header: {
+    //   logo: true,
+    //   title: "codefair",
+    //   showLinkIcon: true,
+    //   exclude: [],
+    //   fluid: true,
+    // },
+    // footer: {
+    //   credits: {
+    //     icon: "IconDocus",
+    //     text: "Powered by Docus",
+    //     href: "https://docus.dev",
+    //   },
+    //   textLinks: [
+    //     {
+    //       text: "Made with ❤️ by fairdataihub",
+    //       href: "https://fairdataihub.org",
+    //     },
+    //   ],
+    //   iconLinks: [
+    //     {
+    //       href: "https://nuxt.com",
+    //       icon: "simple-icons:nuxtdotjs",
+    //     },
+    //   ],
+    // },
   },
 });

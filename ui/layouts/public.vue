@@ -106,7 +106,7 @@ const links = [
             </NuxtLink>
             <NuxtLink
               href="docs"
-              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              class="hidden text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               Documentation
             </NuxtLink>
