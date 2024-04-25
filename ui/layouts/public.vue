@@ -202,9 +202,7 @@ const links = [
         </header>
       </div>
 
-      <div class="container relative z-10 mx-auto max-w-screen-xl px-4 md:px-8">
-        <slot />
-      </div>
+      <slot />
 
       <footer id="contact">
         <div>

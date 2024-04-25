@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/fairdataihub/codefair-app/main/public/assets/images/codefair_logo.png" alt="logo" width="200" height="auto" />
+<img src="https://raw.githubusercontent.com/fairdataihub/codefair-app/main/ui/public/assets/images/codefair_logo.png" alt="logo" width="200" height="auto" />
 
 <br />
 
@@ -58,8 +58,10 @@ codefair is your personal assistant when it comes to making your research softwa
 3. Follow codefair-app's instructions when it opens an issue or submit a pull request
 
 ### Permissions Required
+
 codefair requires a few repository permissions to be able to listen to events happening on a repository and act accordingly to make software FAIR.
 The permissions required include:
+
 - Read access to:
   - Repository contents
   - Repository metadata
@@ -71,7 +73,9 @@ The permissions required include:
   - Repository contents
 
 ### Features
+
 List of features:
+
 - License checker (released): This feature checks for a LICENSE file in repositories that have at lease one commit and opens a GitHub issue if no LICENSE file is found. Users can find helpful ressources for selecting a license in the issue message. Users can also reply with the name of the desired license and the app automatically submits a pull request with a LICENSE file that contains license terms associated with the desired license.
 - CITATION.cff generator (released): This features checks for a CITATION.cff file in repositories that have a LICENSE file and opens a GitHub issue if no CITATION.cff file is found. Users can find helpful resources for preparing a CITATION.cff file. Users can also request the app to create one and submit a pull request while also being provided a link to edit within the GitHub UI if needed.
 - Zenodo archival (upcoming): This feature checks if a GitHub repository is already archived on Zenodo. If not, the app open a Github issue that guides users into linking their GitHub repository with their Zenodo account so every GitHub release of the software is automatically archived on Zenodo by the app with CITATION.cff file updated before the release.
@@ -81,6 +85,7 @@ More features are in the work!
 ## Testing
 
 You can follow these steps for testing the app:
+
 - Create a GitHub repository with e.g., a README file or some other code files included but no LICENSE specified
 - Install codefair on that repository from the GitHub markplace: https://github.com/marketplace/codefair-app
 - Check the GitHub issue opened by the app about missing license file.
@@ -90,7 +95,9 @@ You can follow these steps for testing the app:
 A demo video is available [here](https://youtu.be/_fjUz52mKwM).
 
 ## Run Locally
+
 ### Setup
+
 To run locally you will need to create a GitHub app from an account.
 
 ```sh
@@ -136,7 +143,6 @@ To report any issues with the software, suggest improvements, or request a new f
 
 This work is licensed under
 [MIT](https://opensource.org/licenses/mit). See [LICENSE](https://github.com/AI-READI/pyfairdatatools/blob/main/LICENSE) for more information.
-
 
 ## How to cite
 

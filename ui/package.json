@@ -17,6 +17,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@nuxt-themes/docus": "^1.15.0",
     "axios": "^1.6.8",
     "humanparser": "^2.7.0",
     "js-yaml": "^4.1.0",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@bg-dev/nuxt-naiveui": "^1.13.0",
+    "@nuxtjs/color-mode": "^3.4.0",
     "@nuxtjs/device": "^3.1.1",
     "@nuxtjs/eslint-config-typescript": "^12.1.0",
     "@nuxtjs/google-fonts": "^3.2.0",

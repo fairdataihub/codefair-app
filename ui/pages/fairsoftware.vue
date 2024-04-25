@@ -1,3 +1,9 @@
+<script setup lang="ts">
+definePageMeta({
+  layout: "public",
+});
+</script>
+
 <template>
   <section>
     <div class="bg-[#e7ddfa4f] py-8">

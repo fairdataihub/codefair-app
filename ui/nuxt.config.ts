@@ -12,7 +12,7 @@ export default defineNuxtConfig({
       script: [
         {
           async: true,
-          "data-website-id": '',
+          "data-website-id": "",
           src: "https://umami.fairdataihub.org/mushroom",
         },
       ],
@@ -21,15 +21,34 @@ export default defineNuxtConfig({
     pageTransition: { name: "page", mode: "out-in" },
   },
 
+  extends: "@nuxt-themes/docus",
 
-  modules: ["@nuxtjs/tailwindcss", "@bg-dev/nuxt-naiveui", "notivue/nuxt",  [
-    "@nuxtjs/google-fonts",
-    {
-      families: {
-        Inter: true,
+  modules: [
+    "@nuxtjs/tailwindcss",
+    "@bg-dev/nuxt-naiveui",
+    "notivue/nuxt",
+    "@nuxtjs/color-mode",
+    [
+      "@nuxtjs/google-fonts",
+      {
+        families: {
+          Inter: true,
+        },
       },
-    },
-  ], "nuxt-icon",],
+    ],
+    "nuxt-icon",
+  ],
+
+  colorMode: {
+    preference: "light", // default value of $colorMode.preference
+    fallback: "light", // fallback value if not system preference found
+    hid: "nuxt-color-mode-script",
+    globalName: "__NUXT_COLOR_MODE__",
+    componentName: "ColorScheme",
+    classPrefix: "",
+    classSuffix: "-mode",
+    storageKey: "nuxt-color-mode",
+  },
 
   css: [
     // "@/assets/css/tailwind.css",
