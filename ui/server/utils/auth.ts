@@ -118,10 +118,10 @@ if (!process.env.MONGODB_URI) {
     throw new Error("Please add your Mongo URI to .env.local");
 }
 
-import { webcrypto } from "crypto"; // polyfill for nodejs crypto | can be removed when on node v20
+// import { webcrypto } from "crypto"; // polyfill for nodejs crypto | can be removed when on node v20
 
 // @ts-expect-error
-globalThis.crypto = webcrypto;
+// globalThis.crypto = webcrypto;
 
 const client = new MongoClient(process.env.MONGODB_URI!);
 client.connect();

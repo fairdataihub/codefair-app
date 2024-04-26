@@ -116,6 +116,7 @@ const links = [
             >
               GitHub
             </NuxtLink>
+            <ProfileStatus />
           </nav>
 
           <button
@@ -177,25 +178,30 @@ const links = [
             </button>
 
             <nav class="flex flex-col gap-6">
-              <a
+              <NuxtLink
                 href="codefair.html"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-                >About</a
+                >About</NuxtLink
               >
-              <a
+              <NuxtLink
                 href="fairsoftware.html"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-                >FAIR Software</a
+                >FAIR Software</NuxtLink
               >
-              <a
+              <NuxtLink
                 href="#contact"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-                >Contact</a
+                >Contact</NuxtLink
               >
-              <a
+              <NuxtLink
                 href="https://github.com/fairdataihub/codefair-app"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-                >GitHub</a
+                >GitHub</NuxtLink
+              >
+              <NuxtLink
+                href="Sign In"
+                class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+                >Sign In</NuxtLink
               >
             </nav>
           </div>

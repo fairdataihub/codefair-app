@@ -1,7 +1,18 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "public",
+  // middleware: ['protected', 'auth'],
 });
+const user = useUser();
+
+async function logout() {
+  await $fetch("/api/logout", {
+    method: "POST",
+  });
+  await navigateTo("/");
+}
+console.log(user);
+console.log("+++++++++++++++++++++++++++++++++")
 </script>
 
 <template>
