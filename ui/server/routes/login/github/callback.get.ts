@@ -1,6 +1,7 @@
 import { OAuth2RequestError } from "arctic";
 import { generateIdFromEntropySize } from "lucia";
 import clientPromise from "~/server/utils/mongodb";
+import { github } from "~/server/utils/auth";
 
 export default defineEventHandler(async (event) => {
     const client = await clientPromise;
@@ -25,6 +26,7 @@ export default defineEventHandler(async (event) => {
 			}
 		});
 		const githubUser: GitHubUser = await githubUserResponse.json();
+        console.log(githubUser);
 
 		// Replace this with your own DB client.
         const existingUser = await db.collection("user").findOne({ github_id: githubUser.id });
@@ -65,3 +67,4 @@ interface GitHubUser {
 	id: string;
 	login: string;
 }
+

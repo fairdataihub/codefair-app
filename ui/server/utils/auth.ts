@@ -112,10 +112,16 @@
 import { Lucia } from "lucia";
 import { MongodbAdapter } from "@lucia-auth/adapter-mongodb";
 import { Collection, MongoClient } from "mongodb";
+import { GitHub } from "arctic";
 
 if (!process.env.MONGODB_URI) {
     throw new Error("Please add your Mongo URI to .env.local");
 }
+
+import { webcrypto } from "crypto"; // polyfill for nodejs crypto | can be removed when on node v20
+
+// @ts-expect-error
+globalThis.crypto = webcrypto;
 
 const client = new MongoClient(process.env.MONGODB_URI!);
 client.connect();
@@ -164,3 +170,5 @@ interface SessionDoc {
 	expires_at: Date;
 	user_id: string;
 }
+
+export const github = new GitHub(process.env.GITHUB_CLIENT_ID!, process.env.GITHUB_CLIENT_SECRET!);
