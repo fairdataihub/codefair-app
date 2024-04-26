@@ -2,11 +2,37 @@ const axios = require("axios");
 const human = require("humanparser");
 const licensesAvail = require("./public/assets/data/licenses.json");
 const yaml = require("js-yaml");
+const { MongoClient } = require("mongodb");
+
+if (!process.env.MONGODB_URI) {
+  console.error("Please set the MONGODB_URI environment variable");
+}
+
+if (!process.env.MONGODB_DB_NAME) {
+  console.error("Please set the MONGODB_DB_NAME environment variable");
+}
+
+const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_DB = process.env.MONGODB_DB;
+
+const client = new MongoClient(MONGODB_URI, {});
+
 /**
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
-module.exports = (app) => {
+module.exports = async (app) => {
+  // Connect to the MongoDB database
+  await client.connect();
+
+  const db = client.db(MONGODB_DB);
+  const collection = db.collection("test");
+
+  await collection.insertOne({
+    content: "Hello, MongoDB!",
+    timestamp: new Date(),
+  });
+
   // Opens a PR every time someone installs your app for the first time
   // On adding the app to a repo
   app.on("installation.created", async (context) => {
@@ -431,7 +457,7 @@ async function gatherRepoAuthors(context, owner, repo, fileType) {
       return await context.octokit.users.getByUsername({
         username: contributor.login,
       });
-    })
+    }),
   );
 
   let parsedAuthors = [];
@@ -524,7 +550,7 @@ async function createLicense(context, owner, repo, license) {
   // Create a new file with the license parameter (use axios to get the license from the licenses.json file)
   // Create a new branch with the license file and open a PR
   const licenseRequest = licensesAvail.find(
-    (item) => item.licenseId === license
+    (item) => item.licenseId === license,
   );
   if (licenseRequest) {
     try {
@@ -694,7 +720,7 @@ async function createCodeMetaFile(context, owner, repo, codeMetaText) {
     path: "codemeta.json",
     message: `feat: ✨ add codemeta.json file`,
     content: Buffer.from(JSON.stringify(codeMetaText, null, 2)).toString(
-      "base64"
+      "base64",
     ),
     branch,
   });
@@ -742,7 +768,7 @@ async function getDOI(context, owner, repoName) {
     });
 
     const readmeContent = Buffer.from(readme.data.content, "base64").toString(
-      "utf-8"
+      "utf-8",
     );
     const doiRegex = /10.\d{4,9}\/[-._;()/:A-Z0-9]+/i;
     const doi = doiRegex.exec(readmeContent);
