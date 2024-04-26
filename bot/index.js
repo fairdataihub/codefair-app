@@ -4,14 +4,16 @@ const licensesAvail = require("./public/assets/data/licenses.json");
 const yaml = require("js-yaml");
 const { MongoClient } = require("mongodb");
 
-if (!process.env.MONGODB_URI) {
-  console.error("Please set the MONGODB_URI environment variable");
+function checkEnvVariable(varName) {
+  if (!process.env[varName]) {
+    console.error(`Please set the ${varName} environment variable`);
+    process.exit(1);
+  }
 }
+checkEnvVariable("MONGODB_URI");
+checkEnvVariable("MONGODB_DB_NAME");
 
-if (!process.env.MONGODB_DB_NAME) {
-  console.error("Please set the MONGODB_DB_NAME environment variable");
-}
-
+// sourcery skip: use-object-destructuring
 const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB = process.env.MONGODB_DB;
 
