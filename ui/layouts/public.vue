@@ -1,5 +1,35 @@
 <script setup lang="ts">
 const devMode = process.env.NODE_ENV === "development";
+
+const navCollapsed = ref(false);
+
+const links = [
+  {
+    title: "Find Datasets",
+
+    href: "/",
+  },
+  {
+    title: "Share datasets",
+
+    href: "/submit",
+  },
+  {
+    title: "About",
+
+    href: "/about",
+  },
+  {
+    title: "Documentation",
+
+    href: "https://docs.fairhub.io",
+  },
+  {
+    title: "Contact",
+
+    href: "/contact",
+  },
+];
 </script>
 
 <template>
@@ -76,7 +106,7 @@ const devMode = process.env.NODE_ENV === "development";
             </NuxtLink>
             <NuxtLink
               href="docs"
-              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              class="hidden text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               Documentation
             </NuxtLink>
@@ -172,11 +202,9 @@ const devMode = process.env.NODE_ENV === "development";
         </header>
       </div>
 
-      <div class="container relative z-10 mx-auto max-w-screen-xl px-4 md:px-8">
-        <slot />
-      </div>
+      <slot />
 
-      <footer id="contact" class="hidden">
+      <footer id="contact">
         <div>
           <div class="mx-auto max-w-screen-xl border-t px-4 md:px-8">
             <div
