@@ -3,6 +3,7 @@ const human = require("humanparser");
 const licensesAvail = require("./public/assets/data/licenses.json");
 const yaml = require("js-yaml");
 const { MongoClient } = require("mongodb");
+import { nanoid } from "nanoid";
 
 function checkEnvVariable(varName) {
   if (!process.env[varName]) {
@@ -28,9 +29,9 @@ module.exports = async (app) => {
   await client.connect();
 
   const db = client.db(MONGODB_DB);
-  const collection = db.collection("test");
+  const testCollection = db.collection("test");
 
-  await collection.insertOne({
+  await testCollection.insertOne({
     content: "Hello, MongoDB!",
     timestamp: new Date(),
   });
@@ -49,9 +50,26 @@ module.exports = async (app) => {
 
       if (!license) {
         console.log("No license file found [codefair-app]");
+
+        // Generate a url in the database to store the add a license interface
+        const identifier = nanoid();
+
+        // Store the identifier in the database
+        const url = `https://codefair.io/add/license/${identifier}`;
+
+        // Store the identifier in the database with the repo information
+        const licenseCollection = db.collection("licenseRequests");
+        await licenseCollection.insertOne({
+          identifier,
+          owner,
+          repo,
+          timestamp: new Date(),
+        });
+
         // If issue has been created, create one
         const title = "No license file found [codefair-app]";
-        const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@codefair-app MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com.`;
+        const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@codefair-app license MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch.\n\n If you would like a visual interface to add and or edit a custom license, please click go to this URL: [${url}](${url})`;
+
         const verify = await verifyFirstIssue(context, owner, repo, title);
         if (!verify) {
           await createIssue(context, owner, repo, title, body);

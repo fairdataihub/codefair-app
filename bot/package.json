@@ -23,6 +23,7 @@
     "humanparser": "^2.7.0",
     "js-yaml": "^4.1.0",
     "mongodb": "^6.5.0",
+    "nanoid": "^5.0.7",
     "probot": "^12.2.4"
   },
   "devDependencies": {
