@@ -1,8 +1,8 @@
-const axios = require("axios");
-const human = require("humanparser");
-const licensesAvail = require("./public/assets/data/licenses.json");
-const yaml = require("js-yaml");
-const { MongoClient } = require("mongodb");
+import axios from "axios";
+import human from "humanparser";
+import licensesAvail from "./public/assets/data/licenses.json" assert { type: "json" };
+import yaml from "js-yaml";
+import { MongoClient } from "mongodb";
 import { nanoid } from "nanoid";
 
 function checkEnvVariable(varName) {
@@ -16,7 +16,7 @@ checkEnvVariable("MONGODB_DB_NAME");
 
 // sourcery skip: use-object-destructuring
 const MONGODB_URI = process.env.MONGODB_URI;
-const MONGODB_DB = process.env.MONGODB_DB;
+const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
 
 const client = new MongoClient(MONGODB_URI, {});
 
@@ -24,11 +24,11 @@ const client = new MongoClient(MONGODB_URI, {});
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
-module.exports = async (app) => {
+export default async (app) => {
   // Connect to the MongoDB database
   await client.connect();
 
-  const db = client.db(MONGODB_DB);
+  const db = client.db(MONGODB_DB_NAME);
   const testCollection = db.collection("test");
 
   await testCollection.insertOne({
@@ -63,6 +63,7 @@ module.exports = async (app) => {
           identifier,
           owner,
           repo,
+          open: true,
           timestamp: new Date(),
         });
 
