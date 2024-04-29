@@ -1,8 +1,8 @@
-const axios = require("axios");
-const human = require("humanparser");
-const licensesAvail = require("./public/assets/data/licenses.json");
-const yaml = require("js-yaml");
-const { MongoClient } = require("mongodb");
+import axios from "axios";
+import human from "humanparser";
+import licensesAvail from "./public/assets/data/licenses.json" assert { type: "json" };
+import yaml from "js-yaml";
+import { MongoClient } from "mongodb";
 import { nanoid } from "nanoid";
 
 function checkEnvVariable(varName) {
@@ -24,7 +24,7 @@ const client = new MongoClient(MONGODB_URI, {});
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
-module.exports = async (app) => {
+export default async (app) => {
   // Connect to the MongoDB database
   await client.connect();
 
