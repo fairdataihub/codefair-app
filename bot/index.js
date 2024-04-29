@@ -16,7 +16,7 @@ checkEnvVariable("MONGODB_DB_NAME");
 
 // sourcery skip: use-object-destructuring
 const MONGODB_URI = process.env.MONGODB_URI;
-const MONGODB_DB = process.env.MONGODB_DB;
+const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
 
 const client = new MongoClient(MONGODB_URI, {});
 
@@ -28,7 +28,7 @@ module.exports = async (app) => {
   // Connect to the MongoDB database
   await client.connect();
 
-  const db = client.db(MONGODB_DB);
+  const db = client.db(MONGODB_DB_NAME);
   const testCollection = db.collection("test");
 
   await testCollection.insertOne({
