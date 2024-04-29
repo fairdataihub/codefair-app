@@ -2,13 +2,11 @@ import type { User } from "lucia";
 
 export const useUser = () => {
 	const user = useState<User | null>("user", () => null);
-	console.log("useUser() called");
 	return user;
 };
 
 export const useAuthenticatedUser = () => {
 	const user = useUser();
-	console.log(user);
 	return computed(() => {
 		const userValue = unref(user);
 		if (!userValue) {

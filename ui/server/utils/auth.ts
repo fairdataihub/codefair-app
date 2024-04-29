@@ -114,6 +114,7 @@ import { MongodbAdapter } from "@lucia-auth/adapter-mongodb";
 import { Collection, MongoClient } from "mongodb";
 import { GitHub } from "arctic";
 
+
 if (!process.env.MONGODB_URI) {
     throw new Error("Please add your Mongo URI to .env.local");
 }
