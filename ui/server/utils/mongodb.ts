@@ -1,7 +1,6 @@
 import { MongoClient } from "mongodb";
 
 const uri: any = process.env.MONGODB_URI;
-console.log(typeof uri, "URL Type");
 const options = {};
 
 let client: any;
@@ -9,6 +8,10 @@ let clientPromise: any;
 
 if (!process.env.MONGODB_URI) {
   throw new Error("Please add your Mongo URI to .env");
+}
+
+if (!process.env.MONGODB_DB_NAME) {
+  throw new Error("Please add your Mongo DB Name to .env");
 }
 
 if (process.env.NODE_ENV === "development") {
@@ -26,10 +29,8 @@ if (process.env.NODE_ENV === "development") {
 } else {
   // In production mode, it's best to not use a global variable.
   client = new MongoClient(uri, options);
-  console.log(typeof client, "client type");
 
   clientPromise = client.connect();
-  console.log(typeof clientPromise, "Client Promise type");
 }
 
 // Export a module-scoped MongoClient promise. By doing this in a

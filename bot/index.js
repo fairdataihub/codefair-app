@@ -63,6 +63,7 @@ export default async (app) => {
           identifier,
           owner,
           repo,
+          open: true,
           timestamp: new Date(),
         });
 

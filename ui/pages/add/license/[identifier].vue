@@ -1,9 +1,13 @@
 <script setup lang="ts">
-definePageMeta({
-  // middleware: ["protected"],
-});
+// definePageMeta({
+// middleware: ["protected"],
+// });
 
-const { data, error } = await useFetch("/api/workspaces", {
+const route = useRoute();
+
+const { identifier } = route.params as { identifier: string };
+
+const { data, error } = await useFetch(`/api/license/${identifier}`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
@@ -20,5 +24,7 @@ if (error.value) {
 </script>
 
 <template>
-  <main class="">hello</main>
+  <main class="">
+    {{ data }}
+  </main>
 </template>
