@@ -29,6 +29,15 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const response: LicenseRequestGetResponse = {
+    licenseId: licenseRequest.licenseId,
+    licenseContent: licenseRequest.licenseContent,
+    identifier: licenseRequest.identifier,
+    owner: licenseRequest.owner,
+    repo: licenseRequest.repo,
+    timestamp: licenseRequest.timestamp,
+  };
+
   // return the valid license request
-  return licenseRequest;
+  return response;
 });

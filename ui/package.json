@@ -32,7 +32,8 @@
     "probot": "^13.2.0",
     "sanitize-html": "^2.13.0",
     "vue": "^3.4.21",
-    "vue-router": "^4.3.0"
+    "vue-router": "^4.3.0",
+    "zod": "^3.23.5"
   },
   "devDependencies": {
     "@bg-dev/nuxt-naiveui": "^1.13.0",
