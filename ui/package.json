@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "@lucia-auth/adapter-mongodb": "^1.0.3",
-    "@nuxt-themes/docus": "^1.15.0",
     "arctic": "^1.6.2",
     "axios": "^1.6.8",
     "humanparser": "^2.7.0",
@@ -27,7 +26,7 @@
     "md-editor-v3": "^4.13.5",
     "mongodb": "^6.5.0",
     "notivue": "^2.4.4",
-    "nuxt": "^3.11.2",
+    "nuxt": "3.11.1",
     "oslo": "^1.2.0",
     "probot": "^13.2.0",
     "sanitize-html": "^2.13.0",

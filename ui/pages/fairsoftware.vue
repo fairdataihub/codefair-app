@@ -1,8 +1,4 @@
-<script setup lang="ts">
-definePageMeta({
-  layout: "public",
-});
-</script>
+<script setup lang="ts"></script>
 
 <template>
   <section>
@@ -14,6 +10,7 @@ definePageMeta({
           >
             FAIR Software
           </h1>
+          <ProfileStatus />
         </div>
       </div>
     </div>

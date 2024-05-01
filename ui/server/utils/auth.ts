@@ -71,7 +71,6 @@
 // 	user_id: string;
 // }
 
-
 // // import { webcrypto } from "crypto";
 // // globalThis.crypto = webcrypto as Crypto;
 
@@ -114,12 +113,11 @@ import { MongodbAdapter } from "@lucia-auth/adapter-mongodb";
 import { Collection, MongoClient } from "mongodb";
 import { GitHub } from "arctic";
 
-
 if (!process.env.MONGODB_URI) {
-    throw new Error("Please add your Mongo URI to .env.local");
+  throw new Error("Please add your Mongo URI to .env.local");
 }
 
-// import { webcrypto } from "crypto"; // polyfill for nodejs crypto | can be removed when on node v20
+import { webcrypto } from "crypto"; // polyfill for nodejs crypto | can be removed when on node v20
 
 // @ts-expect-error
 // globalThis.crypto = webcrypto;
@@ -134,42 +132,49 @@ const Session = db.collection("sessions") as Collection<SessionDoc>;
 const adapter = new MongodbAdapter(Session, User);
 
 export const lucia = new Lucia(adapter, {
-	sessionCookie: {
-		attributes: {
-			secure: !import.meta.dev
-		}
-	},
-	getUserAttributes: (attributes) => {
-		return {
-			username: attributes.username,
-			githubId: attributes.github_id
-		};
-	}
+  sessionCookie: {
+    attributes: {
+      secure: !import.meta.dev,
+    },
+  },
+  getUserAttributes: (attributes) => {
+    return {
+      username: attributes.username,
+      githubId: attributes.github_id,
+    };
+  },
 });
 
 declare module "lucia" {
-	interface Register {
-		Lucia: typeof lucia;
-		DatabaseUserAttributes: Omit<DatabaseUser, "id">;
-	}
+  interface Register {
+    Lucia: typeof lucia;
+    DatabaseUserAttributes: Omit<DatabaseUser, "id">;
+  }
 }
-
 
 interface DatabaseUser {
-	id: string;
-	username: string;
-	github_id: number;
+  id: string;
+  username: string;
+  github_id: number;
 }
 
-
 interface UserDoc {
-	_id: string;
+  _id: {
+    type: String;
+    requred: true;
+  };
 }
 
 interface SessionDoc {
-	_id: string;
-	expires_at: Date;
-	user_id: string;
+  _id: {
+    type: String;
+    requred: true;
+  };
+  expires_at: Date;
+  user_id: string;
 }
 
-export const github = new GitHub(process.env.GITHUB_CLIENT_ID!, process.env.GITHUB_CLIENT_SECRET!);
+export const github = new GitHub(
+  process.env.GITHUB_CLIENT_ID!,
+  process.env.GITHUB_CLIENT_SECRET!,
+);

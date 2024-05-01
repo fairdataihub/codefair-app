@@ -1,4 +1,9 @@
 export default defineEventHandler((event) => {
-	console.log("USER CONETNT: ", event.context)
+	console.log("GET USER ENDPOINT: ", event.context.user);
+    if (!event.context.user) {
+		throw createError({
+			statusCode: 401
+		});
+	}
 	return event.context.user;
 });

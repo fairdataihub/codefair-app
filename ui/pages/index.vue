@@ -1,9 +1,11 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: "public",
-  middleware: ['protected'],
+  // middleware: ['protected'],
 });
-// const user = useAuthenticatedUser();
+const user = useUser();
+console.log("USER VALUE BELOW");
+console.log(user.value);
+console.log("USER VALUE ABOVE");
 
 // async function logout() {
 //   await $fetch("/api/logout", {
@@ -28,6 +30,7 @@ definePageMeta({
       >
         Make your research software reusable without breaking a sweat!
       </h1>
+      <pre>{{ user }}</pre>
 
       <div class="text-justify">
         <p class="text-gray-500 lg:w-full xl:text-xl">
@@ -39,11 +42,13 @@ definePageMeta({
       <div
         class="mt-8 flex flex-col gap-2.5 sm:flex-row sm:justify-center md:mt-8 lg:justify-start"
       >
-        <a
-          href="https://github.com/marketplace/codefair-app"
+        <NuxtLink
+          to="https://github.com/marketplace/codefair-app"
+          target="_blank"
           class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
-          >Get codefair -></a
         >
+          Get codefair ->
+        </NuxtLink>
       </div>
     </div>
 
@@ -63,7 +68,6 @@ definePageMeta({
         class="animate-float-item h[25rem]- absolute -left-[4rem] top-10 w-[25rem] object-cover object-center"
       />
     </div>
-    <!-- image - end -->
   </section>
 
   <section id="information-section">
@@ -103,8 +107,9 @@ definePageMeta({
             <a
               href="https://github.com/fairdataihub/codefair-app"
               class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
-              >View the source code -></a
             >
+              View the source code ->
+            </a>
           </div>
         </div>
       </div>
@@ -132,11 +137,12 @@ definePageMeta({
           <div
             class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start lg:py-0"
           >
-            <a
-              href="fairsoftware.html"
+            <NuxtLink
+              to="/fairsoftware"
               class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
-              >Learn more about FAIR software -></a
             >
+              Learn more about FAIR software ->
+            </NuxtLink>
           </div>
         </div>
         <div class="flex-2 self-center">
@@ -182,11 +188,12 @@ definePageMeta({
           <div
             class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center md:py-0 lg:justify-start"
           >
-            <a
-              href="codefair.html"
+            <NuxtLink
+              to="/codefair"
               class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
-              >Learn more about codefair -></a
             >
+              Learn more about codefair ->
+            </NuxtLink>
           </div>
         </div>
       </div>
@@ -220,8 +227,9 @@ definePageMeta({
             <a
               href="https://fairdataihub.org/"
               class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
-              >Learn more about us -></a
             >
+              Learn more about us ->
+            </a>
           </div>
         </div>
         <div class="self-center">
@@ -264,8 +272,9 @@ definePageMeta({
             <a
               href="https://github.com/fairdataihub/codefair-app/issues"
               class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
-              >Open a GitHub issue -></a
             >
+              Open a GitHub issue ->
+            </a>
           </div>
         </div>
       </div>

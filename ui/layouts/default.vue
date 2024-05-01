@@ -148,12 +148,12 @@ const devMode = process.env.NODE_ENV === "development";
 
             <nav class="flex flex-col gap-6">
               <a
-                href="codefair.html"
+                href="/codefair"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
                 >About</a
               >
               <a
-                href="fairsoftware.html"
+                href="/fairsoftware"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
                 >FAIR Software</a
               >
