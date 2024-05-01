@@ -121,7 +121,7 @@ definePageMeta({
             class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start lg:py-0"
           >
             <a
-              href="fairsoftware.html"
+              href="fairsoftware"
               class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
               >Learn more about FAIR software -></a
             >
@@ -171,7 +171,7 @@ definePageMeta({
             class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center md:py-0 lg:justify-start"
           >
             <a
-              href="codefair.html"
+              href="codefair"
               class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
               >Learn more about codefair -></a
             >
