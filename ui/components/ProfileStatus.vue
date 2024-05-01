@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const user = useUser();
+const user = useAuthenticatedUser();
 console.log(user);
 
 async function logout() {
@@ -12,19 +12,19 @@ async function logout() {
 
 <template>
   <pre>{{ user }}</pre>
-  <NuxtLink
+  <button
     v-if="user"
     @click="logout"
     class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
   >
     Logout
-  </NuxtLink>
-  <NuxtLink
+</button>
+  <button
     v-else
     href="/login"
     class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
   >
     Sign In
-  </NuxtLink>
+  </button>
 
 </template>

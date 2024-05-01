@@ -2,20 +2,6 @@
 definePageMeta({
   // middleware: ['protected'],
 });
-const user = useUser();
-console.log("USER VALUE BELOW");
-console.log(user.value);
-console.log("USER VALUE ABOVE");
-
-// async function logout() {
-//   await $fetch("/api/logout", {
-//     method: "POST",
-//   });
-//   await navigateTo("/");
-// }
-// console.log("+++++++++++++++++++++++++++++++++")
-// console.log(user);
-// console.log("+++++++++++++++++++++++++++++++++")
 </script>
 
 <template>
@@ -30,7 +16,6 @@ console.log("USER VALUE ABOVE");
       >
         Make your research software reusable without breaking a sweat!
       </h1>
-      <pre>{{ user }}</pre>
 
       <div class="text-justify">
         <p class="text-gray-500 lg:w-full xl:text-xl">

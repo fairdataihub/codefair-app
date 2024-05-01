@@ -29,12 +29,19 @@ export default defineEventHandler(async (event) => {
 		const githubUser: GitHubUser = await githubUserResponse.json();
 
 		// Replace this with your own DB client.
-        const existingUser = await db.collection("user").findOne({ github_id: githubUser.id }) as | DatabaseUser | undefined;
+        const existingUser = await db.collection("user").findOne({ github_id: githubUser.id });
 
+		// console.log("EXISTING USER: " + JSON.stringify(existingUser))
+		// const { _id } = existingUser; 
+		// console.log("EXISTING USER ID: " + _id)
 		if (existingUser) {
-			const session = await lucia.createSession(existingUser.id, {});
+			const session = await lucia.createSession(existingUser._id, {});
+			// Update the session in the DB
+			// Replace this with your own DB client.
+			// await db.collection("session").updateOne({ _id: session.id }, { $set: { _id: _id } });
+			// console.log("SESSION: " + JSON.stringify(session));
 			appendHeader(event, "Set-Cookie", lucia.createSessionCookie(session.id).serialize());
-			return sendRedirect(event, "/");
+			return sendRedirect(event, "/profile");
 		}
 
 		const userId = generateIdFromEntropySize(10); // 16 characters long
@@ -48,7 +55,7 @@ export default defineEventHandler(async (event) => {
 
 		const session = await lucia.createSession(userId, {});
 		appendHeader(event, "Set-Cookie", lucia.createSessionCookie(session.id).serialize());
-		return sendRedirect(event, "/");
+		return sendRedirect(event, "/profile");
 	} catch (e) {
 		// the specific error message depends on the provider
 		if (e instanceof OAuth2RequestError) {
@@ -58,7 +65,7 @@ export default defineEventHandler(async (event) => {
 			});
 		}
 		throw createError({
-			status: 500
+			status: 500,
 		});
 	}
 });

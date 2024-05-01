@@ -1,10 +1,11 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: "public",
+  layout: "default",
   middleware: ['protected'],
 });
 
 const user = useAuthenticatedUser();
+console.log(user);
 </script>
 
 <template>
