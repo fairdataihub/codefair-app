@@ -17,7 +17,6 @@ export default defineEventHandler(async (event) => {
 		event.context.user = null;
 		return;
 	}
-	console.log("SESSION ID: ", sessionId);
 
 	const { session, user } = await lucia.validateSession(sessionId);
 	if (session && session.fresh) {
@@ -26,10 +25,6 @@ export default defineEventHandler(async (event) => {
 	if (!session) {
 		appendHeader(event, "Set-Cookie", lucia.createBlankSessionCookie().serialize());
 	}
-	console.log("CONTENT FROM server/middleware/auth.ts: ", event.context);
-	console.log(JSON.stringify(event.context));
-	console.log("SESSION: ", session);
-	console.log("USER: ", user);
 	event.context.session = session;
 	event.context.user = user;
 });

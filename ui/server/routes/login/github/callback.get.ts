@@ -1,5 +1,5 @@
 import { OAuth2RequestError } from "arctic";
-import { generateIdFromEntropySize } from "lucia";
+import { DatabaseUser, generateIdFromEntropySize } from "lucia";
 import clientPromise from "~/server/utils/mongodb";
 import { github } from "~/server/utils/auth";
 
@@ -20,17 +20,16 @@ export default defineEventHandler(async (event) => {
 
 	try {
 		const tokens = await github.validateAuthorizationCode(code);
-        console.log(tokens);
+
 		const githubUserResponse = await fetch("https://api.github.com/user", {
 			headers: {
 				Authorization: `Bearer ${tokens.accessToken}`
 			}
 		});
 		const githubUser: GitHubUser = await githubUserResponse.json();
-        console.log(githubUser);
 
 		// Replace this with your own DB client.
-        const existingUser = await db.collection("user").findOne({ github_id: githubUser.id });
+        const existingUser = await db.collection("user").findOne({ github_id: githubUser.id }) as | DatabaseUser | undefined;
 
 		if (existingUser) {
 			const session = await lucia.createSession(existingUser.id, {});
@@ -42,7 +41,7 @@ export default defineEventHandler(async (event) => {
 
 		// Replace this with your own DB client.
         await db.collection("user").insertOne({
-            id: userId,
+            _id: userId,
             github_id: githubUser.id,
             username: githubUser.login
         });

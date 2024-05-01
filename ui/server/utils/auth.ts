@@ -112,22 +112,27 @@ import { Lucia } from "lucia";
 import { MongodbAdapter } from "@lucia-auth/adapter-mongodb";
 import { Collection, MongoClient } from "mongodb";
 import { GitHub } from "arctic";
+import type { DatabaseUser } from "./mongodb";
+// import type { UserDoc, SessionDoc } from "@lucia-auth/adapter-mongodb";
+
+// import type { UserDoc } from "mongodb";
 
 if (!process.env.MONGODB_URI) {
   throw new Error("Please add your Mongo URI to .env.local");
 }
 
-import { webcrypto } from "crypto"; // polyfill for nodejs crypto | can be removed when on node v20
+// import { webcrypto } from "crypto"; // polyfill for nodejs crypto | can be removed when on node v20
 
-// @ts-expect-error
-globalThis.crypto = webcrypto;
+// globalThis.crypto = webcrypto;
 
 const client = new MongoClient(process.env.MONGODB_URI!);
 client.connect();
 
 const db = client.db();
-const User = db.collection("users") as Collection<UserDoc>;
-const Session = db.collection("sessions") as Collection<SessionDoc>;
+const User = db.collection("user") as Collection<UserDoc>;
+const Session = db.collection("session") as Collection<SessionDoc>;
+// const User = db.collection("users");
+// const Session = db.collection("sessions");
 
 const adapter = new MongodbAdapter(Session, User);
 
@@ -151,27 +156,14 @@ declare module "lucia" {
     DatabaseUserAttributes: Omit<DatabaseUser, "id">;
   }
 }
-
-interface DatabaseUser {
-  id: string;
-  username: string;
-  github_id: number;
-}
-
 interface UserDoc {
-  _id: {
-    type: String;
-    requred: true;
-  };
+  _id: String;
 }
 
 interface SessionDoc {
-  _id: {
-    type: String;
-    requred: true;
-  };
+  _id: String;
   expires_at: Date;
-  user_id: string;
+  user_id: String;
 }
 
 export const github = new GitHub(

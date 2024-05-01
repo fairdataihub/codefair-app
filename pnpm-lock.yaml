@@ -57,9 +57,6 @@ importers:
       '@lucia-auth/adapter-mongodb':
         specifier: ^1.0.3
         version: 1.0.3(lucia@3.2.0)(mongodb@6.5.0(socks@2.8.3))
-      '@lucia-auth/adapter-postgresql':
-        specifier: ^3.1.2
-        version: 3.1.2(lucia@3.2.0)(pg@8.11.5)
       '@nuxt-themes/docus':
         specifier: ^1.15.0
         version: 1.15.0(async-validator@4.2.5)(axios@1.6.8)(change-case@4.1.2)(ioredis@5.4.1)(nuxt@3.11.2(@parcel/watcher@2.4.1)(@types/node@20.12.7)(@unocss/reset@0.59.4)(async-validator@4.2.5)(axios@1.6.8)(change-case@4.1.2)(encoding@0.1.13)(eslint@9.1.1)(floating-vue@5.2.2(@nuxt/kit@3.11.2(rollup@4.16.4))(vue@3.4.25(typescript@5.4.5)))(fuse.js@6.6.2)(ioredis@5.4.1)(optionator@0.9.3)(rollup@4.16.4)(terser@5.30.4)(typescript@5.4.5)(unocss@0.59.4(postcss@8.4.38)(rollup@4.16.4)(vite@5.2.10(@types/node@20.12.7)(terser@5.30.4)))(vite@5.2.10(@types/node@20.12.7)(terser@5.30.4)))(postcss@8.4.38)(rollup@4.16.4)(vue@3.4.25(typescript@5.4.5))
@@ -90,9 +87,6 @@ importers:
       oslo:
         specifier: ^1.2.0
         version: 1.2.0
-      pg:
-        specifier: ^8.11.5
-        version: 8.11.5
       probot:
         specifier: ^13.2.0
         version: 13.2.0
@@ -124,9 +118,6 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.12
         version: 0.5.12(tailwindcss@3.4.3)
-      '@types/pg':
-        specifier: ^8.11.5
-        version: 8.11.5
       autoprefixer:
         specifier: ^10.4.19
         version: 10.4.19(postcss@8.4.38)
@@ -957,21 +948,6 @@ packages:
     peerDependencies:
       lucia: 3.x
       mongodb: 4.x || 6.x
-
-  '@lucia-auth/adapter-postgresql@3.1.2':
-    resolution: {integrity: sha512-XgScy312JsaiyJZ0OaUHakk01hFBldF1m8abX4Ctk2Dkt7lEVS/u0xZ2Sf6Hlji1wZtEM0uiIWdeMUu79XcXZA==}
-    peerDependencies:
-      '@neondatabase/serverless': 0.7 - 0.9
-      lucia: 3.x
-      pg: ^8.8.0
-      postgres: ^3.3.0
-    peerDependenciesMeta:
-      '@neondatabase/serverless':
-        optional: true
-      pg:
-        optional: true
-      postgres:
-        optional: true
 
   '@mapbox/node-pre-gyp@1.0.11':
     resolution: {integrity: sha512-Yhlar6v9WQgUp/He7BdgzOz8lqMQ8sU+jkCq7Wx8Myc5YFJLbEe7lgui/V7G1qB1DJykHSGwreceSaD60Y0PUQ==}
@@ -1853,9 +1829,6 @@ packages:
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
-
-  '@types/pg@8.11.5':
-    resolution: {integrity: sha512-2xMjVviMxneZHDHX5p5S6tsRRs7TpDHeeK7kTTMe/kAC/mRRNjWHjZg0rkiY+e17jXSZV3zJYDxXV8Cy72/Vuw==}
 
   '@types/qs@6.9.15':
     resolution: {integrity: sha512-uXHQKES6DQKKCLh441Xv/dwxOq1TVS3JPUMlEqoEglvlhR6Mxnlew/Xq/LRVHpLyk7iK3zODe1qYHIMltO7XGg==}
@@ -5342,9 +5315,6 @@ packages:
     resolution: {integrity: sha512-yBYjY9QX2hnRmZHAjG/f13MzmBzxzYgQhFrke06TTyKY5zSTEqkOeukBzIdVA3j3ulu8Qa3MbVFShV7T2RmGtQ==}
     engines: {node: '>= 0.4'}
 
-  obuf@1.1.2:
-    resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
-
   octokit-auth-probot@2.0.0:
     resolution: {integrity: sha512-bxidVIyxYJ+hWkG24pchPrN6mJdQrklZ2Acu+oGmZlh9aRONsIrw0KNW5W7QC2VlkxsFQwb9lnV+vH0BcEhnLQ==}
     engines: {node: '>=18'}
@@ -5540,48 +5510,6 @@ packages:
 
   perfect-debounce@1.0.0:
     resolution: {integrity: sha512-xCy9V055GLEqoFaHoC1SoLIaLmWctgCUaBaWxDZ7/Zx4CTyX7cJQLJOok/orfjZAh9kEYpjJa4d0KcJmCbctZA==}
-
-  pg-cloudflare@1.1.1:
-    resolution: {integrity: sha512-xWPagP/4B6BgFO+EKz3JONXv3YDgvkbVrGw2mTo3D6tVDQRh1e7cqVGvyR3BE+eQgAvx1XhW/iEASj4/jCWl3Q==}
-
-  pg-connection-string@2.6.4:
-    resolution: {integrity: sha512-v+Z7W/0EO707aNMaAEfiGnGL9sxxumwLl2fJvCQtMn9Fxsg+lPpPkdcyBSv/KFgpGdYkMfn+EI1Or2EHjpgLCA==}
-
-  pg-int8@1.0.1:
-    resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
-    engines: {node: '>=4.0.0'}
-
-  pg-numeric@1.0.2:
-    resolution: {integrity: sha512-BM/Thnrw5jm2kKLE5uJkXqqExRUY/toLHda65XgFTBTFYZyopbKjBe29Ii3RbkvlsMoFwD+tHeGaCjjv0gHlyw==}
-    engines: {node: '>=4'}
-
-  pg-pool@3.6.2:
-    resolution: {integrity: sha512-Htjbg8BlwXqSBQ9V8Vjtc+vzf/6fVUuak/3/XXKA9oxZprwW3IMDQTGHP+KDmVL7rtd+R1QjbnCFPuTHm3G4hg==}
-    peerDependencies:
-      pg: '>=8.0'
-
-  pg-protocol@1.6.1:
-    resolution: {integrity: sha512-jPIlvgoD63hrEuihvIg+tJhoGjUsLPn6poJY9N5CnlPd91c2T18T/9zBtLxZSb1EhYxBRoZJtzScCaWlYLtktg==}
-
-  pg-types@2.2.0:
-    resolution: {integrity: sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==}
-    engines: {node: '>=4'}
-
-  pg-types@4.0.2:
-    resolution: {integrity: sha512-cRL3JpS3lKMGsKaWndugWQoLOCoP+Cic8oseVcbr0qhPzYD5DWXK+RZ9LY9wxRf7RQia4SCwQlXk0q6FCPrVng==}
-    engines: {node: '>=10'}
-
-  pg@8.11.5:
-    resolution: {integrity: sha512-jqgNHSKL5cbDjFlHyYsCXmQDrfIX/3RsNwYqpd4N0Kt8niLuNoRNH+aazv6cOd43gPh9Y4DjQCtb+X0MH0Hvnw==}
-    engines: {node: '>= 8.0.0'}
-    peerDependencies:
-      pg-native: '>=3.0.1'
-    peerDependenciesMeta:
-      pg-native:
-        optional: true
-
-  pgpass@1.0.5:
-    resolution: {integrity: sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==}
 
   picocolors@1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
@@ -6040,41 +5968,6 @@ packages:
   postcss@8.4.38:
     resolution: {integrity: sha512-Wglpdk03BSfXkHoQa3b/oulrotAkwrlLDRSOb9D0bN86FdRyE9lppSp33aHNPgBa0JKCoB+drFLZkQoRRYae5A==}
     engines: {node: ^10 || ^12 || >=14}
-
-  postgres-array@2.0.0:
-    resolution: {integrity: sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==}
-    engines: {node: '>=4'}
-
-  postgres-array@3.0.2:
-    resolution: {integrity: sha512-6faShkdFugNQCLwucjPcY5ARoW1SlbnrZjmGl0IrrqewpvxvhSLHimCVzqeuULCbG0fQv7Dtk1yDbG3xv7Veog==}
-    engines: {node: '>=12'}
-
-  postgres-bytea@1.0.0:
-    resolution: {integrity: sha512-xy3pmLuQqRBZBXDULy7KbaitYqLcmxigw14Q5sj8QBVLqEwXfeybIKVWiqAXTlcvdvb0+xkOtDbfQMOf4lST1w==}
-    engines: {node: '>=0.10.0'}
-
-  postgres-bytea@3.0.0:
-    resolution: {integrity: sha512-CNd4jim9RFPkObHSjVHlVrxoVQXz7quwNFpz7RY1okNNme49+sVyiTvTRobiLV548Hx/hb1BG+iE7h9493WzFw==}
-    engines: {node: '>= 6'}
-
-  postgres-date@1.0.7:
-    resolution: {integrity: sha512-suDmjLVQg78nMK2UZ454hAG+OAW+HQPZ6n++TNDUX+L0+uUlLywnoxJKDou51Zm+zTCjrCl0Nq6J9C5hP9vK/Q==}
-    engines: {node: '>=0.10.0'}
-
-  postgres-date@2.1.0:
-    resolution: {integrity: sha512-K7Juri8gtgXVcDfZttFKVmhglp7epKb1K4pgrkLxehjqkrgPhfG6OO8LHLkfaqkbpjNRnra018XwAr1yQFWGcA==}
-    engines: {node: '>=12'}
-
-  postgres-interval@1.2.0:
-    resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
-    engines: {node: '>=0.10.0'}
-
-  postgres-interval@3.0.0:
-    resolution: {integrity: sha512-BSNDnbyZCXSxgA+1f5UU2GmwhoI0aU5yMxRGO8CdFEcY2BQF9xm/7MqKnYoM1nJDk8nONNWDk9WeSmePFhQdlw==}
-    engines: {node: '>=12'}
-
-  postgres-range@1.1.4:
-    resolution: {integrity: sha512-i/hbxIE9803Alj/6ytL7UHQxRvZkI9O4Sy+J3HGc4F4oo/2eQAjTSNJ0bfxyse3bH0nuVesCk+3IRLaMtG3H6w==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -7520,10 +7413,6 @@ packages:
     resolution: {integrity: sha512-QKxVRxiRACQcVuQEYFsI1hhkrMlrXHPegbbd1yn9UHOmRxY+si12nQYzri3vbzt8VdTTRviqcKxcyllFas5z2A==}
     engines: {node: '>=0.4.0'}
 
-  xtend@4.0.2:
-    resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
-    engines: {node: '>=0.4'}
-
   y18n@5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
@@ -8378,12 +8267,6 @@ snapshots:
     dependencies:
       lucia: 3.2.0
       mongodb: 6.5.0(socks@2.8.3)
-
-  '@lucia-auth/adapter-postgresql@3.1.2(lucia@3.2.0)(pg@8.11.5)':
-    dependencies:
-      lucia: 3.2.0
-    optionalDependencies:
-      pg: 8.11.5
 
   '@mapbox/node-pre-gyp@1.0.11(encoding@0.1.13)':
     dependencies:
@@ -9721,12 +9604,6 @@ snapshots:
       undici-types: 5.26.5
 
   '@types/normalize-package-data@2.4.4': {}
-
-  '@types/pg@8.11.5':
-    dependencies:
-      '@types/node': 20.12.7
-      pg-protocol: 1.6.1
-      pg-types: 4.0.2
 
   '@types/qs@6.9.15': {}
 
@@ -14381,8 +14258,6 @@ snapshots:
       define-properties: 1.2.1
       es-object-atoms: 1.0.0
 
-  obuf@1.1.2: {}
-
   octokit-auth-probot@2.0.0(@octokit/core@5.2.0):
     dependencies:
       '@octokit/auth-app': 6.1.1
@@ -14614,53 +14489,6 @@ snapshots:
   pathe@1.1.2: {}
 
   perfect-debounce@1.0.0: {}
-
-  pg-cloudflare@1.1.1:
-    optional: true
-
-  pg-connection-string@2.6.4: {}
-
-  pg-int8@1.0.1: {}
-
-  pg-numeric@1.0.2: {}
-
-  pg-pool@3.6.2(pg@8.11.5):
-    dependencies:
-      pg: 8.11.5
-
-  pg-protocol@1.6.1: {}
-
-  pg-types@2.2.0:
-    dependencies:
-      pg-int8: 1.0.1
-      postgres-array: 2.0.0
-      postgres-bytea: 1.0.0
-      postgres-date: 1.0.7
-      postgres-interval: 1.2.0
-
-  pg-types@4.0.2:
-    dependencies:
-      pg-int8: 1.0.1
-      pg-numeric: 1.0.2
-      postgres-array: 3.0.2
-      postgres-bytea: 3.0.0
-      postgres-date: 2.1.0
-      postgres-interval: 3.0.0
-      postgres-range: 1.1.4
-
-  pg@8.11.5:
-    dependencies:
-      pg-connection-string: 2.6.4
-      pg-pool: 3.6.2(pg@8.11.5)
-      pg-protocol: 1.6.1
-      pg-types: 2.2.0
-      pgpass: 1.0.5
-    optionalDependencies:
-      pg-cloudflare: 1.1.1
-
-  pgpass@1.0.5:
-    dependencies:
-      split2: 4.2.0
 
   picocolors@1.0.0: {}
 
@@ -15128,28 +14956,6 @@ snapshots:
       nanoid: 3.3.7
       picocolors: 1.0.0
       source-map-js: 1.2.0
-
-  postgres-array@2.0.0: {}
-
-  postgres-array@3.0.2: {}
-
-  postgres-bytea@1.0.0: {}
-
-  postgres-bytea@3.0.0:
-    dependencies:
-      obuf: 1.1.2
-
-  postgres-date@1.0.7: {}
-
-  postgres-date@2.1.0: {}
-
-  postgres-interval@1.2.0:
-    dependencies:
-      xtend: 4.0.2
-
-  postgres-interval@3.0.0: {}
-
-  postgres-range@1.1.4: {}
 
   prelude-ls@1.2.1: {}
 
@@ -16821,8 +16627,6 @@ snapshots:
   xml-name-validator@4.0.0: {}
 
   xmlhttprequest-ssl@2.0.0: {}
-
-  xtend@4.0.2: {}
 
   y18n@5.0.8: {}
 
