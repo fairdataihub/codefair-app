@@ -116,7 +116,6 @@ const links = [
             >
               GitHub
             </NuxtLink>
-            <ProfileStatus />
           </nav>
 
           <button

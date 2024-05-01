@@ -1,6 +1,7 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "public",
+  middleware: ['protected'],
 });
 </script>
 
@@ -14,6 +15,7 @@ definePageMeta({
           >
             FAIR Software
           </h1>
+          <ProfileStatus />
         </div>
       </div>
     </div>

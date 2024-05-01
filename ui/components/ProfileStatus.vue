@@ -1,9 +1,6 @@
 <script setup lang="ts">
-definePageMeta({
-  // layout: "public",
-  middleware: ['protected'],
-});
-const user = useAuthenticatedUser();
+const user = useUser();
+console.log(user);
 
 async function logout() {
   await $fetch("/api/logout", {

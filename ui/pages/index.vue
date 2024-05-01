@@ -1,9 +1,12 @@
 <script setup lang="ts">
 definePageMeta({
   layout: "public",
-  middleware: ['protected'],
+  // middleware: ['protected'],
 });
-// const user = useAuthenticatedUser();
+const user = useUser();
+console.log("USER VALUE BELOW")
+console.log(user.value);
+console.log("USER VALUE ABOVE")
 
 // async function logout() {
 //   await $fetch("/api/logout", {
@@ -28,6 +31,7 @@ definePageMeta({
       >
         Make your research software reusable without breaking a sweat!
       </h1>
+      <pre>{{ user }}</pre>
 
       <div class="text-justify">
         <p class="text-gray-500 lg:w-full xl:text-xl">
