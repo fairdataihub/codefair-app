@@ -1,15 +1,20 @@
 <script setup lang="ts">
 const user = useUser();
 
-console.log(user.value);
-if (user.value) {
-  navigateTo("/profile");
-}
+watchEffect(() => {
+  if (user.value) {
+    return navigateTo("/profile");
+  }
+});
 </script>
 
 <template>
   <div>
     <h1>Sign in</h1>
     <a href="/login/github">Sign in with GitHub</a>
+
+    <pre>
+      User: {{ user }}
+    </pre>
   </div>
 </template>

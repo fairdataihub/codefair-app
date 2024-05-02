@@ -7,7 +7,7 @@ export default defineNuxtRouteMiddleware(async () => {
     console.error(error);
   }
 
-  // if (data.value) {
-  //   user.value = data.value;
-  // }
+  if (data.value) {
+    user.value = data.value;
+  }
 });

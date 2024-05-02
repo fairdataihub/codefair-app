@@ -7,7 +7,7 @@ async function logout() {
   await $fetch("/api/logout", {
     method: "POST",
   });
-  await navigateTo("/");
+  window.location.href = "/";
 }
 </script>
 
