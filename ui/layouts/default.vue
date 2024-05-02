@@ -55,7 +55,7 @@ const devMode = process.env.NODE_ENV === "development";
             codefair
           </a>
 
-          <nav class="hidden gap-12 lg:flex">
+          <nav class="hidden items-center gap-8 lg:flex">
             <NuxtLink
               href="codefair"
               class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
@@ -74,18 +74,16 @@ const devMode = process.env.NODE_ENV === "development";
             >
               Contact
             </NuxtLink>
-            <NuxtLink
-              href="docs"
-              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-            >
-              Documentation
-            </NuxtLink>
+
             <NuxtLink
               href="https://github.com/fairdataihub/codefair-app"
               class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               GitHub
             </NuxtLink>
+            <div>
+              <ProfileStatus />
+            </div>
           </nav>
 
           <button

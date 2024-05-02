@@ -1,12 +1,4 @@
-<script setup lang="ts">
-definePageMeta({
-  layout: "default",
-  middleware: ['protected'],
-});
-
-const user = useAuthenticatedUser();
-console.log(user);
-</script>
+<script setup lang="ts"></script>
 
 <template>
   <section>
@@ -18,8 +10,6 @@ console.log(user);
           >
             FAIR Software
           </h1>
-          <pre>{{ user.username }}</pre>
-          <ProfileStatus />
         </div>
       </div>
     </div>
