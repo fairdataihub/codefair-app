@@ -12,8 +12,8 @@ if (!process.env.MONGODB_URI) {
 
 await mongoose.connect(process.env.MONGODB_URI);
 
-const User = mongoose.model(
-  "User",
+const users = mongoose.model(
+  "users",
   new mongoose.Schema(
     {
       _id: {
@@ -25,8 +25,8 @@ const User = mongoose.model(
   ),
 );
 
-const Session = mongoose.model(
-  "Session",
+const sessions = mongoose.model(
+  "sessions",
   new mongoose.Schema(
     {
       _id: {
@@ -45,6 +45,10 @@ const Session = mongoose.model(
     { _id: false },
   ),
 );
+
+// export let users = mongoose.models.User||mongoose.model("Users", new mongoose.Schema({ _id: { type: String, required: true } }, { _id: false }));
+// export let sessions = mongoose.models.Session||mongoose.model("Sessions", new mongoose.Schema({ _id: { type: String, required: true }, user_id: { type: String, required: true }, expires_at: { type: Date, required: true } }, { _id: false }));
+// export let session = mongoose.models.Session||mongoose.model("session", Session);
 
 const adapter = new MongodbAdapter(
   mongoose.connection.collection("sessions"),
