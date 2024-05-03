@@ -1,7 +1,7 @@
 import { OAuth2RequestError } from "arctic";
 import { DatabaseUser, generateIdFromEntropySize } from "lucia";
 import clientPromise from "~/server/utils/mongodb";
-import { github } from "~/server/utils/auth";
+import { github, sessions, users } from "~/server/utils/auth";
 import mongoose from "mongoose";
 
 export default defineEventHandler(async (event) => {
@@ -30,9 +30,7 @@ export default defineEventHandler(async (event) => {
     const githubUser: GitHubUser = await githubUserResponse.json();
 
     // Replace this with your own DB client.
-    const existingUser = await db
-      .collection("users")
-      .findOne({ github_id: githubUser.id });
+    const existingUser = await users.findOne({ github_id: githubUser.id });
 
     // console.log("EXISTING USER: " + JSON.stringify(existingUser))
     // console.log("EXISTING USER ID: " + _id)
@@ -41,9 +39,7 @@ export default defineEventHandler(async (event) => {
       const session = await lucia.createSession(existingUser._id, {});
       // Update the session in the DB
       // Replace this with your own DB client.
-      await db
-        .collection("session")
-        .updateOne({ _id: session.id }, { $set: { _id: _id } });
+      // await sessions.updateOne({ _id: session.id }, { $set: { _id: _id } });
       // console.log("SESSION: " + JSON.stringify(session));
       appendHeader(
         event,
