@@ -37,6 +37,14 @@ export default defineNuxtConfig({
     "nuxt-icon",
   ],
 
+  nitro: {
+    esbuild: {
+      options: {
+        target: "esnext",
+      },
+    },
+  },
+
   colorMode: {
     preference: "light", // default value of $colorMode.preference
     fallback: "light", // fallback value if not system preference found
