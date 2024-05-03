@@ -51,11 +51,8 @@ const Sessions = mongoose.model(
   sessionsSchema
 );
 
-// export let users = mongoose.models.users||mongoose.model("users", new mongoose.Schema({ _id: { type: String, required: true } }, { _id: false }));
-// export let sessions = mongoose.models.sessions||mongoose.model("sessions", new mongoose.Schema({ _id: { type: String, required: true }, user_id: { type: String, required: true }, expires_at: { type: Date, required: true } }, { _id: false }));
 export let users = mongoose.models.users||mongoose.model("users", userSchema);
 export let sessions = mongoose.models.sessions||mongoose.model("sessions", sessionsSchema);
-// export let session = mongoose.models.Session||mongoose.model("session", Session);
 
 const adapter = new MongodbAdapter(
   mongoose.connection.collection("sessions"),

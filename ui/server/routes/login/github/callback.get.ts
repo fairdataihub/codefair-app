@@ -32,11 +32,9 @@ export default defineEventHandler(async (event) => {
     // Replace this with your own DB client.
     const existingUser = await users.findOne({ github_id: githubUser.id });
 
-    // console.log("EXISTING USER: " + JSON.stringify(existingUser))
-    // console.log("EXISTING USER ID: " + _id)
     if (existingUser) {
 		  const { _id } = existingUser;
-      const session = await lucia.createSession(existingUser._id, {});
+      const session = await lucia.createSession(_id, {});
       // Update the session in the DB
       // Replace this with your own DB client.
       // await sessions.updateOne({ _id: session.id }, { $set: { _id: _id } });
