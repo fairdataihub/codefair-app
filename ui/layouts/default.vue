@@ -57,26 +57,26 @@ const devMode = process.env.NODE_ENV === "development";
 
           <nav class="hidden gap-12 lg:flex">
             <NuxtLink
-              href="codefair"
+              to="codefair"
               class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               About
             </NuxtLink>
             <NuxtLink
-              href="fairsoftware"
+              to="fairsoftware"
               class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               FAIR Software
             </NuxtLink>
             <NuxtLink
-              href="#contact"
+              to="#contact"
               class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               Contact
             </NuxtLink>
 
             <NuxtLink
-              href="https://github.com/fairdataihub/codefair-app"
+              to="https://github.com/fairdataihub/codefair-app"
               class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               GitHub
@@ -142,26 +142,30 @@ const devMode = process.env.NODE_ENV === "development";
             </button>
 
             <nav class="flex flex-col gap-6">
-              <a
-                href="codefair.html"
+              <NuxtLink
+                to="codefair.html"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-                >About</a
               >
-              <a
-                href="fairsoftware.html"
+                About
+              </NuxtLink>
+              <NuxtLink
+                to="fairsoftware.html"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-                >FAIR Software</a
               >
-              <a
-                href="#contact"
+                FAIR Software
+              </NuxtLink>
+              <NuxtLink
+                to="#contact"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-                >Contact</a
               >
-              <a
-                href="https://github.com/fairdataihub/codefair-app"
+                Contact
+              </NuxtLink>
+              <NuxtLink
+                to="https://github.com/fairdataihub/codefair-app"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-                >GitHub</a
               >
+                GitHub
+              </NuxtLink>
             </nav>
           </div>
         </header>
