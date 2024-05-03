@@ -116,11 +116,12 @@
           <div
             class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start lg:py-0"
           >
-            <a
-              href="fairsoftware"
+            <NuxtLink
+              to="fairsoftware"
               class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
-              >Learn more about FAIR software -></a
             >
+              Learn more about FAIR software ->
+            </NuxtLink>
           </div>
         </div>
         <div class="flex-2 self-center">
@@ -166,11 +167,12 @@
           <div
             class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center md:py-0 lg:justify-start"
           >
-            <a
-              href="codefair"
+            <NuxtLink
+              to="codefair"
               class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
-              >Learn more about codefair -></a
             >
+              Learn more about codefair ->
+            </NuxtLink>
           </div>
         </div>
       </div>
