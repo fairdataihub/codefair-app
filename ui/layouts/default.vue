@@ -1,5 +1,13 @@
 <script setup lang="ts">
 const devMode = process.env.NODE_ENV === "development";
+
+import { ref } from 'vue';
+
+const showMobileMenu = ref(false);
+
+const toggleMobileMenu = () => {
+  showMobileMenu.value = !showMobileMenu.value;
+};
 </script>
 
 <template>
@@ -37,7 +45,7 @@ const devMode = process.env.NODE_ENV === "development";
         ></div>
       </div>
 
-      <div class="relative z-10 mx-auto max-w-screen-xl px-4 md:px-8">
+      <div class="relative z-20 mx-auto max-w-screen-xl px-4 md:px-8">
         <header
           class="mb-8 flex items-center justify-between py-4 md:mb-12 md:py-8 xl:mb-16"
         >
@@ -85,8 +93,10 @@ const devMode = process.env.NODE_ENV === "development";
 
           <button
             id="mobile-menu-button"
+            v-if="!showMobileMenu"
             type="button"
-            class="inline-flex items-center gap-2 rounded-lg bg-gray-200 px-2.5 py-2 text-sm font-semibold text-gray-500 ring-indigo-300 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base lg:hidden"
+            @click="toggleMobileMenu"
+            class="inline-flex z-20 items-center gap-2 rounded-lg bg-gray-200 px-2.5 py-2 text-sm font-semibold text-gray-500 ring-indigo-300 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base lg:hidden"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -104,8 +114,9 @@ const devMode = process.env.NODE_ENV === "development";
             Menu
           </button>
           <div
+            v-show="showMobileMenu"
             id="mobile-menu"
-            class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-purple-50 sm:hidden"
+            class="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-purple-50 sm:hidden"
             style="height: fit-content; padding: 6rem"
           >
             <a
@@ -126,6 +137,7 @@ const devMode = process.env.NODE_ENV === "development";
               id="mobile-menu-close"
               type="button"
               class="absolute right-4 top-6 text-gray-500"
+              @click="toggleMobileMenu"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
