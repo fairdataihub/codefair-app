@@ -156,24 +156,28 @@ const toggleMobileMenu = () => {
             <nav class="flex flex-col gap-6">
               <NuxtLink
                 to="codefair"
+                @click="toggleMobileMenu"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
               >
                 About
               </NuxtLink>
               <NuxtLink
                 to="fairsoftware"
+                @click="toggleMobileMenu"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
               >
                 FAIR Software
               </NuxtLink>
               <NuxtLink
                 to="#contact"
+                @click="toggleMobileMenu"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
               >
                 Contact
               </NuxtLink>
               <NuxtLink
                 to="https://github.com/fairdataihub/codefair-app"
+                @click="toggleMobileMenu"
                 class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
               >
                 GitHub
