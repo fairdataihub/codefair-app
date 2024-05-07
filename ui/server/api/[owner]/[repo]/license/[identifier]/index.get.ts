@@ -1,6 +1,8 @@
 import { MongoClient } from "mongodb";
 
 export default defineEventHandler(async (event) => {
+  await protectRoute(event);
+
   const { identifier } = event.context.params as { identifier: string };
 
   const client = new MongoClient(process.env.MONGODB_URI as string, {});

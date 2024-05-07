@@ -1,5 +1,4 @@
 import { verifyRequestOrigin } from "lucia";
-
 import type { User, Session } from "lucia";
 
 export default defineEventHandler(async (event) => {
