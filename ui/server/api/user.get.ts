@@ -1,3 +1,5 @@
-export default defineEventHandler((event) => {
-	return event.context.user;
+export default defineEventHandler(async (event) => {
+  await protectRoute(event);
+
+  return event.context.user;
 });

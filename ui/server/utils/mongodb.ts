@@ -40,6 +40,11 @@ export interface DatabaseUser {
   access_token: String;
 }
 
+export interface DatabaseSession {
+  id: String;
+  access_token: String;
+}
+
 // Export a module-scoped MongoClient promise. By doing this in a
 // separate module, the client can be shared across functions.
 export default clientPromise;

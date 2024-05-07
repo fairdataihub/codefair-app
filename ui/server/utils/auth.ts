@@ -74,8 +74,6 @@ export const lucia = new Lucia(adapter, {
     },
   },
   getUserAttributes: (attributes) => {
-    console.log("ATTRIBUTES: " + JSON.stringify(attributes));
-
     return {
       username: attributes.username,
       github_id: attributes.github_id,
@@ -83,9 +81,9 @@ export const lucia = new Lucia(adapter, {
     };
   },
   getSessionAttributes: (attributes) => {
-    console.log("ATTRIBUTES: " + JSON.stringify(attributes));
-
-    return attributes;
+    return {
+      access_token: attributes.access_token,
+    };
   },
 });
 
@@ -93,6 +91,7 @@ declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
     DatabaseUserAttributes: Omit<DatabaseUser, "id">;
+    DatabaseSessionAttributes: Omit<DatabaseSession, "id">;
   }
 }
 

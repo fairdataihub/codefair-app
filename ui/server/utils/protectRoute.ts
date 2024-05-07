@@ -18,11 +18,15 @@ export default defineEventHandler(async (event) => {
     repo: string;
   };
 
+  console.log("OWNER: " + owner);
+  console.log("REPO: " + repo);
+  console.log("protect Route user: " + JSON.stringify(user));
+
   if (!owner || !repo) {
-    return;
+    return session.access_token;
   }
 
-  if (!user.access_token) {
+  if (!session.access_token) {
     return event.node.res.writeHead(401).end();
   }
 
@@ -30,7 +34,7 @@ export default defineEventHandler(async (event) => {
     `https://api.github.com/repos/${owner}/${repo}/collaborators/${user.username}/permission`,
     {
       headers: {
-        Authorization: `Bearer ${user.access_token}`,
+        Authorization: `Bearer ${session.access_token}`,
       },
     },
   );
