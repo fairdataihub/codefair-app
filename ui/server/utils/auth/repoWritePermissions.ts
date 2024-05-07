@@ -33,6 +33,20 @@ const repoWritePermissions = async (
   });
 
   if (!permissions.ok) {
+    if (permissions.status === 404) {
+      throw createError({
+        statusCode: 404,
+        message: "Not Found. Repository not found",
+      });
+    }
+
+    if (permissions.status === 403) {
+      throw createError({
+        statusCode: 403,
+        message: "Forbidden. You do not have access to this repository",
+      });
+    }
+
     throw createError({
       statusCode: 500,
       message: "Internal Server Error. Failed to fetch repository permissions",

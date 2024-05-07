@@ -14,9 +14,12 @@ export default defineEventHandler(async (event) => {
   await client.connect();
 
   const db = client.db();
+
   const query = getQuery(event);
+
   const code = query.code?.toString() ?? null;
   const state = query.state?.toString() ?? null;
+
   const storedState = getCookie(event, "github_oauth_state") ?? null;
 
   if (!code || !state || !storedState || state !== storedState) {
@@ -37,19 +40,37 @@ export default defineEventHandler(async (event) => {
     });
     const githubUser: GitHubUser = await githubUserResponse.json();
 
-    const existingUser = await users.findOne({ github_id: githubUser.id });
+    console.log("GITHUB USER: " + JSON.stringify(githubUser));
+
+    const existingUser = await db.collection("users").findOne({
+      github_id: githubUser.id,
+    });
+
+    console.log("EXISTING USER: " + JSON.stringify(existingUser));
 
     if (existingUser) {
       const { _id } = existingUser;
 
       const session = await lucia.createSession(_id, {
-        access_token: tokens.accessToken, // todo: should we store this in sesstion or user?
+        access_token: tokens.accessToken, // todo: should we store this in session or user?
       });
 
+      // Add a last login timestamp to the user
+      await db.collection("users").updateOne(
+        {
+          _id,
+        },
+        {
+          $set: {
+            last_login: new Date(),
+          },
+        },
+      );
+
       // Update the session in the DB
-      // Replace this with your own DB client.
+
       // await sessions.updateOne({ _id: session.id }, { $set: { _id: _id } });
-      console.log("SESSION: " + JSON.stringify(session));
+
       appendHeader(
         event,
         "Set-Cookie",
@@ -61,12 +82,12 @@ export default defineEventHandler(async (event) => {
 
     const userId = generateIdFromEntropySize(10); // 16 characters long
 
-    // Replace this with your own DB client.
     await db.collection("users").insertOne({
       _id: userId,
       github_id: githubUser.id,
       username: githubUser.login,
       access_token: tokens.accessToken,
+      created_at: new Date(),
     });
 
     const session = await lucia.createSession(userId, {
