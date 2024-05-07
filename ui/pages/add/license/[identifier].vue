@@ -21,9 +21,9 @@ config({
   },
 });
 
-// definePageMeta({
-// middleware: ["protected"],
-// });
+definePageMeta({
+  middleware: ["protected"],
+});
 
 const licenseOptions = licensesJSON.map((option) => ({
   label: option.name,
@@ -53,7 +53,7 @@ if (error.value) {
     message: "Please contact support",
   });
 
-  navigateTo("/");
+  // navigateTo("/");
 }
 
 if (data.value) {

@@ -1,4 +1,5 @@
 import { MongoClient } from "mongodb";
+import type { User } from "lucia";
 
 export default defineEventHandler(async (event) => {
   await protectRoute(event);
@@ -22,6 +23,9 @@ export default defineEventHandler(async (event) => {
       message: "License request not found",
     });
   }
+
+  // Check if the user is authorized to access the license request
+  await repoWritePermissions(event, licenseRequest.owner, licenseRequest.repo);
 
   // Check if the license request is still open
   if (!licenseRequest.open) {
