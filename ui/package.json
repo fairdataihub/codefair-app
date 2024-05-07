@@ -28,6 +28,7 @@
     "mongoose": "^8.3.3",
     "notivue": "^2.4.4",
     "nuxt": "3.11.1",
+    "nuxt-mongoose": "^1.0.5",
     "oslo": "^1.2.0",
     "probot": "^13.2.0",
     "sanitize-html": "^2.13.0",

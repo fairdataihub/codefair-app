@@ -1,9 +1,6 @@
 import { Lucia } from "lucia";
 import { MongodbAdapter } from "@lucia-auth/adapter-mongodb";
-// import { Collection, MongoClient } from "mongodb";
 import { GitHub } from "arctic";
-// import type { DatabaseUser } from "./mongodb";
-// import type { Session, User } from "lucia";
 import mongoose from "mongoose";
 
 if (!process.env.MONGODB_URI) {
@@ -18,15 +15,23 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    username: {
+      type: String,
+      required: true,
+    },
+    github_id: {
+      type: String,
+      required: true,
+    },
+    access_token: {
+      type: String,
+      required: false,
+    },
   } as const,
   { _id: false },
 );
 
-
-const Users = mongoose.model(
-  "users",
-  userSchema
-);
+mongoose.model("users", userSchema);
 
 const sessionsSchema = new mongoose.Schema(
   {
@@ -42,33 +47,25 @@ const sessionsSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+    access_token: {
+      type: String,
+      required: false,
+    },
   } as const,
   { _id: false },
 );
 
-const Sessions = mongoose.model(
-  "sessions",
-  sessionsSchema
-);
+mongoose.model("sessions", sessionsSchema);
 
-export let users = mongoose.models.users||mongoose.model("users", userSchema);
-export let sessions = mongoose.models.sessions||mongoose.model("sessions", sessionsSchema);
+export const users =
+  mongoose.models.users || mongoose.model("users", userSchema);
+export const sessions =
+  mongoose.models.sessions || mongoose.model("sessions", sessionsSchema);
 
 const adapter = new MongodbAdapter(
   mongoose.connection.collection("sessions"),
   mongoose.connection.collection("users"),
 );
-
-// const client = new MongoClient(process.env.MONGODB_URI!);
-// client.connect();
-
-// const db = client.db();
-// const User = db.collection("user") as Collection<UserDoc>;
-// const Session = db.collection("session") as Collection<SessionDoc>;
-// const User = db.collection("users");
-// const Session = db.collection("sessions");
-
-// const adapter = new MongodbAdapter(Session, User);
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
@@ -77,10 +74,18 @@ export const lucia = new Lucia(adapter, {
     },
   },
   getUserAttributes: (attributes) => {
+    console.log("ATTRIBUTES: " + JSON.stringify(attributes));
+
     return {
       username: attributes.username,
-      githubId: attributes.github_id,
+      github_id: attributes.github_id,
+      access_token: attributes.access_token,
     };
+  },
+  getSessionAttributes: (attributes) => {
+    console.log("ATTRIBUTES: " + JSON.stringify(attributes));
+
+    return attributes;
   },
 });
 
@@ -90,15 +95,6 @@ declare module "lucia" {
     DatabaseUserAttributes: Omit<DatabaseUser, "id">;
   }
 }
-// interface UserDoc {
-//   _id: String;
-// }
-
-// interface SessionDoc {
-//   _id: String;
-//   expires_at: Date;
-//   user_id: String;
-// }
 
 export const github = new GitHub(
   process.env.GITHUB_CLIENT_ID!,

@@ -12,7 +12,7 @@ export default defineNuxtConfig({
       script: [
         {
           async: true,
-          "data-website-id": "",
+          "data-website-id": "80e10200-5878-4adb-9a9e-ac0f23cb1f33",
           src: "https://umami.fairdataihub.org/mushroom",
         },
       ],
