@@ -24,14 +24,6 @@ const repoWritePermissions = async (
     },
   );
 
-  console.log(
-    "url: ",
-    `https://api.github.com/repos/${owner}/${repo}/collaborators/${user.username}/permission`,
-  );
-  console.log("headers: ", {
-    Authorization: `Bearer ${user.access_token}`,
-  });
-
   if (!permissions.ok) {
     if (permissions.status === 404) {
       throw createError({
@@ -54,8 +46,6 @@ const repoWritePermissions = async (
   }
 
   const permissionsJson = await permissions.json();
-
-  console.log("permissionsJson: ", permissionsJson);
 
   if (
     permissionsJson.permission !== "admin" &&

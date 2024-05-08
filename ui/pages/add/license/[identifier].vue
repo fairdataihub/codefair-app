@@ -129,8 +129,6 @@ const updateLicenseContent = async (value: string) => {
 const saveLicenseDraft = async () => {
   submitLoading.value = true;
 
-  console.log(licenseId.value, licenseContent.value);
-
   const body = {
     licenseId: licenseId.value,
     licenseContent: licenseContent.value,

@@ -31,8 +31,6 @@ export default defineEventHandler(async (event) => {
   try {
     const tokens = await github.validateAuthorizationCode(code);
 
-    console.log("TOKENS: " + JSON.stringify(tokens));
-
     const githubUserResponse = await fetch("https://api.github.com/user", {
       headers: {
         Authorization: `Bearer ${tokens.accessToken}`,
@@ -40,13 +38,9 @@ export default defineEventHandler(async (event) => {
     });
     const githubUser: GitHubUser = await githubUserResponse.json();
 
-    console.log("GITHUB USER: " + JSON.stringify(githubUser));
-
     const existingUser = await db.collection("users").findOne({
       github_id: githubUser.id,
     });
-
-    console.log("EXISTING USER: " + JSON.stringify(existingUser));
 
     if (existingUser) {
       const { _id } = existingUser;
