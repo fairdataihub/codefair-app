@@ -20,7 +20,10 @@ export default defineEventHandler(async (event) => {
   if (!licenseRequest) {
     throw createError({
       statusCode: 404,
-      message: "License request not found",
+      data: {
+        code: "license-request-not-found",
+        message: "License request not found",
+      },
     });
   }
 
@@ -31,7 +34,10 @@ export default defineEventHandler(async (event) => {
   if (!licenseRequest.open) {
     throw createError({
       statusCode: 400,
-      message: "request closed",
+      data: {
+        code: "request-closed",
+        message: "License request is closed",
+      },
     });
   }
 

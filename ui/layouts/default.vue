@@ -4,7 +4,7 @@ const devMode = process.env.NODE_ENV === "development";
 
 <template>
   <div
-    class="relative mx-auto flex h-full min-h-screen w-full flex-col"
+    class="relative mx-auto flex h-full min-h-screen w-full flex-col bg-slate-50"
     :class="{ 'debug-screens': devMode }"
   >
     <div

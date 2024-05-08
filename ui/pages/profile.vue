@@ -1,6 +1,5 @@
 <script setup lang="ts">
 definePageMeta({
-  //   layout: "public",
   middleware: ["protected"],
 });
 const user = useUser();
@@ -14,24 +13,31 @@ const user = useUser();
       <p>This is all the information we know about you.</p>
     </n-flex>
 
-    <Card>
-      <template #title>GitHub Username</template>
+    <n-divider />
 
-      <template #content>
-        <p class="m-0">
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Inventore
-          sed consequuntur error repudiandae numquam deserunt quisquam repellat
-          libero asperiores earum nam nobis, culpa ratione quam perferendis
-          esse, cupiditate neque quas!
-        </p>
-      </template>
-    </Card>
+    <n-flex vertical size="large">
+      <Card>
+        <template #title>GitHub Username</template>
 
-    <p>This is all the information we know about you</p>
+        <template #content>
+          <NuxtLink
+            :to="`https://github.com/${user?.username}`"
+            target="_blank"
+          >
+            {{ user?.username }}
+          </NuxtLink>
+        </template>
+      </Card>
 
-    <pre>{{ user }}</pre>
+      <Card>
+        <template #title>GitHub ID</template>
 
-    <!-- <pre>{{ user.username }}</pre> -->
-    <!-- <ProfileStatus /> -->
+        <template #content>
+          <p class="m-0">
+            {{ user?.github_id }}
+          </p>
+        </template>
+      </Card>
+    </n-flex>
   </section>
 </template>

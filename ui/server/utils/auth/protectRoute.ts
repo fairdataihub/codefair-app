@@ -7,7 +7,7 @@
 
 import type { User, Session } from "lucia";
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler((event) => {
   const user = event.context.user as User | null;
   const session = event.context.session as Session | null;
 
@@ -20,7 +20,10 @@ export default defineEventHandler(async (event) => {
 
   if (!user.access_token) {
     throw createError({
-      message: "Unauthorized. Missing access token",
+      data: {
+        code: "missing-access-token",
+        message: "Unauthorized. Missing access token",
+      },
       statusCode: 401,
     });
   }

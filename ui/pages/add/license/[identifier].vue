@@ -41,37 +41,17 @@ const displayLicenseEditor = ref(false);
 const getLicenseLoading = ref(false);
 const submitLoading = ref(false);
 
-const showNotAuthorizedError = ref(false);
-const requestClosed = ref(false);
-
 const { data, error } = await useFetch(`/api/license/${identifier}`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
 if (error.value) {
-  const statusCode = error.value.statusCode ?? 500;
-  const message = error.value.data.message ?? "Something went wrong";
+  push.error({
+    title: "Failed to fetch license details",
+    message: "Please try again later",
+  });
 
-  if (statusCode === 403) {
-    showNotAuthorizedError.value = true;
-  } else if (statusCode === 400) {
-    if (message === "request closed") {
-      requestClosed.value = true;
-
-      push.error({
-        title: "Request closed",
-        message: "This request has been closed. You can't edit it anymore.",
-      });
-    }
-  } else {
-    push.error({
-      title: "Something went wrong",
-    });
-
-    throw new Error("Something went wrong");
-  }
-
-  // navigateTo("/");
+  console.error("Failed to fetch license details:", error.value);
 }
 
 if (data.value) {
@@ -163,42 +143,12 @@ const saveLicenseAndPush = () => {
 </script>
 
 <template>
-  <main class="">
-    <div v-if="showNotAuthorizedError">
-      <div class="flex items-center space-x-4">
-        <img
-          src="https://www.svgrepo.com/show/406101/locked.svg"
-          alt="Not authorized"
-          class="h-20 w-20"
-        />
-
-        <n-flex vertical>
-          <h1>You are not authorized to view this page.</h1>
-          <p>
-            Please contact the owner of the repository to get access to this
-            page.
-          </p>
-        </n-flex>
-      </div>
-    </div>
-    <div v-else-if="requestClosed">
-      <div class="flex items-center space-x-4">
-        <img
-          src="https://www.svgrepo.com/show/235034/close-sign.svg"
-          alt="Not authorized"
-          class="h-20 w-20"
-        />
-
-        <n-flex vertical>
-          <h1>This request has been closed</h1>
-          <p>
-            This request has been marked as closed. This is due to the fact that
-            the request has been completed or the request has been closed by the
-            owner of the repository.
-          </p>
-        </n-flex>
-      </div>
-    </div>
+  <main class="mx-auto max-w-screen-xl">
+    <ErrorPageAuth
+      v-if="error"
+      :errorContent="error.data"
+      :statusCode="error.statusCode"
+    />
     <div v-else>
       <n-flex vertical size="large" class="pb-5">
         <n-select

@@ -27,14 +27,20 @@ const repoWritePermissions = async (
   if (!permissions.ok) {
     if (permissions.status === 404) {
       throw createError({
-        message: "Not Found. Repository not found",
+        data: {
+          code: "repo-not-found",
+          message: "Not Found. Repository not found",
+        },
         statusCode: 404,
       });
     }
 
     if (permissions.status === 403) {
       throw createError({
-        message: "Forbidden. You do not have access to this repository",
+        data: {
+          code: "forbidden-repo-access",
+          message: "Forbidden. You do not have access to this repository",
+        },
         statusCode: 403,
       });
     }
@@ -52,7 +58,11 @@ const repoWritePermissions = async (
     permissionsJson.permission !== "write"
   ) {
     throw createError({
-      message: "Unauthorized. You do not have write access to this repository",
+      data: {
+        code: "unauthorized-repo-access",
+        message:
+          "Unauthorized. You do not have write access to this repository",
+      },
       statusCode: 403,
     });
   }
