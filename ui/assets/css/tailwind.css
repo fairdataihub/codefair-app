@@ -2,15 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Reset CSS */
+@layer reset {
+  button,
+  input {
+    /* CSS to Reset */
+  }
+}
+
 html,
 body {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   margin: 0px;
   padding: 0px;
   overflow: auto;
   @apply bg-slate-50;
   @apply text-slate-700;
+}
+
+body {
+  @apply min-h-full;
 }
 
 @layer base {

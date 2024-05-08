@@ -1,7 +1,9 @@
 <script setup lang="ts">
 const user = useUser();
+const route = useRoute();
 
 const loggedIn = computed(() => !!user.value);
+const onLoginPage = computed(() => route.path === "/login");
 
 async function logout() {
   await $fetch("/api/logout", {
@@ -13,17 +15,27 @@ async function logout() {
 
 <template>
   <n-flex v-if="loggedIn" align="center">
-    <NuxtLink
-      to="/profile"
-      class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-    >
-      Profile
+    <NuxtLink to="/profile" class="flex items-center">
+      <n-avatar
+        round
+        :src="`https://avatars.githubusercontent.com/u/${user?.github_id}?v=4`"
+        :fallback-src="`https://api.dicebear.com/8.x/adventurer/svg?seed=${user?.github_id}`"
+        class="transition-all hover:opacity-90"
+      />
     </NuxtLink>
 
     <n-button color="black" @click="logout"> Sign Out </n-button>
   </n-flex>
 
-  <NuxtLink to="/login" v-else>
-    <n-button color="black"> Sign In </n-button>
-  </NuxtLink>
+  <div v-else>
+    <a href="/login/github" v-if="!onLoginPage">
+      <n-button color="black">
+        <template #icon>
+          <Icon name="bi:github" />
+        </template>
+
+        Sign in with GitHub
+      </n-button>
+    </a>
+  </div>
 </template>
