@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   if (!licenseRequest.open) {
     throw createError({
       statusCode: 400,
-      message: "License request is not open",
+      message: "request closed",
     });
   }
 
