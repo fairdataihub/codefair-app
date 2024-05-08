@@ -7,11 +7,11 @@ export default defineEventHandler(async (event) => {
   });
 
   setCookie(event, "github_oauth_state", state, {
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     maxAge: 60 * 10,
+    path: "/",
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
   });
   return sendRedirect(event, url.toString());
 });

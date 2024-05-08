@@ -21,6 +21,27 @@ export default defineNuxtConfig({
     pageTransition: { name: "page", mode: "out-in" },
   },
 
+  colorMode: {
+    componentName: "ColorScheme",
+    classPrefix: "",
+    fallback: "light", // fallback value if not system preference found
+    hid: "nuxt-color-mode-script",
+    classSuffix: "-mode",
+    preference: "light", // default value of $colorMode.preference
+    globalName: "__NUXT_COLOR_MODE__",
+    storageKey: "nuxt-color-mode",
+  },
+
+  css: [
+    "@/assets/css/tailwind.css",
+    "md-editor-v3/lib/style.css",
+    "primevue/resources/themes/aura-light-green/theme.css",
+    "notivue/notification.css", // Only needed if using built-in notifications
+    "notivue/animations.css", // Only needed if using built-in animations
+  ],
+
+  devtools: { enabled: true },
+
   modules: [
     "@nuxtjs/tailwindcss",
     "@bg-dev/nuxt-naiveui",
@@ -46,32 +67,11 @@ export default defineNuxtConfig({
     },
   },
 
-  primevue: {
-    cssLayerOrder: "reset,primevue",
-  },
-
-  colorMode: {
-    preference: "light", // default value of $colorMode.preference
-    fallback: "light", // fallback value if not system preference found
-    hid: "nuxt-color-mode-script",
-    globalName: "__NUXT_COLOR_MODE__",
-    componentName: "ColorScheme",
-    classPrefix: "",
-    classSuffix: "-mode",
-    storageKey: "nuxt-color-mode",
-  },
-
-  css: [
-    "@/assets/css/tailwind.css",
-    "md-editor-v3/lib/style.css",
-    "primevue/resources/themes/aura-light-green/theme.css",
-    "notivue/notification.css", // Only needed if using built-in notifications
-    "notivue/animations.css", // Only needed if using built-in animations
-  ],
-
   notivue: {
     position: "bottom-right",
   },
 
-  devtools: { enabled: true },
+  primevue: {
+    cssLayerOrder: "reset,primevue",
+  },
 });

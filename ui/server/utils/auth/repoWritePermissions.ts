@@ -9,8 +9,8 @@ const repoWritePermissions = async (
 
   if (!owner || !repo) {
     throw createError({
-      statusCode: 400,
       message: "Bad Request. Missing owner or repo in the URL params",
+      statusCode: 400,
     });
   }
 
@@ -27,21 +27,21 @@ const repoWritePermissions = async (
   if (!permissions.ok) {
     if (permissions.status === 404) {
       throw createError({
-        statusCode: 404,
         message: "Not Found. Repository not found",
+        statusCode: 404,
       });
     }
 
     if (permissions.status === 403) {
       throw createError({
-        statusCode: 403,
         message: "Forbidden. You do not have access to this repository",
+        statusCode: 403,
       });
     }
 
     throw createError({
-      statusCode: 500,
       message: "Internal Server Error. Failed to fetch repository permissions",
+      statusCode: 500,
     });
   }
 
@@ -52,12 +52,10 @@ const repoWritePermissions = async (
     permissionsJson.permission !== "write"
   ) {
     throw createError({
-      statusCode: 403,
       message: "Unauthorized. You do not have write access to this repository",
+      statusCode: 403,
     });
   }
-
-  return;
 };
 
 export default repoWritePermissions;

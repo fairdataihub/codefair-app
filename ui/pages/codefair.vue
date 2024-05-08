@@ -13,6 +13,7 @@
         </div>
       </div>
     </div>
+
     <div class="">
       <div class="mx-auto flex max-w-screen-xl justify-start px-4 md:px-8">
         <div class="flex max-w-screen-xl flex-col py-8">
@@ -22,6 +23,7 @@
             >
               What is codefair?
             </h2>
+
             <p>
               codefair is a free and open source GitHub app that acts as your
               personal assistant when it comes to making your research software
@@ -30,6 +32,7 @@
               (FAIR4RS Principles).
             </p>
           </div>
+
           <div
             class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start"
           >
@@ -42,6 +45,7 @@
         </div>
       </div>
     </div>
+
     <div class="bg-[#e7ddfa4f]">
       <div class="mx-auto flex max-w-screen-xl justify-start px-4 md:px-8">
         <div class="my-8 flex h-auto max-w-screen-xl flex-col py-8">
@@ -51,6 +55,7 @@
             >
               How does codefair work?
             </h2>
+
             <p>
               Just install codefair from the GitHub marketplace on your
               software's GitHub repository. By communicating with you through
@@ -61,6 +66,7 @@
               principles.
             </p>
           </div>
+
           <div
             class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start"
           >
@@ -73,6 +79,7 @@
         </div>
       </div>
     </div>
+
     <div class="">
       <div class="mx-auto flex max-w-screen-xl justify-start px-4 md:px-8">
         <div class="my-8 flex h-auto max-w-screen-xl flex-col py-8">
@@ -82,6 +89,7 @@
             >
               Who should use codefair?
             </h2>
+
             <div>
               <p>
                 Currently, codefair helps make software FAIR by following the
@@ -100,6 +108,7 @@
         </div>
       </div>
     </div>
+
     <div class="bg-[#e7ddfa4f]">
       <div class="mx-auto flex max-w-screen-xl justify-start px-4 md:px-8">
         <div class="my-8 flex max-w-lg flex-col py-8">
@@ -108,6 +117,7 @@
           >
             How is codefair developed?
           </h2>
+
           <p>
             codefair is developed using Probot and is deployed on Vercel as a
             serverless function. The GitHub app is configured to receive

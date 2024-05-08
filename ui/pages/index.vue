@@ -47,6 +47,7 @@ definePageMeta({
           alt="Hero image"
           class="animate-float-opposite absolute left-24 top-8 h-[25rem] w-[25rem] object-cover object-center"
         />
+
         <img
           src="/assets/images/first_layer_hero.png"
           loading="lazy"
@@ -69,6 +70,7 @@ definePageMeta({
               class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
             />
           </div>
+
           <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
             <div class="flex flex-col">
               <h2
@@ -76,6 +78,7 @@ definePageMeta({
               >
                 What is codefair?
               </h2>
+
               <p>
                 codefair is a free and open source GitHub app that acts as your
                 personal assistant when it comes to making your research
@@ -88,6 +91,7 @@ definePageMeta({
                 assist you.
               </p>
             </div>
+
             <div
               class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start lg:py-0"
             >
@@ -101,6 +105,7 @@ definePageMeta({
           </div>
         </div>
       </div>
+
       <div class="py-4 md:py-8">
         <div
           class="container mx-auto flex max-w-screen-xl flex-col justify-between md:flex-row"
@@ -112,6 +117,7 @@ definePageMeta({
               >
                 Why make research software reusable?
               </h2>
+
               <p>
                 Making research software FAIR, i.e. optimally reusable, is
                 critical to enable reproducible and transparent research,
@@ -121,6 +127,7 @@ definePageMeta({
                 reusable (cha-ching).
               </p>
             </div>
+
             <div
               class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start lg:py-0"
             >
@@ -132,6 +139,7 @@ definePageMeta({
               </NuxtLink>
             </div>
           </div>
+
           <div class="flex-2 self-center">
             <img
               src="/assets/images/Other 08.png"
@@ -142,6 +150,7 @@ definePageMeta({
           </div>
         </div>
       </div>
+
       <div class="bg-[#e7ddfa4f] py-4 md:py-8">
         <div
           class="container mx-auto flex max-w-screen-xl flex-col-reverse justify-between lg:flex-row"
@@ -154,6 +163,7 @@ definePageMeta({
               class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
             />
           </div>
+
           <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
             <div class="flex flex-col">
               <h2
@@ -161,6 +171,7 @@ definePageMeta({
               >
                 Why should you use codefair?
               </h2>
+
               <p>
                 With codefair, you do not have to think about making your
                 software FAIR. Just install codefair from the GitHub marketplace
@@ -172,6 +183,7 @@ definePageMeta({
                 the FAIR4RS principles.
               </p>
             </div>
+
             <div
               class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center md:py-0 lg:justify-start"
             >
@@ -185,6 +197,7 @@ definePageMeta({
           </div>
         </div>
       </div>
+
       <div class="py-4 md:py-8">
         <div
           class="container mx-auto flex max-w-screen-xl flex-col justify-between lg:flex-row"
@@ -196,6 +209,7 @@ definePageMeta({
               >
                 Who are we?
               </h2>
+
               <p>
                 codefair is being developed by the team at the FAIR Data
                 Innovations Hub, a division of the non profit biomedical
@@ -208,6 +222,7 @@ definePageMeta({
                 tool. We would also love if others would join us in this effort!
               </p>
             </div>
+
             <div
               class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center md:py-0 lg:justify-start"
             >
@@ -219,6 +234,7 @@ definePageMeta({
               </a>
             </div>
           </div>
+
           <div class="self-center">
             <img
               src="/assets/images/DRIP_18.png"
@@ -229,6 +245,7 @@ definePageMeta({
           </div>
         </div>
       </div>
+
       <div class="bg-[#e7ddfa4f] py-4 md:py-8">
         <div
           class="container mx-auto flex max-w-screen-xl flex-col-reverse justify-between lg:flex-row"
@@ -241,6 +258,7 @@ definePageMeta({
               class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
             />
           </div>
+
           <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
             <div>
               <h2
@@ -248,11 +266,13 @@ definePageMeta({
               >
                 Need help? Have suggestions? Want to contribute?
               </h2>
+
               <p>
                 Reach out to us via the GitHub issues of the codefair repo and
                 we will be happy to connect with you.
               </p>
             </div>
+
             <div
               class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center md:-mt-8 md:py-0 lg:justify-start"
             >

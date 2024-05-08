@@ -11,21 +11,21 @@ await mongoose.connect(process.env.MONGODB_URI);
 
 const userSchema = new mongoose.Schema(
   {
-    _id: {
-      type: String,
-      required: true,
-    },
     username: {
-      type: String,
       required: true,
+      type: String,
     },
-    github_id: {
-      type: String,
+    _id: {
       required: true,
+      type: String,
     },
     access_token: {
-      type: String,
       required: false,
+      type: String,
+    },
+    github_id: {
+      required: true,
+      type: String,
     },
   } as const,
   { _id: false },
@@ -36,20 +36,20 @@ mongoose.model("users", userSchema);
 const sessionsSchema = new mongoose.Schema(
   {
     _id: {
+      required: true,
       type: String,
-      required: true,
-    },
-    user_id: {
-      type: String,
-      required: true,
-    },
-    expires_at: {
-      type: Date,
-      required: true,
     },
     access_token: {
-      type: String,
       required: false,
+      type: String,
+    },
+    expires_at: {
+      required: true,
+      type: Date,
+    },
+    user_id: {
+      required: true,
+      type: String,
     },
   } as const,
   { _id: false },
@@ -68,30 +68,30 @@ const adapter = new MongodbAdapter(
 );
 
 export const lucia = new Lucia(adapter, {
-  sessionCookie: {
-    attributes: {
-      secure: !import.meta.dev,
-    },
-  },
-  getUserAttributes: (attributes) => {
-    return {
-      username: attributes.username,
-      github_id: attributes.github_id,
-      access_token: attributes.access_token,
-    };
-  },
   getSessionAttributes: (attributes) => {
     return {
       access_token: attributes.access_token,
     };
   },
+  getUserAttributes: (attributes) => {
+    return {
+      username: attributes.username,
+      access_token: attributes.access_token,
+      github_id: attributes.github_id,
+    };
+  },
+  sessionCookie: {
+    attributes: {
+      secure: !import.meta.dev,
+    },
+  },
 });
 
 declare module "lucia" {
   interface Register {
-    Lucia: typeof lucia;
-    DatabaseUserAttributes: Omit<DatabaseUser, "id">;
     DatabaseSessionAttributes: Omit<DatabaseSession, "id">;
+    DatabaseUserAttributes: Omit<DatabaseUser, "id">;
+    Lucia: typeof lucia;
   }
 }
 

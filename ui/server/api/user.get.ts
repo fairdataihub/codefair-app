@@ -5,9 +5,9 @@ export default defineEventHandler(async (event) => {
 
   return user
     ? {
+        id: user?.id,
         username: user?.username,
         github_id: user?.github_id,
-        id: user?.id,
       }
     : null;
 });

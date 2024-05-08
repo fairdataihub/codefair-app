@@ -1,8 +1,7 @@
 import { OAuth2RequestError } from "arctic";
-import { DatabaseUser, generateIdFromEntropySize } from "lucia";
+import { generateIdFromEntropySize } from "lucia";
 import clientPromise from "~/server/utils/mongodb";
-import { github, sessions, users } from "~/server/utils/auth";
-import mongoose from "mongoose";
+import { github } from "~/server/utils/auth";
 
 interface GitHubUser {
   id: string;
@@ -77,11 +76,11 @@ export default defineEventHandler(async (event) => {
     const userId = generateIdFromEntropySize(10); // 16 characters long
 
     await db.collection("users").insertOne({
-      _id: userId,
-      github_id: githubUser.id,
       username: githubUser.login,
+      _id: userId,
       access_token: tokens.accessToken,
       created_at: new Date(),
+      github_id: githubUser.id,
     });
 
     const session = await lucia.createSession(userId, {
@@ -104,8 +103,8 @@ export default defineEventHandler(async (event) => {
     }
 
     throw createError({
-      status: 500,
       message: (e as any) ?? "An error occurred",
+      status: 500,
     });
   }
 });

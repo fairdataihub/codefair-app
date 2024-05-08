@@ -1,27 +1,27 @@
 export default defineAppConfig({
   docus: {
     title: "codefair",
-    description:
-      "Make your research software reusable without breaking a sweat!",
-    socials: {
-      twitter: "fairdataihub",
-      github: "fairdataihub/codefair-app",
-    },
-    github: {
-      dir: "blob/main/content",
-      branch: "main",
-      repo: "codefair-app",
-      owner: "fairdataihub",
-      edit: true,
-    },
     aside: {
-      level: 0,
       collapsed: false,
       exclude: [],
+      level: 0,
+    },
+    description:
+      "Make your research software reusable without breaking a sweat!",
+    github: {
+      branch: "main",
+      dir: "blob/main/content",
+      edit: true,
+      owner: "fairdataihub",
+      repo: "codefair-app",
     },
     main: {
-      padded: true,
       fluid: true,
+      padded: true,
+    },
+    socials: {
+      github: "fairdataihub/codefair-app",
+      twitter: "fairdataihub",
     },
     // header: {
     //   logo: true,

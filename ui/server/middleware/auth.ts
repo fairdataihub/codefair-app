@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
 
 declare module "h3" {
   interface H3EventContext {
-    user: User | null;
     session: Session | null;
+    user: User | null;
   }
 }

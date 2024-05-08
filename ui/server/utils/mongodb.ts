@@ -36,8 +36,8 @@ if (process.env.NODE_ENV === "development") {
 export interface DatabaseUser {
   id: String;
   username: String;
-  github_id: Number;
   access_token: String;
+  github_id: Number;
 }
 
 export interface DatabaseSession {

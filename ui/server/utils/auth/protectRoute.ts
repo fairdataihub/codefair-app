@@ -13,17 +13,15 @@ export default defineEventHandler(async (event) => {
 
   if (!user || !session) {
     throw createError({
-      statusCode: 401,
       message: "Unauthorized",
+      statusCode: 401,
     });
   }
 
   if (!user.access_token) {
     throw createError({
-      statusCode: 401,
       message: "Unauthorized. Missing access token",
+      statusCode: 401,
     });
   }
-
-  return;
 });

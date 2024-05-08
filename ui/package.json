@@ -10,16 +10,15 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "start": "probot run ./index.js",
-    "!build-css": "tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css",
-    "!watch-css": "npx tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css --watch",
-    "!build": "npm run build-css",
+    "lint:js": "eslint --ext .js,.ts,.vue --ignore-path .gitignore .",
+    "lint:prettier": "prettier --check .",
+    "lint": "pnpm lint:js && pnpm lint:prettier",
+    "lint:fix": "prettier --write --list-different . && pnpm lint:js --fix",
     "test": "jest"
   },
   "dependencies": {
     "@lucia-auth/adapter-mongodb": "^1.0.3",
     "arctic": "^1.6.2",
-    "axios": "^1.6.8",
     "humanparser": "^2.7.0",
     "js-yaml": "^4.1.0",
     "lucia": "^3.2.0",
@@ -29,8 +28,6 @@
     "notivue": "^2.4.4",
     "nuxt": "3.11.1",
     "nuxt-mongoose": "^1.0.5",
-    "oslo": "^1.2.0",
-    "probot": "^13.2.0",
     "sanitize-html": "^2.13.0",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0",
@@ -61,7 +58,6 @@
     "postcss": "^8.4.38",
     "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.14",
-    "smee-client": "^2.0.1",
     "tailwindcss-debug-screens": "^2.2.1"
   }
 }
