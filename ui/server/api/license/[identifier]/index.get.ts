@@ -1,6 +1,9 @@
 import { MongoClient } from "mongodb";
+import type { User } from "lucia";
 
 export default defineEventHandler(async (event) => {
+  await protectRoute(event);
+
   const { identifier } = event.context.params as { identifier: string };
 
   const client = new MongoClient(process.env.MONGODB_URI as string, {});
@@ -21,11 +24,14 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Check if the user is authorized to access the license request
+  await repoWritePermissions(event, licenseRequest.owner, licenseRequest.repo);
+
   // Check if the license request is still open
   if (!licenseRequest.open) {
     throw createError({
       statusCode: 400,
-      message: "License request is not open",
+      message: "request closed",
     });
   }
 

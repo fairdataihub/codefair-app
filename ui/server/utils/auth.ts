@@ -1,133 +1,71 @@
-// import { Lucia } from "lucia";
-// import { MongodbAdapter } from "@lucia-auth/adapter-mongodb"
-// import { Collection } from "mongodb";
-// import clientPromise from "./mongodb"
-
-// const client = await clientPromise;
-// await client.connect();
-
-// const db = client.db();
-// const User = db.collection("users") as Collection<UserDoc>;
-// const Session = db.collection("sessions") as Collection<SessionDoc>;
-
-// const adapter = new MongodbAdapter(Session, User);
-
-// export const lucia = new Lucia(adapter, {
-// 	sessionCookie: {
-// 		attributes: {
-// 			secure: !import.meta.dev
-// 		}
-// 	},
-// 	getUserAttributes: (attributes) => {
-// 		return {
-// 			// attributes has the type of DatabaseUserAttributes
-// 			githubId: attributes.github_id,
-// 			username: attributes.username
-// 		};
-// 	}
-// });
-
-// declare module "lucia" {
-//     interface Register {
-//         Lucia: typeof lucia;
-//         DatabaseUserAttributes: DatabaseUserAttributes;
-//     }
-// }
-
-// interface DatabaseUserAttributes {
-//     github_id: number;
-//     username: string;
-// }
-
-// interface UserDoc {
-//     _id: string;
-// }
-
-// interface SessionDoc {
-//     _id: string;
-//     expires_at: Date;
-//     user_id: string;
-// }
-
-// import { Lucia } from "lucia";
-// import { Collection } from "mongodb";
-// import { MongodbAdapter } from "@lucia-auth/adapter-mongodb";
-// import clientPromise from "./mongodb";
-// import { GitHub } from "arctic";
-
-// interface DatabaseUser {
-// 	id: string;
-// 	username: string;
-// 	github_id: number;
-// }
-
-// interface UserDoc {
-// 	_id: string;
-// }
-
-// interface SessionDoc {
-// 	_id: string;
-// 	expires_at: Date;
-// 	user_id: string;
-// }
-
-// // import { webcrypto } from "crypto";
-// // globalThis.crypto = webcrypto as Crypto;
-
-// const client = await clientPromise;
-// await client.connect();
-
-// const db = client.db();
-// const User = db.collection("users") as Collection<UserDoc>;
-// const Session = db.collection("sessions") as Collection<SessionDoc>;
-
-// const adapter = new MongodbAdapter(Session, User);
-
-// export const lucia = new Lucia(adapter, {
-// 	sessionCookie: {
-// 		attributes: {
-// 			secure: !import.meta.dev
-// 		}
-// 	},
-// 	getUserAttributes: (attributes) => {
-// 		return {
-// 			username: attributes.username,
-// 			githubId: attributes.github_id
-// 		};
-// 	}
-// });
-
-// declare module "lucia" {
-// 	interface Register {
-// 		Lucia: typeof lucia;
-// 		DatabaseUserAttributes: Omit<DatabaseUser, "id">;
-// 	}
-// }
-
-// // const config = useRuntimeConfig();
-
-// export const github = new GitHub(process.env.GITHUB_CLIENT_ID!, process.env.GITHUB_CLIENT_SECRET!);
-
 import { Lucia } from "lucia";
 import { MongodbAdapter } from "@lucia-auth/adapter-mongodb";
-import { Collection, MongoClient } from "mongodb";
 import { GitHub } from "arctic";
-import type { DatabaseUser } from "./mongodb";
+import mongoose from "mongoose";
 
 if (!process.env.MONGODB_URI) {
-  throw new Error("Please add your Mongo URI to .env.local");
+  throw new Error("Please add your Mongo URI to .env");
 }
 
-const client = new MongoClient(process.env.MONGODB_URI!);
-client.connect();
+await mongoose.connect(process.env.MONGODB_URI);
 
-const db = client.db();
-const User = db.collection("user") as Collection<UserDoc>;
-const Session = db.collection("session") as Collection<SessionDoc>;
-// const User = db.collection("users");
-// const Session = db.collection("sessions");
+const userSchema = new mongoose.Schema(
+  {
+    _id: {
+      type: String,
+      required: true,
+    },
+    username: {
+      type: String,
+      required: true,
+    },
+    github_id: {
+      type: String,
+      required: true,
+    },
+    access_token: {
+      type: String,
+      required: false,
+    },
+  } as const,
+  { _id: false },
+);
 
-const adapter = new MongodbAdapter(Session, User);
+mongoose.model("users", userSchema);
+
+const sessionsSchema = new mongoose.Schema(
+  {
+    _id: {
+      type: String,
+      required: true,
+    },
+    user_id: {
+      type: String,
+      required: true,
+    },
+    expires_at: {
+      type: Date,
+      required: true,
+    },
+    access_token: {
+      type: String,
+      required: false,
+    },
+  } as const,
+  { _id: false },
+);
+
+mongoose.model("sessions", sessionsSchema);
+
+export const users =
+  mongoose.models.users || mongoose.model("users", userSchema);
+export const sessions =
+  mongoose.models.sessions || mongoose.model("sessions", sessionsSchema);
+
+const adapter = new MongodbAdapter(
+  mongoose.connection.collection("sessions"),
+  mongoose.connection.collection("users"),
+);
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
@@ -138,7 +76,13 @@ export const lucia = new Lucia(adapter, {
   getUserAttributes: (attributes) => {
     return {
       username: attributes.username,
-      githubId: attributes.github_id,
+      github_id: attributes.github_id,
+      access_token: attributes.access_token,
+    };
+  },
+  getSessionAttributes: (attributes) => {
+    return {
+      access_token: attributes.access_token,
     };
   },
 });
@@ -147,16 +91,8 @@ declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
     DatabaseUserAttributes: Omit<DatabaseUser, "id">;
+    DatabaseSessionAttributes: Omit<DatabaseSession, "id">;
   }
-}
-interface UserDoc {
-  _id: String;
-}
-
-interface SessionDoc {
-  _id: String;
-  expires_at: Date;
-  user_id: String;
 }
 
 export const github = new GitHub(

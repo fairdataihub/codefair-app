@@ -2,6 +2,8 @@ import { MongoClient } from "mongodb";
 import { z } from "zod";
 
 export default defineEventHandler(async (event) => {
+  await protectRoute(event);
+
   const bodySchema = z.object({
     licenseId: z.string(),
     licenseContent: z.string(),

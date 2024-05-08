@@ -9,7 +9,7 @@ const devMode = process.env.NODE_ENV === "development";
   >
     <div class="relative pb-10 sm:pb-8 lg:pb-12">
       <div
-        class="ransform-gpu absolute inset-x-0 -top-40 z-0 overflow-hidden blur-3xl sm:-top-80"
+        class="absolute inset-x-0 -top-40 z-0 transform-gpu overflow-hidden blur-3xl sm:-top-80"
         aria-hidden="true"
       >
         <div
