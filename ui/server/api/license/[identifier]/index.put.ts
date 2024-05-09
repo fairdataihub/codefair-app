@@ -49,6 +49,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Check if the user is authorized to access the license request
+  await repoWritePermissions(event, licenseRequest.owner, licenseRequest.repo);
+
   if (!licenseRequest.open) {
     throw createError({
       statusCode: 400,
@@ -69,7 +72,7 @@ export default defineEventHandler(async (event) => {
   if (!updatedRecord) {
     throw createError({
       statusCode: 500,
-      message: "Failed to update license request",
+      message: "license-request-update-failed",
     });
   }
 

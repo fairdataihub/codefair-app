@@ -139,8 +139,44 @@ const saveLicenseDraft = async () => {
     });
 };
 
-const saveLicenseAndPush = () => {
-  console.log("Save and push license to repository");
+const saveLicenseAndPush = async () => {
+  submitLoading.value = true;
+
+  const body = {
+    licenseId: licenseId.value,
+    licenseContent: licenseContent.value,
+  };
+
+  await $fetch(`/api/license/${identifier}`, {
+    method: "POST",
+    headers: useRequestHeaders(["cookie"]),
+    body: JSON.stringify(body),
+  })
+    .then((response) => {
+      if ("prUrl" in response) {
+        push.success({
+          title: "License pushed to repository",
+          message: "Review the changes in the repository",
+        });
+
+        window.open(response.prUrl, "_blank");
+      } else {
+        push.error({
+          title: "Failed to push license to repository",
+          message: "Please try again later",
+        });
+      }
+    })
+    .catch((error) => {
+      console.error("Failed to push license to repository:", error);
+      push.error({
+        title: "Failed to push license to repository",
+        message: "Please try again later",
+      });
+    })
+    .finally(() => {
+      submitLoading.value = false;
+    });
 };
 </script>
 

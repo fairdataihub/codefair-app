@@ -6,8 +6,6 @@ watchEffect(() => {
     return navigateTo("/");
   }
 });
-
-const visible = ref(false);
 </script>
 
 <template>

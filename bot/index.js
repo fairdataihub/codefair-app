@@ -63,6 +63,7 @@ export default async (app) => {
           identifier,
           owner,
           repo,
+          installationId: context.payload.installation.id,
           open: true,
           timestamp: new Date(),
         });
