@@ -13,18 +13,15 @@ export default defineEventHandler((event) => {
 
   if (!user || !session) {
     throw createError({
-      message: "Unauthorized",
       statusCode: 401,
+      statusMessage: "unauthorized",
     });
   }
 
   if (!user.access_token) {
     throw createError({
-      data: {
-        code: "missing-access-token",
-        message: "Unauthorized. Missing access token",
-      },
       statusCode: 401,
+      statusMessage: "missing-access-token",
     });
   }
 });

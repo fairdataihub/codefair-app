@@ -51,7 +51,9 @@ if (error.value) {
     message: "Please try again later",
   });
 
-  console.error("Failed to fetch license details:", error.value);
+  // console.error("Failed to fetch license details:", error.value);
+
+  throw createError(error.value);
 }
 
 if (data.value) {
@@ -144,12 +146,12 @@ const saveLicenseAndPush = () => {
 
 <template>
   <main class="mx-auto max-w-screen-xl">
-    <ErrorPageAuth
+    <!-- <ErrorPageAuth
       v-if="error"
       :errorContent="error.data"
       :statusCode="error.statusCode"
-    />
-    <div v-else>
+    /> -->
+    <div>
       <n-flex vertical size="large" class="pb-5">
         <n-select
           v-model:value="licenseId"

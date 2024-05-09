@@ -7,12 +7,13 @@ export default defineEventHandler(async (event) => {
   const { identifier } = event.context.params as { identifier: string };
 
   const client = new MongoClient(process.env.MONGODB_URI as string, {});
-  // Check if the request identifier exists in the database
+
   await client.connect();
 
   const db = client.db(process.env.MONGODB_DB_NAME);
   const collection = db.collection("licenseRequests");
 
+  // Check if the request identifier exists in the database
   const licenseRequest = await collection.findOne({
     identifier,
   });
@@ -20,10 +21,7 @@ export default defineEventHandler(async (event) => {
   if (!licenseRequest) {
     throw createError({
       statusCode: 404,
-      data: {
-        code: "license-request-not-found",
-        message: "License request not found",
-      },
+      statusMessage: "license-request-not-found",
     });
   }
 
@@ -34,10 +32,7 @@ export default defineEventHandler(async (event) => {
   if (!licenseRequest.open) {
     throw createError({
       statusCode: 400,
-      data: {
-        code: "request-closed",
-        message: "License request is closed",
-      },
+      statusMessage: "request-closed",
     });
   }
 

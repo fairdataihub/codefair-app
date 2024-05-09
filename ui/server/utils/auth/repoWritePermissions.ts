@@ -9,8 +9,8 @@ const repoWritePermissions = async (
 
   if (!owner || !repo) {
     throw createError({
-      message: "Bad Request. Missing owner or repo in the URL params",
       statusCode: 400,
+      statusMessage: "Bad Request. Missing owner or repo in the URL params",
     });
   }
 
@@ -27,21 +27,15 @@ const repoWritePermissions = async (
   if (!permissions.ok) {
     if (permissions.status === 404) {
       throw createError({
-        data: {
-          code: "repo-not-found",
-          message: "Not Found. Repository not found",
-        },
         statusCode: 404,
+        statusMessage: "repo-not-found",
       });
     }
 
     if (permissions.status === 403) {
       throw createError({
-        data: {
-          code: "forbidden-repo-access",
-          message: "Forbidden. You do not have access to this repository",
-        },
         statusCode: 403,
+        statusMessage: "forbidden-repo-access",
       });
     }
 
@@ -58,12 +52,8 @@ const repoWritePermissions = async (
     permissionsJson.permission !== "write"
   ) {
     throw createError({
-      data: {
-        code: "unauthorized-repo-access",
-        message:
-          "Unauthorized. You do not have write access to this repository",
-      },
       statusCode: 403,
+      statusMessage: "unauthorized-repo-access",
     });
   }
 };
