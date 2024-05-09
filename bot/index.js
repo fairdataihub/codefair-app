@@ -1,9 +1,9 @@
 import axios from "axios";
 import human from "humanparser";
-import licensesAvail from "./public/assets/data/licenses.json" assert { type: "json" };
 import yaml from "js-yaml";
 import { MongoClient } from "mongodb";
 import { nanoid } from "nanoid";
+import licensesAvail from "./public/assets/data/licenses.json" assert { type: "json" };
 
 function checkEnvVariable(varName) {
   if (!process.env[varName]) {
@@ -18,7 +18,7 @@ checkEnvVariable("MONGODB_DB_NAME");
 const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
 
-// const client = new MongoClient(MONGODB_URI, {});
+const client = new MongoClient(MONGODB_URI, {});
 
 /**
  * This is the main entrypoint to your Probot app
@@ -26,15 +26,15 @@ const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
  */
 export default async (app) => {
   // Connect to the MongoDB database
-  // await client.connec/t();
+  await client.connect();
 
   const db = client.db(MONGODB_DB_NAME);
   const testCollection = db.collection("test");
 
-  // await testCollection.insertOne({
-  //   content: "Hello, MongoDB!",
-  //   timestamp: new Date(),
-  // });
+  await testCollection.insertOne({
+    content: "Hello, MongoDB!",
+    timestamp: new Date(),
+  });
 
   // Opens a PR every time someone installs your app for the first time
   // On adding the app to a repo
@@ -52,26 +52,25 @@ export default async (app) => {
         console.log("No license file found [codefair-app]");
 
         // Generate a url in the database to store the add a license interface
-        // const identifier = nanoid();
+        const identifier = nanoid();
 
         // Store the identifier in the database
-        // const url = `https://codefair.io/add/license/${identifier}`;
+        const url = `https://codefair.io/add/license/${identifier}`;
 
         // Store the identifier in the database with the repo information
         const licenseCollection = db.collection("licenseRequests");
         await licenseCollection.insertOne({
           identifier,
-          owner,
-          repo,
           installationId: context.payload.installation.id,
           open: true,
+          owner,
+          repo,
           timestamp: new Date(),
         });
 
         // If issue has been created, create one
         const title = "No license file found [codefair-app]";
-        const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/) (e.g., comment “@codefair-app MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com.`;
-        // const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@codefair-app license MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch.\n\n If you would like a visual interface to add and or edit a custom license, please click go to this URL: [${url}](${url})`;
+        const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@codefair-app license MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch.\n\n If you would like a visual interface to add and or edit a custom license, please click go to this URL: [${url}](${url})`;
 
         const verify = await verifyFirstIssue(context, owner, repo, title);
         if (!verify) {
@@ -129,7 +128,7 @@ export default async (app) => {
         console.log("No license file found [codefair-app]");
         const title = "No license file found [codefair-app]";
         const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@codefair-app MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com.`;
-        let verify = await verifyFirstIssue(context, owner, repo, title);
+        const verify = await verifyFirstIssue(context, owner, repo, title);
         if (!verify) {
           await createIssue(context, owner, repo, title, body);
         }
@@ -144,7 +143,7 @@ export default async (app) => {
         const body = `No CITATION.cff file was found at the root of your repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.
           If you would like me to generate a CITATION.cff file for you, please reply with "@codefair-app Yes". I will gather the information required in the CITATION.cff that I can find automatically from your repository and include that information in my reply for your review and edit. You can also add a CITATION.cff file yourself and I will close this issue when I detect it on the main branch.
           `;
-        let verify = await verifyFirstIssue(context, owner, repo, title);
+        const verify = await verifyFirstIssue(context, owner, repo, title);
         if (!verify) {
           await createIssue(context, owner, repo, title, body);
         }
@@ -167,10 +166,10 @@ export default async (app) => {
     const owner = context.payload.repository.owner.login;
     const repo = context.payload.repository.name;
     // Check if push is going to the default branch
-    const default_branch = await getDefaultBranch(context, owner, repo);
+    const defaultBranch = await getDefaultBranch(context, owner, repo);
 
     // If push is not going to the default branch don't do anything
-    if (context.payload.ref != `refs/heads/${default_branch.data.name}`) {
+    if (context.payload.ref !== `refs/heads/${defaultBranch.data.name}`) {
       console.log("Not pushing to default branch");
       return;
     }
@@ -218,7 +217,7 @@ export default async (app) => {
       console.log("No license file found (push)");
       const title = "No license file found [codefair-app]";
       const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@codefair-app MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com.`;
-      let verify = await verifyFirstIssue(context, owner, repo, title);
+      const verify = await verifyFirstIssue(context, owner, repo, title);
       if (!verify) {
         await createIssue(context, owner, repo, title, body);
       }
@@ -233,7 +232,7 @@ export default async (app) => {
       const body = `No CITATION.cff file was found at the root of your repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.
       If you would like me to generate a CITATION.cff file for you, please reply with "@codefair-app Yes". I will gather the information required in the CITATION.cff that I can find automatically from your repository and include that information in my reply for your review and edit. You can also add a CITATION.cff file yourself and I will close this issue when I detect it on the main branch.
       `;
-      let verify = await verifyFirstIssue(context, owner, repo, title);
+      const verify = await verifyFirstIssue(context, owner, repo, title);
       if (!verify) {
         await createIssue(context, owner, repo, title, body);
       }
@@ -304,20 +303,19 @@ export default async (app) => {
 };
 
 async function getDefaultBranch(context, owner, repo) {
-  let default_branch;
+  let defaultBranch;
 
   try {
-    default_branch = await context.octokit.repos.getBranch({
+    defaultBranch = await context.octokit.repos.getBranch({
+      branch: context.payload.repository.default_branch,
       owner,
       repo,
-      branch: context.payload.repository.default_branch,
     });
 
-    return default_branch;
+    return defaultBranch;
   } catch (error) {
     console.log("Error getting the default branch");
     console.log(error);
-    return;
   }
 }
 
@@ -325,11 +323,11 @@ async function closeOpenIssue(context, owner, repo, title) {
   // Check if issue is open and close it
   // TODO: UPDATE THE CREATOR WHEN MOVING TO PROD
   const issue = await context.octokit.issues.listForRepo({
-    owner,
-    repo: repo,
-    state: "open",
+    title,
     creator: "codefair-app[bot]",
-    title: title,
+    owner,
+    repo,
+    state: "open",
   });
 
   if (issue.data.length > 0) {
@@ -337,9 +335,9 @@ async function closeOpenIssue(context, owner, repo, title) {
     for (let i = 0; i < issue.data.length; i++) {
       if (issue.data[i].title === title) {
         await context.octokit.issues.update({
-          repo,
-          owner,
           issue_number: issue.data[i].number,
+          owner,
+          repo,
           state: "closed",
         });
       }
@@ -350,24 +348,24 @@ async function closeOpenIssue(context, owner, repo, title) {
 async function verifyFirstIssue(context, owner, repo, title) {
   // If there is an issue that has been created by the bot, (either opened or closed) don't create another issue
   const issues = await context.octokit.issues.listForRepo({
+    creator: "codefair-app[bot]",
     owner,
     repo,
-    creator: "codefair-app[bot]",
     state: "all",
   });
 
   if (issues.data.length > 0) {
     // iterate through issues to see if there is an issue with the same title
-    let no_issue = false;
+    let noIssue = false;
     for (let i = 0; i < issues.data.length; i++) {
       if (issues.data[i].title === title) {
         console.log("Issue already exists, will not recreate");
-        no_issue = true;
+        noIssue = true;
         break;
       }
     }
 
-    if (!no_issue) {
+    if (!noIssue) {
       return false;
     } else {
       return true;
@@ -396,8 +394,8 @@ async function checkForCitation(context, owner, repo) {
   try {
     await context.octokit.rest.repos.getContent({
       owner,
-      repo,
       path: "CITATION.cff",
+      repo,
     });
 
     return true;
@@ -410,8 +408,8 @@ async function checkForCodeMeta(context, owner, repo) {
   try {
     await context.octokit.rest.repos.getContent({
       owner,
-      repo,
       path: "codemeta.json",
+      repo,
     });
 
     return true;
@@ -424,11 +422,11 @@ async function createIssue(context, owner, repo, title, body) {
   // If issue has been created, create one
   console.log("gathering issues");
   const issue = await context.octokit.issues.listForRepo({
-    owner,
-    repo: repo,
-    state: "open",
+    title,
     creator: "codefair-app[bot]",
-    title: title,
+    owner,
+    repo,
+    state: "open",
   });
 
   console.log("ISSUE DATA");
@@ -436,22 +434,22 @@ async function createIssue(context, owner, repo, title, body) {
 
   if (issue.data.length > 0) {
     // iterate through issues to see if there is an issue with the same title
-    let no_issue = false;
+    let noIssue = false;
     for (let i = 0; i < issue.data.length; i++) {
       if (issue.data[i].title === title) {
-        no_issue = true;
+        noIssue = true;
         break;
       }
     }
 
-    if (!no_issue) {
+    if (!noIssue) {
       console.log("Creating an issue since no open issue was found");
       // Issue has not been created so we create one
       await context.octokit.issues.create({
-        repo,
+        title,
+        body,
         owner,
-        title: title,
-        body: body,
+        repo,
       });
     }
   }
@@ -459,10 +457,10 @@ async function createIssue(context, owner, repo, title, body) {
   if (issue.data.length === 0) {
     // Issue has not been created so we create one
     await context.octokit.issues.create({
-      repo,
+      title,
+      body,
       owner,
-      title: title,
-      body: body,
+      repo,
     });
   }
 }
@@ -470,12 +468,12 @@ async function createIssue(context, owner, repo, title, body) {
 async function gatherRepoAuthors(context, owner, repo, fileType) {
   // Get the list of contributors from the repo
   const contributors = await context.octokit.repos.listContributors({
-    repo,
     owner,
+    repo,
   });
 
   // Get user information for each contributors
-  let userInfo = await Promise.all(
+  const userInfo = await Promise.all(
     contributors.data.map(async (contributor) => {
       return await context.octokit.users.getByUsername({
         username: contributor.login,
@@ -483,25 +481,27 @@ async function gatherRepoAuthors(context, owner, repo, fileType) {
     }),
   );
 
-  let parsedAuthors = [];
+  const parsedAuthors = [];
   if (userInfo.length > 0) {
-    userInfo.map((author) => {
+    for (const author of userInfo) {
       if (author.data.type === "Bot") {
-        return;
+        continue;
       }
 
-      let authorObj = {
+      const authorObj = {
         orcid: "",
       };
+
       const parsedNames = human.parseName(author.data.name);
+
       if (author.data.company && fileType === "citation") {
-        authorObj["affiliation"] = author.data.company;
+        authorObj.affiliation = author.data.company;
       }
 
-      if (author.data.company && fileType == "codemeta") {
-        authorObj["affiliation"] = {
-          "@type": "Organization",
+      if (author.data.company && fileType === "codemeta") {
+        authorObj.affiliation = {
           name: author.data.company,
+          "@type": "Organization",
         };
       }
 
@@ -512,10 +512,10 @@ async function gatherRepoAuthors(context, owner, repo, fileType) {
         authorObj["family-names"] = parsedNames.lastName;
       }
       if (author.data.email) {
-        authorObj["email"] = author.data.email;
+        authorObj.email = author.data.email;
       }
       parsedAuthors.push(authorObj);
-    });
+    }
   }
 
   return parsedAuthors;
@@ -523,14 +523,14 @@ async function gatherRepoAuthors(context, owner, repo, fileType) {
 
 async function gatherLanguagesUsed(context, owner, repo) {
   // Get the programming languages used in the repo
-  let languages = await context.octokit.repos.listLanguages({
-    repo,
+  const languages = await context.octokit.repos.listLanguages({
     owner,
+    repo,
   });
 
   // Parse the data for languages used
   let languagesUsed = [];
-  if (languages != {}) {
+  if (Object.keys(languages.data).length !== 0) {
     languagesUsed = Object.keys(languages.data);
   }
 
@@ -540,24 +540,25 @@ async function gatherLanguagesUsed(context, owner, repo) {
 async function createLicense(context, owner, repo, license) {
   // Verify there is no PR open already for the LICENSE file
   const openPR = await context.octokit.pulls.list({
-    repo,
     owner,
+    repo,
     state: "open",
   });
 
   let prExists = false;
-  openPR.data.map((pr) => {
+
+  for (const pr of openPR.data) {
     if (pr.title === "feat: ✨ LICENSE file added") {
       prExists = true;
     }
-  });
+  }
 
   if (prExists) {
     await context.octokit.issues.createComment({
-      repo,
-      owner,
-      issue_number: context.payload.issue.number,
       body: `A pull request for the LICENSE file already exists here: ${openPR.data[0].html_url}`,
+      issue_number: context.payload.issue.number,
+      owner,
+      repo,
     });
 
     // // comment on pull request to resolve issue
@@ -578,20 +579,21 @@ async function createLicense(context, owner, repo, license) {
   if (licenseRequest) {
     try {
       const response = await axios.get(licenseRequest.detailsUrl);
-      const response_data = response.data;
+      const responseData = response.data;
 
       // Create a new file
       const branch = `license-${Math.floor(Math.random() * 9999)}`;
 
-      let default_branch;
-      let default_branch_name;
+      let defaultBranch;
+      let defaultBranchName;
+
       try {
-        default_branch = await context.octokit.repos.getBranch({
+        defaultBranch = await context.octokit.repos.getBranch({
+          branch: context.payload.repository.default_branch,
           owner,
           repo,
-          branch: context.payload.repository.default_branch,
         });
-        default_branch_name = default_branch.data.name;
+        defaultBranchName = defaultBranch.data.name;
       } catch (error) {
         console.log("Error getting default branch");
         console.log(error);
@@ -602,56 +604,55 @@ async function createLicense(context, owner, repo, license) {
       console.log(default_branch);
       console.log("Creating branch");
       await context.octokit.git.createRef({
-        repo,
         owner,
         ref: `refs/heads/${branch}`,
-        sha: default_branch.data.commit.sha,
+        repo,
+        sha: defaultBranch.data.commit.sha,
       });
 
       // Create a new file
       console.log("Creating file");
       await context.octokit.repos.createOrUpdateFileContents({
-        repo,
+        branch,
+        content: Buffer.from(responseData.licenseText).toString("base64"),
+        message: `feat: ✨ add LICENSE file with ${license} license terms`,
         owner,
         path: "LICENSE",
-        message: `feat: ✨ add LICENSE file with ${license} license terms`,
-        content: Buffer.from(response_data.licenseText).toString("base64"),
-        branch,
+        repo,
       });
 
       // Create a PR from that branch with the commit of our added file
       console.log("Creating PR");
       await context.octokit.pulls.create({
-        repo,
-        owner,
         title: "feat: ✨ LICENSE file added",
-        head: branch,
-        base: default_branch_name,
+        base: defaultBranchName,
         body: `Resolves #${context.payload.issue.number}`,
-        maintainer_can_modify: true, //Allows maintainers to edit your app's PR
+        head: branch,
+        maintainer_can_modify: true, // Allows maintainers to edit your app's PR
+        owner,
+        repo,
       });
 
       // Comment on issue to notify user that license has been added
       console.log("Commenting on issue");
       await context.octokit.issues.createComment({
-        repo,
-        owner,
-        issue_number: context.payload.issue.number,
         body: `A LICENSE file with ${license} license terms has been added to a new branch and a pull request is awaiting approval. I will close this issue automatically once the pull request is approved.`,
+        issue_number: context.payload.issue.number,
+        owner,
+        repo,
       });
     } catch (error) {
       console.log("Error fetching license file");
       console.log(error);
-      return;
     }
   } else {
     // License not found, comment on issue to notify user
     console.log("License not found");
     await context.octokit.issues.createComment({
-      repo,
-      owner,
-      issue_number: context.payload.issue.number,
       body: `The license identifier “${license}” was not found in the SPDX License List. Please reply with a valid license identifier.`,
+      issue_number: context.payload.issue.number,
+      owner,
+      repo,
     });
   }
 }
@@ -664,59 +665,59 @@ async function createCitationFile(context, owner, repo, citationText) {
   const branch = `citation-${Math.floor(Math.random() * 9999)}`;
 
   // Get the default branch of the repo
-  let default_branch = await getDefaultBranch(context, owner, repo);
-  let default_branch_name = default_branch.data.name;
+  const defaultBranch = await getDefaultBranch(context, owner, repo);
+  const defaultBranchName = defaultBranch.data.name;
 
   // Create a new branch based off the default branch
   await context.octokit.git.createRef({
-    repo,
     owner,
     ref: `refs/heads/${branch}`,
-    sha: default_branch.data.commit.sha,
+    repo,
+    sha: defaultBranch.data.commit.sha,
   });
 
   // Create a new file
   await context.octokit.repos.createOrUpdateFileContents({
-    repo,
+    branch,
+    content: Buffer.from(citationText).toString("base64"),
+    message: `feat: ✨ add CITATION.cff file`,
     owner,
     path: "CITATION.cff",
-    message: `feat: ✨ add CITATION.cff file`,
-    content: Buffer.from(citationText).toString("base64"),
-    branch,
+    repo,
   });
 
   // Create a PR with the branch
   await context.octokit.pulls.create({
-    repo,
-    owner,
     title: "feat: ✨ CITATION.cff create for repo",
-    head: branch,
-    base: default_branch_name,
+    base: defaultBranchName,
     body: `Resolves #${context.payload.issue.number}`,
+    head: branch,
     maintainer_can_modify: true,
+    owner,
+    repo,
   });
 
   // Get the link to the CITATION.cff file in the branch created
-  let citation_link = await context.octokit.repos.getContent({
-    repo,
+  let citationLink = await context.octokit.repos.getContent({
     owner,
     path: "CITATION.cff",
     ref: `refs/heads/${branch}`,
+    repo,
   });
 
-  citation_link = citation_link.data.html_url;
-  let edit_link = citation_link.replace("blob", "edit");
+  citationLink = citationLink.data.html_url;
+  const editLink = citationLink.replace("blob", "edit");
 
   await context.octokit.issues.createComment({
-    repo,
-    owner,
-    issue_number: context.payload.issue.number,
     body:
       "```yaml\n" +
       citationText +
       "\n```" +
       `\n\nHere is the information I was able to gather from this repo. If you would like to add more please follow the link to edit using the GitHub UI. Once you are satisfied with the CITATION.cff you can merge the pull request and I will close this issue.
-      \n\n[Edit CITATION.cff](${edit_link})`,
+      \n\n[Edit CITATION.cff](${editLink})`,
+    issue_number: context.payload.issue.number,
+    owner,
+    repo,
   });
 }
 
@@ -725,61 +726,61 @@ async function createCodeMetaFile(context, owner, repo, codeMetaText) {
   const branch = `codemeta-${Math.floor(Math.random() * 9999)}`;
 
   // Get the default branch of the repo
-  let default_branch = await getDefaultBranch(context, owner, repo);
-  let default_branch_name = default_branch.data.name;
+  const defaultBranch = await getDefaultBranch(context, owner, repo);
+  const defaultBranchName = defaultBranch.data.name;
 
   // Create a new branch based off the default branch
   await context.octokit.git.createRef({
-    repo,
     owner,
     ref: `refs/heads/${branch}`,
-    sha: default_branch.data.commit.sha,
+    repo,
+    sha: defaultBranch.data.commit.sha,
   });
 
   // Create a new file
   await context.octokit.repos.createOrUpdateFileContents({
-    repo,
-    owner,
-    path: "codemeta.json",
-    message: `feat: ✨ add codemeta.json file`,
+    branch,
     content: Buffer.from(JSON.stringify(codeMetaText, null, 2)).toString(
       "base64",
     ),
-    branch,
+    message: `feat: ✨ add codemeta.json file`,
+    owner,
+    path: "codemeta.json",
+    repo,
   });
 
   // Create a PR with the branch
   await context.octokit.pulls.create({
-    repo,
-    owner,
     title: "feat: ✨ codemeta.json created for repo",
-    head: branch,
-    base: default_branch_name,
+    base: defaultBranchName,
     body: `Resolves #${context.payload.issue.number}`,
+    head: branch,
     maintainer_can_modify: true,
+    owner,
+    repo,
   });
 
   // Get the link to the codemeta.json file in the branch created
-  let codemeta_link = await context.octokit.repos.getContent({
-    repo,
+  let codemetaLink = await context.octokit.repos.getContent({
     owner,
     path: "codemeta.json",
     ref: `refs/heads/${branch}`,
+    repo,
   });
 
-  codemeta_link = codemeta_link.data.html_url;
-  const edit_link = codemeta_link.replace("blob", "edit");
+  codemetaLink = codemetaLink.data.html_url;
+  const editLink = codemetaLink.replace("blob", "edit");
 
   await context.octokit.issues.createComment({
-    repo,
-    owner,
-    issue_number: context.payload.issue.number,
     body:
       "```json\n" +
       JSON.stringify(codeMetaText, null, 2) +
       "\n```" +
       `\n\nHere is the information I was able to gather from this repo. If you would like to add more please follow the link to edit using the GitHub UI. Once you are satisfied with the codemeta.json you can merge the pull request and I will close this issue.
-      \n\n[Edit codemeta.json](${edit_link})`,
+      \n\n[Edit codemeta.json](${editLink})`,
+    issue_number: context.payload.issue.number,
+    owner,
+    repo,
   });
 }
 
@@ -807,56 +808,62 @@ async function getDOI(context, owner, repoName) {
 async function gatherCitationInfo(context, owner, repo) {
   // Verify there is no PR open already for the CITATION.cff file
   const openPR = await context.octokit.pulls.list({
-    repo,
     owner,
+    repo,
     state: "open",
   });
 
   let prExists = false;
-  openPR.data.map((pr) => {
+
+  for (const pr of openPR.data) {
     if (pr.title === "feat: ✨ CITATION.cff created for repo") {
       prExists = true;
     }
-  });
+  }
 
   if (prExists) {
     await context.octokit.issues.createComment({
-      repo,
-      owner,
-      issue_number: context.payload.issue.number,
       body: `A PR for the CITATION.cff file already exists here: ${openPR.data[0].html_url}`,
+      issue_number: context.payload.issue.number,
+      owner,
+      repo,
     });
     return;
   }
 
   // Get the release data of the repo
-  let releases = await context.octokit.repos.listReleases({
-    repo,
+  const releases = await context.octokit.repos.listReleases({
     owner,
+    repo,
   });
 
   // Get the metadata of the repo
-  let repoData = await context.octokit.repos.get({
-    repo,
+  const repoData = await context.octokit.repos.get({
     owner,
+    repo,
   });
 
   // Get authors of repo
-  let parsedAuthors = await gatherRepoAuthors(context, owner, repo, "citation");
+  const parsedAuthors = await gatherRepoAuthors(
+    context,
+    owner,
+    repo,
+    "citation",
+  );
   // Get DOI of repo (if it exists)
-  let doi = await getDOI(context, owner, repo);
+  const doi = await getDOI(context, owner, repo);
   // Get the repo description
-  let abstract = repoData.data.description;
+  const abstract = repoData.data.description;
   // Get the license of the repo
-  let license_name = repoData.data.license;
+  const licenseName = repoData.data.license;
 
   // date released is dependent on whether the repo has a release data (if not, use the created date)
-  let date_released;
+  let dateReleased;
   if (repoData.data.released_at) {
-    date_released = repoData.data.released_at;
+    dateReleased = repoData.data.released_at;
   } else {
     // The date needs to be in this pattern:
-    date_released = new Date().toISOString().split("T")[0];
+    dateReleased = new Date().toISOString().split("T")[0];
   }
 
   // Get the homepage of the repo
@@ -874,74 +881,74 @@ async function gatherCitationInfo(context, owner, repo) {
   }
 
   // Begin creating json for CITATION.cff file
-  let citation_obj = {
+  let citationObj = {
+    title: repoData.data.name,
     "cff-version": "1.2.0",
-    message: "If you use this software, please cite it as below.",
-    type: "software",
     identifiers: [
       {
-        type: "doi",
         description: "DOI for this software's record on Zenodo.",
+        type: "doi",
       },
     ],
+    message: "If you use this software, please cite it as below.",
     "repository-code": repoData.data.html_url,
-    title: repoData.data.name,
+    type: "software",
   };
 
   if (doi[0]) {
-    citation_obj["identifiers"][0]["value"] = doi[1];
+    citationObj.identifiers[0].value = doi[1];
   } else {
-    citation_obj["identifiers"][0]["value"] = "";
+    citationObj.identifiers[0].value = "";
   }
 
   if (parsedAuthors.length > 0) {
-    citation_obj["authors"] = parsedAuthors;
+    citationObj.authors = parsedAuthors;
   }
 
-  if (license_name != null) {
-    citation_obj["license"] = license_name["spdx_id"];
+  if (licenseName !== null) {
+    citationObj.license = licenseName.spdx_id;
   }
 
-  if (abstract != null) {
-    citation_obj["abstract"] = abstract;
+  if (abstract !== null) {
+    citationObj.abstract = abstract;
   } else {
-    citation_obj["abstract"] = "";
+    citationObj.abstract = "";
   }
 
   if (keywords.length > 0) {
-    citation_obj["keywords"] = keywords;
+    citationObj.keywords = keywords;
   }
 
-  if (url != null && url != "") {
-    citation_obj["url"] = url;
+  if (url !== null && url !== "") {
+    citationObj.url = url;
   } else {
-    citation_obj["url"] = repoData.data.html_url;
+    citationObj.url = repoData.data.html_url;
   }
 
-  if (date_released != null && date_released != "") {
-    citation_obj["date-released"] = date_released;
+  if (dateReleased !== null && dateReleased !== "") {
+    citationObj["date-released"] = dateReleased;
   } else {
-    citation_obj["date-released"] = "";
+    citationObj["date-released"] = "";
   }
 
   // sort keys alphabetically
-  citation_obj = Object.keys(citation_obj)
+  citationObj = Object.keys(citationObj)
     .sort()
     .reduce((acc, key) => {
-      acc[key] = citation_obj[key];
+      acc[key] = citationObj[key];
       return acc;
     }, {});
 
-  let citation_template = yaml.dump(citation_obj);
+  const citationTemplate = yaml.dump(citationObj);
 
   await createCitationFile(context, owner, repo, citation_template);
 }
 
 async function gatherCodeMetaInfo(context, owner, repo) {
   // Gather metadata from the repo to create a codemeta.json file
-  let repoData = await context.octokit.repos.get({
-    repo,
+  const repoData = await context.octokit.repos.get({
     owner,
+    repo,
   });
 
   // Get the languages used in the repo
@@ -965,56 +972,56 @@ async function gatherCodeMetaInfo(context, owner, repo) {
     "@type": "SoftwareSourceCode",
   };
 
-  if (license != null || license != "") {
-    metadata["license"] = `https://spdx.org/licenses/${license}`;
+  if (license !== null || license !== "") {
+    metadata.license = `https://spdx.org/licenses/${license}`;
   }
 
-  if (codeRepository != null || codeRepository != "") {
-    metadata["codeRepository"] = codeRepository;
+  if (codeRepository !== null || codeRepository !== "") {
+    metadata.codeRepository = codeRepository;
   }
 
-  if (dataCreated != null || dataCreated != "") {
-    metadata["dateCreated"] = dataCreated.split("T")[0];
+  if (dataCreated !== null || dataCreated !== "") {
+    metadata.dateCreated = dataCreated.split("T")[0];
   }
 
-  if (dataModified != null || dataModified != "") {
-    metadata["dateModified"] = dataModified.split("T")[0];
+  if (dataModified !== null || dataModified !== "") {
+    metadata.dateModified = dataModified.split("T")[0];
   }
 
   if (keywords.length > 0) {
-    metadata["keywords"] = keywords;
+    metadata.keywords = keywords;
   } else {
-    metadata["keywords"] = [];
+    metadata.keywords = [];
   }
 
-  if (description != null || description != "") {
-    metadata["description"] = description;
+  if (description !== null || description !== "") {
+    metadata.description = description;
   }
 
-  if (identifier != null || identifier != "") {
-    metadata["identifier"] = identifier;
+  if (identifier !== null || identifier !== "") {
+    metadata.identifier = identifier;
   }
 
-  if (name != null || name != "") {
-    metadata["name"] = name;
+  if (name !== null || name !== "") {
+    metadata.name = name;
   }
 
-  if (issueTracker != null || issueTracker != "") {
+  if (issueTracker !== null || issueTracker !== "") {
     // Remove the {/number} from the issue tracker url
     issueTracker = issueTracker.replace("{/number}", "");
-    metadata["issueTracker"] = issueTracker;
+    metadata.issueTracker = issueTracker;
   }
 
   if (languagesUsed.length > 0) {
-    metadata["programmingLanguage"] = languagesUsed;
+    metadata.programmingLanguage = languagesUsed;
   } else {
-    metadata["programmingLanguage"] = [];
+    metadata.programmingLanguage = [];
   }
 
   if (authors.length > 0) {
-    metadata["author"] = authors;
+    metadata.author = authors;
   } else {
-    metadata["author"] = [];
+    metadata.author = [];
   }
 
   // sort keys alphabetically
