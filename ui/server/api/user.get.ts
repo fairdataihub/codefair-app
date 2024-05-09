@@ -1,6 +1,6 @@
 import type { User } from "lucia";
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler((event) => {
   const user = event.context.user as User | null;
 
   return user

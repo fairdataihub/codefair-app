@@ -4,6 +4,7 @@ const uri: any = process.env.MONGODB_URI;
 const options = {};
 
 let client: any;
+// eslint-disable-next-line import/no-mutable-exports
 let clientPromise: any;
 
 if (!process.env.MONGODB_URI) {

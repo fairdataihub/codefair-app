@@ -18,7 +18,7 @@ checkEnvVariable("MONGODB_DB_NAME");
 const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
 
-const client = new MongoClient(MONGODB_URI, {});
+// const client = new MongoClient(MONGODB_URI, {});
 
 /**
  * This is the main entrypoint to your Probot app
@@ -26,15 +26,15 @@ const client = new MongoClient(MONGODB_URI, {});
  */
 export default async (app) => {
   // Connect to the MongoDB database
-  await client.connect();
+  // await client.connec/t();
 
   const db = client.db(MONGODB_DB_NAME);
   const testCollection = db.collection("test");
 
-  await testCollection.insertOne({
-    content: "Hello, MongoDB!",
-    timestamp: new Date(),
-  });
+  // await testCollection.insertOne({
+  //   content: "Hello, MongoDB!",
+  //   timestamp: new Date(),
+  // });
 
   // Opens a PR every time someone installs your app for the first time
   // On adding the app to a repo
@@ -52,10 +52,10 @@ export default async (app) => {
         console.log("No license file found [codefair-app]");
 
         // Generate a url in the database to store the add a license interface
-        const identifier = nanoid();
+        // const identifier = nanoid();
 
         // Store the identifier in the database
-        const url = `https://codefair.io/add/license/${identifier}`;
+        // const url = `https://codefair.io/add/license/${identifier}`;
 
         // Store the identifier in the database with the repo information
         const licenseCollection = db.collection("licenseRequests");
@@ -70,7 +70,8 @@ export default async (app) => {
 
         // If issue has been created, create one
         const title = "No license file found [codefair-app]";
-        const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@codefair-app license MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch.\n\n If you would like a visual interface to add and or edit a custom license, please click go to this URL: [${url}](${url})`;
+        const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/) (e.g., comment “@codefair-app MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com.`;
+        // const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@codefair-app license MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch.\n\n If you would like a visual interface to add and or edit a custom license, please click go to this URL: [${url}](${url})`;
 
         const verify = await verifyFirstIssue(context, owner, repo, title);
         if (!verify) {

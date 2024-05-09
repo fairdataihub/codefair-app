@@ -94,30 +94,38 @@ You can follow these steps for testing the app:
 
 A demo video is available [here](https://youtu.be/_fjUz52mKwM).
 
-## Run Locally
+## Run the github app locally
 
 ### Setup
 
-To run locally you will need to create a GitHub app from an account.
+This repository uses a pnpm workspace to handle both the bot and the frontend UI. You will need to install pnpm globally to run the app locally. You will also need to be on Node.js version 20 or higher.
 
-```sh
-# Install dependencies
-npm install
+```bash
+npm install -g pnpm
 ```
 
-```sh
-# Run the bot and visit localhost:3000 to connect Probot to your GitHub app
-npm start
+To start both the bot and the frontend UI, run the following command at the root of the repository:
+
+```bash
+pnpm dev
 ```
 
-### Docker
+This will start the bot and the frontend UI in development mode. The bot will be available at `http://localhost:3001` and the frontend UI will be available at `http://localhost:3000`.
 
-```sh
-# 1. Build container
-docker build -t codefair .
+The .env files for each package are located in the respective package directories. You will need to create a `.env` file in the `bot` and `ui` directories. Use the .env.example files in each directory as a template.
 
-# 2. Start container
-docker run -e APP_ID=<app-id> -e PRIVATE_KEY=<pem-value> codeFAIR
+To run the bot only, run the following command at the root of the repository:
+
+```bash
+cd bot
+pnpm dev
+```
+
+To run the frontend UI only, run the following command at the root of the repository:
+
+```bash
+cd ui
+pnpm dev
 ```
 
 ## How codefair is developed
