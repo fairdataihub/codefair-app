@@ -146,13 +146,13 @@ const saveLicenseAndPush = () => {
 
 <template>
   <main class="mx-auto max-w-screen-xl">
-    <!-- <ErrorPageAuth
-      v-if="error"
-      :errorContent="error.data"
-      :statusCode="error.statusCode"
-    /> -->
     <div>
       <n-flex vertical size="large" class="pb-5">
+        <p class="text-lg">
+          You can select a license from the list below and edit it in the
+          editor.
+        </p>
+
         <n-select
           v-model:value="licenseId"
           placeholder="MIT License Modern Variant"
@@ -164,7 +164,7 @@ const saveLicenseAndPush = () => {
         />
 
         <TransitionFade>
-          <div v-if="displayLicenseEditor" class="pb-5">
+          <div v-if="displayLicenseEditor" class="my-5">
             <MdEditor
               v-model="licenseContent"
               language="en-US"
