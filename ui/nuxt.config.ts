@@ -22,13 +22,13 @@ export default defineNuxtConfig({
   },
 
   colorMode: {
-    componentName: "ColorScheme",
     classPrefix: "",
-    fallback: "light", // fallback value if not system preference found
-    hid: "nuxt-color-mode-script",
     classSuffix: "-mode",
-    preference: "light", // default value of $colorMode.preference
+    componentName: "ColorScheme",
+    fallback: "light", // fallback value if not system preference found
     globalName: "__NUXT_COLOR_MODE__",
+    hid: "nuxt-color-mode-script",
+    preference: "light", // default value of $colorMode.preference
     storageKey: "nuxt-color-mode",
   },
 

@@ -72,6 +72,14 @@ body {
     @apply whitespace-pre-wrap text-xs;
   }
 
+  ol {
+    @apply list-decimal;
+  }
+
+  ul {
+    @apply list-disc;
+  }
+
   /* #endregion  /**======== Typography =========== */
 
   /* #region  /**=========== Scrollbar =========== */

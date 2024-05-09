@@ -163,15 +163,17 @@ const saveLicenseAndPush = () => {
           :options="licenseOptions"
         />
 
-        <div v-if="displayLicenseEditor" class="pb-5">
-          <MdEditor
-            v-model="licenseContent"
-            language="en-US"
-            preview-theme="github"
-            :show-code-row-number="true"
-            :sanitize="sanitize"
-          />
-        </div>
+        <TransitionFade>
+          <div v-if="displayLicenseEditor" class="pb-5">
+            <MdEditor
+              v-model="licenseContent"
+              language="en-US"
+              preview-theme="github"
+              :show-code-row-number="true"
+              :sanitize="sanitize"
+            />
+          </div>
+        </TransitionFade>
       </n-flex>
 
       <n-divider />
