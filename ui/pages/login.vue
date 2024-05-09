@@ -3,7 +3,7 @@ const user = useUser();
 
 watchEffect(() => {
   if (user.value) {
-    return navigateTo("/profile");
+    return navigateTo("/");
   }
 });
 

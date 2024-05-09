@@ -70,7 +70,7 @@ export default defineEventHandler(async (event) => {
         lucia.createSessionCookie(session.id).serialize(),
       );
 
-      return sendRedirect(event, "/profile");
+      return sendRedirect(event, "/");
     }
 
     const userId = generateIdFromEntropySize(10); // 16 characters long
@@ -92,7 +92,7 @@ export default defineEventHandler(async (event) => {
       "Set-Cookie",
       lucia.createSessionCookie(session.id).serialize(),
     );
-    return sendRedirect(event, "/profile");
+    return sendRedirect(event, "/");
   } catch (e) {
     // the specific error message depends on the provider
     if (e instanceof OAuth2RequestError) {

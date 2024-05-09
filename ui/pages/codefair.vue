@@ -27,7 +27,7 @@
             <p>
               codefair is a free and open source GitHub app that acts as your
               personal assistant when it comes to making your research software
-              reusable and especially complying with the Findable, Accessible,
+              reusable and especially complying with the Findable, Accessible,
               Interoperable, Reusable (FAIR) Principles for Research Software
               (FAIR4RS Principles).
             </p>
