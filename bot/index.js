@@ -29,10 +29,9 @@ export default async (app) => {
   await client.connect();
 
   const db = client.db(MONGODB_DB_NAME);
-  const testCollection = db.collection("test");
+  const ping = db.collection("ping");
 
-  await testCollection.insertOne({
-    content: "Hello, MongoDB!",
+  await ping.insertOne({
     timestamp: new Date(),
   });
 
@@ -260,7 +259,6 @@ export default async (app) => {
     const repo = context.payload.repository.name;
     const userComment = context.payload.comment.body;
     const authorAssociation = context.payload.comment.author_association;
-    console.log("should all be true above to move forward");
 
     if (
       context.payload.issue.title === "No license file found [codefair-app]" &&
@@ -269,7 +267,8 @@ export default async (app) => {
     ) {
       // Check the comment to see if the user has replied with a license
       const splitComment = userComment.split(" ");
-      const selection = splitComment[splitComment.indexOf("@codefair-app") + 1];
+      const selection =
+        splitComment[splitComment.indexOf("@codefair-app license") + 1];
 
       console.log("License user responded with: " + selection);
 
@@ -941,7 +940,7 @@ async function gatherCitationInfo(context, owner, repo) {
 
   const citationTemplate = yaml.dump(citationObj);
 
-  await createCitationFile(context, owner, repo, citation_template);
+  await createCitationFile(context, owner, repo, citationTemplate);
 }
 
 async function gatherCodeMetaInfo(context, owner, repo) {
