@@ -13,10 +13,12 @@ function checkEnvVariable(varName) {
 }
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
+checkEnvVariable("GITHUB_APP_NAME");
 
 // sourcery skip: use-object-destructuring
 const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
+const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 
 const client = new MongoClient(MONGODB_URI, {});
 
@@ -43,70 +45,98 @@ export default async (app) => {
     // shows all repos you've installed the app on
     for (const repository of context.payload.repositories) {
       const repo = repository.name;
-      const license = await checkForLicense(context, owner, repo);
-      const citation = await checkForCitation(context, owner, repo);
-      const codemeta = await checkForCodeMeta(context, owner, repo);
+      // const license = await checkForLicense(context, owner, repo);
+      // const citation = await checkForCitation(context, owner, repo);
+      // const codemeta = await checkForCodeMeta(context, owner, repo);
 
-      if (!license) {
-        console.log("No license file found [codefair-app]");
+      // const subjects = {
+      //   citation,
+      //   codemeta,
+      //   license,
+      // };
 
-        // Generate a url in the database to store the add a license interface
-        const identifier = nanoid();
+      const issueBody = await renderIssues(
+        owner,
+        repository,
+        // subjects,
+        db,
+      );
+      const title = `FAIR-BioRS Compliance Issues`;
 
-        // Store the identifier in the database
-        const url = `https://codefair.io/add/license/${identifier}`;
+      // Create an issue with the compliance issues
+      await createIssue(context, owner, repo, title, issueBody);
 
-        // Store the identifier in the database with the repo information
-        const licenseCollection = db.collection("licenseRequests");
-        await licenseCollection.insertOne({
-          identifier,
-          installationId: context.payload.installation.id,
-          open: true,
-          owner,
-          repo,
-          timestamp: new Date(),
-        });
+      // if (!license) {
+      //   console.log(`No license file found [${GITHUB_APP_NAME}]`);
 
-        // If issue has been created, create one
-        const title = "No license file found [codefair-app]";
-        const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@codefair-app license MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch.\n\n If you would like a visual interface to add and or edit a custom license, please click go to this URL: [${url}](${url})`;
+      //   // Generate a url in the database to store the add a license interface
+      //   const identifier = nanoid();
 
-        const verify = await verifyFirstIssue(context, owner, repo, title);
-        if (!verify) {
-          await createIssue(context, owner, repo, title, body);
-        }
-      } else {
-        const title = "No license file found [codefair-app]";
-        await closeOpenIssue(context, owner, repo, title);
-      }
+      //   // Store the identifier in the database
+      //   let url = `https://codefair.io/add/license/${identifier}`;
 
-      if (!citation && license) {
-        // License was found but no citation file was found
-        const title = "No citation file found [codefair-app]";
-        const body = `No CITATION.cff file was found at the root of your repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.
-          If you would like me to generate a CITATION.cff file for you, please reply with "@codefair-app Yes". I will gather the information required in the CITATION.cff that I can find automatically from your repository and include that information in my reply for your review and edit. You can also add a CITATION.cff file yourself and I will close this issue when I detect it on the main branch.
-          `;
-        const verify = await verifyFirstIssue(context, owner, repo, title);
-        if (!verify) {
-          await createIssue(context, owner, repo, title, body);
-        }
-      } else if (citation) {
-        const title = "No citation file found [codefair-app]";
-        await closeOpenIssue(context, owner, repo, title);
-      }
+      //   // Store the identifier in the database with the repo information
+      //   const licenseCollection = db.collection("licenseRequests");
+      //   const existingLicense = await licenseCollection.findOne({
+      //     repositoryId: repository.id,
+      //   });
 
-      if (!codemeta && license) {
-        // License was found but no codemeta.json exists
-        const title = "No codemeta.json file found [codefair-app]";
-        const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@codefair-app Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
-        const verify = await verifyFirstIssue(context, owner, repo, title);
-        if (!verify) {
-          await createIssue(context, owner, repo, title, body);
-        }
-      } else if (codemeta) {
-        const title = "No codemeta.json file found [codefair-app]";
-        await closeOpenIssue(context, owner, repo, title);
-      }
+      //   if (!existingLicense) {
+      //     // Doesn't exist, create a new one
+      //     await licenseCollection.insertOne({
+      //       identifier,
+      //       open: true,
+      //       owner,
+      //       repo,
+      //       repositoryId: repository.id,
+      //       timestamp: new Date(),
+      //     });
+      //   } else {
+      //     // Get the identifier of the existing license request
+      //     const url = `https://codefair.io/add/license/${existingLicense.identifier}`;
+      //     console.log("Existing license request: " + url);
+      //   }
+
+      //   // If issue has been created, create one
+      //   const title = `No license file found [${GITHUB_APP_NAME}]`;
+      //   const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@${GITHUB_APP_NAME} license MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch.\n\n If you would like a visual interface to add and or edit a custom license, please click go to this URL: [${url}](${url})`;
+
+      //   const verify = await verifyFirstIssue(context, owner, repo, title);
+      //   if (!verify) {
+      //     await createIssue(context, owner, repo, title, body);
+      //   }
+      // } else {
+      //   const title = `No license file found [${GITHUB_APP_NAME}]`;
+      //   await closeOpenIssue(context, owner, repo, title);
+      // }
+
+      // if (!citation && license) {
+      //   // License was found but no citation file was found
+      //   const title = `No citation file found [${GITHUB_APP_NAME}]`;
+      //   const body = `No CITATION.cff file was found at the root of your repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.
+      //     If you would like me to generate a CITATION.cff file for you, please reply with "@${GITHUB_APP_NAME} Yes". I will gather the information required in the CITATION.cff that I can find automatically from your repository and include that information in my reply for your review and edit. You can also add a CITATION.cff file yourself and I will close this issue when I detect it on the main branch.
+      //     `;
+      //   const verify = await verifyFirstIssue(context, owner, repo, title);
+      //   if (!verify) {
+      //     await createIssue(context, owner, repo, title, body);
+      //   }
+      // } else if (citation) {
+      //   const title = `No citation file found [${GITHUB_APP_NAME}]`;
+      //   await closeOpenIssue(context, owner, repo, title);
+      // }
+
+      // if (!codemeta && license) {
+      //   // License was found but no codemeta.json exists
+      //   const title = `No codemeta.json file found [${GITHUB_APP_NAME}]`;
+      //   const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@${GITHUB_APP_NAME} Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
+      //   const verify = await verifyFirstIssue(context, owner, repo, title);
+      //   if (!verify) {
+      //     await createIssue(context, owner, repo, title, body);
+      //   }
+      // } else if (codemeta) {
+      //   const title = `No codemeta.json file found [${GITHUB_APP_NAME}]`;
+      //   await closeOpenIssue(context, owner, repo, title);
+      // }
     }
   });
 
@@ -117,46 +147,67 @@ export default async (app) => {
     for (const repository of context.payload.repositories_added) {
       // Loop through the added respotories
       const repo = repository.name;
-      const license = await checkForLicense(context, owner, repo);
-      const citation = await checkForCitation(context, owner, repo);
-      const codemeta = await checkForCodeMeta(context, owner, repo);
+      console.log("REPO ID: " + repository.id);
+      console.log(repository);
+      // const license = await checkForLicense(context, owner, repo);
+      // const citation = await checkForCitation(context, owner, repo);
+      // const codemeta = await checkForCodeMeta(context, owner, repo);
 
-      if (!license) {
-        // No license was found, make an issue if one was never made before
-        // If the issue was close, don't make another
-        console.log("No license file found [codefair-app]");
-        const title = "No license file found [codefair-app]";
-        const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@codefair-app MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com.`;
-        const verify = await verifyFirstIssue(context, owner, repo, title);
-        if (!verify) {
-          await createIssue(context, owner, repo, title, body);
-        }
-      } else {
-        // Check if issue is open and close it
-        const title = "No license file found [codefair-app]";
-        await closeOpenIssue(context, owner, repo, title);
-      }
+      // const subjects = {
+      //   citation,
+      //   codemeta,
+      //   license,
+      // };
 
-      if (!citation && license) {
-        const title = "No citation file found [codefair-app]";
-        const body = `No CITATION.cff file was found at the root of your repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.
-          If you would like me to generate a CITATION.cff file for you, please reply with "@codefair-app Yes". I will gather the information required in the CITATION.cff that I can find automatically from your repository and include that information in my reply for your review and edit. You can also add a CITATION.cff file yourself and I will close this issue when I detect it on the main branch.
-          `;
-        const verify = await verifyFirstIssue(context, owner, repo, title);
-        if (!verify) {
-          await createIssue(context, owner, repo, title, body);
-        }
-      }
+      const issueBody = await renderIssues(
+        owner,
+        repo,
+        // subjects,
+        db,
+        repository,
+      );
+      const title = `FAIR-BioRS Compliance Issues`;
 
-      if (!codemeta && license) {
-        // License was found but no codemeta.json exists
-        const title = "No codemeta.json file found [codefair-app]";
-        const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@codefair-app Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
-        const verify = await verifyFirstIssue(context, owner, repo, title);
-        if (!verify) {
-          await createIssue(context, owner, repo, title, body);
-        }
-      }
+      // Create an issue with the compliance issues
+      console.log("CREATING ISSUE");
+      await createIssue(context, owner, repo, title, issueBody);
+
+      // if (!license) {
+      //   // No license was found, make an issue if one was never made before
+      //   // If the issue was close, don't make another
+      //   console.log(`No license file found [${GITHUB_APP_NAME}]`);
+      //   const title = `No license file found [${GITHUB_APP_NAME}]`;
+      //   const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@${GITHUB_APP_NAME} MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com.`;
+      //   const verify = await verifyFirstIssue(context, owner, repo, title);
+      //   if (!verify) {
+      //     await createIssue(context, owner, repo, title, body);
+      //   }
+      // } else {
+      //   // Check if issue is open and close it
+      //   const title = `No license file found [${GITHUB_APP_NAME}]`;
+      //   await closeOpenIssue(context, owner, repo, title);
+      // }
+
+      // if (!citation && license) {
+      //   const title = `No citation file found [${GITHUB_APP_NAME}]`;
+      //   const body = `No CITATION.cff file was found at the root of your repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.
+      //     If you would like me to generate a CITATION.cff file for you, please reply with "@${GITHUB_APP_NAME} Yes". I will gather the information required in the CITATION.cff that I can find automatically from your repository and include that information in my reply for your review and edit. You can also add a CITATION.cff file yourself and I will close this issue when I detect it on the main branch.
+      //     `;
+      //   const verify = await verifyFirstIssue(context, owner, repo, title);
+      //   if (!verify) {
+      //     await createIssue(context, owner, repo, title, body);
+      //   }
+      // }
+
+      // if (!codemeta && license) {
+      //   // License was found but no codemeta.json exists
+      //   const title = `No codemeta.json file found [${GITHUB_APP_NAME}]`;
+      //   const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@${GITHUB_APP_NAME} Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
+      //   const verify = await verifyFirstIssue(context, owner, repo, title);
+      //   if (!verify) {
+      //     await createIssue(context, owner, repo, title, body);
+      //   }
+      // }
     }
   });
 
@@ -214,42 +265,42 @@ export default async (app) => {
 
     if (!license) {
       console.log("No license file found (push)");
-      const title = "No license file found [codefair-app]";
-      const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@codefair-app MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com.`;
+      const title = `No license file found [${GITHUB_APP_NAME}]`;
+      const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@${GITHUB_APP_NAME} MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com.`;
       const verify = await verifyFirstIssue(context, owner, repo, title);
       if (!verify) {
         await createIssue(context, owner, repo, title, body);
       }
     } else {
       // License was found, close the issue if one was created
-      const title = "No license file found [codefair-app]";
+      const title = `No license file found [${GITHUB_APP_NAME}]`;
       await closeOpenIssue(context, owner, repo, title);
     }
 
     if (!citation && license) {
-      const title = "No citation file found [codefair-app]";
+      const title = `No citation file found [${GITHUB_APP_NAME}]`;
       const body = `No CITATION.cff file was found at the root of your repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.
-      If you would like me to generate a CITATION.cff file for you, please reply with "@codefair-app Yes". I will gather the information required in the CITATION.cff that I can find automatically from your repository and include that information in my reply for your review and edit. You can also add a CITATION.cff file yourself and I will close this issue when I detect it on the main branch.
+      If you would like me to generate a CITATION.cff file for you, please reply with "@${GITHUB_APP_NAME} Yes". I will gather the information required in the CITATION.cff that I can find automatically from your repository and include that information in my reply for your review and edit. You can also add a CITATION.cff file yourself and I will close this issue when I detect it on the main branch.
       `;
       const verify = await verifyFirstIssue(context, owner, repo, title);
       if (!verify) {
         await createIssue(context, owner, repo, title, body);
       }
     } else if (citation) {
-      const title = "No citation file found [codefair-app]";
+      const title = `No citation file found [${GITHUB_APP_NAME}]`;
       await closeOpenIssue(context, owner, repo, title);
     }
 
     if (!codemeta && license) {
       // License was found but no codemeta.json exists
-      const title = "No codemeta.json file found [codefair-app]";
-      const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@codefair-app Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
+      const title = `No codemeta.json file found [${GITHUB_APP_NAME}]`;
+      const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@${GITHUB_APP_NAME} Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
       const verify = await verifyFirstIssue(context, owner, repo, title);
       if (!verify) {
         await createIssue(context, owner, repo, title, body);
       }
     } else if (codemeta) {
-      const title = "No codemeta.json file found [codefair-app]";
+      const title = `No codemeta.json file found [${GITHUB_APP_NAME}]`;
       await closeOpenIssue(context, owner, repo, title);
     }
   });
@@ -261,14 +312,15 @@ export default async (app) => {
     const authorAssociation = context.payload.comment.author_association;
 
     if (
-      context.payload.issue.title === "No license file found [codefair-app]" &&
+      context.payload.issue.title ===
+        `No license file found [${GITHUB_APP_NAME}]` &&
       ["MEMBER", "OWNER"].includes(authorAssociation) &&
-      userComment.includes("codefair-app")
+      userComment.includes(GITHUB_APP_NAME)
     ) {
       // Check the comment to see if the user has replied with a license
       const splitComment = userComment.split(" ");
       const selection =
-        splitComment[splitComment.indexOf("@codefair-app license") + 1];
+        splitComment[splitComment.indexOf(`@${GITHUB_APP_NAME} license`) + 1];
 
       console.log("License user responded with: " + selection);
 
@@ -277,9 +329,10 @@ export default async (app) => {
     }
 
     if (
-      context.payload.issue.title === "No citation file found [codefair-app]" &&
+      context.payload.issue.title ===
+        `No citation file found [${GITHUB_APP_NAME}]` &&
       ["MEMBER", "OWNER"].includes(authorAssociation) &&
-      userComment.includes("codefair-app")
+      userComment.includes(GITHUB_APP_NAME)
     ) {
       if (userComment.includes("Yes")) {
         // Gather the information for the CITATION.cff file
@@ -289,9 +342,9 @@ export default async (app) => {
 
     if (
       context.payload.issue.title ===
-        "No codemeta.json file found [codefair-app]" &&
+        `No codemeta.json file found [${GITHUB_APP_NAME}]` &&
       ["MEMBER", "OWNER"].includes(authorAssociation) &&
-      userComment.includes("codefair-app")
+      userComment.includes(GITHUB_APP_NAME)
     ) {
       if (userComment.includes("Yes")) {
         // Gather the information for the codemeta.json file
@@ -300,6 +353,121 @@ export default async (app) => {
     }
   });
 };
+
+/**
+ * * Renders the body of the dashboard issue message
+ *
+ * @param {string} owner - The owner of the repository
+ * @param {*} repository
+ * @param {*} db
+ * @returns
+ */
+async function renderIssues(owner, repository, db) {
+  // const issueTitle = "FAIR-BioRS Compliance Issues";
+  // console.log(subjects);
+
+  const license = await checkForLicense(context, owner, repo);
+  const citation = await checkForCitation(context, owner, repo);
+  const codemeta = await checkForCodeMeta(context, owner, repo);
+
+  const subjects = {
+    citation,
+    codemeta,
+    license,
+  };
+  let baseTemplate = `# Check your compliance with the FAIR-BioRS Guidelines\n\nThis issue is your repository's dashboard for all things FAIR. You can read the [documentation](https://docs.codefair.io/dashboard) to learn more.\n\n`;
+
+  if (!subjects.license) {
+    const identifier = nanoid();
+
+    let url = `https://codefair.io/add/license/${identifier}`;
+
+    const licenseCollection = db.collection("licenseRequests");
+
+    const existingLicense = await licenseCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (!existingLicense) {
+      // Entry does not exist in db, create a new one
+      await licenseCollection.insertOne({
+        identifier,
+        installationId: repository.installation.id,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        timestamp: new Date(),
+      });
+    } else {
+      // Get the identifier of the existing license request
+      url = `https://codefair.io/add/license/${existingLicense.identifier}`;
+      console.log("Existing license request: " + url);
+    }
+    // No license file found text
+    const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
+    baseTemplate += `## License\n\nNo license file found in the repository. Any open license requests that were created are listed here. You edit the license and push it when you are happy with the terms.\n\n${licenseBadge}`;
+  } else {
+    // License file found text
+    const licenseBadge = `[![License](https://img.shields.io/badge/License_Added-6366f1.svg)]`;
+    baseTemplate += `## License\n\nLicense file found in the repository.\n\n${licenseBadge}`;
+  }
+
+  if (!subjects.citation && subjects.license) {
+    // License was found but no citation file was found
+    const identifier = nanoid();
+
+    let url = `https://codefair.io/add/citation/${identifier}`;
+
+    const citationCollection = db.collection("citationRequests");
+
+    const existingCitation = await citationCollection.findOne({
+      repositoryId: repository.id,
+    });
+    if (!existingCitation) {
+      // Entry does not exist in db, create a new one
+      await citationCollection.insertOne({
+        identifier,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        timestamp: new Date(),
+      });
+    } else {
+      // Get the identifier of the existing citation request
+      url = `https://codefair.io/add/citation/${existingCitation.identifier}`;
+    }
+
+    const citationBadge = `[![Citation](https://img.shields.io/badge/Add_Citation-dc2626.svg)](${url})`;
+    baseTemplate += `\n\n## Citation\n\nA CITATION.cff file was not found in the repository. A CITATION.cff file is recommended to provide metadata about your software and make it citable.\n\n${citationBadge}`;
+  } else if (subjects.citation && subjects.license) {
+    // Citation file was found and license was found
+    const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Added-6366f1.svg)`;
+    baseTemplate += `\n\n## Citation\n\nCITATION.cff file found in the repository.\n\n${citationBadge}`;
+  } else {
+    // Citation file was not found and license was not found
+    const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Not_Checked-fbbf24)`;
+    baseTemplate += `\n\n## Citation\n\nA CITATION.cff file will be checked after a license file is added. A CITATION.cff file is recommended to provide metadata about your software and make it citable.\n\n${citationBadge}`;
+  }
+
+  if (!subjects.codemeta && subjects.license) {
+    // License was found but no codemeta.json exists
+    const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/Add_CodeMeta-dc2626.svg)`;
+    baseTemplate += `\n\n## CodeMeta\n\nA codemeta.json file was not found in the repository. A codemeta.json file is recommended to provide metadata about your software and make it reusable.\n\n${codemetaBadge}`;
+  } else if (subjects.codemeta && subjects.license) {
+    // License was found and also codemetata.json exists
+    // Then add codemeta section mentioning it will be checked after license is added
+    const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/CodeMeta_Added-6366f1.svg)`;
+    baseTemplate += `\n\n## CodeMeta\n\nCodemeta.json file found in the repository.\n\n${codemetaBadge}`;
+  } else {
+    // codemeta and license does not exist
+    const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/CodeMeta_Not_Checked-fbbf24)`;
+    baseTemplate += `\n\n## CodeMeta\n\nA codemeta.json file will be checked after a license file is added. A codemeta.json file is recommended to provide metadata about your software and make it reusable.\n\n${codemetaBadge}`;
+  }
+
+  return baseTemplate;
+}
 
 async function getDefaultBranch(context, owner, repo) {
   let defaultBranch;
@@ -323,7 +491,7 @@ async function closeOpenIssue(context, owner, repo, title) {
   // TODO: UPDATE THE CREATOR WHEN MOVING TO PROD
   const issue = await context.octokit.issues.listForRepo({
     title,
-    creator: "codefair-app[bot]",
+    creator: `${GITHUB_APP_NAME}[bot]`,
     owner,
     repo,
     state: "open",
@@ -347,7 +515,7 @@ async function closeOpenIssue(context, owner, repo, title) {
 async function verifyFirstIssue(context, owner, repo, title) {
   // If there is an issue that has been created by the bot, (either opened or closed) don't create another issue
   const issues = await context.octokit.issues.listForRepo({
-    creator: "codefair-app[bot]",
+    creator: `${GITHUB_APP_NAME}[bot]`,
     owner,
     repo,
     state: "all",
@@ -422,7 +590,7 @@ async function createIssue(context, owner, repo, title, body) {
   console.log("gathering issues");
   const issue = await context.octokit.issues.listForRepo({
     title,
-    creator: "codefair-app[bot]",
+    creator: `${GITHUB_APP_NAME}[bot]`,
     owner,
     repo,
     state: "open",
