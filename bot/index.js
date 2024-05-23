@@ -45,17 +45,9 @@ export default async (app) => {
     // shows all repos you've installed the app on
     for (const repository of context.payload.repositories) {
       const repo = repository.name;
-      // const license = await checkForLicense(context, owner, repo);
-      // const citation = await checkForCitation(context, owner, repo);
-      // const codemeta = await checkForCodeMeta(context, owner, repo);
-
-      // const subjects = {
-      //   citation,
-      //   codemeta,
-      //   license,
-      // };
 
       const issueBody = await renderIssues(
+        context,
         owner,
         repository,
         // subjects,
@@ -65,78 +57,6 @@ export default async (app) => {
 
       // Create an issue with the compliance issues
       await createIssue(context, owner, repo, title, issueBody);
-
-      // if (!license) {
-      //   console.log(`No license file found [${GITHUB_APP_NAME}]`);
-
-      //   // Generate a url in the database to store the add a license interface
-      //   const identifier = nanoid();
-
-      //   // Store the identifier in the database
-      //   let url = `https://codefair.io/add/license/${identifier}`;
-
-      //   // Store the identifier in the database with the repo information
-      //   const licenseCollection = db.collection("licenseRequests");
-      //   const existingLicense = await licenseCollection.findOne({
-      //     repositoryId: repository.id,
-      //   });
-
-      //   if (!existingLicense) {
-      //     // Doesn't exist, create a new one
-      //     await licenseCollection.insertOne({
-      //       identifier,
-      //       open: true,
-      //       owner,
-      //       repo,
-      //       repositoryId: repository.id,
-      //       timestamp: new Date(),
-      //     });
-      //   } else {
-      //     // Get the identifier of the existing license request
-      //     const url = `https://codefair.io/add/license/${existingLicense.identifier}`;
-      //     console.log("Existing license request: " + url);
-      //   }
-
-      //   // If issue has been created, create one
-      //   const title = `No license file found [${GITHUB_APP_NAME}]`;
-      //   const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@${GITHUB_APP_NAME} license MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch.\n\n If you would like a visual interface to add and or edit a custom license, please click go to this URL: [${url}](${url})`;
-
-      //   const verify = await verifyFirstIssue(context, owner, repo, title);
-      //   if (!verify) {
-      //     await createIssue(context, owner, repo, title, body);
-      //   }
-      // } else {
-      //   const title = `No license file found [${GITHUB_APP_NAME}]`;
-      //   await closeOpenIssue(context, owner, repo, title);
-      // }
-
-      // if (!citation && license) {
-      //   // License was found but no citation file was found
-      //   const title = `No citation file found [${GITHUB_APP_NAME}]`;
-      //   const body = `No CITATION.cff file was found at the root of your repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.
-      //     If you would like me to generate a CITATION.cff file for you, please reply with "@${GITHUB_APP_NAME} Yes". I will gather the information required in the CITATION.cff that I can find automatically from your repository and include that information in my reply for your review and edit. You can also add a CITATION.cff file yourself and I will close this issue when I detect it on the main branch.
-      //     `;
-      //   const verify = await verifyFirstIssue(context, owner, repo, title);
-      //   if (!verify) {
-      //     await createIssue(context, owner, repo, title, body);
-      //   }
-      // } else if (citation) {
-      //   const title = `No citation file found [${GITHUB_APP_NAME}]`;
-      //   await closeOpenIssue(context, owner, repo, title);
-      // }
-
-      // if (!codemeta && license) {
-      //   // License was found but no codemeta.json exists
-      //   const title = `No codemeta.json file found [${GITHUB_APP_NAME}]`;
-      //   const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@${GITHUB_APP_NAME} Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
-      //   const verify = await verifyFirstIssue(context, owner, repo, title);
-      //   if (!verify) {
-      //     await createIssue(context, owner, repo, title, body);
-      //   }
-      // } else if (codemeta) {
-      //   const title = `No codemeta.json file found [${GITHUB_APP_NAME}]`;
-      //   await closeOpenIssue(context, owner, repo, title);
-      // }
     }
   });
 
@@ -149,17 +69,9 @@ export default async (app) => {
       const repo = repository.name;
       console.log("REPO ID: " + repository.id);
       console.log(repository);
-      // const license = await checkForLicense(context, owner, repo);
-      // const citation = await checkForCitation(context, owner, repo);
-      // const codemeta = await checkForCodeMeta(context, owner, repo);
-
-      // const subjects = {
-      //   citation,
-      //   codemeta,
-      //   license,
-      // };
 
       const issueBody = await renderIssues(
+        context,
         owner,
         repo,
         // subjects,
@@ -362,13 +274,13 @@ export default async (app) => {
  * @param {*} db
  * @returns
  */
-async function renderIssues(owner, repository, db) {
+async function renderIssues(context, owner, repository, db) {
   // const issueTitle = "FAIR-BioRS Compliance Issues";
   // console.log(subjects);
 
-  const license = await checkForLicense(context, owner, repo);
-  const citation = await checkForCitation(context, owner, repo);
-  const codemeta = await checkForCodeMeta(context, owner, repo);
+  const license = await checkForLicense(context, owner, repository);
+  const citation = await checkForCitation(context, owner, repository);
+  const codemeta = await checkForCodeMeta(context, owner, repository);
 
   const subjects = {
     citation,
@@ -406,11 +318,11 @@ async function renderIssues(owner, repository, db) {
     }
     // No license file found text
     const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
-    baseTemplate += `## License\n\nNo license file found in the repository. Any open license requests that were created are listed here. You edit the license and push it when you are happy with the terms.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE\n\nNo License file found in the repository. Any open license requests that were created are listed here. You edit the license and push it when you are happy with the terms.\n\n${licenseBadge}`;
   } else {
     // License file found text
     const licenseBadge = `[![License](https://img.shields.io/badge/License_Added-6366f1.svg)]`;
-    baseTemplate += `## License\n\nLicense file found in the repository.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE\n\nA License file found in the repository.\n\n${licenseBadge}`;
   }
 
   if (!subjects.citation && subjects.license) {
@@ -440,30 +352,30 @@ async function renderIssues(owner, repository, db) {
     }
 
     const citationBadge = `[![Citation](https://img.shields.io/badge/Add_Citation-dc2626.svg)](${url})`;
-    baseTemplate += `\n\n## Citation\n\nA CITATION.cff file was not found in the repository. A CITATION.cff file is recommended to provide metadata about your software and make it citable.\n\n${citationBadge}`;
+    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file was not found in the repository. A CITATION.cff file is recommended to provide metadata about your software and make it citable.\n\n${citationBadge}`;
   } else if (subjects.citation && subjects.license) {
     // Citation file was found and license was found
     const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Added-6366f1.svg)`;
-    baseTemplate += `\n\n## Citation\n\nCITATION.cff file found in the repository.\n\n${citationBadge}`;
+    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file found in the repository.\n\n${citationBadge}`;
   } else {
     // Citation file was not found and license was not found
     const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## Citation\n\nA CITATION.cff file will be checked after a license file is added. A CITATION.cff file is recommended to provide metadata about your software and make it citable.\n\n${citationBadge}`;
+    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file will be checked after a license file is added. A CITATION.cff file is recommended to provide metadata about your software and make it citable.\n\n${citationBadge}`;
   }
 
   if (!subjects.codemeta && subjects.license) {
     // License was found but no codemeta.json exists
     const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/Add_CodeMeta-dc2626.svg)`;
-    baseTemplate += `\n\n## CodeMeta\n\nA codemeta.json file was not found in the repository. A codemeta.json file is recommended to provide metadata about your software and make it reusable.\n\n${codemetaBadge}`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file was not found in the repository. A codemeta.json file is recommended to provide metadata about your software and make it reusable.\n\n${codemetaBadge}`;
   } else if (subjects.codemeta && subjects.license) {
     // License was found and also codemetata.json exists
     // Then add codemeta section mentioning it will be checked after license is added
     const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/CodeMeta_Added-6366f1.svg)`;
-    baseTemplate += `\n\n## CodeMeta\n\nCodemeta.json file found in the repository.\n\n${codemetaBadge}`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file found in the repository.\n\n${codemetaBadge}`;
   } else {
     // codemeta and license does not exist
     const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/CodeMeta_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## CodeMeta\n\nA codemeta.json file will be checked after a license file is added. A codemeta.json file is recommended to provide metadata about your software and make it reusable.\n\n${codemetaBadge}`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file will be checked after a license file is added. A codemeta.json file is recommended to provide metadata about your software and make it reusable.\n\n${codemetaBadge}`;
   }
 
   return baseTemplate;
