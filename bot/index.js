@@ -14,11 +14,13 @@ function checkEnvVariable(varName) {
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
 checkEnvVariable("GITHUB_APP_NAME");
+checkEnvVariable("DOPPLER_ENVIRONMENT");
 
 // sourcery skip: use-object-destructuring
 const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
 const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
+const ENVIRONMENT = process.env.DOPPLER_ENVIRONMENT;
 
 const client = new MongoClient(MONGODB_URI, {});
 
@@ -73,10 +75,9 @@ export default async (app) => {
       const issueBody = await renderIssues(
         context,
         owner,
-        repo,
+        repository,
         // subjects,
         db,
-        repository,
       );
       const title = `FAIR-BioRS Compliance Issues`;
 
@@ -278,6 +279,12 @@ async function renderIssues(context, owner, repository, db) {
   // const issueTitle = "FAIR-BioRS Compliance Issues";
   // console.log(subjects);
 
+  console.log("IMPORTANT");
+  console.log(repository);
+  console.log("IMPORTANT!!!!!");
+  console.log(context);
+  console.log("IMPORTANT!!!!!");
+
   const license = await checkForLicense(context, owner, repository);
   const citation = await checkForCitation(context, owner, repository);
   const codemeta = await checkForCodeMeta(context, owner, repository);
@@ -293,18 +300,23 @@ async function renderIssues(context, owner, repository, db) {
     const identifier = nanoid();
 
     let url = `https://codefair.io/add/license/${identifier}`;
+    if (ENVIRONMENT === "dev") {
+      // If in development, use localhost
+      url = `http://localhost:3000/add/license/${identifier}`;
+    }
 
     const licenseCollection = db.collection("licenseRequests");
 
     const existingLicense = await licenseCollection.findOne({
       repositoryId: repository.id,
     });
+    console.log(existingLicense);
 
     if (!existingLicense) {
       // Entry does not exist in db, create a new one
       await licenseCollection.insertOne({
         identifier,
-        installationId: repository.installation.id,
+        installationId: context.payload.installation.id,
         open: true,
         owner,
         repo: repository.name,
@@ -314,15 +326,19 @@ async function renderIssues(context, owner, repository, db) {
     } else {
       // Get the identifier of the existing license request
       url = `https://codefair.io/add/license/${existingLicense.identifier}`;
+      if (ENVIRONMENT === "dev") {
+        // If in development, use localhost
+        url = `http://localhost:3000/add/license/${existingLicense.identifier}`;
+      }
       console.log("Existing license request: " + url);
     }
     // No license file found text
     const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
-    baseTemplate += `## LICENSE\n\nNo License file found in the repository. Any open license requests that were created are listed here. You edit the license and push it when you are happy with the terms.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE\n\nNo LICENSE file found in the repository. To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). Any open license requests that were created are listed here. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@${GITHUB_APP_NAME} MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com. You edit the license and push it when you are happy with the terms.\n\n${licenseBadge}`;
   } else {
     // License file found text
     const licenseBadge = `[![License](https://img.shields.io/badge/License_Added-6366f1.svg)]`;
-    baseTemplate += `## LICENSE\n\nA License file found in the repository.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE\n\nA LICENSE file found in the repository.\n\n${licenseBadge}`;
   }
 
   if (!subjects.citation && subjects.license) {
@@ -330,6 +346,10 @@ async function renderIssues(context, owner, repository, db) {
     const identifier = nanoid();
 
     let url = `https://codefair.io/add/citation/${identifier}`;
+    if (ENVIRONMENT === "dev") {
+      // If in development, use localhost
+      url = `http://localhost:3000/add/citation/${identifier}`;
+    }
 
     const citationCollection = db.collection("citationRequests");
 
@@ -349,10 +369,14 @@ async function renderIssues(context, owner, repository, db) {
     } else {
       // Get the identifier of the existing citation request
       url = `https://codefair.io/add/citation/${existingCitation.identifier}`;
+      if (ENVIRONMENT === "dev") {
+        // If in development, use localhost
+        url = `http://localhost:3000/add/citation/${existingCitation.identifier}`;
+      }
     }
 
     const citationBadge = `[![Citation](https://img.shields.io/badge/Add_Citation-dc2626.svg)](${url})`;
-    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file was not found in the repository. A CITATION.cff file is recommended to provide metadata about your software and make it citable.\n\n${citationBadge}`;
+    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file was not found in the repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.\n\n${citationBadge}`;
   } else if (subjects.citation && subjects.license) {
     // Citation file was found and license was found
     const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Added-6366f1.svg)`;
@@ -360,13 +384,13 @@ async function renderIssues(context, owner, repository, db) {
   } else {
     // Citation file was not found and license was not found
     const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file will be checked after a license file is added. A CITATION.cff file is recommended to provide metadata about your software and make it citable.\n\n${citationBadge}`;
+    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file will be checked after a license file is added. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.\n\n${citationBadge}`;
   }
 
   if (!subjects.codemeta && subjects.license) {
     // License was found but no codemeta.json exists
     const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/Add_CodeMeta-dc2626.svg)`;
-    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file was not found in the repository. A codemeta.json file is recommended to provide metadata about your software and make it reusable.\n\n${codemetaBadge}`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file was not found in the repository. To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org).\n\n${codemetaBadge}`;
   } else if (subjects.codemeta && subjects.license) {
     // License was found and also codemetata.json exists
     // Then add codemeta section mentioning it will be checked after license is added
@@ -375,7 +399,7 @@ async function renderIssues(context, owner, repository, db) {
   } else {
     // codemeta and license does not exist
     const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/CodeMeta_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file will be checked after a license file is added. A codemeta.json file is recommended to provide metadata about your software and make it reusable.\n\n${codemetaBadge}`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file will be checked after a license file is added. To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org).\n\n${codemetaBadge}`;
   }
 
   return baseTemplate;
