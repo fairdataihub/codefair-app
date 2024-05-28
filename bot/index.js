@@ -69,58 +69,13 @@ export default async (app) => {
     for (const repository of context.payload.repositories_added) {
       // Loop through the added respotories
       const repo = repository.name;
-      // console.log("REPO ID: " + repository.id);
-      // console.log(repository);
 
-      const issueBody = await renderIssues(
-        context,
-        owner,
-        repository,
-        // subjects,
-        db,
-      );
+      const issueBody = await renderIssues(context, owner, repository, db);
       const title = `FAIR-BioRS Compliance Issues`;
 
       // Create an issue with the compliance issues
       // console.log("CREATING ISSUE");
       await createIssue(context, owner, repo, title, issueBody);
-
-      // if (!license) {
-      //   // No license was found, make an issue if one was never made before
-      //   // If the issue was close, don't make another
-      //   console.log(`No license file found [${GITHUB_APP_NAME}]`);
-      //   const title = `No license file found [${GITHUB_APP_NAME}]`;
-      //   const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@${GITHUB_APP_NAME} MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com.`;
-      //   const verify = await verifyFirstIssue(context, owner, repo, title);
-      //   if (!verify) {
-      //     await createIssue(context, owner, repo, title, body);
-      //   }
-      // } else {
-      //   // Check if issue is open and close it
-      //   const title = `No license file found [${GITHUB_APP_NAME}]`;
-      //   await closeOpenIssue(context, owner, repo, title);
-      // }
-
-      // if (!citation && license) {
-      //   const title = `No citation file found [${GITHUB_APP_NAME}]`;
-      //   const body = `No CITATION.cff file was found at the root of your repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.
-      //     If you would like me to generate a CITATION.cff file for you, please reply with "@${GITHUB_APP_NAME} Yes". I will gather the information required in the CITATION.cff that I can find automatically from your repository and include that information in my reply for your review and edit. You can also add a CITATION.cff file yourself and I will close this issue when I detect it on the main branch.
-      //     `;
-      //   const verify = await verifyFirstIssue(context, owner, repo, title);
-      //   if (!verify) {
-      //     await createIssue(context, owner, repo, title, body);
-      //   }
-      // }
-
-      // if (!codemeta && license) {
-      //   // License was found but no codemeta.json exists
-      //   const title = `No codemeta.json file found [${GITHUB_APP_NAME}]`;
-      //   const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@${GITHUB_APP_NAME} Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
-      //   const verify = await verifyFirstIssue(context, owner, repo, title);
-      //   if (!verify) {
-      //     await createIssue(context, owner, repo, title, body);
-      //   }
-      // }
     }
   });
 
@@ -139,83 +94,21 @@ export default async (app) => {
 
     // Grab the commits being pushed
     const { commits } = context.payload;
-    let license = await checkForLicense(context, owner, repo);
-    let citation = await checkForCitation(context, owner, repo);
-    let codemeta = await checkForCodeMeta(context, owner, repo);
 
-    // Check if any of the commits added a LICENSE, CITATION, or codemeta file
-    if (commits.length > 0) {
-      let licenseBeingPushed = false;
-      let citationBeingPushed = false;
-      let codeMetaBeingPushed = false;
-      for (let i = 0; i < commits.length; i++) {
-        if (commits[i].added.includes("LICENSE")) {
-          console.log("LICENSE file added with this push");
-          licenseBeingPushed = true;
-          continue;
-        }
-        if (commits[i].added.includes("CITATION.cff")) {
-          console.log("CITATION.cff file added with this push");
-          citationBeingPushed = true;
-          continue;
-        }
-        if (commits[i].added.includes("codemeta.json")) {
-          console.log("codemeta.json file added with this push");
-          codeMetaBeingPushed = true;
-          continue;
-        }
-        if (licenseBeingPushed) {
-          license = true;
-        }
-        if (citationBeingPushed) {
-          citation = true;
-        }
-        if (codeMetaBeingPushed) {
-          codemeta = true;
-        }
-      }
-    }
+    const issueBody = await renderIssues(
+      context,
+      owner,
+      repo,
+      db,
+      "",
+      "",
+      "",
+      commits,
+    );
+    const title = `FAIR-BioRS Compliance Issues`;
 
-    if (!license) {
-      console.log("No license file found (push)");
-      const title = `No license file found [${GITHUB_APP_NAME}]`;
-      const body = `To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@${GITHUB_APP_NAME} MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com.`;
-      const verify = await verifyFirstIssue(context, owner, repo, title);
-      if (!verify) {
-        await createIssue(context, owner, repo, title, body);
-      }
-    } else {
-      // License was found, close the issue if one was created
-      const title = `No license file found [${GITHUB_APP_NAME}]`;
-      await closeOpenIssue(context, owner, repo, title);
-    }
-
-    if (!citation && license) {
-      const title = `No citation file found [${GITHUB_APP_NAME}]`;
-      const body = `No CITATION.cff file was found at the root of your repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.
-      If you would like me to generate a CITATION.cff file for you, please reply with "@${GITHUB_APP_NAME} Yes". I will gather the information required in the CITATION.cff that I can find automatically from your repository and include that information in my reply for your review and edit. You can also add a CITATION.cff file yourself and I will close this issue when I detect it on the main branch.
-      `;
-      const verify = await verifyFirstIssue(context, owner, repo, title);
-      if (!verify) {
-        await createIssue(context, owner, repo, title, body);
-      }
-    } else if (citation) {
-      const title = `No citation file found [${GITHUB_APP_NAME}]`;
-      await closeOpenIssue(context, owner, repo, title);
-    }
-
-    if (!codemeta && license) {
-      // License was found but no codemeta.json exists
-      const title = `No codemeta.json file found [${GITHUB_APP_NAME}]`;
-      const body = `To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). No such file was found. It is important to provide software metadata to transfer metadata between software authors, repositories, and others, for the purposes of archiving, sharing, indexing, citing and discovering software. If you would like me to generate a codemeta.json file for you, please reply here with '@${GITHUB_APP_NAME} Yes'. I will gather the information required in the codemeta.json that I can find automatically from your repository and include that information in my reply for your edit or approve. You can also add a codemeta.json file yourself and I will close this issue when I detect it on the main branch.`;
-      const verify = await verifyFirstIssue(context, owner, repo, title);
-      if (!verify) {
-        await createIssue(context, owner, repo, title, body);
-      }
-    } else if (codemeta) {
-      const title = `No codemeta.json file found [${GITHUB_APP_NAME}]`;
-      await closeOpenIssue(context, owner, repo, title);
-    }
+    // Update the dashboard issue
+    await createIssue(context, owner, repo, title, issueBody);
   });
 
   app.on("issue_comment.created", async (context) => {
@@ -318,6 +211,7 @@ async function renderIssues(
   prTitle = "",
   prNumber = "",
   prLink = "",
+  commits = [],
 ) {
   // const issueTitle = "FAIR-BioRS Compliance Issues";
   // console.log(subjects);
@@ -328,9 +222,30 @@ async function renderIssues(
   // console.log(context);
   // console.log("IMPORTANT!!!!!");
 
-  const license = await checkForLicense(context, owner, repository);
-  const citation = await checkForCitation(context, owner, repository);
-  const codemeta = await checkForCodeMeta(context, owner, repository);
+  let license = await checkForLicense(context, owner, repository);
+  let citation = await checkForCitation(context, owner, repository);
+  let codemeta = await checkForCodeMeta(context, owner, repository);
+
+  // Check if any of the commits added a LICENSE, CITATION, or codemeta file
+  if (commits.length > 0) {
+    for (let i = 0; i < commits.length; i++) {
+      if (commits[i].added.includes("LICENSE")) {
+        console.log("LICENSE file added with this push");
+        license = true;
+        continue;
+      }
+      if (commits[i].added.includes("CITATION.cff")) {
+        console.log("CITATION.cff file added with this push");
+        citation = true;
+        continue;
+      }
+      if (commits[i].added.includes("codemeta.json")) {
+        console.log("codemeta.json file added with this push");
+        codemeta = true;
+        continue;
+      }
+    }
+  }
 
   const subjects = {
     citation,
@@ -380,7 +295,7 @@ async function renderIssues(
     baseTemplate += `## LICENSE\n\nNo LICENSE file found in the repository. To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). Any open license requests that were created are listed here. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please reply here with the identifier of the license you would like from the [SPDX License List](https://spdx.org/licenses/)  (e.g., comment “@${GITHUB_APP_NAME} MIT” for the MIT license). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com. You edit the license and push it when you are happy with the terms.\n\n${licenseBadge}`;
   } else {
     // License file found text
-    const licenseBadge = `[![License](https://img.shields.io/badge/License_Added-6366f1.svg)]`;
+    const licenseBadge = `![License](https://img.shields.io/badge/License_Added-22c55e.svg)`;
     baseTemplate += `## LICENSE\n\nA LICENSE file found in the repository.\n\n${licenseBadge}`;
   }
 
