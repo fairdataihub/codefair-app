@@ -69,8 +69,8 @@ export default async (app) => {
     for (const repository of context.payload.repositories_added) {
       // Loop through the added respotories
       const repo = repository.name;
-      console.log("REPO ID: " + repository.id);
-      console.log(repository);
+      // console.log("REPO ID: " + repository.id);
+      // console.log(repository);
 
       const issueBody = await renderIssues(
         context,
@@ -82,7 +82,7 @@ export default async (app) => {
       const title = `FAIR-BioRS Compliance Issues`;
 
       // Create an issue with the compliance issues
-      console.log("CREATING ISSUE");
+      // console.log("CREATING ISSUE");
       await createIssue(context, owner, repo, title, issueBody);
 
       // if (!license) {
@@ -265,6 +265,41 @@ export default async (app) => {
       }
     }
   });
+
+  app.on("pull_request.opened", async (context) => {
+    console.log("PULL REQUEST OPENED");
+    const owner = context.payload.repository.owner.login;
+    const repo = context.payload.repository.name;
+    const prTitle = context.payload.pull_request.title;
+    console.log(context);
+
+    if (prTitle === "feat: ✨ LICENSE file added") {
+      const prNumber = context.payload.pull_request.number;
+      const prLink = context.payload.pull_request.html_url;
+      // Check if the pull request is for the LICENSE file
+      // If it is, close the issue that was opened for the license
+      console.log("Issue opened for license file");
+      const issueBody = await renderIssues(
+        context,
+        owner,
+        repo,
+        db,
+        prTitle,
+        prNumber,
+        prLink,
+      );
+      await createIssue(
+        context,
+        owner,
+        repo,
+        "FAIR-BioRS Compliance Issues",
+        issueBody,
+      );
+      // update dashboard issue with pr number
+      // const issueTitle = `No license file found [${GITHUB_APP_NAME}]`;
+      // await closeOpenIssue(context, owner, repo, issueTitle);
+    }
+  });
 };
 
 /**
@@ -275,15 +310,23 @@ export default async (app) => {
  * @param {*} db
  * @returns
  */
-async function renderIssues(context, owner, repository, db) {
+async function renderIssues(
+  context,
+  owner,
+  repository,
+  db,
+  prTitle = "",
+  prNumber = "",
+  prLink = "",
+) {
   // const issueTitle = "FAIR-BioRS Compliance Issues";
   // console.log(subjects);
 
-  console.log("IMPORTANT");
-  console.log(repository);
-  console.log("IMPORTANT!!!!!");
-  console.log(context);
-  console.log("IMPORTANT!!!!!");
+  // console.log("IMPORTANT");
+  // console.log(repository);
+  // console.log("IMPORTANT!!!!!");
+  // console.log(context);
+  // console.log("IMPORTANT!!!!!");
 
   const license = await checkForLicense(context, owner, repository);
   const citation = await checkForCitation(context, owner, repository);
@@ -310,7 +353,7 @@ async function renderIssues(context, owner, repository, db) {
     const existingLicense = await licenseCollection.findOne({
       repositoryId: repository.id,
     });
-    console.log(existingLicense);
+    // console.log(existingLicense);
 
     if (!existingLicense) {
       // Entry does not exist in db, create a new one
@@ -339,6 +382,12 @@ async function renderIssues(context, owner, repository, db) {
     // License file found text
     const licenseBadge = `[![License](https://img.shields.io/badge/License_Added-6366f1.svg)]`;
     baseTemplate += `## LICENSE\n\nA LICENSE file found in the repository.\n\n${licenseBadge}`;
+  }
+
+  // If License PR is open, add the PR number to the dashboard
+  console.log(prTitle);
+  if (prTitle === "feat: ✨ LICENSE file added") {
+    baseTemplate += `\n\nA pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
   }
 
   if (!subjects.citation && subjects.license) {
@@ -532,15 +581,19 @@ async function createIssue(context, owner, repo, title, body) {
     state: "open",
   });
 
-  console.log("ISSUE DATA");
-  console.log(issue.data);
+  // console.log("ISSUE DATA");
+  // console.log(issue.data);
+  console.log(title);
 
   if (issue.data.length > 0) {
     // iterate through issues to see if there is an issue with the same title
     let noIssue = false;
+    let issueNumber;
     for (let i = 0; i < issue.data.length; i++) {
+      console.log(issue.data[i].title);
       if (issue.data[i].title === title) {
         noIssue = true;
+        issueNumber = issue.data[i].number;
         break;
       }
     }
@@ -553,6 +606,19 @@ async function createIssue(context, owner, repo, title, body) {
         body,
         owner,
         repo,
+      });
+    } else {
+      // Update the issue with the new body
+      console.log("++++++++++++++++");
+      console.log(issue.data);
+      // console.log(issue);
+      console.log("Updating existing issue: " + issueNumber);
+      await context.octokit.issues.update({
+        issue_number: issueNumber,
+        owner,
+        repo,
+        title,
+        body,
       });
     }
   }
@@ -978,9 +1044,9 @@ async function gatherCitationInfo(context, owner, repo) {
   // Get the keywords of the repo
   let keywords = [];
   if (repoData.data.topics != null && repoData.data.topics.length > 0) {
-    console.log(repoData.data.topics);
+    // console.log(repoData.data.topics);
     keywords = repoData.data.topics;
-    console.log(keywords);
+    // console.log(keywords);
   }
 
   // Begin creating json for CITATION.cff file
