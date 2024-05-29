@@ -14,6 +14,7 @@ config({
           scrollAuto: "Scroll Auto",
         },
       },
+      // toolBarsExclude: ["preview", "fullscreen"],
     },
   },
   markdownItConfig(md) {
@@ -184,9 +185,11 @@ const saveLicenseAndPush = async () => {
   <main class="mx-auto max-w-screen-xl">
     <div>
       <n-flex vertical size="large" class="pb-5">
+        <h1 class="text-2xl font-bold">Edit License</h1>
+
         <p class="text-lg">
           You can select a license from the list below and edit it in the
-          editor.
+          editor. Once you are done, you can save the draft or push the license to the repository as a pull request.
         </p>
 
         <n-select
@@ -204,6 +207,7 @@ const saveLicenseAndPush = async () => {
             <MdEditor
               v-model="licenseContent"
               language="en-US"
+              :toolbars-exclude="['preview', 'fullscreen', 'save', 'pageFullscreen']"
               preview-theme="github"
               :show-code-row-number="true"
               :sanitize="sanitize"
@@ -214,7 +218,7 @@ const saveLicenseAndPush = async () => {
 
       <n-divider />
 
-      <n-flex>
+      <n-flex class="my-4">
         <n-button
           size="large"
           color="black"
@@ -231,7 +235,7 @@ const saveLicenseAndPush = async () => {
 
         <n-button
           size="large"
-          color="black"
+          color="black"x
           @click="saveLicenseAndPush"
           :disabled="!licenseId || !licenseContent"
           :loading="submitLoading"
