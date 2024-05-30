@@ -185,7 +185,7 @@ const saveLicenseAndPush = async () => {
   <main class="mx-auto max-w-screen-xl">
     <div>
       <n-flex vertical size="large" class="pb-5">
-        <h1 class="text-2xl font-bold">Edit License</h1>
+        <h1 class="text-2xl font-bold">Edit LICENSE</h1>
 
         <p class="text-lg">
           You can select a license from the list below and edit it in the
