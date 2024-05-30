@@ -202,12 +202,17 @@ const saveLicenseAndPush = async () => {
           :options="licenseOptions"
         />
 
+        <!-- help text -->
+        <n-text v-if="displayLicenseEditor" type="secondary" class="mt-2">
+            Your edits will update the preview on the right side. You can edit the license content on the left side using the editor.
+        </n-text>
+
         <TransitionFade>
           <div v-if="displayLicenseEditor" class="my-5">
             <MdEditor
               v-model="licenseContent"
               language="en-US"
-              :toolbars-exclude="['preview', 'fullscreen', 'save', 'pageFullscreen']"
+              :toolbars-exclude="['preview', 'fullscreen', 'save', 'pageFullscreen', 'github', 'catalog']"
               preview-theme="github"
               :show-code-row-number="true"
               :sanitize="sanitize"

@@ -29,7 +29,7 @@ export async function gatherCodeMetaInfo(context, owner, repo) {
   const dataModified = repoData.data.updated_at;
   const keywords = repoData.data.topics;
   const license = repoData.data.license.spdx_id;
-  const description = repoData.data.description;
+  const { description } = repoData.data;
   const identifier = repoData.data.id;
   const name = repoData.data.full_name;
   let issueTracker = repoData.data.issues_url;
