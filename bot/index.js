@@ -1,22 +1,12 @@
-import axios from "axios";
-import human from "humanparser";
-import yaml from "js-yaml";
 import { MongoClient } from "mongodb";
-import { nanoid } from "nanoid";
-import licensesAvail from "./public/assets/data/licenses.json" assert { type: "json" };
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
-import { getDefaultBranch } from "./utils/tools/index.js";
+import { getDefaultBranch, checkEnvVariable } from "./utils/tools/index.js";
 
-function checkEnvVariable(varName) {
-  if (!process.env[varName]) {
-    console.error(`Please set the ${varName} environment variable`);
-    process.exit(1);
-  }
-}
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
 checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("DOPPLER_ENVIRONMENT");
+checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
 // sourcery skip: use-object-destructuring
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -40,14 +30,33 @@ export default async (app) => {
     timestamp: new Date(),
   });
 
-  // Opens a PR every time someone installs your app for the first time
-  // On adding the app to a repo
+  // When the app is installed on an Org or Repository
   app.on("installation.created", async (context) => {
     const owner = context.payload.installation.account.login;
+    const installationCollection = db.collection("installation");
 
     // shows all repos you've installed the app on
     for (const repository of context.payload.repositories) {
       const repo = repository.name;
+      const installationId = context.payload.installation.id;
+
+      // Check if the installation is already in the database
+      const installation = await installationCollection.findOne({
+        installationId,
+        repo,
+        repositoryId: repository.id,
+      });
+
+      if (!installation) {
+        // If the installation is not in the database, add it
+        await installationCollection.insertOne({
+          installationId,
+          owner,
+          repo,
+          repositoryId: repository.id,
+          timestamp: new Date(),
+        });
+      }
 
       const issueBody = await renderIssues(
         context,
@@ -63,13 +72,35 @@ export default async (app) => {
     }
   });
 
+  // When a new repository is added to the installation
   app.on("installation_repositories.added", async (context) => {
     // Event for when github app is alredy installed but a new repository is added
     const owner = context.payload.installation.account.login;
+    const installationId = context.payload.installation.id;
+    const installationCollection = db.collection("installation");
 
     for (const repository of context.payload.repositories_added) {
       // Loop through the added respotories
       const repo = repository.name;
+
+      // Check if the installation is already in the database
+      const installation = await installationCollection.findOne({
+        installationId,
+        owner,
+        repo,
+        repositoryId: repository.id,
+      });
+
+      if (!installation) {
+        // If the installation is not in the database, add it
+        await installationCollection.insertOne({
+          installationId,
+          owner,
+          repo,
+          repositoryId: repository.id,
+          timestamp: new Date(),
+        });
+      }
 
       const issueBody = await renderIssues(context, owner, repository, db);
       const title = `FAIR-BioRS Compliance Issues`;
@@ -80,6 +111,7 @@ export default async (app) => {
     }
   });
 
+  // When a push is made to a repository
   app.on("push", async (context) => {
     // Event for when a push is made to the repository (listens to all branches)
     const owner = context.payload.repository.owner.login;
@@ -112,6 +144,7 @@ export default async (app) => {
     await createIssue(context, owner, repo, title, issueBody);
   });
 
+  // When a comment is made on an issue
   app.on("issue_comment.created", async (context) => {
     const owner = context.payload.repository.owner.login;
     const repo = context.payload.repository.name;
@@ -160,6 +193,7 @@ export default async (app) => {
     }
   });
 
+  // When a pull request is opened
   app.on("pull_request.opened", async (context) => {
     console.log("PULL REQUEST OPENED");
     const owner = context.payload.repository.owner.login;
@@ -189,9 +223,6 @@ export default async (app) => {
         "FAIR-BioRS Compliance Issues",
         issueBody,
       );
-      // update dashboard issue with pr number
-      // const issueTitle = `No license file found [${GITHUB_APP_NAME}]`;
-      // await closeOpenIssue(context, owner, repo, issueTitle);
     }
   });
 };
