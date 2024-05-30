@@ -1,3 +1,27 @@
+/**
+ * @fileoverview Utility functions for the bot
+ */
+
+/**
+ * * Verify that the required environment variables are set
+ *
+ * @param {string} varName - The name of the environment variable to check
+ */
+export function checkEnvVariable(varName) {
+  if (!process.env[varName]) {
+    console.error(`Please set the ${varName} environment variable`);
+    process.exit(1);
+  }
+}
+
+/**
+ * * Get the default branch of the repository
+ *
+ * @param {object} context - The GitHub context object
+ * @param {string} owner - The owner of the repository
+ * @param {string} repo - The name of the repository
+ * @returns {string} - The default branch of the repository
+ */
 export async function getDefaultBranch(context, owner, repo) {
   let defaultBranch;
 
@@ -15,6 +39,16 @@ export async function getDefaultBranch(context, owner, repo) {
   }
 }
 
+/**
+ * * Check if the issue already exists in the repository
+ *
+ * @param {object} context - The GitHub context object
+ * @param {string} owner - The owner of the repository
+ * @param {string} repo - The name of the repository
+ * @param {string} title - The title of the issue
+ *
+ * @returns {boolean} - Returns true if the issue already exists, false otherwise
+ */
 export async function verifyFirstIssue(context, owner, repo, title) {
   // If there is an issue that has been created by the bot, (either opened or closed) don't create another issue
   const issues = await context.octokit.issues.listForRepo({
@@ -43,6 +77,14 @@ export async function verifyFirstIssue(context, owner, repo, title) {
   }
 }
 
+/**
+ * * Close an open issue with the specified title
+ *
+ * @param {object} context - The GitHub context object
+ * @param {string} owner - The owner of the repository
+ * @param {string} repo - The name of the repository
+ * @param {string} title - The title of the issue to close
+ */
 export async function closeOpenIssue(context, owner, repo, title) {
   // Check if issue is open and close it
   const issue = await context.octokit.issues.listForRepo({
@@ -68,6 +110,16 @@ export async function closeOpenIssue(context, owner, repo, title) {
   }
 }
 
+/**
+ * * Gathers contributors of the repository and parses the user information
+ *
+ * @param {object} context - The GitHub context object
+ * @param {string} owner - The owner of the repository
+ * @param {string} repo - The name of the repository
+ * @param {string} fileType - The type of file to gather information for (CITATION.cff or codemeta.json)
+ *
+ * @returns {array} - An array of objects containing the information for the authors of the repository
+ */
 export async function gatherRepoAuthors(context, owner, repo, fileType) {
   // Get the list of contributors from the repo
   const contributors = await context.octokit.repos.listContributors({
@@ -87,15 +139,15 @@ export async function gatherRepoAuthors(context, owner, repo, fileType) {
   const parsedAuthors = [];
   if (userInfo.length > 0) {
     for (const author of userInfo) {
+      // Skip bots
       if (author.data.type === "Bot") {
         continue;
       }
 
+      const parsedNames = human.parseName(author.data.name);
       const authorObj = {
         orcid: "",
       };
-
-      const parsedNames = human.parseName(author.data.name);
 
       if (author.data.company && fileType === "citation") {
         authorObj.affiliation = author.data.company;
@@ -124,6 +176,15 @@ export async function gatherRepoAuthors(context, owner, repo, fileType) {
   return parsedAuthors;
 }
 
+/**
+ * * Gather the programming languages used in the repository
+ *
+ * @param {object} context - The GitHub context object
+ * @param {string} owner - The owner of the repository
+ * @param {string} repo - The name of the repository
+ *
+ * @returns {array} - An array of strings containing the programming languages used in the repository
+ */
 export async function gatherLanguagesUsed(context, owner, repo) {
   // Get the programming languages used in the repo
   const languages = await context.octokit.repos.listLanguages({
@@ -140,6 +201,15 @@ export async function gatherLanguagesUsed(context, owner, repo) {
   return languagesUsed;
 }
 
+/**
+ * * Gather the DOI from the README of the repository
+ *
+ * @param {object} context - The GitHub context object
+ * @param {string} owner - The owner of the repository
+ * @param {string} repoName - The name of the repository
+ *
+ * @returns {array} - An array containing a boolean and the DOI if found, [true, doi] or [false, ""]
+ */
 export async function getDOI(context, owner, repoName) {
   try {
     const readme = await context.octokit.repos.getContent({
