@@ -183,14 +183,17 @@ const saveLicenseAndPush = async () => {
 
 <template>
   <main class="mx-auto max-w-screen-xl">
-    <div>
+    <div class="bg-white p-8">
       <n-flex vertical size="large" class="pb-5">
         <h1 class="text-2xl font-bold">Edit LICENSE</h1>
+        <n-text type="secondary" class="mt-2 text-lg">
+          To make your software reusable a license file is expected at the root level of your repository, as recommended in the FAIR-BioRS Guidelines. It is important to choose your license early since it will affect your software's dependencies.
+        </n-text>
 
-        <p class="text-lg">
+        <n-text type="secondary">
           You can select a license from the list below and edit it in the
           editor. Once you are done, you can save the draft or push the license to the repository as a pull request.
-        </p>
+        </n-text>
 
         <n-select
           v-model:value="licenseId"
@@ -203,7 +206,7 @@ const saveLicenseAndPush = async () => {
         />
 
         <!-- help text -->
-        <n-text v-if="displayLicenseEditor" type="secondary" class="mt-2">
+        <n-text v-if="displayLicenseEditor" class="mt-2">
             Your edits will update the preview on the right side. You can edit the license content on the left side using the editor.
         </n-text>
 
