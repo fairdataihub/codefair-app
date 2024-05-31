@@ -1,6 +1,6 @@
 import { MongoClient } from "mongodb";
-import { renderIssues, createIssue } from "./utils/renderer/index.js";
-import { getDefaultBranch, checkEnvVariable } from "./utils/tools/index.js";
+import { renderIssues, createIssue } from "../../utils/renderer/index.js";
+import { getDefaultBranch, checkEnvVariable } from "../../utils/tools/index.js";
 
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
