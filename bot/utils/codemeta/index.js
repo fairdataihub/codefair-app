@@ -1,4 +1,4 @@
-export async function checkForCodeMeta(context, owner, repo) {
+async function checkForCodeMeta(context, owner, repo) {
   try {
     await context.octokit.rest.repos.getContent({
       owner,
@@ -12,7 +12,7 @@ export async function checkForCodeMeta(context, owner, repo) {
   }
 }
 
-export async function gatherCodeMetaInfo(context, owner, repo) {
+async function gatherCodeMetaInfo(context, owner, repo) {
   // Gather metadata from the repo to create a codemeta.json file
   const repoData = await context.octokit.repos.get({
     owner,
@@ -103,7 +103,7 @@ export async function gatherCodeMetaInfo(context, owner, repo) {
   await createCodeMetaFile(context, owner, repo, metadata);
 }
 
-export async function createCodeMetaFile(context, owner, repo, codeMetaText) {
+async function createCodeMetaFile(context, owner, repo, codeMetaText) {
   // Create a new branch
   const branch = `codemeta-${Math.floor(Math.random() * 9999)}`;
 
@@ -165,3 +165,9 @@ export async function createCodeMetaFile(context, owner, repo, codeMetaText) {
     repo,
   });
 }
+
+module.exports = {
+  checkForCodeMeta,
+  createCodeMetaFile,
+  gatherCodeMetaInfo,
+};

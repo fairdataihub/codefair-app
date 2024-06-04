@@ -2,12 +2,20 @@
  * @fileoverview Utility functions for the bot
  */
 
+const { init } = require("@paralleldrive/cuid2");
+
+const createId = init({
+  fingerprint: "a-custom-host-fingerprint",
+  length: 10,
+  random: Math.random,
+});
+
 /**
  * * Verify that the required environment variables are set
  *
  * @param {string} varName - The name of the environment variable to check
  */
-export function checkEnvVariable(varName) {
+function checkEnvVariable(varName) {
   if (!process.env[varName]) {
     console.error(`Please set the ${varName} environment variable`);
     process.exit(1);
@@ -22,7 +30,7 @@ export function checkEnvVariable(varName) {
  * @param {string} repo - The name of the repository
  * @returns {string} - The default branch of the repository
  */
-export async function getDefaultBranch(context, owner, repo) {
+async function getDefaultBranch(context, owner, repo) {
   let defaultBranch;
 
   try {
@@ -49,7 +57,7 @@ export async function getDefaultBranch(context, owner, repo) {
  *
  * @returns {boolean} - Returns true if the issue already exists, false otherwise
  */
-export async function verifyFirstIssue(context, owner, repo, title) {
+async function verifyFirstIssue(context, owner, repo, title) {
   // If there is an issue that has been created by the bot, (either opened or closed) don't create another issue
   const issues = await context.octokit.issues.listForRepo({
     creator: `${GITHUB_APP_NAME}[bot]`,
@@ -85,7 +93,7 @@ export async function verifyFirstIssue(context, owner, repo, title) {
  * @param {string} repo - The name of the repository
  * @param {string} title - The title of the issue to close
  */
-export async function closeOpenIssue(context, owner, repo, title) {
+async function closeOpenIssue(context, owner, repo, title) {
   // Check if issue is open and close it
   const issue = await context.octokit.issues.listForRepo({
     title,
@@ -120,7 +128,7 @@ export async function closeOpenIssue(context, owner, repo, title) {
  *
  * @returns {array} - An array of objects containing the information for the authors of the repository
  */
-export async function gatherRepoAuthors(context, owner, repo, fileType) {
+async function gatherRepoAuthors(context, owner, repo, fileType) {
   // Get the list of contributors from the repo
   const contributors = await context.octokit.repos.listContributors({
     owner,
@@ -185,7 +193,7 @@ export async function gatherRepoAuthors(context, owner, repo, fileType) {
  *
  * @returns {array} - An array of strings containing the programming languages used in the repository
  */
-export async function gatherLanguagesUsed(context, owner, repo) {
+async function gatherLanguagesUsed(context, owner, repo) {
   // Get the programming languages used in the repo
   const languages = await context.octokit.repos.listLanguages({
     owner,
@@ -210,7 +218,7 @@ export async function gatherLanguagesUsed(context, owner, repo) {
  *
  * @returns {array} - An array containing a boolean and the DOI if found, [true, doi] or [false, ""]
  */
-export async function getDOI(context, owner, repoName) {
+async function getDOI(context, owner, repoName) {
   try {
     const readme = await context.octokit.repos.getContent({
       owner,
@@ -230,3 +238,14 @@ export async function getDOI(context, owner, repoName) {
     return [false, ""];
   }
 }
+
+module.exports = {
+  checkEnvVariable,
+  closeOpenIssue,
+  createId,
+  gatherLanguagesUsed,
+  gatherRepoAuthors,
+  getDefaultBranch,
+  getDOI,
+  verifyFirstIssue,
+};

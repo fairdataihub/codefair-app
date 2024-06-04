@@ -1,4 +1,4 @@
-export async function checkForLicense(context, owner, repo) {
+async function checkForLicense(context, owner, repo) {
   console.log("checking for license");
   try {
     await context.octokit.rest.licenses.getForRepo({
@@ -15,7 +15,7 @@ export async function checkForLicense(context, owner, repo) {
   }
 }
 
-export async function createLicense(context, owner, repo, license) {
+async function createLicense(context, owner, repo, license) {
   // Verify there is no PR open already for the LICENSE file
   const openPR = await context.octokit.pulls.list({
     owner,
@@ -134,3 +134,8 @@ export async function createLicense(context, owner, repo, license) {
     });
   }
 }
+
+module.exports = {
+  createLicense,
+  checkForLicense,
+};

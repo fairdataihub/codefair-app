@@ -1,6 +1,12 @@
-import { MongoClient } from "mongodb";
-import { renderIssues, createIssue } from "../../utils/renderer/index.js";
-import { getDefaultBranch, checkEnvVariable } from "../../utils/tools/index.js";
+// import { MongoClient } from "mongodb";
+const { MongoClient } = require("mongodb");
+const { createIssue, renderIssues } = require("./utils/renderer/index.js");
+const {
+  checkEnvVariable,
+  getDefaultBranch,
+} = require("./utils/tools/index.js");
+// import { renderIssues, createIssue } from "../../utils/renderer/index.js";
+// import { getDefaultBranch, checkEnvVariable } from "../../utils/tools/index.js";
 
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
@@ -19,7 +25,7 @@ const client = new MongoClient(MONGODB_URI, {});
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
-export default async (app) => {
+module.exports = async (app) => {
   // Connect to the MongoDB database
   await client.connect();
 

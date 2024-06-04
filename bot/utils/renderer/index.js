@@ -1,7 +1,11 @@
-import { nanoid } from "nanoid";
-import { checkForCitation } from "../citation/index.js";
-import { checkForCodeMeta } from "../codemeta/index.js";
-import { checkForLicense } from "../license/index.js";
+// import { nanoid } from "nanoid";
+const { createId } = require("../tools/index.js");
+const { checkForCitation } = require("../citation/index.js");
+const { checkForCodeMeta } = require("../codemeta/index.js");
+const { checkForLicense } = require("../license/index.js");
+// import { checkForCitation } from "../citation/index.js";
+// import { checkForCodeMeta } from "../codemeta/index.js";
+// import { checkForLicense } from "../license/index.js";
 
 const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
@@ -17,7 +21,7 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  *
  * @returns {string} - The updated base template
  */
-export async function applyCodemetaTemplate(
+async function applyCodemetaTemplate(
   subjects,
   baseTemplate,
   db,
@@ -26,7 +30,7 @@ export async function applyCodemetaTemplate(
 ) {
   if (!subjects.codemeta && subjects.license) {
     // License was found but no codemeta.json exists
-    const identifier = nanoid();
+    const identifier = createId();
 
     let url = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
 
@@ -78,7 +82,7 @@ export async function applyCodemetaTemplate(
  *
  * @returns {string} - The updated base template
  */
-export async function applyCitationTemplate(
+async function applyCitationTemplate(
   subjects,
   baseTemplate,
   db,
@@ -87,7 +91,7 @@ export async function applyCitationTemplate(
 ) {
   if (!subjects.citation && subjects.license) {
     // License was found but no citation file was found
-    const identifier = nanoid();
+    const identifier = createId();
 
     let url = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
     const citationCollection = db.collection("citationRequests");
@@ -137,7 +141,7 @@ export async function applyCitationTemplate(
  *
  * @returns {string} - The updated base template
  */
-export async function applyLicenseTemplate(
+async function applyLicenseTemplate(
   subjects,
   baseTemplate,
   db,
@@ -145,7 +149,7 @@ export async function applyLicenseTemplate(
   owner,
 ) {
   if (!subjects.license) {
-    const identifier = nanoid();
+    const identifier = createId();
     let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
     const licenseCollection = db.collection("licenseRequests");
     const existingLicense = await licenseCollection.findOne({
@@ -192,7 +196,7 @@ export async function applyLicenseTemplate(
  *
  * @returns {string} - The rendered issue message
  */
-export async function renderIssues(
+async function renderIssues(
   context,
   owner,
   repository,
@@ -284,7 +288,7 @@ export async function renderIssues(
  * @param {string} title - The title of the issue
  * @param {string} body - The body of the issue
  */
-export async function createIssue(context, owner, repo, title, body) {
+async function createIssue(context, owner, repo, title, body) {
   // If issue has been created, create one
   console.log("gathering issues");
   const issue = await context.octokit.issues.listForRepo({
@@ -347,3 +351,11 @@ export async function createIssue(context, owner, repo, title, body) {
     });
   }
 }
+
+module.exports = {
+  applyCitationTemplate,
+  applyCodemetaTemplate,
+  applyLicenseTemplate,
+  createIssue,
+  renderIssues,
+};
