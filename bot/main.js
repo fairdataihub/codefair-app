@@ -1,5 +1,5 @@
-const { Server, Probot } = require("probot");
-const app = require("./index.js");
+import { Server, Probot } from "probot";
+import app from "./index.js";
 // import "dotenv/config";
 
 async function startServer() {
@@ -7,7 +7,7 @@ async function startServer() {
     // log: console,
     Probot: Probot.defaults({
       appId: process.env.GITHUB_APP_ID,
-      privateKey: process.env.PRIVATE_KEY.replace(/\\n/g, "\n"),
+      privateKey: process.env.PRIVATE_KEY,
       secret: process.env.WEBHOOK_SECRET,
     }),
   });
