@@ -2,13 +2,13 @@
  * @fileoverview Utility functions for the bot
  */
 
-const { init } = require("@paralleldrive/cuid2");
+// const { init } = require("@paralleldrive/cuid2");
 
-const createId = init({
-  fingerprint: "a-custom-host-fingerprint",
-  length: 10,
-  random: Math.random,
-});
+// const createId = init({
+//   fingerprint: "a-custom-host-fingerprint",
+//   length: 10,
+//   random: Math.random,
+// });
 
 /**
  * * Verify that the required environment variables are set
