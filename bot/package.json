@@ -12,8 +12,8 @@
     "probot-app"
   ],
   "scripts": {
-    "start": "node ./main.js",
-    "dev": "nodemon --watch ./index.js --watch .env --exec \"probot run ./index.js\"",
+    "dev": "probot run ./index.js ",
+    "start": "node -r dotenv/config ./main.js",
     "build-css": "tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css",
     "watch-css": "npx tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css --watch",
     "build": "npm run build-css",
