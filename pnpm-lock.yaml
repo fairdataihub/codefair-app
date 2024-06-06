@@ -45,6 +45,9 @@ importers:
       nodemon:
         specifier: ^3.1.0
         version: 3.1.3
+      npm-run-all:
+        specifier: ^4.1.5
+        version: 4.1.5
       postcss:
         specifier: ^8.4.38
         version: 8.4.38

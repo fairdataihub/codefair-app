@@ -164,6 +164,7 @@ export async function applyLicenseTemplate(
         created_at: newDate,
         updated_at: newDate,
       });
+      console.log("new")
     } else {
       // Get the identifier of the existing license request
       // Update the database
