@@ -6,6 +6,11 @@ interface CodeMetadataRequest {
     email?: string;
     familyName?: string;
     givenName: string;
+    roles: {
+      endDate?: string;
+      role: string | null;
+      startDate?: string;
+    }[];
     uri: string;
   }[];
   codeRepository?: string;

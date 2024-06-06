@@ -18,6 +18,12 @@ const formValue = reactive({
       email: "john.doe@example.com",
       familyName: "Doe",
       givenName: "John",
+      roles: [
+        {
+          role: "Developer",
+          startDate: "2022-01-01",
+        },
+      ],
       uri: "https://example.com/johndoe",
     },
     {
@@ -25,6 +31,13 @@ const formValue = reactive({
       email: "jane.smith@example.com",
       familyName: "Smith",
       givenName: "Jane",
+      roles: [
+        {
+          endDate: "2022-12-31",
+          role: "Tester",
+          startDate: "2022-01-01",
+        },
+      ],
       uri: "https://example.com/janesmith",
     },
   ],
