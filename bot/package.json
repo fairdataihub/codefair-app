@@ -12,9 +12,9 @@
     "probot-app"
   ],
   "scripts": {
-    "dev": "nodemon --watch ./index.js --watch .env --exec \"probot run ./index.js\"",
-    "dev:start": "node -r dotenv/config ./main.js",
+    "dev": "probot run ./index.js ",
     "start": "node ./main.js",
+    "dev:start": "node -r dotenv/config ./main.js",
     "build-css": "tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css",
     "watch-css": "npx tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css --watch",
     "build": "npm run build-css",
@@ -29,6 +29,7 @@
     "nanoid": "^5.0.7",
     "probot": "12.4.0"
   },
+  "type": "module",
   "devDependencies": {
     "autoprefixer": "^10.4.19",
     "jest": "^29.0.0",

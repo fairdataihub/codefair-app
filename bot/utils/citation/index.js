@@ -1,4 +1,4 @@
-async function checkForCitation(context, owner, repo) {
+export async function checkForCitation(context, owner, repo) {
   try {
     await context.octokit.rest.repos.getContent({
       owner,
@@ -12,7 +12,7 @@ async function checkForCitation(context, owner, repo) {
   }
 }
 
-async function gatherCitationInfo(context, owner, repo) {
+export async function gatherCitationInfo(context, owner, repo) {
   // Verify there is no PR open already for the CITATION.cff file
   const openPR = await context.octokit.pulls.list({
     owner,
@@ -151,7 +151,7 @@ async function gatherCitationInfo(context, owner, repo) {
   await createCitationFile(context, owner, repo, citationTemplate);
 }
 
-async function createCitationFile(context, owner, repo, citationText) {
+export async function createCitationFile(context, owner, repo, citationText) {
   // Here we take the citation text passed as a parameter
   // It could from probot's initial gathering or an updated version from the user
 
@@ -214,9 +214,3 @@ async function createCitationFile(context, owner, repo, citationText) {
     repo,
   });
 }
-
-module.exports = {
-  checkForCitation,
-  createCitationFile,
-  gatherCitationInfo,
-};
