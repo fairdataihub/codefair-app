@@ -4,7 +4,7 @@ import app from "./index.js";
 
 async function startServer() {
   const server = new Server({
-    // log: console,
+    // log: "http://localhost:3000",
     Probot: Probot.defaults({
       appId: process.env.GITHUB_APP_ID,
       privateKey: process.env.PRIVATE_KEY,
