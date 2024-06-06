@@ -1,11 +1,11 @@
 interface CodeMetadataRequest {
   name: string;
   description: string;
-  creationDate: string;
-  firstReleaseDate: string;
-  license: string;
+  creationDate?: string | null;
+  firstReleaseDate?: string | null;
+  license: string | null;
   uniqueIdentifier?: string;
-  applicationCategory?: string;
+  applicationCategory?: string | null;
   keywords: string[];
   fundingCode?: string;
   fundingOrganzation?: string;
@@ -14,17 +14,17 @@ interface CodeMetadataRequest {
   issueTracker?: string;
   relatedLinks?: string[];
   programmingLanguages: string[];
-  runtimePlatform?: string;
-  operatingSystem?: string;
+  runtimePlatform?: string | null;
+  operatingSystem?: string | null;
   otherSoftwareRequirements?: string[];
   currentVersion?: string;
-  currentVersionReleaseDate?: string;
+  currentVersionReleaseDate?: string | null;
   currentVersionDownloadURL?: string;
   currentVersionReleaseNotes?: string;
   referencePublication?: string;
   reviewAspect?: string;
   reviewBody?: string;
-  developmentStatus?: string;
+  developmentStatus?: string | null;
   isPartOf?: string;
   authors: {
     givenName: string;
@@ -40,7 +40,7 @@ interface CodeMetadataRequest {
     uri: string;
     affiliation?: string;
     roles: {
-      role: string;
+      role: string | null;
       startDate?: string;
       endDate?: string;
     }[];
