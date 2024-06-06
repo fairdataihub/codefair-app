@@ -1,57 +1,58 @@
 interface CodeMetadataRequest {
   name: string;
-  description: string;
-  creationDate?: string | null;
-  firstReleaseDate?: string | null;
-  license: string | null;
-  uniqueIdentifier?: string;
   applicationCategory?: string | null;
-  keywords: string[];
-  fundingCode?: string;
-  fundingOrganzation?: string;
+  authors: {
+    affiliation?: string;
+    email?: string;
+    familyName?: string;
+    givenName: string;
+    uri: string;
+  }[];
   codeRepository?: string;
   continuousIntegration?: string;
-  issueTracker?: string;
-  relatedLinks?: string[];
-  programmingLanguages: string[];
-  runtimePlatform?: string | null;
-  operatingSystem?: string | null;
-  otherSoftwareRequirements?: string[];
-  currentVersion?: string;
-  currentVersionReleaseDate?: string | null;
-  currentVersionDownloadURL?: string;
-  currentVersionReleaseNotes?: string;
-  referencePublication?: string;
-  reviewAspect?: string;
-  reviewBody?: string;
-  developmentStatus?: string | null;
-  isPartOf?: string;
-  authors: {
-    givenName: string;
-    familyName?: string;
-    email?: string;
-    uri: string;
-    affiliation?: string;
-  }[];
   contributors: {
-    givenName: string;
-    familyName?: string;
-    email?: string;
-    uri: string;
     affiliation?: string;
+    email?: string;
+    familyName?: string;
+    givenName: string;
     roles: {
+      endDate?: string;
       role: string | null;
       startDate?: string;
-      endDate?: string;
     }[];
+    uri: string;
   }[];
+  creationDate?: string | null;
+  currentVersion?: string;
+  currentVersionDownloadURL?: string;
+  currentVersionReleaseDate?: string | null;
+  currentVersionReleaseNotes?: string;
+  description: string;
+  developmentStatus?: string | null;
+  firstReleaseDate?: string | null;
+  fundingCode?: string;
+  fundingOrganization?: string;
+  isPartOf?: string;
+  isSourceCodeOf?: string;
+  issueTracker?: string;
+  keywords: string[];
+  license: string | null;
+  operatingSystem?: string[];
+  otherSoftwareRequirements?: string[];
+  programmingLanguages: string[];
+  referencePublication?: string;
+  relatedLinks?: string[];
+  reviewAspect?: string;
+  reviewBody?: string;
+  runtimePlatform?: string[];
+  uniqueIdentifier?: string;
 }
 
 interface CodeMetadataRequestGetResponse {
+  createdAt: number;
   identifier: string;
+  metadata: CodeMetadataRequest;
   owner: string;
   repo: string;
-  metadata: CodeMetadataRequest;
-  createdAt: number;
   updatedAt: number;
 }

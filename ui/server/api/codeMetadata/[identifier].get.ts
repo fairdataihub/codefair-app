@@ -1,5 +1,4 @@
 import { MongoClient } from "mongodb";
-import type { User } from "lucia";
 
 export default defineEventHandler(async (event) => {
   await protectRoute(event);
@@ -32,21 +31,36 @@ export default defineEventHandler(async (event) => {
     codeMetadataRequest.repo,
   );
 
-  // Check if the license request is still open
-  if (!codeMetadataRequest.open) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "request-closed",
-    });
+  const rawMetadata = codeMetadataRequest.metadata;
+
+  // Convert the creationDate and firstReleaseDate to a number
+  if (rawMetadata.creationDate) {
+    rawMetadata.creationDate = new Date(rawMetadata.creationDate).getTime();
   }
 
+  if (rawMetadata.firstReleaseDate) {
+    rawMetadata.firstReleaseDate = new Date(
+      rawMetadata.firstReleaseDate,
+    ).getTime();
+  }
+
+  if (rawMetadata.currentVersionReleaseDate) {
+    rawMetadata.currentVersionReleaseDate = new Date(
+      rawMetadata.currentVersionReleaseDate,
+    ).getTime();
+  }
+
+  const parsedMetadata = rawMetadata as CodeMetadataRequest;
+
+  console.log(parsedMetadata);
+
   const response: CodeMetadataRequestGetResponse = {
-    licenseId: codeMetadataRequest.licenseId,
-    licenseContent: codeMetadataRequest.licenseContent,
+    createdAt: codeMetadataRequest.createdAt,
     identifier: codeMetadataRequest.identifier,
+    metadata: parsedMetadata,
     owner: codeMetadataRequest.owner,
     repo: codeMetadataRequest.repo,
-    timestamp: codeMetadataRequest.timestamp,
+    updatedAt: codeMetadataRequest.updatedAt,
   };
 
   // return the valid license request

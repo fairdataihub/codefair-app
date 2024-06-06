@@ -1,272 +1,486 @@
 <script setup lang="ts">
-import sanitizeHtml from "sanitize-html";
-import { MdEditor, config } from "md-editor-v3";
-import type { FormInst, FormItemRule, SelectOption } from "naive-ui";
-import licensesJSON from "@/assets/data/licenses.json";
-import TargetBlankExtension from "@/utils/TargetBlankExtension";
-
-config({
-  editorConfig: {
-    languageUserDefined: {
-      "en-US": {
-        footer: {
-          markdownTotal: "Character Count",
-          scrollAuto: "Scroll Auto",
-        },
-      },
-      // toolBarsExclude: ["preview", "fullscreen"],
-    },
-  },
-  markdownItConfig(md) {
-    md.use(TargetBlankExtension);
-  },
-});
+import type { FormInst, FormRules } from "naive-ui";
+import codeMetadataJSON from "@/assets/data/codeMetadata.json";
 
 definePageMeta({
   middleware: ["protected"],
 });
 
-const licenseOptions = licensesJSON.map((option) => ({
-  label: option.name,
-  value: option.licenseId,
-}));
-
 const route = useRoute();
+
+const formRef = ref<FormInst | null>(null);
+const formValue = reactive({
+  name: "Example Project",
+  applicationCategory: "Software Development",
+  authors: [
+    {
+      affiliation: "Example University",
+      email: "john.doe@example.com",
+      familyName: "Doe",
+      givenName: "John",
+      uri: "https://example.com/johndoe",
+    },
+    {
+      affiliation: "Example Institute",
+      email: "jane.smith@example.com",
+      familyName: "Smith",
+      givenName: "Jane",
+      uri: "https://example.com/janesmith",
+    },
+  ],
+  codeRepository: "https://github.com/example/project",
+  continuousIntegration: "https://ci.example.com",
+  contributors: [
+    {
+      affiliation: "Example Labs",
+      email: "alice.johnson@example.com",
+      familyName: "Johnson",
+      givenName: "Alice",
+      roles: [
+        {
+          role: "Developer",
+          startDate: "2022-01-01",
+        },
+      ],
+      uri: "https://example.com/alicejohnson",
+    },
+    {
+      affiliation: "Example Corp",
+      email: "bob.brown@example.com",
+      familyName: "Brown",
+      givenName: "Bob",
+      roles: [
+        {
+          endDate: "2022-12-31",
+          role: "Tester",
+          startDate: "2022-01-01",
+        },
+      ],
+      uri: "https://example.com/bobbrown",
+    },
+  ],
+  creationDate: 1622505600000,
+  currentVersion: "1.0.0",
+  currentVersionDownloadURL: "https://example.com/download/1.0.0",
+  currentVersionReleaseDate: 1672531200000,
+  currentVersionReleaseNotes: "Initial stable release.",
+  description: "This is an example project to demonstrate a JSON schema.",
+  developmentStatus: "active",
+  firstReleaseDate: 1672531200000,
+  fundingCode: "FC-67890",
+  fundingOrganization: "Example Funding Org",
+  isPartOf: "Example Suite",
+  isSourceCodeOf: "Example Suite",
+  issueTracker: "https://issues.example.com",
+  keywords: ["example", "json", "schema"],
+  license: "MIT",
+  operatingSystem: ["Linux", "macOS", "Windows"],
+  otherSoftwareRequirements: ["Docker"],
+  programmingLanguages: ["Python", "JavaScript"],
+  referencePublication: "Doe, J. (2023). Example Project. Journal of Examples.",
+  relatedLinks: ["https://example.com/docs", "https://example.com/tutorials"],
+  reviewAspect: "Code Quality",
+  reviewBody: "This project has been thoroughly reviewed for code quality.",
+  runtimePlatform: [".Net"],
+  uniqueIdentifier: "12345-abcde",
+});
+
+const rules = ref<FormRules>({
+  name: {
+    message: "Please input the name of the software",
+    required: true,
+    trigger: "blur",
+  },
+  description: {
+    message: "Please input the description or abstract for the software",
+    required: true,
+    trigger: "blur",
+  },
+  keywords: {
+    message: "Please input at least one keyword",
+    required: true,
+    trigger: "blur",
+    type: "array",
+  },
+  programmingLanguages: {
+    message: "Please select at least one programming language",
+    required: true,
+    trigger: "blur",
+    type: "array",
+  },
+});
 
 const { identifier } = route.params as { identifier: string };
 
-const licenseId = ref<string | null>(null);
-const licenseContent = ref<string>("");
-
-const displayLicenseEditor = ref(false);
-const getLicenseLoading = ref(false);
-const submitLoading = ref(false);
-
-const { data, error } = await useFetch(`/api/license/${identifier}`, {
+const { data, error } = await useFetch(`/api/codeMetadata/${identifier}`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
 if (error.value) {
   push.error({
-    title: "Failed to fetch license details",
+    title: "Failed to fetch code metadata details",
     message: "Please try again later",
   });
-
-  // console.error("Failed to fetch license details:", error.value);
 
   throw createError(error.value);
 }
 
 if (data.value) {
-  licenseId.value = data.value.licenseId ?? null;
-  licenseContent.value = data.value.licenseContent ?? "";
-
-  if (licenseContent.value) {
-    displayLicenseEditor.value = true;
-  }
+  formValue.name = data.value.metadata.name;
 }
 
-const sanitize = (html: string) => sanitizeHtml(html);
+const applicationCategoryOptions =
+  codeMetadataJSON.applicationCategoryOptions.map((option) => ({
+    label: option,
+    value: option,
+  }));
 
-const updateLicenseContent = async (value: string) => {
-  if (!value) {
-    return;
-  }
-
-  displayLicenseEditor.value = false;
-
-  const license = licensesJSON.find((item) => item.licenseId === value);
-
-  if (license) {
-    getLicenseLoading.value = true;
-    const notification = push.promise(
-      "Please wait while we fetch the license details...",
-    );
-
-    await $fetch(`/api/license/request/${license.licenseId}`, {
-      headers: useRequestHeaders(["cookie"]),
-    })
-      .then((response) => {
-        licenseContent.value = response.licenseText;
-
-        notification.resolve({
-          title: "License details fetched",
-          message: "You can continue editing",
-        });
-
-        displayLicenseEditor.value = true;
-      })
-      .catch((error) => {
-        console.error("Failed to fetch license details:", error);
-        notification.reject({
-          title: "Failed to fetch license details",
-          message: "Please try again later",
-        });
-      })
-      .finally(() => {
-        getLicenseLoading.value = false;
-      });
-  }
-};
-
-const saveLicenseDraft = async () => {
-  submitLoading.value = true;
-
-  const body = {
-    licenseId: licenseId.value,
-    licenseContent: licenseContent.value,
-  };
-
-  await $fetch(`/api/license/${identifier}`, {
-    method: "PUT",
-    headers: useRequestHeaders(["cookie"]),
-    body: JSON.stringify(body),
-  })
-    .then((_response) => {
+const handleValidateClick = (e: MouseEvent) => {
+  e.preventDefault();
+  formRef.value?.validate((errors) => {
+    if (!errors) {
       push.success({
-        title: "License draft saved",
-        message: "You can continue editing",
+        title: "Valid",
+        message: "Form is valid",
       });
-    })
-    .catch((error) => {
-      console.error("Failed to save license draft:", error);
+    } else {
+      console.log(errors);
       push.error({
-        title: "Failed to save license draft",
-        message: "Please try again later",
+        title: "Invalid",
+        message: "Form is invalid",
       });
-    })
-    .finally(() => {
-      submitLoading.value = false;
-    });
-};
-
-const saveLicenseAndPush = async () => {
-  submitLoading.value = true;
-
-  const body = {
-    licenseId: licenseId.value,
-    licenseContent: licenseContent.value,
-  };
-
-  await $fetch(`/api/license/${identifier}`, {
-    method: "POST",
-    headers: useRequestHeaders(["cookie"]),
-    body: JSON.stringify(body),
-  })
-    .then((response) => {
-      if ("prUrl" in response) {
-        push.success({
-          title: "License pushed to repository",
-          message: "Review the changes in the repository",
-        });
-
-        window.open(response.prUrl, "_blank");
-      } else {
-        push.error({
-          title: "Failed to push license to repository",
-          message: "Please try again later",
-        });
-      }
-    })
-    .catch((error) => {
-      console.error("Failed to push license to repository:", error);
-      push.error({
-        title: "Failed to push license to repository",
-        message: "Please try again later",
-      });
-    })
-    .finally(() => {
-      submitLoading.value = false;
-    });
+    }
+  });
 };
 </script>
 
 <template>
-  <main class="mx-auto max-w-screen-xl">
-    <div class="bg-white p-8">
-      <n-flex vertical size="large" class="pb-5">
-        <h1 class="text-2xl font-bold">Edit LICENSE</h1>
-        <n-text type="secondary" class="mt-2 text-lg">
-          To make your software reusable a license file is expected at the root
-          level of your repository, as recommended in the FAIR-BioRS Guidelines.
-          It is important to choose your license early since it will affect your
-          software's dependencies.
-        </n-text>
+  <main class="mx-auto max-w-screen-xl p-8">
+    <n-form
+      ref="formRef"
+      :label-width="80"
+      :model="formValue"
+      :rules="rules"
+      size="large"
+    >
+      <LayoutLargeForm>
+        <template #info>
+          <h2>Basic Information</h2>
+        </template>
 
-        <n-text type="secondary">
-          You can select a license from the list below and edit it in the
-          editor. Once you are done, you can save the draft or push the license
-          to the repository as a pull request.
-        </n-text>
+        <template #form>
+          <div
+            class="rounded-md border-slate-200 bg-white px-6 pb-2 pt-4 shadow-sm"
+          >
+            <n-form-item label="Software Name" path="name">
+              <n-input
+                v-model:value="formValue.name"
+                placeholder="Input Name"
+              />
+            </n-form-item>
 
-        <n-select
-          v-model:value="licenseId"
-          placeholder="MIT License Modern Variant"
-          clearable
-          size="large"
-          filterable
-          @update:value="updateLicenseContent"
-          :options="licenseOptions"
-        />
+            <n-form-item label="Description" path="description">
+              <n-input
+                v-model:value="formValue.description"
+                placeholder="Input Description"
+                type="textarea"
+                :rows="4"
+              />
+            </n-form-item>
 
-        <!-- help text -->
-        <n-text v-if="displayLicenseEditor" class="mt-2">
-          Your edits will update the preview on the right side. You can edit the
-          license content on the left side using the editor.
-        </n-text>
+            <n-form-item label="Creation Date" path="creationDate">
+              <n-date-picker
+                v-model:value="formValue.creationDate"
+                type="date"
+              />
+            </n-form-item>
 
-        <TransitionFade>
-          <div v-if="displayLicenseEditor" class="my-5">
-            <MdEditor
-              v-model="licenseContent"
-              language="en-US"
-              :toolbars-exclude="[
-                'preview',
-                'fullscreen',
-                'save',
-                'pageFullscreen',
-                'github',
-                'catalog',
-              ]"
-              preview-theme="github"
-              :show-code-row-number="true"
-              :sanitize="sanitize"
-            />
+            <n-form-item label="First Release Date" path="firstReleaseDate">
+              <n-date-picker
+                v-model:value="formValue.firstReleaseDate"
+                type="date"
+              />
+            </n-form-item>
           </div>
-        </TransitionFade>
-      </n-flex>
+        </template>
+      </LayoutLargeForm>
 
-      <n-divider />
+      <LayoutLargeForm>
+        <template #info>
+          <h2>Discoverability</h2>
+        </template>
 
-      <n-flex class="my-4">
-        <n-button
-          size="large"
-          color="black"
-          @click="saveLicenseDraft"
-          :loading="submitLoading"
-          :disabled="!licenseId || !licenseContent"
-        >
+        <template #form>
+          <n-form-item label="Unique Identifier" path="uniqueIdentifier">
+            <n-input
+              v-model:value="formValue.uniqueIdentifier"
+              placeholder="10.60775/fairhub.1"
+            />
+          </n-form-item>
+
+          <n-form-item label="Application Category" path="applicationCategory">
+            <n-select
+              v-model:value="formValue.applicationCategory"
+              placeholder="Select Category"
+              :options="applicationCategoryOptions"
+            >
+            </n-select>
+          </n-form-item>
+
+          <n-form-item label="Keywords" path="keywords">
+            <n-dynamic-input
+              v-model:value="formValue.keywords"
+              placeholder="Input Related Link"
+            />
+          </n-form-item>
+
+          <n-form-item label="Funding Code" path="fundingCode">
+            <n-input
+              v-model:value="formValue.fundingCode"
+              placeholder="Input Funding Code"
+            />
+          </n-form-item>
+
+          <n-form-item label="Funding Organization" path="fundingOrganization">
+            <n-input
+              v-model:value="formValue.fundingOrganization"
+              placeholder="Input Funding Organization"
+            />
+          </n-form-item>
+        </template>
+      </LayoutLargeForm>
+
+      <LayoutLargeForm>
+        <template #info>
+          <h2>Development Tools</h2>
+        </template>
+
+        <template #form>
+          <n-form-item label="Code Repository" path="codeRepository">
+            <n-input
+              v-model:value="formValue.codeRepository"
+              placeholder="https://github.com/fairdataihub/codefair-app"
+            />
+          </n-form-item>
+
+          <n-form-item
+            label="Continuous Integration"
+            path="continuousIntegration"
+          >
+            <n-input
+              v-model:value="formValue.continuousIntegration"
+              placeholder="https://ci.example.com"
+            />
+          </n-form-item>
+
+          <n-form-item label="Issue Tracker" path="issueTracker">
+            <n-input
+              v-model:value="formValue.issueTracker"
+              placeholder="https://issues.example.com"
+            />
+          </n-form-item>
+
+          <n-form-item label="Related Links" path="relatedLinks">
+            <n-dynamic-input
+              v-model:value="formValue.relatedLinks"
+              placeholder="Input Related Link"
+            />
+          </n-form-item>
+        </template>
+      </LayoutLargeForm>
+
+      <LayoutLargeForm>
+        <template #info>
+          <h2>Run-time Environment</h2>
+        </template>
+
+        <template #form>
+          <n-form-item label="Programming Language" path="programmingLanguage">
+            <n-select
+              v-model:value="formValue.programmingLanguages"
+              placeholder="Select Category"
+              filterable
+              multiple
+              tag
+              clearable
+              :options="codeMetadataJSON.programmingLanguageOptions"
+            />
+          </n-form-item>
+
+          <n-form-item label="Runtime Platform" path="runtimePlatform">
+            <n-select
+              v-model:value="formValue.runtimePlatform"
+              placeholder="Select Category"
+              filterable
+              multiple
+              tag
+              clearable
+              :options="codeMetadataJSON.runtimePlatformOptions"
+            />
+          </n-form-item>
+
+          <n-form-item label="Operating System" path="operatingSystem">
+            <n-select
+              v-model:value="formValue.operatingSystem"
+              placeholder="Select Category"
+              filterable
+              multiple
+              tag
+              clearable
+              :options="codeMetadataJSON.operatingSystemOptions"
+            />
+          </n-form-item>
+
+          <n-form-item
+            label="Other Software Requirements"
+            path="otherSoftwareRequirements"
+          >
+            <n-dynamic-input
+              v-model:value="formValue.otherSoftwareRequirements"
+              placeholder="Input Related Link"
+            />
+          </n-form-item>
+        </template>
+      </LayoutLargeForm>
+
+      <LayoutLargeForm>
+        <template #info>
+          <h2>Current version of the software</h2>
+        </template>
+
+        <template #form>
+          <n-form-item label="Current Version" path="currentVersion">
+            <n-input
+              v-model:value="formValue.currentVersion"
+              placeholder="1.2.5"
+            />
+          </n-form-item>
+
+          <n-form-item label="Description" path="description">
+            <n-input
+              v-model:value="formValue.description"
+              placeholder="Input Description"
+              type="textarea"
+              :rows="4"
+            />
+          </n-form-item>
+
+          <n-form-item
+            label="Creation Version Release Date"
+            path="currentVersionReleaseDate"
+          >
+            <n-date-picker
+              v-model:value="formValue.currentVersionReleaseDate"
+              type="date"
+            />
+          </n-form-item>
+
+          <n-form-item
+            label="Current Version Download URL"
+            path="currentVersionDownloadURL"
+          >
+            <n-input
+              v-model:value="formValue.currentVersionDownloadURL"
+              placeholder="https://example.com/download/1.0.0"
+            />
+          </n-form-item>
+
+          <n-form-item
+            label="Current Version Release Notes"
+            path="currentVersionReleaseNotes"
+          >
+            <n-input
+              v-model:value="formValue.currentVersionReleaseNotes"
+              placeholder="Initial stable release."
+              type="textarea"
+              :rows="4"
+            />
+          </n-form-item>
+        </template>
+      </LayoutLargeForm>
+
+      <LayoutLargeForm>
+        <template #info>
+          <h2>Additional Information</h2>
+        </template>
+
+        <template #form>
+          <n-form-item label="Development Status" path="developmentStatus">
+            <n-select
+              v-model:value="formValue.developmentStatus"
+              placeholder="Select Category"
+              :options="codeMetadataJSON.developmentStatusOptions"
+            />
+          </n-form-item>
+
+          <n-form-item label="Is Source Code Of" path="isSourceCodeOf">
+            <n-input
+              v-model:value="formValue.isSourceCodeOf"
+              placeholder="Bigger Application"
+            />
+          </n-form-item>
+
+          <n-form-item label="Is Part Of" path="isPartOf">
+            <n-input
+              v-model:value="formValue.isPartOf"
+              placeholder="Bigger Suite"
+            />
+          </n-form-item>
+        </template>
+      </LayoutLargeForm>
+
+      <LayoutLargeForm>
+        <template #info>
+          <h2>Editorial Review</h2>
+        </template>
+
+        <template #form>
+          <n-form-item
+            label="Reference Publication"
+            path="referencePublication"
+          >
+            <n-input
+              v-model:value="formValue.referencePublication"
+              placeholder="Doe, J. (2023). Example Project. Journal of Examples."
+            />
+          </n-form-item>
+
+          <n-form-item label="Review Aspect" path="reviewAspect">
+            <n-input
+              v-model:value="formValue.reviewAspect"
+              placeholder="Code Quality"
+            />
+          </n-form-item>
+
+          <n-form-item label="Review Body" path="reviewBody">
+            <n-input
+              v-model:value="formValue.reviewBody"
+              placeholder="This project has been thoroughly reviewed for code quality."
+              type="textarea"
+              :rows="4"
+            />
+          </n-form-item>
+        </template>
+      </LayoutLargeForm>
+
+      <n-form-item>
+        <n-button color="black" size="large" @click="handleValidateClick">
           <template #icon>
-            <Icon name="material-symbols:save" />
+            <Icon name="grommet-icons:validate" />
           </template>
-
-          Save draft
+          Validate
         </n-button>
+      </n-form-item>
+    </n-form>
 
-        <n-button
-          size="large"
-          color="black"
-          x
-          @click="saveLicenseAndPush"
-          :disabled="!licenseId || !licenseContent"
-          :loading="submitLoading"
-        >
-          <template #icon>
-            <Icon name="ion:push" />
-          </template>
-          Save and push license to repository
-        </n-button>
-      </n-flex>
-    </div>
+    <n-collapse class="mt-8">
+      <n-collapse-item title="data" name="data">
+        <pre>{{ data }}</pre>
+      </n-collapse-item>
+
+      <n-collapse-item title="formValue" name="formValue">
+        <pre>{{ formValue }}</pre>
+      </n-collapse-item>
+    </n-collapse>
   </main>
 </template>
