@@ -3,6 +3,9 @@
  */
 import { init } from "@paralleldrive/cuid2";
 
+/**
+ * * Create a unique identifier for database entries
+ */
 export const createId = init({
   fingerprint: "a-custom-host-fingerprint",
   length: 10,
