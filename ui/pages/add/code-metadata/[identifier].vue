@@ -169,9 +169,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
 
         <template #form>
-          <div
-            class="rounded-md border-slate-200 bg-white px-6 pb-2 pt-4 shadow-sm"
-          >
+          <n-card>
             <n-form-item label="Software Name" path="name">
               <n-input
                 v-model:value="formValue.name"
@@ -201,7 +199,7 @@ const handleValidateClick = (e: MouseEvent) => {
                 type="date"
               />
             </n-form-item>
-          </div>
+          </n-card>
         </template>
       </LayoutLargeForm>
 
@@ -211,42 +209,50 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
 
         <template #form>
-          <n-form-item label="Unique Identifier" path="uniqueIdentifier">
-            <n-input
-              v-model:value="formValue.uniqueIdentifier"
-              placeholder="10.60775/fairhub.1"
-            />
-          </n-form-item>
+          <n-card>
+            <n-form-item label="Unique Identifier" path="uniqueIdentifier">
+              <n-input
+                v-model:value="formValue.uniqueIdentifier"
+                placeholder="10.60775/fairhub.1"
+              />
+            </n-form-item>
 
-          <n-form-item label="Application Category" path="applicationCategory">
-            <n-select
-              v-model:value="formValue.applicationCategory"
-              placeholder="Select Category"
-              :options="applicationCategoryOptions"
+            <n-form-item
+              label="Application Category"
+              path="applicationCategory"
             >
-            </n-select>
-          </n-form-item>
+              <n-select
+                v-model:value="formValue.applicationCategory"
+                placeholder="Select Category"
+                :options="applicationCategoryOptions"
+              >
+              </n-select>
+            </n-form-item>
 
-          <n-form-item label="Keywords" path="keywords">
-            <n-dynamic-input
-              v-model:value="formValue.keywords"
-              placeholder="Input Related Link"
-            />
-          </n-form-item>
+            <n-form-item label="Keywords" path="keywords">
+              <n-dynamic-input
+                v-model:value="formValue.keywords"
+                placeholder="Input Related Link"
+              />
+            </n-form-item>
 
-          <n-form-item label="Funding Code" path="fundingCode">
-            <n-input
-              v-model:value="formValue.fundingCode"
-              placeholder="Input Funding Code"
-            />
-          </n-form-item>
+            <n-form-item label="Funding Code" path="fundingCode">
+              <n-input
+                v-model:value="formValue.fundingCode"
+                placeholder="Input Funding Code"
+              />
+            </n-form-item>
 
-          <n-form-item label="Funding Organization" path="fundingOrganization">
-            <n-input
-              v-model:value="formValue.fundingOrganization"
-              placeholder="Input Funding Organization"
-            />
-          </n-form-item>
+            <n-form-item
+              label="Funding Organization"
+              path="fundingOrganization"
+            >
+              <n-input
+                v-model:value="formValue.fundingOrganization"
+                placeholder="Input Funding Organization"
+              />
+            </n-form-item>
+          </n-card>
         </template>
       </LayoutLargeForm>
 
@@ -256,36 +262,38 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
 
         <template #form>
-          <n-form-item label="Code Repository" path="codeRepository">
-            <n-input
-              v-model:value="formValue.codeRepository"
-              placeholder="https://github.com/fairdataihub/codefair-app"
-            />
-          </n-form-item>
+          <n-card>
+            <n-form-item label="Code Repository" path="codeRepository">
+              <n-input
+                v-model:value="formValue.codeRepository"
+                placeholder="https://github.com/fairdataihub/codefair-app"
+              />
+            </n-form-item>
 
-          <n-form-item
-            label="Continuous Integration"
-            path="continuousIntegration"
-          >
-            <n-input
-              v-model:value="formValue.continuousIntegration"
-              placeholder="https://ci.example.com"
-            />
-          </n-form-item>
+            <n-form-item
+              label="Continuous Integration"
+              path="continuousIntegration"
+            >
+              <n-input
+                v-model:value="formValue.continuousIntegration"
+                placeholder="https://ci.example.com"
+              />
+            </n-form-item>
 
-          <n-form-item label="Issue Tracker" path="issueTracker">
-            <n-input
-              v-model:value="formValue.issueTracker"
-              placeholder="https://issues.example.com"
-            />
-          </n-form-item>
+            <n-form-item label="Issue Tracker" path="issueTracker">
+              <n-input
+                v-model:value="formValue.issueTracker"
+                placeholder="https://issues.example.com"
+              />
+            </n-form-item>
 
-          <n-form-item label="Related Links" path="relatedLinks">
-            <n-dynamic-input
-              v-model:value="formValue.relatedLinks"
-              placeholder="Input Related Link"
-            />
-          </n-form-item>
+            <n-form-item label="Related Links" path="relatedLinks">
+              <n-dynamic-input
+                v-model:value="formValue.relatedLinks"
+                placeholder="Input Related Link"
+              />
+            </n-form-item>
+          </n-card>
         </template>
       </LayoutLargeForm>
 
@@ -295,51 +303,56 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
 
         <template #form>
-          <n-form-item label="Programming Language" path="programmingLanguage">
-            <n-select
-              v-model:value="formValue.programmingLanguages"
-              placeholder="Select Category"
-              filterable
-              multiple
-              tag
-              clearable
-              :options="codeMetadataJSON.programmingLanguageOptions"
-            />
-          </n-form-item>
+          <n-card>
+            <n-form-item
+              label="Programming Language"
+              path="programmingLanguage"
+            >
+              <n-select
+                v-model:value="formValue.programmingLanguages"
+                placeholder="Select Category"
+                filterable
+                multiple
+                tag
+                clearable
+                :options="codeMetadataJSON.programmingLanguageOptions"
+              />
+            </n-form-item>
 
-          <n-form-item label="Runtime Platform" path="runtimePlatform">
-            <n-select
-              v-model:value="formValue.runtimePlatform"
-              placeholder="Select Category"
-              filterable
-              multiple
-              tag
-              clearable
-              :options="codeMetadataJSON.runtimePlatformOptions"
-            />
-          </n-form-item>
+            <n-form-item label="Runtime Platform" path="runtimePlatform">
+              <n-select
+                v-model:value="formValue.runtimePlatform"
+                placeholder="Select Category"
+                filterable
+                multiple
+                tag
+                clearable
+                :options="codeMetadataJSON.runtimePlatformOptions"
+              />
+            </n-form-item>
 
-          <n-form-item label="Operating System" path="operatingSystem">
-            <n-select
-              v-model:value="formValue.operatingSystem"
-              placeholder="Select Category"
-              filterable
-              multiple
-              tag
-              clearable
-              :options="codeMetadataJSON.operatingSystemOptions"
-            />
-          </n-form-item>
+            <n-form-item label="Operating System" path="operatingSystem">
+              <n-select
+                v-model:value="formValue.operatingSystem"
+                placeholder="Select Category"
+                filterable
+                multiple
+                tag
+                clearable
+                :options="codeMetadataJSON.operatingSystemOptions"
+              />
+            </n-form-item>
 
-          <n-form-item
-            label="Other Software Requirements"
-            path="otherSoftwareRequirements"
-          >
-            <n-dynamic-input
-              v-model:value="formValue.otherSoftwareRequirements"
-              placeholder="Input Related Link"
-            />
-          </n-form-item>
+            <n-form-item
+              label="Other Software Requirements"
+              path="otherSoftwareRequirements"
+            >
+              <n-dynamic-input
+                v-model:value="formValue.otherSoftwareRequirements"
+                placeholder="Input Related Link"
+              />
+            </n-form-item>
+          </n-card>
         </template>
       </LayoutLargeForm>
 
@@ -349,53 +362,55 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
 
         <template #form>
-          <n-form-item label="Current Version" path="currentVersion">
-            <n-input
-              v-model:value="formValue.currentVersion"
-              placeholder="1.2.5"
-            />
-          </n-form-item>
+          <n-card>
+            <n-form-item label="Current Version" path="currentVersion">
+              <n-input
+                v-model:value="formValue.currentVersion"
+                placeholder="1.2.5"
+              />
+            </n-form-item>
 
-          <n-form-item label="Description" path="description">
-            <n-input
-              v-model:value="formValue.description"
-              placeholder="Input Description"
-              type="textarea"
-              :rows="4"
-            />
-          </n-form-item>
+            <n-form-item label="Description" path="description">
+              <n-input
+                v-model:value="formValue.description"
+                placeholder="Input Description"
+                type="textarea"
+                :rows="4"
+              />
+            </n-form-item>
 
-          <n-form-item
-            label="Creation Version Release Date"
-            path="currentVersionReleaseDate"
-          >
-            <n-date-picker
-              v-model:value="formValue.currentVersionReleaseDate"
-              type="date"
-            />
-          </n-form-item>
+            <n-form-item
+              label="Creation Version Release Date"
+              path="currentVersionReleaseDate"
+            >
+              <n-date-picker
+                v-model:value="formValue.currentVersionReleaseDate"
+                type="date"
+              />
+            </n-form-item>
 
-          <n-form-item
-            label="Current Version Download URL"
-            path="currentVersionDownloadURL"
-          >
-            <n-input
-              v-model:value="formValue.currentVersionDownloadURL"
-              placeholder="https://example.com/download/1.0.0"
-            />
-          </n-form-item>
+            <n-form-item
+              label="Current Version Download URL"
+              path="currentVersionDownloadURL"
+            >
+              <n-input
+                v-model:value="formValue.currentVersionDownloadURL"
+                placeholder="https://example.com/download/1.0.0"
+              />
+            </n-form-item>
 
-          <n-form-item
-            label="Current Version Release Notes"
-            path="currentVersionReleaseNotes"
-          >
-            <n-input
-              v-model:value="formValue.currentVersionReleaseNotes"
-              placeholder="Initial stable release."
-              type="textarea"
-              :rows="4"
-            />
-          </n-form-item>
+            <n-form-item
+              label="Current Version Release Notes"
+              path="currentVersionReleaseNotes"
+            >
+              <n-input
+                v-model:value="formValue.currentVersionReleaseNotes"
+                placeholder="Initial stable release."
+                type="textarea"
+                :rows="4"
+              />
+            </n-form-item>
+          </n-card>
         </template>
       </LayoutLargeForm>
 
@@ -405,27 +420,29 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
 
         <template #form>
-          <n-form-item label="Development Status" path="developmentStatus">
-            <n-select
-              v-model:value="formValue.developmentStatus"
-              placeholder="Select Category"
-              :options="codeMetadataJSON.developmentStatusOptions"
-            />
-          </n-form-item>
+          <n-card>
+            <n-form-item label="Development Status" path="developmentStatus">
+              <n-select
+                v-model:value="formValue.developmentStatus"
+                placeholder="Select Category"
+                :options="codeMetadataJSON.developmentStatusOptions"
+              />
+            </n-form-item>
 
-          <n-form-item label="Is Source Code Of" path="isSourceCodeOf">
-            <n-input
-              v-model:value="formValue.isSourceCodeOf"
-              placeholder="Bigger Application"
-            />
-          </n-form-item>
+            <n-form-item label="Is Source Code Of" path="isSourceCodeOf">
+              <n-input
+                v-model:value="formValue.isSourceCodeOf"
+                placeholder="Bigger Application"
+              />
+            </n-form-item>
 
-          <n-form-item label="Is Part Of" path="isPartOf">
-            <n-input
-              v-model:value="formValue.isPartOf"
-              placeholder="Bigger Suite"
-            />
-          </n-form-item>
+            <n-form-item label="Is Part Of" path="isPartOf">
+              <n-input
+                v-model:value="formValue.isPartOf"
+                placeholder="Bigger Suite"
+              />
+            </n-form-item>
+          </n-card>
         </template>
       </LayoutLargeForm>
 
@@ -435,31 +452,33 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
 
         <template #form>
-          <n-form-item
-            label="Reference Publication"
-            path="referencePublication"
-          >
-            <n-input
-              v-model:value="formValue.referencePublication"
-              placeholder="Doe, J. (2023). Example Project. Journal of Examples."
-            />
-          </n-form-item>
+          <n-card>
+            <n-form-item
+              label="Reference Publication"
+              path="referencePublication"
+            >
+              <n-input
+                v-model:value="formValue.referencePublication"
+                placeholder="Doe, J. (2023). Example Project. Journal of Examples."
+              />
+            </n-form-item>
 
-          <n-form-item label="Review Aspect" path="reviewAspect">
-            <n-input
-              v-model:value="formValue.reviewAspect"
-              placeholder="Code Quality"
-            />
-          </n-form-item>
+            <n-form-item label="Review Aspect" path="reviewAspect">
+              <n-input
+                v-model:value="formValue.reviewAspect"
+                placeholder="Code Quality"
+              />
+            </n-form-item>
 
-          <n-form-item label="Review Body" path="reviewBody">
-            <n-input
-              v-model:value="formValue.reviewBody"
-              placeholder="This project has been thoroughly reviewed for code quality."
-              type="textarea"
-              :rows="4"
-            />
-          </n-form-item>
+            <n-form-item label="Review Body" path="reviewBody">
+              <n-input
+                v-model:value="formValue.reviewBody"
+                placeholder="This project has been thoroughly reviewed for code quality."
+                type="textarea"
+                :rows="4"
+              />
+            </n-form-item>
+          </n-card>
         </template>
       </LayoutLargeForm>
 
