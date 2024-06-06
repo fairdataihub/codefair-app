@@ -13,9 +13,9 @@
   ],
   "scripts": {
     "dev-old": "probot run ./index.js ",
-    "dev": "nodemon --watch ./index.js --watch .env --watch ./package.json --watch ./utils --exec \"run-p dev:smee dev:start\"",
+    "dev": "nodemon --watch ./index.js --watch .env --watch ./package.json --watch ./utils/* --exec \"run-p dev:smee dev:start\"",
     "start": "node ./main.js",
-    "dev:smee": "smee -u https://smee.io/n0NQN1LUpx2kI2T1",
+    "dev:smee": "smee -u https://smee.io/n0NQN1LUpx2kI2T1 -p 3001",
     "dev:start": "node -r dotenv/config ./main.js",
     "build-css": "tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css",
     "watch-css": "npx tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css --watch",
