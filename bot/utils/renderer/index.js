@@ -154,16 +154,23 @@ export async function applyLicenseTemplate(
 
     if (!existingLicense) {
       // Entry does not exist in db, create a new one
+      const newDate = new Date();
       await licenseCollection.insertOne({
         identifier,
         open: true,
-        // owner,
+        owner,
         repo: repository.name,
         repositoryId: repository.id,
-        timestamp: new Date(),
+        created_at: newDate,
+        updated_at: newDate,
       });
     } else {
       // Get the identifier of the existing license request
+      // Update the database
+      await licenseCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { updated_at: new Date() } },
+      );
       url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
       console.log("Existing license request: " + url);
     }
