@@ -158,6 +158,7 @@ export async function gatherRepoAuthors(context, owner, repo, fileType) {
       const parsedNames = human.parseName(author.data.name);
       const authorObj = {
         orcid: "",
+        roles: [],
       };
 
       if (author.data.company && fileType === "citation") {

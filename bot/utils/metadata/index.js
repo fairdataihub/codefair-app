@@ -46,18 +46,22 @@ export async function gatherMetadata(context, owner, repo) {
     fundingCode: "",
     fundingOrganization: "",
     isPartOf: "",
-    issueTracker: repoData.data.issues_url,
+    isSourceCodeOf: "",
+    issueTracker: repoData.data.issues_url.replace("{/number}", ""),
     keywords: repoData.data.topics || [],
-    license: repoData.data.license?.spdx_id || null,
+    license:
+      repoData.data.license?.spdx_id === "NOASSERTION"
+        ? null
+        : repoData.data.license?.spdx_id || null,
     operatingSystem: null,
     otherSoftwareRequirements: [],
     programmingLanguages: languagesUsed || [],
-    referencePublication: doi || "",
+    referencePublication: doi[1] || "",
     relatedLinks: [],
     reviewAspect: "",
     reviewBody: "",
     runtimePlatform: null,
-    uniqueIdentifier: repoData.data.id,
+    uniqueIdentifier: "",
   };
 
   return codeMeta;

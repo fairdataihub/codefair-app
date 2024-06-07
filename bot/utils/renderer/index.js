@@ -13,8 +13,10 @@ export async function applyMetadataTemplate(
   db,
   repository,
   owner,
+  context,
 ) {
   if ((!subjects.codemeta || !subjects.citation) && subjects.license) {
+    console.log(owner, repository);
     // License was found but no codemeta.json or CITATION.cff exists
     const identifier = createId();
 
@@ -28,7 +30,7 @@ export async function applyMetadataTemplate(
     if (!existingMetadata) {
       // Entry does not exist in db, create a new one
       const newDate = new Date();
-      const gatheredMetadata = await gatherMetadata();
+      const gatheredMetadata = await gatherMetadata(context, owner, repository);
       await metadataCollection.insertOne({
         created_at: newDate,
         identifier,
@@ -335,6 +337,7 @@ export async function renderIssues(
     db,
     repository,
     owner,
+    context,
   );
 
   if (prTitle === "feat: ✨ metadata files added") {
