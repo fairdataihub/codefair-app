@@ -4,6 +4,15 @@ import {
   getDOI,
 } from "../tools/index.js";
 
+/**
+ * * Gathers metadata to create a citation.cff and codemeta.json file
+ *
+ * @param {string} context - Event context
+ * @param {string} owner - The owner of the repository
+ * @param {object} repo - The repository object
+ *
+ * @returns {object} - An object containing the metadata for the repository
+ */
 export async function gatherMetadata(context, owner, repo) {
   console.log("Gathering metadata...");
   // Gather the metadata needed to create both citation.cff and codemeta.json files
