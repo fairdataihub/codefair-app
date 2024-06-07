@@ -14,7 +14,9 @@ defineProps({
     </div>
 
     <div class="col-span-8">
-      <slot name="form"></slot>
+      <n-flex vertical>
+        <slot name="form"></slot>
+      </n-flex>
     </div>
   </div>
 </template>

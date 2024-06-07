@@ -495,6 +495,63 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
+      <LayoutLargeForm>
+        <template #info>
+          <h2>Authors and Contributors</h2>
+        </template>
+
+        <template #form>
+          <n-card>
+            <n-flex vertical>
+              <CardCollapsible
+                v-for="(author, index) in formValue.authors"
+                :key="index"
+                :title="
+                  author.givenName
+                    ? `${author.givenName} ${author.familyName}`
+                    : `Author ${index + 1}`
+                "
+                bordered
+              >
+                <template #header-extra>
+                  <n-popconfirm @positive-click="removeAuthor(index)">
+                    <template #trigger>
+                      <n-button type="error" secondary>
+                        <template #icon>
+                          <Icon name="ep:delete" />
+                        </template>
+
+                        Remove Author
+                      </n-button>
+                    </template>
+
+                    Are you sure you want to remove this Condition?
+                  </n-popconfirm>
+                </template>
+
+                {{ author }}
+              </CardCollapsible>
+            </n-flex>
+
+            <n-form-item label="Authors" path="authors">
+              <n-dynamic-input
+                v-model:value="formValue.authors"
+                placeholder="Input Author"
+              />
+            </n-form-item>
+          </n-card>
+
+          <n-card>
+            <n-form-item label="Contributors" path="contributors">
+              <n-dynamic-input
+                v-model:value="formValue.contributors"
+                placeholder="Input Contributor"
+              />
+            </n-form-item>
+          </n-card>
+        </template>
+      </LayoutLargeForm>
+
       <n-form-item>
         <n-button color="black" size="large" @click="handleValidateClick">
           <template #icon>
