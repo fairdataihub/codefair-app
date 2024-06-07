@@ -7,11 +7,11 @@ interface CodeMetadataRequest {
     familyName?: string;
     givenName: string;
     roles: {
-      endDate?: string;
+      endDate?: string | null | number;
       role: string | null;
-      startDate?: string;
+      startDate?: string | null | number;
     }[];
-    uri: string;
+    uri?: string;
   }[];
   codeRepository?: string;
   continuousIntegration?: string;
@@ -21,20 +21,20 @@ interface CodeMetadataRequest {
     familyName?: string;
     givenName: string;
     roles: {
-      endDate?: string;
+      endDate?: string | null | number;
       role: string | null;
-      startDate?: string;
+      startDate?: string | null | number;
     }[];
-    uri: string;
+    uri?: string;
   }[];
-  creationDate?: string | null;
+  creationDate?: string | null | number;
   currentVersion?: string;
   currentVersionDownloadURL?: string;
-  currentVersionReleaseDate?: string | null;
+  currentVersionReleaseDate?: string | null | number;
   currentVersionReleaseNotes?: string;
   description: string;
   developmentStatus?: string | null;
-  firstReleaseDate?: string | null;
+  firstReleaseDate?: string | null | number;
   fundingCode?: string;
   fundingOrganization?: string;
   isPartOf?: string;

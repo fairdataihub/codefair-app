@@ -9,7 +9,7 @@ definePageMeta({
 const route = useRoute();
 
 const formRef = ref<FormInst | null>(null);
-const formValue = reactive({
+const formValue = ref<CodeMetadataRequest>({
   name: "Example Project",
   applicationCategory: "Software Development",
   authors: [
@@ -20,8 +20,9 @@ const formValue = reactive({
       givenName: "John",
       roles: [
         {
+          endDate: 1622505600000,
           role: "Developer",
-          startDate: "2022-01-01",
+          startDate: 1672531200000,
         },
       ],
       uri: "https://example.com/johndoe",
@@ -33,9 +34,9 @@ const formValue = reactive({
       givenName: "Jane",
       roles: [
         {
-          endDate: "2022-12-31",
+          endDate: 1622505600000,
           role: "Tester",
-          startDate: "2022-01-01",
+          startDate: 1672531200000,
         },
       ],
       uri: "https://example.com/janesmith",
@@ -51,8 +52,9 @@ const formValue = reactive({
       givenName: "Alice",
       roles: [
         {
+          endDate: 1622505600000,
           role: "Developer",
-          startDate: "2022-01-01",
+          startDate: 1672531200000,
         },
       ],
       uri: "https://example.com/alicejohnson",
@@ -64,9 +66,9 @@ const formValue = reactive({
       givenName: "Bob",
       roles: [
         {
-          endDate: "2022-12-31",
+          endDate: 1622505600000,
           role: "Tester",
-          startDate: "2022-01-01",
+          startDate: 1672531200000,
         },
       ],
       uri: "https://example.com/bobbrown",
@@ -139,7 +141,7 @@ if (error.value) {
 }
 
 if (data.value) {
-  formValue.name = data.value.metadata.name;
+  formValue.value.name = data.value.metadata.name;
 }
 
 const applicationCategoryOptions =
@@ -147,6 +149,10 @@ const applicationCategoryOptions =
     label: option,
     value: option,
   }));
+
+const removeAuthor = (idx: number) => {
+  formValue.value.authors.splice(idx, 1);
+};
 
 const handleValidateClick = (e: MouseEvent) => {
   e.preventDefault();
@@ -176,7 +182,7 @@ const handleValidateClick = (e: MouseEvent) => {
       :rules="rules"
       size="large"
     >
-      <LayoutLargeForm>
+      <LayoutLargeForm class="hidden">
         <template #info>
           <h2>Basic Information</h2>
         </template>
@@ -201,14 +207,14 @@ const handleValidateClick = (e: MouseEvent) => {
 
             <n-form-item label="Creation Date" path="creationDate">
               <n-date-picker
-                v-model:value="formValue.creationDate"
+                v-model:value="formValue.creationDate as number"
                 type="date"
               />
             </n-form-item>
 
             <n-form-item label="First Release Date" path="firstReleaseDate">
               <n-date-picker
-                v-model:value="formValue.firstReleaseDate"
+                v-model:value="formValue.firstReleaseDate as number"
                 type="date"
               />
             </n-form-item>
@@ -216,7 +222,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm>
+      <LayoutLargeForm class="hidden">
         <template #info>
           <h2>Discoverability</h2>
         </template>
@@ -269,7 +275,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm>
+      <LayoutLargeForm class="hidden">
         <template #info>
           <h2>Development Tools</h2>
         </template>
@@ -310,7 +316,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm>
+      <LayoutLargeForm class="hidden">
         <template #info>
           <h2>Run-time Environment</h2>
         </template>
@@ -369,7 +375,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm>
+      <LayoutLargeForm class="hidden">
         <template #info>
           <h2>Current version of the software</h2>
         </template>
@@ -397,7 +403,7 @@ const handleValidateClick = (e: MouseEvent) => {
               path="currentVersionReleaseDate"
             >
               <n-date-picker
-                v-model:value="formValue.currentVersionReleaseDate"
+                v-model:value="formValue.currentVersionReleaseDate as number"
                 type="date"
               />
             </n-form-item>
@@ -427,7 +433,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm>
+      <LayoutLargeForm class="hidden">
         <template #info>
           <h2>Additional Information</h2>
         </template>
@@ -459,7 +465,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm>
+      <LayoutLargeForm class="hidden">
         <template #info>
           <h2>Editorial Review</h2>
         </template>
@@ -495,14 +501,14 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm>
+      <LayoutLargeForm class="">
         <template #info>
           <h2>Authors and Contributors</h2>
         </template>
 
         <template #form>
           <n-card>
-            <n-flex vertical>
+            <n-flex vertical size="large">
               <CardCollapsible
                 v-for="(author, index) in formValue.authors"
                 :key="index"
@@ -529,16 +535,153 @@ const handleValidateClick = (e: MouseEvent) => {
                   </n-popconfirm>
                 </template>
 
-                {{ author }}
-              </CardCollapsible>
-            </n-flex>
+                <n-form-item
+                  label="Given Name"
+                  :path="`authors[${index}].givenName`"
+                  :rule="{
+                    message: 'Please enter a name',
+                    required: true,
+                    trigger: ['blur', 'input'],
+                  }"
+                >
+                  <n-input
+                    v-model:value="author.givenName"
+                    placeholder="Bertolt"
+                    clearable
+                  />
+                </n-form-item>
 
-            <n-form-item label="Authors" path="authors">
-              <n-dynamic-input
-                v-model:value="formValue.authors"
-                placeholder="Input Author"
-              />
-            </n-form-item>
+                <n-form-item
+                  label="Family Name"
+                  :path="`authors[${index}].familyName`"
+                >
+                  <n-input
+                    v-model:value="author.familyName"
+                    placeholder="Brecht"
+                    clearable
+                  />
+                </n-form-item>
+
+                <n-form-item label="Email" :path="`authors[${index}].email`">
+                  <n-input
+                    v-model:value="author.email"
+                    placeholder="hello@codefair.io"
+                    clearable
+                  />
+                </n-form-item>
+
+                <n-form-item
+                  label="Affiliation"
+                  :path="`authors[${index}].affiliation`"
+                >
+                  <n-input
+                    v-model:value="author.affiliation"
+                    placeholder="University of Example"
+                    clearable
+                  />
+                </n-form-item>
+
+                <n-form-item label="URI" :path="`authors[${index}].uri`">
+                  <n-input
+                    v-model:value="author.uri"
+                    placeholder="https://example.com/bertoltbrecht"
+                    clearable
+                  />
+                </n-form-item>
+
+                <n-flex vertical size="large">
+                  <CardCollapsible
+                    v-for="(role, roleIndex) in author.roles"
+                    :key="roleIndex"
+                    :title="role.role || `Role ${roleIndex + 1}`"
+                    bordered
+                  >
+                    <template #header-extra>
+                      <n-button
+                        type="error"
+                        @click="
+                          formValue.authors[index].roles.splice(roleIndex, 1)
+                        "
+                      >
+                        <template #icon>
+                          <Icon name="ep:delete" />
+                        </template>
+
+                        Remove Role
+                      </n-button>
+                    </template>
+
+                    <n-form-item
+                      label="Role"
+                      :path="`authors[${index}].roles[${roleIndex}].role`"
+                      :rule="{
+                        message: 'Please enter a role',
+                        required: true,
+                        trigger: ['blur', 'input'],
+                      }"
+                    >
+                      <n-input
+                        v-model:value="role.role"
+                        placeholder="Developer"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="Start Date"
+                      :path="`authors[${index}].roles[${roleIndex}].startDate`"
+                    >
+                      <n-date-picker
+                        v-model:value="role.startDate as number"
+                        type="date"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="End Date"
+                      :path="`authors[${index}].roles[${roleIndex}].endDate`"
+                    >
+                      <n-date-picker
+                        v-model:value="role.endDate as number"
+                        type="date"
+                        clearable
+                      />
+                    </n-form-item>
+                  </CardCollapsible>
+                </n-flex>
+
+                <n-button
+                  @click="formValue.authors[index].roles.push({ role: '' })"
+                >
+                  <template #icon>
+                    <Icon name="gridicons:user-add" />
+                  </template>
+
+                  Add Role
+                </n-button>
+              </CardCollapsible>
+
+              <n-button
+                type="primary"
+                @click="
+                  formValue.authors.push({
+                    roles: [
+                      {
+                        role: '',
+                      },
+                    ],
+                    givenName: '',
+                  })
+                "
+              >
+                <template #icon>
+                  <Icon name="gridicons:user-add" />
+                </template>
+
+                Add Author
+              </n-button>
+            </n-flex>
           </n-card>
 
           <n-card>

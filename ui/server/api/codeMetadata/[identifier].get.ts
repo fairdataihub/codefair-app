@@ -50,6 +50,36 @@ export default defineEventHandler(async (event) => {
     ).getTime();
   }
 
+  if (rawMetadata.authors) {
+    for (const author of rawMetadata.authors) {
+      if (author.roles) {
+        for (const role of author.roles) {
+          if (role.startDate) {
+            role.startDate = new Date(role.startDate).getTime();
+          }
+          if (role.endDate) {
+            role.endDate = new Date(role.endDate).getTime();
+          }
+        }
+      }
+    }
+  }
+
+  if (rawMetadata.contributors) {
+    for (const contributor of rawMetadata.contributors) {
+      if (contributor.roles) {
+        for (const role of contributor.roles) {
+          if (role.startDate) {
+            role.startDate = new Date(role.startDate).getTime();
+          }
+          if (role.endDate) {
+            role.endDate = new Date(role.endDate).getTime();
+          }
+        }
+      }
+    }
+  }
+
   const parsedMetadata = rawMetadata as CodeMetadataRequest;
 
   console.log(parsedMetadata);
