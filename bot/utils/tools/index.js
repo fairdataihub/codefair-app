@@ -2,6 +2,7 @@
  * @fileoverview Utility functions for the bot
  */
 import { init } from "@paralleldrive/cuid2";
+import human from "humanparser";
 
 /**
  * * Create a unique identifier for database entries
