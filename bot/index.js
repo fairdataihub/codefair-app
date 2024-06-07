@@ -117,6 +117,7 @@ export default async (app) => {
     // Event for when a push is made to the repository (listens to all branches)
     const owner = context.payload.repository.owner.login;
     const repo = context.payload.repository.name;
+    const repository = context.payload.repository;
     // Check if push is going to the default branch
     const defaultBranch = await getDefaultBranch(context, owner, repo);
 
@@ -132,7 +133,7 @@ export default async (app) => {
     const issueBody = await renderIssues(
       context,
       owner,
-      repo,
+      repository,
       db,
       "",
       "",
@@ -199,6 +200,7 @@ export default async (app) => {
     console.log("PULL REQUEST OPENED");
     const owner = context.payload.repository.owner.login;
     const repo = context.payload.repository.name;
+    const repository = context.payload.repository;
     const prTitle = context.payload.pull_request.title;
     console.log(context);
 
@@ -211,7 +213,7 @@ export default async (app) => {
       const issueBody = await renderIssues(
         context,
         owner,
-        repo,
+        repository,
         db,
         prTitle,
         prNumber,
