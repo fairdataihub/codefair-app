@@ -16,7 +16,7 @@ export async function applyMetadataTemplate(
   context,
 ) {
   if ((!subjects.codemeta || !subjects.citation) && subjects.license) {
-    console.log(owner, repository);
+    // console.log(owner, repository);
     // License was found but no codemeta.json or CITATION.cff exists
     const identifier = createId();
 
@@ -95,7 +95,7 @@ export async function applyCodemetaTemplate(
     let url = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
 
     const codemetaCollection = db.collection("codemetaRequests");
-    console.log(repository);
+    // console.log(repository);
     const existingCodemeta = await codemetaCollection.findOne({
       repositoryId: repository.id,
     });
@@ -161,7 +161,7 @@ export async function applyCitationTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
     const citationCollection = db.collection("citationRequests");
-    console.log(repository);
+    // console.log(repository);
     const existingCitation = await citationCollection.findOne({
       repositoryId: repository.id,
     });

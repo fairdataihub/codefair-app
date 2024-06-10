@@ -79,7 +79,7 @@ export async function createLicense(context, owner, repo, license) {
       }
 
       // Create a new branch base off the default branch
-      console.log(default_branch);
+      // console.log(default_branch);
       console.log("Creating branch");
       await context.octokit.git.createRef({
         owner,
