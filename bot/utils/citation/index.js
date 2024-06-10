@@ -5,7 +5,7 @@ export async function checkForCitation(context, owner, repo) {
     await context.octokit.rest.repos.getContent({
       owner,
       path: "CITATION.cff",
-      repo,
+      repo: repo.name,
     });
 
     return true;

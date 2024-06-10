@@ -3,7 +3,7 @@ export async function checkForLicense(context, owner, repo) {
   try {
     await context.octokit.rest.licenses.getForRepo({
       owner,
-      repo,
+      repo: repo.name,
     });
 
     console.log("license found!");

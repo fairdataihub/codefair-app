@@ -7,7 +7,7 @@ import { gatherMetadata } from "../metadata/index.js";
 const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 /**
- * * Applies the metadata template to the base template
+ * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
  * 
  * @param {object} subjects - The subjects to check for
  * @param {string} baseTemplate - The base template to add to
