@@ -296,9 +296,9 @@ export async function renderIssues(
   prLink = "",
   commits = [],
 ) {
-  let license = await checkForLicense(context, owner, repository);
-  let citation = await checkForCitation(context, owner, repository);
-  let codemeta = await checkForCodeMeta(context, owner, repository);
+  let license = await checkForLicense(context, owner, repository.name);
+  let citation = await checkForCitation(context, owner, repository.name);
+  let codemeta = await checkForCodeMeta(context, owner, repository.name);
 
   // Check if any of the commits added a LICENSE, CITATION, or codemeta file
   if (commits.length > 0) {
