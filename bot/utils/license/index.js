@@ -1,9 +1,21 @@
+/**
+ * @fileoverview This file contains utility functions for the license bot
+ */
+
+/**
+ * * Check if a license is found in the repository
+ * 
+ * @param {object} context - The GitHub context object 
+ * @param {string} owner - The owner of the repository
+ * @param {string} repo - The name of the repository
+ * @returns {boolean} - Returns true if a license is found in the repository, false otherwise
+ */
 export async function checkForLicense(context, owner, repo) {
   console.log("checking for license");
   try {
     await context.octokit.rest.licenses.getForRepo({
       owner,
-      repo: repo.name,
+      repo,
     });
 
     console.log("license found!");
@@ -15,6 +27,14 @@ export async function checkForLicense(context, owner, repo) {
   }
 }
 
+/**
+ * * Create a new license file in the repository
+ * 
+ * @param {object1} context - The GitHub context object 
+ * @param {string} owner - The owner of the repository 
+ * @param {string} repo - The name of the repository
+ * @param {string} license - The license identifier
+ */
 export async function createLicense(context, owner, repo, license) {
   // Verify there is no PR open already for the LICENSE file
   const openPR = await context.octokit.pulls.list({
