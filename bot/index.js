@@ -44,7 +44,6 @@ export default async (app) => {
       // Check if the installation is already in the database
       const installation = await installationCollection.findOne({
         installationId,
-        repo,
         repositoryId: repository.id,
       });
 
@@ -57,7 +56,19 @@ export default async (app) => {
           repositoryId: repository.id,
           timestamp: new Date(),
         });
+      } else {
+        // verify the repo name is the same 
+        if (installation.repo !== repo) {
+          await installationCollection.updateOne(
+            { installationId, repositoryId: repository.id },
+            {
+              $set: {
+                repo,
+              },
+            },
+          );
       }
+    }
 
       const issueBody = await renderIssues(
         context,
@@ -101,7 +112,19 @@ export default async (app) => {
           repositoryId: repository.id,
           timestamp: new Date(),
         });
+      } else {
+        // verify the repo name is the same 
+        if (installation.repo !== repo) {
+          await installationCollection.updateOne(
+            { installationId, repositoryId: repository.id },
+            {
+              $set: {
+                repo,
+              },
+            },
+          );
       }
+    }
 
       const issueBody = await renderIssues(context, owner, repository, db);
       const title = `FAIR-BioRS Compliance Issues`;
@@ -202,7 +225,7 @@ export default async (app) => {
     const repo = context.payload.repository.name;
     const repository = context.payload.repository;
     const prTitle = context.payload.pull_request.title;
-    console.log(context);
+    console.log(prTitle)
 
     if (prTitle === "feat: ✨ LICENSE file added") {
       const prNumber = context.payload.pull_request.number;
