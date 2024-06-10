@@ -15,20 +15,20 @@ import {
  */
 export async function gatherMetadata(context, owner, repo) {
   console.log("Gathering metadata...");
-  // Gather the metadata needed to create both citation.cff and codemeta.json files
-  console.log(owner);
-  console.log("owner above and repo below");
-  console.log(repo.name);
+
+  // Get the metadata of the repo
   const repoData = await context.octokit.repos.get({
     owner,
     repo: repo.name,
   });
 
+  // Get the release data of the repo
   const releases = await context.octokit.repos.listReleases({
     owner,
     repo: repo.name,
   });
 
+  // Get authors, doi and languages used of repo
   const doi = await getDOI(context, owner, repo.name);
   const languagesUsed = await gatherLanguagesUsed(context, owner, repo.name);
   const citationAuthors = await gatherRepoAuthors(

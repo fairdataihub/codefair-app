@@ -141,7 +141,7 @@ export default async (app) => {
     const repoName = context.payload.repository.name;
     const repoId = context.payload.repository.id;
     const repository = context.payload.repository;
-    // Check if push is going to the default branch
+
     const defaultBranch = await getDefaultBranch(context, owner, repoName);
 
     // If push is not going to the default branch don't do anything
@@ -245,7 +245,6 @@ export default async (app) => {
     const repoId = context.payload.repository.id;
     const repository = context.payload.repository;
     const prTitle = context.payload.pull_request.title;
-    console.log(prTitle)
 
     // Check if the repo name is the same as the one in the database
     const installationCollection = db.collection("installation");
