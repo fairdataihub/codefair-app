@@ -6,7 +6,18 @@ import { gatherMetadata } from "../metadata/index.js";
 
 const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
-
+/**
+ * * Applies the metadata template to the base template
+ * 
+ * @param {object} subjects - The subjects to check for
+ * @param {string} baseTemplate - The base template to add to
+ * @param {*} db - The database 
+ * @param {object} repository - The GitHub repository information
+ * @param {string} owner - The owner of the repository
+ * @param {object} context - The GitHub context object
+ * 
+ * @returns {string} - The updated base template
+ */
 export async function applyMetadataTemplate(
   subjects,
   baseTemplate,
