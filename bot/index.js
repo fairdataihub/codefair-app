@@ -140,6 +140,7 @@ export default async (app) => {
     // Event for when a push is made to the repository (listens to all branches)
     const owner = context.payload.repository.owner.login;
     const repo = context.payload.repository.name;
+    const repoId = context.payload.repository.id;
     const repository = context.payload.repository;
     // Check if push is going to the default branch
     const defaultBranch = await getDefaultBranch(context, owner, repo);
@@ -148,6 +149,25 @@ export default async (app) => {
     if (context.payload.ref !== `refs/heads/${defaultBranch.data.name}`) {
       console.log("Not pushing to default branch");
       return;
+    }
+
+    // Check if the repo name is the same as the one in the database
+    const installationCollection = db.collection("installation");
+    const installation = await installation
+      .findOne({
+        owner,
+        repositoryId: repoId
+      })
+
+    if (installation.repo !== repo) {
+      await installationCollection.updateOne(
+        { owner, repositoryId: repoId },
+        {
+          $set: {
+            repo,
+          },
+        },
+      );
     }
 
     // Grab the commits being pushed
@@ -223,9 +243,29 @@ export default async (app) => {
     console.log("PULL REQUEST OPENED");
     const owner = context.payload.repository.owner.login;
     const repo = context.payload.repository.name;
+    const repoId = context.payload.repository.id;
     const repository = context.payload.repository;
     const prTitle = context.payload.pull_request.title;
     console.log(prTitle)
+
+    // Check if the repo name is the same as the one in the database
+    const installationCollection = db.collection("installation");
+    const installation = await installation
+      .findOne({
+        owner,
+        repositoryId: repoId
+      })
+
+    if (installation.repo !== repo) {
+      await installationCollection.updateOne(
+        { owner, repositoryId: repoId },
+        {
+          $set: {
+            repo,
+          },
+        },
+      );
+    }
 
     if (prTitle === "feat: ✨ LICENSE file added") {
       const prNumber = context.payload.pull_request.number;
