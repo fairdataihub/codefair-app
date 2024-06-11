@@ -14,6 +14,7 @@ export async function checkForCodeMeta(context, owner, repo) {
   }
 }
 
+// TODO: Verify if this is still needed
 export async function gatherCodeMetaInfo(context, owner, repo) {
   // Gather metadata from the repo to create a codemeta.json file
   const repoData = await context.octokit.repos.get({
