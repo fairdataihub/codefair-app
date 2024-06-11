@@ -34,16 +34,8 @@ export async function gatherMetadata(context, owner, repo) {
   const citationAuthors = await gatherRepoAuthors(
     context,
     owner,
-    repo,
+    repo.name,
     "citation",
-    false,
-  );
-  const contributors = await gatherRepoAuthors(
-    context,
-    owner,
-    repo,
-    "citation",
-    true,
   );
   let url;
   if (repoData.data.homepage != null) {
@@ -55,7 +47,7 @@ export async function gatherMetadata(context, owner, repo) {
     authors: citationAuthors || [],
     codeRepository: repoData.data.html_url,
     continuousIntegration: "",
-    contributors: contributors || [],
+    contributors: [],
     creationDate: repoData.data.created_at || "",
     currentVersion: releases.data[0]?.tag_name || "",
     currentVersionDownloadURL: releases.data[0]?.html_url || "",
@@ -68,7 +60,7 @@ export async function gatherMetadata(context, owner, repo) {
     fundingOrganization: "",
     isPartOf: "",
     isSourceCodeOf: "",
-    issueTracker: repoData.data.issues_url.replace("{/number}", ""),
+    issueTracker: `https://github.com/${owner}/${repo.name}/issues`,
     keywords: repoData.data.topics || [],
     license:
       repoData.data.license?.spdx_id === "NOASSERTION"
