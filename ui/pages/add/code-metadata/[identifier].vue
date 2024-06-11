@@ -192,6 +192,15 @@ const saveCodeMetadataDraft = (e: MouseEvent) => {
     }
   });
 };
+
+// Event handlers for single option select picker
+const handleApplicationCategoryChange = (value: string) => {
+  formValue.value.applicationCategory = value;
+};
+
+const handleDevelopmentStatusChange = (value: string) => {
+  formValue.value.developmentStatus = value;
+};
 </script>
 
 <template>
@@ -262,11 +271,10 @@ const saveCodeMetadataDraft = (e: MouseEvent) => {
               path="applicationCategory"
             >
               <n-select
-                v-model:value="formValue.applicationCategory"
                 placeholder="Select Category"
                 :options="applicationCategoryOptions"
-              >
-              </n-select>
+                @update:value="handleApplicationCategoryChange"
+              />
             </n-form-item>
 
             <n-form-item label="Keywords" path="keywords">
@@ -463,9 +471,9 @@ const saveCodeMetadataDraft = (e: MouseEvent) => {
           <n-card>
             <n-form-item label="Development Status" path="developmentStatus">
               <n-select
-                v-model:value="formValue.developmentStatus"
                 placeholder="Select Category"
                 :options="codeMetadataJSON.developmentStatusOptions"
+                @update:value="handleDevelopmentStatusChange"
               />
             </n-form-item>
 
