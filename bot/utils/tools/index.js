@@ -128,10 +128,11 @@ export async function closeOpenIssue(context, owner, repo, title) {
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
  * @param {string} fileType - The type of file to gather information for (CITATION.cff or codemeta.json)
+ * @param {boolean} role - Whether to include the role of the contributor
  *
  * @returns {array} - An array of objects containing the information for the authors of the repository
  */
-export async function gatherRepoAuthors(context, owner, repo, fileType) {
+export async function gatherRepoAuthors(context, owner, repo, fileType, role) {
   // Get the list of contributors from the repo
   const contributors = await context.octokit.repos.listContributors({
     owner,
@@ -158,9 +159,12 @@ export async function gatherRepoAuthors(context, owner, repo, fileType) {
       const parsedNames = human.parseName(author.data.name);
       const authorObj = {
         orcid: "",
-        roles: [],
         uri: "",
       };
+
+      if (role) {
+        authorObj.role = [];
+      }
 
       if (author.data.company && fileType === "citation") {
         authorObj.affiliation = author.data.company;
