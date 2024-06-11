@@ -8,14 +8,14 @@ const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 /**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
- * 
+ *
  * @param {object} subjects - The subjects to check for
  * @param {string} baseTemplate - The base template to add to
- * @param {*} db - The database 
+ * @param {*} db - The database
  * @param {object} repository - The GitHub repository information
  * @param {string} owner - The owner of the repository
  * @param {object} context - The GitHub context object
- * 
+ *
  * @returns {string} - The updated base template
  */
 export async function applyMetadataTemplate(
@@ -31,7 +31,7 @@ export async function applyMetadataTemplate(
     // License was found but no codemeta.json or CITATION.cff exists
     const identifier = createId();
 
-    let url = `${CODEFAIR_DOMAIN}/add/metadata/${identifier}`;
+    let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
     const metadataCollection = db.collection("codeMetadata");
     const existingMetadata = await metadataCollection.findOne({
@@ -59,7 +59,7 @@ export async function applyMetadataTemplate(
         { $set: { updated_at: new Date() } },
       );
 
-      url = `${CODEFAIR_DOMAIN}/add/metadata/${existingMetadata.identifier}`;
+      url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
     }
 
     const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
