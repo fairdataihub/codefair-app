@@ -14,36 +14,36 @@ const formValue = ref<CodeMetadataRequest>({
   applicationCategory: "",
   authors: [
     {
-      givenName: "",
-      familyName: "",
-      email: "",
       affiliation: "",
-      uri: "",
+      email: "",
+      familyName: "",
+      givenName: "",
       roles: [
         {
+          endDate: null,
           role: "",
           startDate: null,
-          endDate: null,
         },
       ],
+      uri: "",
     },
   ],
   codeRepository: "",
   continuousIntegration: "",
   contributors: [
     {
-      givenName: "",
-      familyName: "",
-      email: "",
       affiliation: "",
-      uri: "",
+      email: "",
+      familyName: "",
+      givenName: "",
       roles: [
         {
+          endDate: null,
           role: "",
           startDate: null,
-          endDate: null,
         },
       ],
+      uri: "",
     },
   ],
   creationDate: null,
