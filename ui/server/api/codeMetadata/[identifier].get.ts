@@ -82,8 +82,6 @@ export default defineEventHandler(async (event) => {
 
   const parsedMetadata = rawMetadata as CodeMetadataRequest;
 
-  console.log(parsedMetadata);
-
   const response: CodeMetadataRequestGetResponse = {
     createdAt: codeMetadataRequest.createdAt,
     identifier: codeMetadataRequest.identifier,
