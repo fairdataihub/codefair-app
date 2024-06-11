@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   const client = await clientPromise;
   await client.connect();
 
-  const db = client.db();
+  const db = client.db(process.env.MONGODB_DB_NAME);
 
   const query = getQuery(event);
 
@@ -44,14 +44,13 @@ export default defineEventHandler(async (event) => {
     if (existingUser) {
       const { _id } = existingUser;
 
-      const session = await lucia.createSession(_id, {
-        access_token: tokens.accessToken, // todo: should we store this in session or user?
-      });
+      const session = await lucia.createSession(_id, {});
 
       // Add a last login timestamp to the user
       await db.collection("users").updateOne(
         {
           _id,
+          access_token: tokens.accessToken,
         },
         {
           $set: {
@@ -83,9 +82,7 @@ export default defineEventHandler(async (event) => {
       github_id: githubUser.id,
     });
 
-    const session = await lucia.createSession(userId, {
-      access_token: tokens.accessToken, // todo: should we store this in sesstion or user?
-    });
+    const session = await lucia.createSession(userId, {});
 
     appendHeader(
       event,
