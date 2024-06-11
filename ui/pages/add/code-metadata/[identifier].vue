@@ -154,6 +154,10 @@ const removeAuthor = (idx: number) => {
   formValue.value.authors.splice(idx, 1);
 };
 
+const removeContributor = (idx: number) => {
+  formValue.value.contributors.splice(idx, 1);
+};
+
 const handleValidateClick = (e: MouseEvent) => {
   e.preventDefault();
   formRef.value?.validate((errors) => {
@@ -182,7 +186,7 @@ const handleValidateClick = (e: MouseEvent) => {
       :rules="rules"
       size="large"
     >
-      <LayoutLargeForm class="hidden">
+      <LayoutLargeForm>
         <template #info>
           <h2>Basic Information</h2>
         </template>
@@ -222,7 +226,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm class="hidden">
+      <LayoutLargeForm>
         <template #info>
           <h2>Discoverability</h2>
         </template>
@@ -275,7 +279,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm class="hidden">
+      <LayoutLargeForm>
         <template #info>
           <h2>Development Tools</h2>
         </template>
@@ -316,7 +320,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm class="hidden">
+      <LayoutLargeForm>
         <template #info>
           <h2>Run-time Environment</h2>
         </template>
@@ -375,7 +379,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm class="hidden">
+      <LayoutLargeForm>
         <template #info>
           <h2>Current version of the software</h2>
         </template>
@@ -433,7 +437,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm class="hidden">
+      <LayoutLargeForm>
         <template #info>
           <h2>Additional Information</h2>
         </template>
@@ -465,7 +469,7 @@ const handleValidateClick = (e: MouseEvent) => {
         </template>
       </LayoutLargeForm>
 
-      <LayoutLargeForm class="hidden">
+      <LayoutLargeForm>
         <template #info>
           <h2>Editorial Review</h2>
         </template>
