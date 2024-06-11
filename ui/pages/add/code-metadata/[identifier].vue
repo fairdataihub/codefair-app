@@ -162,8 +162,10 @@ const saveCodeMetadataDraft = (e: MouseEvent) => {
 
       submitLoading.value = true;
 
+      console.log("Saving code metadata draft:", body);
+
       await $fetch(`/api/codeMetadata/${identifier}`, {
-        body: JSON.stringify(body),
+        body: JSON.stringify({ metadata: body }),
         headers: useRequestHeaders(["cookie"]),
         method: "PUT",
       })
