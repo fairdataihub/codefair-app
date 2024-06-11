@@ -9,7 +9,7 @@ definePageMeta({
 const route = useRoute();
 
 const formRef = ref<FormInst | null>(null);
-const formValue = ref({
+const formValue = ref<CodeMetadataRequest>({
   name: "",
   applicationCategory: "",
   authors: [
