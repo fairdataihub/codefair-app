@@ -132,7 +132,7 @@ export async function closeOpenIssue(context, owner, repo, title) {
  *
  * @returns {array} - An array of objects containing the information for the authors of the repository
  */
-export async function gatherRepoAuthors(context, owner, repo, fileType, role) {
+export async function gatherRepoAuthors(context, owner, repo, fileType) {
   // Get the list of contributors from the repo
   const contributors = await context.octokit.repos.listContributors({
     owner,
@@ -159,12 +159,9 @@ export async function gatherRepoAuthors(context, owner, repo, fileType, role) {
       const parsedNames = human.parseName(author.data.name);
       const authorObj = {
         orcid: "",
+        role: [],
         uri: "",
       };
-
-      if (role) {
-        authorObj.role = [];
-      }
 
       if (author.data.company && fileType === "citation") {
         authorObj.affiliation = author.data.company;
