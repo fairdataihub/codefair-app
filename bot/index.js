@@ -52,12 +52,12 @@ export default async (app) => {
         await installationCollection.insertOne({
           installationId,
           owner,
-          repoName,
+          repo: repoName,
           repositoryId: repository.id,
           timestamp: new Date(),
         });
       } else {
-        // verify the repo name is the same 
+        // verify the repo name is the same
         if (installation.repo !== repo) {
           await installationCollection.updateOne(
             { installationId, repositoryId: repository.id },
@@ -67,15 +67,10 @@ export default async (app) => {
               },
             },
           );
+        }
       }
-    }
 
-      const issueBody = await renderIssues(
-        context,
-        owner,
-        repository,
-        db,
-      );
+      const issueBody = await renderIssues(context, owner, repository, db);
       const title = `FAIR-BioRS Compliance Issues`;
 
       // Create an issue with the compliance issues
@@ -98,7 +93,6 @@ export default async (app) => {
       const installation = await installationCollection.findOne({
         installationId,
         owner,
-        repoName,
         repositoryId: repository.id,
       });
 
@@ -107,12 +101,12 @@ export default async (app) => {
         await installationCollection.insertOne({
           installationId,
           owner,
-          repoName,
+          repo: repoName,
           repositoryId: repository.id,
           timestamp: new Date(),
         });
       } else {
-        // verify the repo name is the same 
+        // verify the repo name is the same
         if (installation.repo !== repoName) {
           await installationCollection.updateOne(
             { installationId, repositoryId: repository.id },
@@ -122,8 +116,8 @@ export default async (app) => {
               },
             },
           );
+        }
       }
-    }
 
       const issueBody = await renderIssues(context, owner, repository, db);
       const title = `FAIR-BioRS Compliance Issues`;
@@ -152,11 +146,10 @@ export default async (app) => {
 
     // Check if the repo name is the same as the one in the database
     const installationCollection = db.collection("installation");
-    const installation = await installationCollection
-      .findOne({
-        owner,
-        repositoryId: repoId
-      })
+    const installation = await installationCollection.findOne({
+      owner,
+      repositoryId: repoId,
+    });
 
     if (installation.repo !== repo) {
       await installationCollection.updateOne(
@@ -248,11 +241,10 @@ export default async (app) => {
 
     // Check if the repo name is the same as the one in the database
     const installationCollection = db.collection("installation");
-    const installation = await installationCollection
-      .findOne({
-        owner,
-        repositoryId: repoId
-      })
+    const installation = await installationCollection.findOne({
+      owner,
+      repositoryId: repoId,
+    });
 
     if (installation.repo !== repo) {
       await installationCollection.updateOne(
