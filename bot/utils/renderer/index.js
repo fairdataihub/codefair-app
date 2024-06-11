@@ -66,6 +66,7 @@ export async function applyMetadataTemplate(
     baseTemplate += `\n\n## Metadata\n\nA CITATION.cff and codemeta.json file were not found in the repository. To make your software reusable a CITATION.cff and codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines).\n\n${metadataBadge}`;
   }
 
+  // TODO: If metadata files are found, fetch and add the metadata to the db (allow for continuous updates)
   if (subjects.codemeta && subjects.citation && subjects.license) {
     // License, codemeta.json and CITATION.cff files were found
     const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Added-6366f1.svg)`;
