@@ -125,6 +125,8 @@ const rules = ref<FormRules>({
   },
 });
 
+const submitLoading = ref(false);
+
 const { identifier } = route.params as { identifier: string };
 
 const { data, error } = await useFetch(`/api/codeMetadata/${identifier}`, {
@@ -167,7 +169,50 @@ const handleValidateClick = (e: MouseEvent) => {
         message: "Form is valid",
       });
     } else {
-      console.log(errors);
+      console.error(errors);
+      push.error({
+        title: "Invalid",
+        message: "Form is invalid",
+      });
+    }
+  });
+};
+
+const saveCodeMetadataDraft = (e: MouseEvent) => {
+  e.preventDefault();
+  formRef.value?.validate(async (errors) => {
+    if (!errors) {
+      const body = {
+        metadata: {
+          ...formValue.value,
+        },
+      };
+
+      submitLoading.value = true;
+
+      await $fetch(`/api/codeMetadata/${identifier}`, {
+        body: JSON.stringify(body),
+        headers: useRequestHeaders(["cookie"]),
+        method: "PUT",
+      })
+        .then((_response) => {
+          push.success({
+            title: "Code metadata draft saved",
+            message: "You can continue editing",
+          });
+        })
+        .catch((error) => {
+          console.error("Failed to save code metadata draft:", error);
+          push.error({
+            title: "Failed to save code metadata draft",
+            message: "Please try again later",
+          });
+        })
+        .finally(() => {
+          submitLoading.value = false;
+        });
+    } else {
+      console.error(errors);
       push.error({
         title: "Invalid",
         message: "Form is invalid",
@@ -878,12 +923,36 @@ const handleValidateClick = (e: MouseEvent) => {
       </LayoutLargeForm>
 
       <n-form-item>
-        <n-button color="black" size="large" @click="handleValidateClick">
-          <template #icon>
-            <Icon name="grommet-icons:validate" />
-          </template>
-          Validate
-        </n-button>
+        <n-flex vertical>
+          <n-flex class="my-4">
+            <n-button
+              size="large"
+              color="black"
+              :loading="submitLoading"
+              @click="saveCodeMetadataDraft"
+            >
+              <template #icon>
+                <Icon name="material-symbols:save" />
+              </template>
+
+              Save draft
+            </n-button>
+
+            <n-button size="large" color="black" :loading="submitLoading">
+              <template #icon>
+                <Icon name="ion:push" />
+              </template>
+              Save and push to repository
+            </n-button>
+          </n-flex>
+
+          <n-button color="black" size="large" @click="handleValidateClick">
+            <template #icon>
+              <Icon name="grommet-icons:validate" />
+            </template>
+            Validate
+          </n-button>
+        </n-flex>
       </n-form-item>
     </n-form>
 

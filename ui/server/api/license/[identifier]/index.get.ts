@@ -2,7 +2,7 @@ import { MongoClient } from "mongodb";
 import type { User } from "lucia";
 
 export default defineEventHandler(async (event) => {
-  await protectRoute(event);
+  protectRoute(event);
 
   const { identifier } = event.context.params as { identifier: string };
 

@@ -1,7 +1,7 @@
 import { MongoClient } from "mongodb";
 
 export default defineEventHandler(async (event) => {
-  await protectRoute(event);
+  protectRoute(event);
 
   const { identifier } = event.context.params as { identifier: string };
 
