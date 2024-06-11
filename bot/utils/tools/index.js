@@ -174,10 +174,10 @@ export async function gatherRepoAuthors(context, owner, repo, fileType) {
       }
 
       if (parsedNames.firstName) {
-        authorObj["given-names"] = parsedNames.firstName;
+        authorObj["given-name"] = parsedNames.firstName;
       }
       if (parsedNames.lastName) {
-        authorObj["family-names"] = parsedNames.lastName;
+        authorObj["family-name"] = parsedNames.lastName;
       }
       if (author.data.email) {
         authorObj.email = author.data.email;
