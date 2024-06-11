@@ -34,8 +34,16 @@ export async function gatherMetadata(context, owner, repo) {
   const citationAuthors = await gatherRepoAuthors(
     context,
     owner,
-    repo.name,
+    repo,
     "citation",
+    false,
+  );
+  const contributors = await gatherRepoAuthors(
+    context,
+    owner,
+    repo,
+    "citation",
+    true,
   );
   let url;
   if (repoData.data.homepage != null) {
@@ -47,6 +55,7 @@ export async function gatherMetadata(context, owner, repo) {
     authors: citationAuthors || [],
     codeRepository: repoData.data.html_url,
     continuousIntegration: "",
+    contributors: contributors || [],
     creationDate: repoData.data.created_at || "",
     currentVersion: releases.data[0]?.tag_name || "",
     currentVersionDownloadURL: releases.data[0]?.html_url || "",
