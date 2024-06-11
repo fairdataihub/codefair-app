@@ -39,6 +39,7 @@ export default defineEventHandler(async (event) => {
 
   const db = client.db(process.env.MONGODB_DB_NAME);
   const collection = db.collection("licenseRequests");
+  const installation = db.collection("installation");
 
   const licenseRequest = await collection.findOne({
     identifier,
@@ -48,6 +49,18 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 404,
       message: "License request not found",
+    });
+  }
+
+  console.log(licenseRequest);
+  const installationId = await installation.findOne({
+    repositoryId: licenseRequest.repositoryId,
+  });
+
+  if (!installationId) {
+    throw createError({
+      statusCode: 404,
+      message: "Installation not found",
     });
   }
 
@@ -72,8 +85,9 @@ export default defineEventHandler(async (event) => {
   });
 
   // Get the installation instance for the app
+  console.log(installationId);
   const octokit = await app.getInstallationOctokit(
-    licenseRequest.installationId,
+    installationId.installationId,
   );
 
   // Get the default branch of the repository

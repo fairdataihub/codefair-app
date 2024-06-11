@@ -2,6 +2,7 @@
  * @fileoverview Utility functions for the bot
  */
 import { init } from "@paralleldrive/cuid2";
+import human from "humanparser";
 
 /**
  * * Create a unique identifier for database entries
@@ -157,6 +158,8 @@ export async function gatherRepoAuthors(context, owner, repo, fileType) {
       const parsedNames = human.parseName(author.data.name);
       const authorObj = {
         orcid: "",
+        roles: [],
+        uri: "",
       };
 
       if (author.data.company && fileType === "citation") {

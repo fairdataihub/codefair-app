@@ -1,3 +1,5 @@
+import { gatherRepoAuthors } from "../tools/index.js";
+
 export async function checkForCitation(context, owner, repo) {
   try {
     await context.octokit.rest.repos.getContent({
