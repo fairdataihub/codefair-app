@@ -40,7 +40,7 @@ export async function applyMetadataTemplate(
 
     if (!existingMetadata) {
       // Entry does not exist in db, create a new one
-      const newDate = new Date();
+      const newDate = Date.now();
       const gatheredMetadata = await gatherMetadata(context, owner, repository);
       await metadataCollection.insertOne({
         created_at: newDate,
@@ -56,7 +56,7 @@ export async function applyMetadataTemplate(
       // Get the identifier of the existing metadata request
       await metadataCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { updated_at: new Date() } },
+        { $set: { updated_at: Date.now() } },
       );
 
       url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
@@ -114,7 +114,7 @@ export async function applyCodemetaTemplate(
 
     if (!existingCodemeta) {
       // Entry does not exist in db, create a new one
-      const newDate = new Date();
+      const newDate = Date.now();
       await codemetaCollection.insertOne({
         created_at: newDate,
         identifier,
@@ -128,7 +128,7 @@ export async function applyCodemetaTemplate(
       // Get the identifier of the existing codemeta request
       await codemetaCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { updated_at: new Date() } },
+        { $set: { updated_at: Date.now() } },
       );
       url = `${CODEFAIR_DOMAIN}/add/codemeta/${existingCodemeta.identifier}`;
     }
@@ -180,7 +180,7 @@ export async function applyCitationTemplate(
 
     if (!existingCitation) {
       // Entry does not exist in db, create a new one
-      const newDate = new Date();
+      const newDate = Date.now();
       await citationCollection.insertOne({
         created_at: newDate,
         identifier,
@@ -194,7 +194,7 @@ export async function applyCitationTemplate(
       // Get the identifier of the existing citation request
       await citationCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { updated_at: new Date() } },
+        { $set: { updated_at: Date.now() } },
       );
       url = `${CODEFAIR_DOMAIN}/add/citation/${existingCitation.identifier}`;
     }
@@ -242,7 +242,7 @@ export async function applyLicenseTemplate(
 
     if (!existingLicense) {
       // Entry does not exist in db, create a new one
-      const newDate = new Date();
+      const newDate = Date.now();
       await licenseCollection.insertOne({
         created_at: newDate,
         identifier,
@@ -257,7 +257,7 @@ export async function applyLicenseTemplate(
       // Update the database
       await licenseCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { updated_at: new Date() } },
+        { $set: { updated_at: Date.now() } },
       );
       url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
       console.log("Existing license request: " + url);

@@ -28,7 +28,7 @@ export default async (app) => {
   const ping = db.collection("ping");
 
   await ping.insertOne({
-    timestamp: new Date(),
+    timestamp: Date.now(),
   });
 
   // When the app is installed on an Org or Repository
@@ -54,20 +54,18 @@ export default async (app) => {
           owner,
           repo: repoName,
           repositoryId: repository.id,
-          timestamp: new Date(),
+          timestamp: Date.now(),
         });
-      } else {
+      } else if (installation.repo !== repo) {
         // verify the repo name is the same
-        if (installation.repo !== repo) {
-          await installationCollection.updateOne(
-            { installationId, repositoryId: repository.id },
-            {
-              $set: {
-                repo: repoName,
-              },
+        await installationCollection.updateOne(
+          { installationId, repositoryId: repository.id },
+          {
+            $set: {
+              repo: repoName,
             },
-          );
-        }
+          },
+        );
       }
 
       const issueBody = await renderIssues(context, owner, repository, db);
@@ -103,7 +101,7 @@ export default async (app) => {
           owner,
           repo: repoName,
           repositoryId: repository.id,
-          timestamp: new Date(),
+          timestamp: Date.now(),
         });
       } else {
         // verify the repo name is the same

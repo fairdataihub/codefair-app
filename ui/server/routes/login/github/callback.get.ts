@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
         },
         {
           $set: {
-            last_login: new Date(),
+            last_login: Date.now(),
           },
         },
       );
@@ -78,7 +78,7 @@ export default defineEventHandler(async (event) => {
       username: githubUser.login,
       _id: userId,
       access_token: tokens.accessToken,
-      created_at: new Date(),
+      created_at: Date.now(),
       github_id: githubUser.id,
     });
 
