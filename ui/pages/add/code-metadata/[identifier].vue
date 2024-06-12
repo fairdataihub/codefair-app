@@ -273,6 +273,7 @@ const handleDevelopmentStatusChange = (value: string) => {
               path="applicationCategory"
             >
               <n-select
+                v-model:value="formValue.applicationCategory"
                 placeholder="Select Category"
                 :options="applicationCategoryOptions"
                 @update:value="handleApplicationCategoryChange"
@@ -473,6 +474,7 @@ const handleDevelopmentStatusChange = (value: string) => {
           <n-card>
             <n-form-item label="Development Status" path="developmentStatus">
               <n-select
+                v-model:value="formValue.developmentStatus"
                 placeholder="Select Category"
                 :options="codeMetadataJSON.developmentStatusOptions"
                 @update:value="handleDevelopmentStatusChange"
