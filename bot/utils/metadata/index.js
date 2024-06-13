@@ -67,14 +67,14 @@ export async function gatherMetadata(context, owner, repo) {
       repoData.data.license?.spdx_id === "NOASSERTION"
         ? null
         : repoData.data.license?.spdx_id || null,
-    operatingSystem: null,
+    operatingSystem: [],
     otherSoftwareRequirements: [],
     programmingLanguages: languagesUsed || [],
     referencePublication: doi[1] || "",
     relatedLinks: [],
     reviewAspect: "",
     reviewBody: "",
-    runtimePlatform: null,
+    runtimePlatform: [],
     uniqueIdentifier: "",
   };
 
