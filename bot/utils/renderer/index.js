@@ -69,7 +69,7 @@ export async function applyMetadataTemplate(
   // TODO: If metadata files are found, fetch and add the metadata to the db (allow for continuous updates)
   if (subjects.codemeta && subjects.citation && subjects.license) {
     // License, codemeta.json and CITATION.cff files were found
-    const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Added-6366f1.svg)`;
+    const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Added-22c55e.svg)`;
     baseTemplate += `\n\n## Metadata\n\nA CITATION.cff and codemeta.json file found in the repository.\n\n${metadataBadge}`;
   }
 
