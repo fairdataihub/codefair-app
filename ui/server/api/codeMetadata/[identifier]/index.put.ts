@@ -4,8 +4,73 @@ import { z } from "zod";
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 
-  // todo: add schema
-  const bodySchema = z.object({}).passthrough();
+  const bodySchema = z.object({
+    metadata: z.object({
+      name: z.string(),
+      applicationCategory: z.string().optional().nullable(),
+      authors: z.array(
+        z.object({
+          affiliation: z.string().optional(),
+          email: z.string().optional(),
+          familyName: z.string().optional(),
+          givenName: z.string(),
+          roles: z.array(
+            z.object({
+              endDate: z.number().optional().nullable(),
+              role: z.string().nullable(),
+              startDate: z.number().optional().nullable(),
+            }),
+          ),
+          uri: z.string().optional(),
+        }),
+      ),
+      codeRepository: z.string().optional(),
+      continuousIntegration: z.string().optional(),
+      contributors: z.array(
+        z.object({
+          affiliation: z.string().optional(),
+          email: z.string().optional(),
+          familyName: z.string().optional(),
+          givenName: z.string(),
+          roles: z.array(
+            z.object({
+              endDate: z.union([z.string(), z.number()]).optional().nullable(),
+              role: z.string().nullable(),
+              startDate: z.number().optional().nullable(),
+            }),
+          ),
+          uri: z.string().optional(),
+        }),
+      ),
+      creationDate: z.union([z.string(), z.number()]).optional().nullable(),
+      currentVersion: z.string().optional(),
+      currentVersionDownloadURL: z.string().optional(),
+      currentVersionReleaseDate: z
+        .union([z.string(), z.number()])
+        .optional()
+        .nullable(),
+      currentVersionReleaseNotes: z.string().optional(),
+      description: z.string(),
+      developmentStatus: z.string().optional().nullable(),
+      firstReleaseDate: z.union([z.string(), z.number()]).optional().nullable(),
+      fundingCode: z.string().optional(),
+      fundingOrganization: z.string().optional(),
+      isPartOf: z.string().optional(),
+      isSourceCodeOf: z.string().optional(),
+      issueTracker: z.string().optional(),
+      keywords: z.array(z.string()),
+      license: z.string().nullable(),
+      operatingSystem: z.array(z.string()).optional(),
+      otherSoftwareRequirements: z.array(z.string()).optional(),
+      programmingLanguages: z.array(z.string()),
+      referencePublication: z.string().optional(),
+      relatedLinks: z.array(z.string()).optional(),
+      reviewAspect: z.string().optional(),
+      reviewBody: z.string().optional(),
+      runtimePlatform: z.array(z.string()).optional(),
+      uniqueIdentifier: z.string().optional(),
+    }),
+  });
 
   const { identifier } = event.context.params as { identifier: string };
 
@@ -21,60 +86,16 @@ export default defineEventHandler(async (event) => {
   const parsedBody = bodySchema.safeParse(body);
 
   if (!parsedBody.success) {
+    console.error(parsedBody.error.errors);
+
     throw createError({
+      data: parsedBody.error.errors,
       message: "The provided parameters are invalid",
       statusCode: 400,
     });
   }
 
-  const { metadata: rawMetadata } = parsedBody.data as { metadata: any };
-
-  // Convert the creationDate and firstReleaseDate from number to a string date with the format "YYYY-MM-DD"
-  if (rawMetadata.creationDate) {
-    rawMetadata.creationDate = new Date(rawMetadata.creationDate).toISOString();
-  }
-
-  if (rawMetadata.firstReleaseDate) {
-    rawMetadata.firstReleaseDate = new Date(
-      rawMetadata.firstReleaseDate,
-    ).toISOString();
-  }
-
-  if (rawMetadata.currentVersionReleaseDate) {
-    rawMetadata.currentVersionReleaseDate = new Date(
-      rawMetadata.currentVersionReleaseDate,
-    ).toISOString();
-  }
-
-  if (rawMetadata.authors) {
-    for (const author of rawMetadata.authors) {
-      if (author.roles) {
-        for (const role of author.roles) {
-          if (role.startDate) {
-            role.startDate = new Date(role.startDate).toISOString();
-          }
-          if (role.endDate) {
-            role.endDate = new Date(role.endDate).toISOString();
-          }
-        }
-      }
-    }
-  }
-
-  if (rawMetadata.contributors) {
-    for (const contributor of rawMetadata.contributors) {
-      if (contributor.roles) {
-        for (const role of contributor.roles) {
-          if (role.startDate) {
-            role.startDate = new Date(role.startDate).toISOString();
-          }
-          if (role.endDate) {
-            role.endDate = new Date(role.endDate).toISOString();
-          }
-        }
-      }
-    }
-  }
+  const { metadata: rawMetadata } = parsedBody.data;
 
   const parsedMetadata = rawMetadata;
 
@@ -107,7 +128,7 @@ export default defineEventHandler(async (event) => {
     { identifier },
     {
       $set: {
-        ...parsedMetadata,
+        metadata: parsedMetadata,
       },
     },
   );

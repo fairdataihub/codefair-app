@@ -11,7 +11,7 @@ const props = defineProps({
 
 const statusCode = props.error?.statusCode ?? 500;
 
-console.log(props.error.data);
+console.error(props.error);
 
 const showNotAuthorizedError = ref(false);
 const requestClosed = ref(false);
