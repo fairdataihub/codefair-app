@@ -231,6 +231,8 @@ const pushToRepository = (e: MouseEvent) => {
                   title: "Code metadata pushed to repository",
                   message: "Review the changes in the repository",
                 });
+
+                window.open(response.prUrl, "_blank");
               } else {
                 console.error(
                   "Failed to push code metadata to repository:",

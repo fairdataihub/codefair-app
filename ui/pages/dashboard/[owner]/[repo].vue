@@ -58,7 +58,7 @@ const licenseRequests = computed(() => {
         Dashboard
       </n-breadcrumb-item>
 
-      <n-breadcrumb-item :clickable="false">
+      <n-breadcrumb-item :clickable="false" :href="`/dashboard/${owner}`">
         <Icon name="uil:github" />
         {{ owner }}
       </n-breadcrumb-item>
