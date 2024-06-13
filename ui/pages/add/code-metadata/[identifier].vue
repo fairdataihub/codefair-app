@@ -717,6 +717,7 @@ const handleDevelopmentStatusChange = (value: string) => {
                       :key="roleIndex"
                       :title="role.role || `Role ${roleIndex + 1}`"
                       bordered
+                      class="mb-4"
                     >
                       <template #header-extra>
                         <n-button
@@ -899,6 +900,7 @@ const handleDevelopmentStatusChange = (value: string) => {
                       :key="roleIndex"
                       :title="role.role || `Role ${roleIndex + 1}`"
                       bordered
+                      class="mb-4"
                     >
                       <template #header-extra>
                         <n-button
@@ -993,7 +995,19 @@ const handleDevelopmentStatusChange = (value: string) => {
       </LayoutLargeForm>
 
       <n-form-item>
-        <n-flex vertical>
+        <n-flex horizontal justify="space-between" class="w-full">
+          <n-button
+            color="black"
+            size="large"
+            class="my-4"
+            @click="handleValidateClick"
+          >
+            <template #icon>
+              <Icon name="grommet-icons:validate" />
+            </template>
+            Validate
+          </n-button>
+
           <n-flex class="my-4">
             <n-button
               size="large"
@@ -1020,13 +1034,6 @@ const handleDevelopmentStatusChange = (value: string) => {
               Save and push to repository
             </n-button>
           </n-flex>
-
-          <n-button color="black" size="large" @click="handleValidateClick">
-            <template #icon>
-              <Icon name="grommet-icons:validate" />
-            </template>
-            Validate
-          </n-button>
         </n-flex>
       </n-form-item>
     </n-form>
