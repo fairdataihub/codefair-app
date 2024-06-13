@@ -48,14 +48,15 @@ export async function gatherMetadata(context, owner, repo) {
     codeRepository: repoData.data.html_url,
     continuousIntegration: "",
     contributors: [],
-    creationDate: repoData.data.created_at || null,
+    creationDate: Date.parse(repoData.data.created_at) || null,
     currentVersion: releases.data[0]?.tag_name || "",
     currentVersionDownloadURL: releases.data[0]?.html_url || "",
-    currentVersionReleaseDate: releases.data[0]?.published_at || null,
+    currentVersionReleaseDate:
+      Date.parse(releases.data[0]?.published_at) || null,
     currentVersionReleaseNotes: releases.data[0]?.body || "",
     description: repoData.data.description,
     developmentStatus: null,
-    firstReleaseDate: releases.data[0]?.published_at || null,
+    firstReleaseDate: Date.parse(releases.data[0]?.published_at) || null,
     fundingCode: "",
     fundingOrganization: "",
     isPartOf: "",
@@ -66,14 +67,14 @@ export async function gatherMetadata(context, owner, repo) {
       repoData.data.license?.spdx_id === "NOASSERTION"
         ? null
         : repoData.data.license?.spdx_id || null,
-    operatingSystem: null,
+    operatingSystem: [],
     otherSoftwareRequirements: [],
     programmingLanguages: languagesUsed || [],
     referencePublication: doi[1] || "",
     relatedLinks: [],
     reviewAspect: "",
     reviewBody: "",
-    runtimePlatform: null,
+    runtimePlatform: [],
     uniqueIdentifier: "",
   };
 

@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
   if (!codeMetadataRequest) {
     throw createError({
       statusCode: 404,
-      statusMessage: "license-request-not-found",
+      statusMessage: "codemetadata-request-not-found",
     });
   }
 
@@ -33,52 +33,8 @@ export default defineEventHandler(async (event) => {
 
   const rawMetadata = codeMetadataRequest.metadata;
 
-  // Convert the creationDate and firstReleaseDate to a number
-  if (rawMetadata.creationDate) {
-    rawMetadata.creationDate = new Date(rawMetadata.creationDate).getTime();
-  }
-
-  if (rawMetadata.firstReleaseDate) {
-    rawMetadata.firstReleaseDate = new Date(
-      rawMetadata.firstReleaseDate,
-    ).getTime();
-  }
-
-  if (rawMetadata.currentVersionReleaseDate) {
-    rawMetadata.currentVersionReleaseDate = new Date(
-      rawMetadata.currentVersionReleaseDate,
-    ).getTime();
-  }
-
-  if (rawMetadata.authors) {
-    for (const author of rawMetadata.authors) {
-      if (author.roles) {
-        for (const role of author.roles) {
-          if (role.startDate) {
-            role.startDate = new Date(role.startDate).getTime();
-          }
-          if (role.endDate) {
-            role.endDate = new Date(role.endDate).getTime();
-          }
-        }
-      }
-    }
-  }
-
-  if (rawMetadata.contributors) {
-    for (const contributor of rawMetadata.contributors) {
-      if (contributor.roles) {
-        for (const role of contributor.roles) {
-          if (role.startDate) {
-            role.startDate = new Date(role.startDate).getTime();
-          }
-          if (role.endDate) {
-            role.endDate = new Date(role.endDate).getTime();
-          }
-        }
-      }
-    }
-  }
+  // to do conversions on the metadata if needed
+  // -- none for now --
 
   const parsedMetadata = rawMetadata as CodeMetadataRequest;
 
