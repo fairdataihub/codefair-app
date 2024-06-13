@@ -186,6 +186,18 @@ export default defineEventHandler(async (event) => {
     },
   );
 
+  // Save the PR URL to the database
+  const updateLicenseRequest = await collection.updateOne(
+    {
+      identifier,
+    },
+    {
+      $set: {
+        pullRequestURL: pullRequestData.html_url,
+      },
+    },
+  );
+
   /**
    * ? Should we close the license request here? Or should we wait for the PR to be merged?
    */
