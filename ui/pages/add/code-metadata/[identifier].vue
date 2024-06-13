@@ -106,6 +106,8 @@ const { data, error } = await useFetch(`/api/codeMetadata/${identifier}`, {
 });
 
 if (error.value) {
+  console.error("Failed to fetch code metadata details:", error.value);
+
   push.error({
     title: "Failed to fetch code metadata details",
     message: "Please try again later",
@@ -162,10 +164,8 @@ const saveCodeMetadataDraft = (e: MouseEvent) => {
 
       submitLoading.value = true;
 
-      console.log("Saving code metadata draft:", body);
-
       await $fetch(`/api/codeMetadata/${identifier}`, {
-        body: JSON.stringify({ metadata: body }),
+        body: JSON.stringify(body),
         headers: useRequestHeaders(["cookie"]),
         method: "PUT",
       })
@@ -179,6 +179,84 @@ const saveCodeMetadataDraft = (e: MouseEvent) => {
           console.error("Failed to save code metadata draft:", error);
           push.error({
             title: "Failed to save code metadata draft",
+            message: "Please try again later",
+          });
+        })
+        .finally(() => {
+          submitLoading.value = false;
+        });
+    } else {
+      console.error(errors);
+      push.error({
+        title: "Invalid",
+        message: "Form is invalid",
+      });
+    }
+  });
+};
+
+const pushToRepository = (e: MouseEvent) => {
+  e.preventDefault();
+  formRef.value?.validate(async (errors) => {
+    if (!errors) {
+      const body = {
+        metadata: {
+          ...formValue.value,
+        },
+      };
+
+      submitLoading.value = true;
+
+      // Save the code metadata via PUT request and push to the repository via POST request
+
+      await $fetch(`/api/codeMetadata/${identifier}`, {
+        body: JSON.stringify(body),
+        headers: useRequestHeaders(["cookie"]),
+        method: "PUT",
+      })
+        .then(async (_response) => {
+          const notification = push.load({
+            title: "Code metadata draft saved",
+            message:
+              "Please wait while we push the code metadata to the repository. This may take a few seconds.",
+          });
+
+          await $fetch(`/api/codeMetadata/${identifier}`, {
+            headers: useRequestHeaders(["cookie"]),
+            method: "POST",
+          })
+            .then((response) => {
+              if ("prUrl" in response) {
+                notification.success({
+                  title: "Code metadata pushed to repository",
+                  message: "Review the changes in the repository",
+                });
+              } else {
+                console.error(
+                  "Failed to push code metadata to repository:",
+                  response,
+                );
+                notification.error({
+                  title: "Failed to push code metadata to repository",
+                  message: "Please try again later",
+                });
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Failed to push code metadata to repository:",
+                error,
+              );
+              push.error({
+                title: "Failed to push code metadata to repository",
+                message: "Please try again later",
+              });
+            });
+        })
+        .catch((error) => {
+          console.error("Failed to save and push code metadata:", error);
+          push.error({
+            title: "Failed to save and push code metadata",
             message: "Please try again later",
           });
         })
@@ -239,14 +317,14 @@ const handleDevelopmentStatusChange = (value: string) => {
 
             <n-form-item label="Creation Date" path="creationDate">
               <n-date-picker
-                v-model:value="formValue.creationDate as number"
+                v-model:value="formValue.creationDate"
                 type="date"
               />
             </n-form-item>
 
             <n-form-item label="First Release Date" path="firstReleaseDate">
               <n-date-picker
-                v-model:value="formValue.firstReleaseDate as number"
+                v-model:value="formValue.firstReleaseDate"
                 type="date"
               />
             </n-form-item>
@@ -541,365 +619,375 @@ const handleDevelopmentStatusChange = (value: string) => {
 
         <template #form>
           <n-card>
-            <n-flex vertical size="large">
-              <CardCollapsible
-                v-for="(author, index) in formValue.authors"
-                :key="index"
-                :title="
-                  author.givenName
-                    ? `${author.givenName} ${author.familyName}`
-                    : `Author ${index + 1}`
-                "
-                bordered
-              >
-                <template #header-extra>
-                  <n-popconfirm @positive-click="removeAuthor(index)">
-                    <template #trigger>
-                      <n-button type="error" secondary>
-                        <template #icon>
-                          <Icon name="ep:delete" />
-                        </template>
-
-                        Remove Author
-                      </n-button>
-                    </template>
-
-                    Are you sure you want to remove this author?
-                  </n-popconfirm>
-                </template>
-
-                <n-form-item
-                  label="Given Name"
-                  :path="`authors[${index}].givenName`"
-                  :rule="{
-                    message: 'Please enter a name',
-                    required: true,
-                    trigger: ['blur', 'input'],
-                  }"
+            <n-form-item
+              label="Authors"
+              path="authors"
+              :rule="{
+                message: 'Please enter at least one author',
+                required: true,
+                type: 'array',
+                trigger: ['blur', 'input'],
+              }"
+              class="w-full"
+            >
+              <n-flex vertical size="large" class="w-full">
+                <CardCollapsible
+                  v-for="(author, index) in formValue.authors"
+                  :key="index"
+                  :title="
+                    author.givenName
+                      ? `${author.givenName} ${author.familyName || ''}`
+                      : `Author ${index + 1}`
+                  "
+                  bordered
                 >
-                  <n-input
-                    v-model:value="author.givenName"
-                    placeholder="Bertolt"
-                    clearable
-                  />
-                </n-form-item>
+                  <template #header-extra>
+                    <n-popconfirm @positive-click="removeAuthor(index)">
+                      <template #trigger>
+                        <n-button type="error" secondary>
+                          <template #icon>
+                            <Icon name="ep:delete" />
+                          </template>
 
-                <n-form-item
-                  label="Family Name"
-                  :path="`authors[${index}].familyName`"
-                >
-                  <n-input
-                    v-model:value="author.familyName"
-                    placeholder="Brecht"
-                    clearable
-                  />
-                </n-form-item>
+                          Remove Author
+                        </n-button>
+                      </template>
 
-                <n-form-item label="Email" :path="`authors[${index}].email`">
-                  <n-input
-                    v-model:value="author.email"
-                    placeholder="hello@codefair.io"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item
-                  label="Affiliation"
-                  :path="`authors[${index}].affiliation`"
-                >
-                  <n-input
-                    v-model:value="author.affiliation"
-                    placeholder="University of Example"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item label="URI" :path="`authors[${index}].uri`">
-                  <n-input
-                    v-model:value="author.uri"
-                    placeholder="https://example.com/bertoltbrecht"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-flex vertical size="large">
-                  <CardCollapsible
-                    v-for="(role, roleIndex) in author.roles"
-                    :key="roleIndex"
-                    :title="role.role || `Role ${roleIndex + 1}`"
-                    bordered
-                  >
-                    <template #header-extra>
-                      <n-button
-                        type="error"
-                        @click="
-                          formValue.authors[index].roles.splice(roleIndex, 1)
-                        "
-                      >
-                        <template #icon>
-                          <Icon name="ep:delete" />
-                        </template>
-
-                        Remove Role
-                      </n-button>
-                    </template>
-
-                    <n-form-item
-                      label="Role"
-                      :path="`authors[${index}].roles[${roleIndex}].role`"
-                      :rule="{
-                        message: 'Please enter a role',
-                        required: true,
-                        trigger: ['blur', 'input'],
-                      }"
-                    >
-                      <n-input
-                        v-model:value="role.role"
-                        placeholder="Developer"
-                        clearable
-                      />
-                    </n-form-item>
-
-                    <n-form-item
-                      label="Start Date"
-                      :path="`authors[${index}].roles[${roleIndex}].startDate`"
-                    >
-                      <n-date-picker
-                        v-model:value="role.startDate as number"
-                        type="date"
-                        clearable
-                      />
-                    </n-form-item>
-
-                    <n-form-item
-                      label="End Date"
-                      :path="`authors[${index}].roles[${roleIndex}].endDate`"
-                    >
-                      <n-date-picker
-                        v-model:value="role.endDate as number"
-                        type="date"
-                        clearable
-                      />
-                    </n-form-item>
-                  </CardCollapsible>
-                </n-flex>
-
-                <n-button
-                  @click="formValue.authors[index].roles.push({ role: '' })"
-                >
-                  <template #icon>
-                    <Icon name="gridicons:user-add" />
+                      Are you sure you want to remove this author?
+                    </n-popconfirm>
                   </template>
 
-                  Add Role
-                </n-button>
-              </CardCollapsible>
-
-              <n-button
-                type="primary"
-                @click="
-                  formValue.authors.push({
-                    roles: [
-                      {
-                        role: '',
-                      },
-                    ],
-                    givenName: '',
-                  })
-                "
-              >
-                <template #icon>
-                  <Icon name="gridicons:user-add" />
-                </template>
-
-                Add Author
-              </n-button>
-            </n-flex>
-          </n-card>
-
-          <n-card>
-            <n-flex vertical size="large" class="w-full">
-              <CardCollapsible
-                v-for="(contributor, index) in formValue.contributors"
-                :key="index"
-                :title="
-                  contributor.givenName
-                    ? `${contributor.givenName} ${contributor.familyName}`
-                    : `Contributor ${index + 1}`
-                "
-                bordered
-              >
-                <template #header-extra>
-                  <n-popconfirm @positive-click="removeContributor(index)">
-                    <template #trigger>
-                      <n-button type="error" secondary>
-                        <template #icon>
-                          <Icon name="ep:delete" />
-                        </template>
-
-                        Remove Contributor
-                      </n-button>
-                    </template>
-
-                    Are you sure you want to remove this contributor?
-                  </n-popconfirm>
-                </template>
-
-                <n-form-item
-                  label="Given Name"
-                  :path="`contributors[${index}].givenName`"
-                  :rule="{
-                    message: 'Please enter a name',
-                    required: true,
-                    trigger: ['blur', 'input'],
-                  }"
-                >
-                  <n-input
-                    v-model:value="contributor.givenName"
-                    placeholder="Bertolt"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item
-                  label="Family Name"
-                  :path="`contributors[${index}].familyName`"
-                >
-                  <n-input
-                    v-model:value="contributor.familyName"
-                    placeholder="Brecht"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item
-                  label="Email"
-                  :path="`contributors[${index}].email`"
-                >
-                  <n-input
-                    v-model:value="contributor.email"
-                    placeholder="hello@codefair.io"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item
-                  label="Affiliation"
-                  :path="`contributors[${index}].affiliation`"
-                >
-                  <n-input
-                    v-model:value="contributor.affiliation"
-                    placeholder="University of Example"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item label="URI" :path="`contributors[${index}].uri`">
-                  <n-input
-                    v-model:value="contributor.uri"
-                    placeholder="https://example.com/bertoltbrecht"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-flex vertical size="large">
-                  <CardCollapsible
-                    v-for="(role, roleIndex) in contributor.roles"
-                    :key="roleIndex"
-                    :title="role.role || `Role ${roleIndex + 1}`"
-                    bordered
+                  <n-form-item
+                    label="Given Name"
+                    :path="`authors[${index}].givenName`"
+                    :rule="{
+                      message: 'Please enter a name',
+                      required: true,
+                      trigger: ['blur', 'input'],
+                    }"
                   >
-                    <template #header-extra>
-                      <n-button
-                        type="error"
-                        @click="
-                          formValue.contributors[index].roles.splice(
-                            roleIndex,
-                            1,
-                          )
-                        "
-                      >
-                        <template #icon>
-                          <Icon name="ep:delete" />
-                        </template>
+                    <n-input
+                      v-model:value="author.givenName"
+                      placeholder="Bertolt"
+                      clearable
+                    />
+                  </n-form-item>
 
-                        Remove Role
-                      </n-button>
+                  <n-form-item
+                    label="Family Name"
+                    :path="`authors[${index}].familyName`"
+                  >
+                    <n-input
+                      v-model:value="author.familyName"
+                      placeholder="Brecht"
+                      clearable
+                    />
+                  </n-form-item>
+
+                  <n-form-item label="Email" :path="`authors[${index}].email`">
+                    <n-input
+                      v-model:value="author.email"
+                      placeholder="hello@codefair.io"
+                      clearable
+                    />
+                  </n-form-item>
+
+                  <n-form-item
+                    label="Affiliation"
+                    :path="`authors[${index}].affiliation`"
+                  >
+                    <n-input
+                      v-model:value="author.affiliation"
+                      placeholder="University of Example"
+                      clearable
+                    />
+                  </n-form-item>
+
+                  <n-form-item label="URI" :path="`authors[${index}].uri`">
+                    <n-input
+                      v-model:value="author.uri"
+                      placeholder="https://example.com/bertoltbrecht"
+                      clearable
+                    />
+                  </n-form-item>
+
+                  <n-flex vertical size="large">
+                    <CardCollapsible
+                      v-for="(role, roleIndex) in author.roles"
+                      :key="roleIndex"
+                      :title="role.role || `Role ${roleIndex + 1}`"
+                      bordered
+                    >
+                      <template #header-extra>
+                        <n-button
+                          type="error"
+                          @click="
+                            formValue.authors[index].roles.splice(roleIndex, 1)
+                          "
+                        >
+                          <template #icon>
+                            <Icon name="ep:delete" />
+                          </template>
+
+                          Remove Role
+                        </n-button>
+                      </template>
+
+                      <n-form-item
+                        label="Role"
+                        :path="`authors[${index}].roles[${roleIndex}].role`"
+                        :rule="{
+                          message: 'Please enter a role',
+                          required: true,
+                          trigger: ['blur', 'input'],
+                        }"
+                      >
+                        <n-input
+                          v-model:value="role.role"
+                          placeholder="Developer"
+                          clearable
+                        />
+                      </n-form-item>
+
+                      <n-form-item
+                        label="Start Date"
+                        :path="`authors[${index}].roles[${roleIndex}].startDate`"
+                      >
+                        <n-date-picker
+                          v-model:value="role.startDate"
+                          type="date"
+                          clearable
+                        />
+                      </n-form-item>
+
+                      <n-form-item
+                        label="End Date"
+                        :path="`authors[${index}].roles[${roleIndex}].endDate`"
+                      >
+                        <n-date-picker
+                          v-model:value="role.endDate"
+                          type="date"
+                          clearable
+                        />
+                      </n-form-item>
+                    </CardCollapsible>
+                  </n-flex>
+
+                  <n-button
+                    @click="formValue.authors[index].roles.push({ role: '' })"
+                  >
+                    <template #icon>
+                      <Icon name="gridicons:user-add" />
                     </template>
 
-                    <n-form-item
-                      label="Role"
-                      :path="`contributors[${index}].roles[${roleIndex}].role`"
-                      :rule="{
-                        message: 'Please enter a role',
-                        required: true,
-                        trigger: ['blur', 'input'],
-                      }"
-                    >
-                      <n-input
-                        v-model:value="role.role"
-                        placeholder="Developer"
-                        clearable
-                      />
-                    </n-form-item>
-
-                    <n-form-item
-                      label="Start Date"
-                      :path="`contributors[${index}].roles[${roleIndex}].startDate`"
-                    >
-                      <n-date-picker
-                        v-model:value="role.startDate as number"
-                        type="date"
-                        clearable
-                      />
-                    </n-form-item>
-
-                    <n-form-item
-                      label="End Date"
-                      :path="`contributors[${index}].roles[${roleIndex}].endDate`"
-                    >
-                      <n-date-picker
-                        v-model:value="role.endDate as number"
-                        type="date"
-                        clearable
-                      />
-                    </n-form-item>
-                  </CardCollapsible>
-                </n-flex>
+                    Add Role
+                  </n-button>
+                </CardCollapsible>
 
                 <n-button
+                  type="primary"
                   @click="
-                    formValue.contributors[index].roles.push({ role: '' })
+                    formValue.authors.push({
+                      roles: [],
+                      givenName: '',
+                    })
                   "
                 >
                   <template #icon>
                     <Icon name="gridicons:user-add" />
                   </template>
 
-                  Add Role
+                  Add Author
                 </n-button>
-              </CardCollapsible>
+              </n-flex>
+            </n-form-item>
+          </n-card>
 
-              <n-button
-                type="primary"
-                @click="
-                  formValue.contributors.push({
-                    roles: [
-                      {
-                        role: '',
-                      },
-                    ],
-                    givenName: '',
-                  })
-                "
-              >
-                <template #icon>
-                  <Icon name="gridicons:user-add" />
-                </template>
+          <n-card>
+            <n-form-item
+              label="Contributors"
+              path="contributors"
+              class="w-full"
+            >
+              <n-flex vertical size="large" class="w-full">
+                <CardCollapsible
+                  v-for="(contributor, index) in formValue.contributors"
+                  :key="index"
+                  :title="
+                    contributor.givenName
+                      ? `${contributor.givenName} ${contributor.familyName}`
+                      : `Contributor ${index + 1}`
+                  "
+                  bordered
+                >
+                  <template #header-extra>
+                    <n-popconfirm @positive-click="removeContributor(index)">
+                      <template #trigger>
+                        <n-button type="error" secondary>
+                          <template #icon>
+                            <Icon name="ep:delete" />
+                          </template>
 
-                Add Contributor
-              </n-button>
-            </n-flex>
+                          Remove Contributor
+                        </n-button>
+                      </template>
+
+                      Are you sure you want to remove this contributor?
+                    </n-popconfirm>
+                  </template>
+
+                  <n-form-item
+                    label="Given Name"
+                    :path="`contributors[${index}].givenName`"
+                    :rule="{
+                      message: 'Please enter a name',
+                      required: true,
+                      trigger: ['blur', 'input'],
+                    }"
+                  >
+                    <n-input
+                      v-model:value="contributor.givenName"
+                      placeholder="Bertolt"
+                      clearable
+                    />
+                  </n-form-item>
+
+                  <n-form-item
+                    label="Family Name"
+                    :path="`contributors[${index}].familyName`"
+                  >
+                    <n-input
+                      v-model:value="contributor.familyName"
+                      placeholder="Brecht"
+                      clearable
+                    />
+                  </n-form-item>
+
+                  <n-form-item
+                    label="Email"
+                    :path="`contributors[${index}].email`"
+                  >
+                    <n-input
+                      v-model:value="contributor.email"
+                      placeholder="hello@codefair.io"
+                      clearable
+                    />
+                  </n-form-item>
+
+                  <n-form-item
+                    label="Affiliation"
+                    :path="`contributors[${index}].affiliation`"
+                  >
+                    <n-input
+                      v-model:value="contributor.affiliation"
+                      placeholder="University of Example"
+                      clearable
+                    />
+                  </n-form-item>
+
+                  <n-form-item label="URI" :path="`contributors[${index}].uri`">
+                    <n-input
+                      v-model:value="contributor.uri"
+                      placeholder="https://example.com/bertoltbrecht"
+                      clearable
+                    />
+                  </n-form-item>
+
+                  <n-flex vertical size="large">
+                    <CardCollapsible
+                      v-for="(role, roleIndex) in contributor.roles"
+                      :key="roleIndex"
+                      :title="role.role || `Role ${roleIndex + 1}`"
+                      bordered
+                    >
+                      <template #header-extra>
+                        <n-button
+                          type="error"
+                          @click="
+                            formValue.contributors[index].roles.splice(
+                              roleIndex,
+                              1,
+                            )
+                          "
+                        >
+                          <template #icon>
+                            <Icon name="ep:delete" />
+                          </template>
+
+                          Remove Role
+                        </n-button>
+                      </template>
+
+                      <n-form-item
+                        label="Role"
+                        :path="`contributors[${index}].roles[${roleIndex}].role`"
+                        :rule="{
+                          message: 'Please enter a role',
+                          required: true,
+                          trigger: ['blur', 'input'],
+                        }"
+                      >
+                        <n-input
+                          v-model:value="role.role"
+                          placeholder="Developer"
+                          clearable
+                        />
+                      </n-form-item>
+
+                      <n-form-item
+                        label="Start Date"
+                        :path="`contributors[${index}].roles[${roleIndex}].startDate`"
+                      >
+                        <n-date-picker
+                          v-model:value="role.startDate"
+                          type="date"
+                          clearable
+                        />
+                      </n-form-item>
+
+                      <n-form-item
+                        label="End Date"
+                        :path="`contributors[${index}].roles[${roleIndex}].endDate`"
+                      >
+                        <n-date-picker
+                          v-model:value="role.endDate"
+                          type="date"
+                          clearable
+                        />
+                      </n-form-item>
+                    </CardCollapsible>
+                  </n-flex>
+
+                  <n-button
+                    @click="
+                      formValue.contributors[index].roles.push({ role: '' })
+                    "
+                  >
+                    <template #icon>
+                      <Icon name="gridicons:user-add" />
+                    </template>
+
+                    Add Role
+                  </n-button>
+                </CardCollapsible>
+
+                <n-button
+                  type="primary"
+                  @click="
+                    formValue.contributors.push({
+                      roles: [],
+                      givenName: '',
+                    })
+                  "
+                >
+                  <template #icon>
+                    <Icon name="gridicons:user-add" />
+                  </template>
+
+                  Add Contributor
+                </n-button>
+              </n-flex>
+            </n-form-item>
           </n-card>
         </template>
       </LayoutLargeForm>
@@ -920,7 +1008,12 @@ const handleDevelopmentStatusChange = (value: string) => {
               Save draft
             </n-button>
 
-            <n-button size="large" color="black" :loading="submitLoading">
+            <n-button
+              size="large"
+              color="black"
+              :loading="submitLoading"
+              @click="pushToRepository"
+            >
               <template #icon>
                 <Icon name="ion:push" />
               </template>

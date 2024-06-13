@@ -52,7 +52,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  console.log(licenseRequest);
   const installationId = await installation.findOne({
     repositoryId: licenseRequest.repositoryId,
   });
@@ -85,7 +84,6 @@ export default defineEventHandler(async (event) => {
   });
 
   // Get the installation instance for the app
-  console.log(installationId);
   const octokit = await app.getInstallationOctokit(
     installationId.installationId,
   );
@@ -103,7 +101,6 @@ export default defineEventHandler(async (event) => {
   );
 
   const defaultBranch = repoData.default_branch;
-  console.log("📢 [index.post.ts:89]", defaultBranch);
 
   // Get the default branch reference
   const { data: refData } = await octokit.request(
@@ -120,7 +117,6 @@ export default defineEventHandler(async (event) => {
 
   // Create a new branch for the license addition
   const newBranchName = `license-${nanoid()}`;
-  console.log("📢 [index.post.ts:103]", newBranchName);
 
   // Create a new branch from the default branch
   await octokit.request("POST /repos/{owner}/{repo}/git/refs", {
