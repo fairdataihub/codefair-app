@@ -56,7 +56,7 @@ export default async (app) => {
           repositoryId: repository.id,
           timestamp: Date.now(),
         });
-      } else if (installation.repo !== repo) {
+      } else if (installation.repo !== repoName) {
         // verify the repo name is the same
         await installationCollection.updateOne(
           { installationId, repositoryId: repository.id },
@@ -103,18 +103,16 @@ export default async (app) => {
           repositoryId: repository.id,
           timestamp: Date.now(),
         });
-      } else {
+      } else if (installation.repo !== repoName) {
         // verify the repo name is the same
-        if (installation.repo !== repoName) {
-          await installationCollection.updateOne(
-            { installationId, repositoryId: repository.id },
-            {
-              $set: {
-                repo: repoName,
-              },
+        await installationCollection.updateOne(
+          { installationId, repositoryId: repository.id },
+          {
+            $set: {
+              repo: repoName,
             },
-          );
-        }
+          },
+        );
       }
 
       const issueBody = await renderIssues(context, owner, repository, db);
@@ -149,7 +147,7 @@ export default async (app) => {
       repositoryId: repoId,
     });
 
-    if (installation.repo !== repo) {
+    if (installation.repo !== repoName) {
       await installationCollection.updateOne(
         { owner, repositoryId: repoId },
         {
@@ -244,7 +242,7 @@ export default async (app) => {
       repositoryId: repoId,
     });
 
-    if (installation.repo !== repo) {
+    if (installation.repo !== repoName) {
       await installationCollection.updateOne(
         { owner, repositoryId: repoId },
         {
