@@ -1,5 +1,4 @@
 import { MongoClient } from "mongodb";
-import type { User } from "lucia";
 
 export default defineEventHandler(async (event) => {
   protectRoute(event);
