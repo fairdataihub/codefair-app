@@ -1,6 +1,10 @@
 import { MongoClient } from "mongodb";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
-import { getDefaultBranch, checkEnvVariable } from "./utils/tools/index.js";
+import {
+  getDefaultBranch,
+  checkEnvVariable,
+  verifyRepoName,
+} from "./utils/tools/index.js";
 
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
@@ -56,15 +60,12 @@ export default async (app) => {
           repositoryId: repository.id,
           timestamp: Date.now(),
         });
-      } else if (installation.repo !== repoName) {
-        // verify the repo name is the same
-        await installationCollection.updateOne(
-          { installationId, repositoryId: repository.id },
-          {
-            $set: {
-              repo: repoName,
-            },
-          },
+      } else {
+        verifyRepoName(
+          installation.repo,
+          repoName,
+          owner,
+          installationCollection,
         );
       }
 
@@ -103,15 +104,12 @@ export default async (app) => {
           repositoryId: repository.id,
           timestamp: Date.now(),
         });
-      } else if (installation.repo !== repoName) {
-        // verify the repo name is the same
-        await installationCollection.updateOne(
-          { installationId, repositoryId: repository.id },
-          {
-            $set: {
-              repo: repoName,
-            },
-          },
+      } else {
+        verifyRepoName(
+          installation.repo,
+          repoName,
+          owner,
+          installationCollection,
         );
       }
 
@@ -147,16 +145,12 @@ export default async (app) => {
       repositoryId: repoId,
     });
 
-    if (installation.repo !== repoName) {
-      await installationCollection.updateOne(
-        { owner, repositoryId: repoId },
-        {
-          $set: {
-            repo: repoName,
-          },
-        },
-      );
-    }
+    await verifyRepoName(
+      installation.repo,
+      repoName,
+      owner,
+      installationCollection,
+    );
 
     // Grab the commits being pushed
     const { commits } = context.payload;
@@ -242,16 +236,12 @@ export default async (app) => {
       repositoryId: repoId,
     });
 
-    if (installation.repo !== repoName) {
-      await installationCollection.updateOne(
-        { owner, repositoryId: repoId },
-        {
-          $set: {
-            repo: repoName,
-          },
-        },
-      );
-    }
+    await verifyRepoName(
+      installation.repo,
+      repoName,
+      owner,
+      installationCollection,
+    );
 
     if (prTitle === "feat: ✨ LICENSE file added") {
       const prNumber = context.payload.pull_request.number;
