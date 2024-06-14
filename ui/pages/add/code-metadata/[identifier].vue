@@ -286,808 +286,832 @@ const handleDevelopmentStatusChange = (value: string) => {
 </script>
 
 <template>
-  <main class="mx-auto mb-4 max-w-screen-xl rounded bg-white p-8 shadow-md">
-    <n-form
-      ref="formRef"
-      :label-width="80"
-      :model="formValue"
-      :rules="rules"
-      size="large"
-    >
-      <LayoutLargeForm>
-        <template #info>
-          <n-space vertical size="large" class="pr-6">
-            <h2>Basic Information</h2>
+  <main>
+    <div class="mx-auto mb-4 max-w-screen-xl">
+      <h1 class="mb-4 text-2xl font-bold">Edit Codemeta</h1>
 
-            <p>General information of the repository.</p>
-          </n-space>
-        </template>
+      <n-text type="secondary" class="mt-2 text-lg">
+        The metadata of the software repository is used to describe the software
+        and it development process. It is used to help users discover the
+        software in the repository and to provide information about the software
+        to the users. The metadata gathered here will be used to create your
+        CITATION.cff and codemeta.json files.
+      </n-text>
+    </div>
 
-        <template #form>
-          <n-card class="rounded-lg bg-[#f9fafb]">
-            <n-form-item label="Software Name" path="name">
-              <n-input
-                v-model:value="formValue.name"
-                placeholder="Input Name"
-              />
-            </n-form-item>
+    <div class="mx-auto mb-4 max-w-screen-xl rounded bg-white p-8 shadow-md">
+      <n-form
+        ref="formRef"
+        :label-width="80"
+        :model="formValue"
+        :rules="rules"
+        size="large"
+      >
+        <LayoutLargeForm>
+          <template #info>
+            <n-space vertical size="large" class="pr-6">
+              <h2>Basic Information</h2>
 
-            <n-form-item label="Description" path="description">
-              <n-input
-                v-model:value="formValue.description"
-                placeholder="Input Description"
-                type="textarea"
-                :rows="4"
-              />
-            </n-form-item>
+              <p>General information of the repository.</p>
+            </n-space>
+          </template>
 
-            <n-form-item label="Creation Date" path="creationDate">
-              <n-date-picker
-                v-model:value="formValue.creationDate"
-                type="date"
-              />
-            </n-form-item>
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item label="Software Name" path="name">
+                <n-input
+                  v-model:value="formValue.name"
+                  placeholder="Input Name"
+                />
+              </n-form-item>
 
-            <n-form-item label="First Release Date" path="firstReleaseDate">
-              <n-date-picker
-                v-model:value="formValue.firstReleaseDate"
-                type="date"
-              />
-            </n-form-item>
-          </n-card>
-        </template>
-      </LayoutLargeForm>
+              <n-form-item label="Description" path="description">
+                <n-input
+                  v-model:value="formValue.description"
+                  placeholder="Input Description"
+                  type="textarea"
+                  :rows="4"
+                />
+              </n-form-item>
 
-      <LayoutLargeForm>
-        <template #info>
-          <n-space vertical size="large" class="pr-6">
-            <h2>Discoverability</h2>
+              <n-form-item label="Creation Date" path="creationDate">
+                <n-date-picker
+                  v-model:value="formValue.creationDate"
+                  type="date"
+                />
+              </n-form-item>
 
-            <p>
-              Information to help users discover the software in the repository.
-            </p>
-          </n-space>
-        </template>
+              <n-form-item label="First Release Date" path="firstReleaseDate">
+                <n-date-picker
+                  v-model:value="formValue.firstReleaseDate"
+                  type="date"
+                />
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
 
-        <template #form>
-          <n-card class="rounded-lg bg-[#f9fafb]">
-            <n-form-item label="Unique Identifier" path="uniqueIdentifier">
-              <n-input
-                v-model:value="formValue.uniqueIdentifier"
-                placeholder="10.60775/fairhub.1"
-              />
-            </n-form-item>
+        <LayoutLargeForm>
+          <template #info>
+            <n-space vertical size="large" class="pr-6">
+              <h2>Discoverability</h2>
 
-            <n-form-item
-              label="Application Category"
-              path="applicationCategory"
-            >
-              <n-select
-                v-model:value="formValue.applicationCategory"
-                placeholder="Select Category"
-                :options="applicationCategoryOptions"
-                @update:value="handleApplicationCategoryChange"
-              />
-            </n-form-item>
+              <p>
+                Information to help users discover the software in the
+                repository.
+              </p>
+            </n-space>
+          </template>
 
-            <n-form-item label="Keywords" path="keywords">
-              <n-dynamic-input
-                v-model:value="formValue.keywords"
-                placeholder="Input Related Link"
-              />
-            </n-form-item>
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item label="Unique Identifier" path="uniqueIdentifier">
+                <n-input
+                  v-model:value="formValue.uniqueIdentifier"
+                  placeholder="10.60775/fairhub.1"
+                />
+              </n-form-item>
 
-            <n-form-item label="Funding Code" path="fundingCode">
-              <n-input
-                v-model:value="formValue.fundingCode"
-                placeholder="Input Funding Code"
-              />
-            </n-form-item>
+              <n-form-item
+                label="Application Category"
+                path="applicationCategory"
+              >
+                <n-select
+                  v-model:value="formValue.applicationCategory"
+                  placeholder="Select Category"
+                  :options="applicationCategoryOptions"
+                  @update:value="handleApplicationCategoryChange"
+                />
+              </n-form-item>
 
-            <n-form-item
-              label="Funding Organization"
-              path="fundingOrganization"
-            >
-              <n-input
-                v-model:value="formValue.fundingOrganization"
-                placeholder="Input Funding Organization"
-              />
-            </n-form-item>
-          </n-card>
-        </template>
-      </LayoutLargeForm>
+              <n-form-item label="Keywords" path="keywords">
+                <n-dynamic-input
+                  v-model:value="formValue.keywords"
+                  placeholder="Input Related Link"
+                />
+              </n-form-item>
 
-      <LayoutLargeForm>
-        <template #info>
-          <n-space vertical size="large" class="pr-6">
-            <h2>License</h2>
+              <n-form-item label="Funding Code" path="fundingCode">
+                <n-input
+                  v-model:value="formValue.fundingCode"
+                  placeholder="Input Funding Code"
+                />
+              </n-form-item>
 
-            <p>Information about the license of the software.</p>
-          </n-space>
-        </template>
+              <n-form-item
+                label="Funding Organization"
+                path="fundingOrganization"
+              >
+                <n-input
+                  v-model:value="formValue.fundingOrganization"
+                  placeholder="Input Funding Organization"
+                />
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
 
-        <template #form>
-          <n-card class="rounded-lg bg-[#f9fafb]">
-            <n-form-item label="Code Repository" path="codeRepository">
-              <n-input
-                v-model:value="formValue.codeRepository"
-                placeholder="https://github.com/fairdataihub/codefair-app"
-              />
-            </n-form-item>
+        <LayoutLargeForm>
+          <template #info>
+            <n-space vertical size="large" class="pr-6">
+              <h2>License</h2>
 
-            <n-form-item
-              label="Continuous Integration"
-              path="continuousIntegration"
-            >
-              <n-input
-                v-model:value="formValue.continuousIntegration"
-                placeholder="https://ci.example.com"
-              />
-            </n-form-item>
+              <p>Information about the license of the software.</p>
+            </n-space>
+          </template>
 
-            <n-form-item label="Issue Tracker" path="issueTracker">
-              <n-input
-                v-model:value="formValue.issueTracker"
-                placeholder="https://issues.example.com"
-              />
-            </n-form-item>
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item label="Code Repository" path="codeRepository">
+                <n-input
+                  v-model:value="formValue.codeRepository"
+                  placeholder="https://github.com/fairdataihub/codefair-app"
+                />
+              </n-form-item>
 
-            <n-form-item label="Related Links" path="relatedLinks">
-              <n-dynamic-input
-                v-model:value="formValue.relatedLinks"
-                placeholder="Input Related Link"
-              />
-            </n-form-item>
-          </n-card>
-        </template>
-      </LayoutLargeForm>
+              <n-form-item
+                label="Continuous Integration"
+                path="continuousIntegration"
+              >
+                <n-input
+                  v-model:value="formValue.continuousIntegration"
+                  placeholder="https://ci.example.com"
+                />
+              </n-form-item>
 
-      <LayoutLargeForm>
-        <template #info>
-          <n-space vertical size="large" class="pr-6">
-            <h2>Software Requirements</h2>
+              <n-form-item label="Issue Tracker" path="issueTracker">
+                <n-input
+                  v-model:value="formValue.issueTracker"
+                  placeholder="https://issues.example.com"
+                />
+              </n-form-item>
 
-            <p>
-              Information about the run-time environment required to run the
-              software.
-            </p>
-          </n-space>
-        </template>
+              <n-form-item label="Related Links" path="relatedLinks">
+                <n-dynamic-input
+                  v-model:value="formValue.relatedLinks"
+                  placeholder="Input Related Link"
+                />
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
 
-        <template #form>
-          <n-card class="rounded-lg bg-[#f9fafb]">
-            <n-form-item
-              label="Programming Language"
-              path="programmingLanguage"
-            >
-              <n-select
-                v-model:value="formValue.programmingLanguages"
-                placeholder="Select Category"
-                filterable
-                multiple
-                tag
-                clearable
-                :options="codeMetadataJSON.programmingLanguageOptions"
-              />
-            </n-form-item>
+        <LayoutLargeForm>
+          <template #info>
+            <n-space vertical size="large" class="pr-6">
+              <h2>Software Requirements</h2>
 
-            <n-form-item label="Runtime Platform" path="runtimePlatform">
-              <n-select
-                v-model:value="formValue.runtimePlatform"
-                placeholder="Select Category"
-                filterable
-                multiple
-                tag
-                clearable
-                :options="codeMetadataJSON.runtimePlatformOptions"
-              />
-            </n-form-item>
+              <p>
+                Information about the run-time environment required to run the
+                software.
+              </p>
+            </n-space>
+          </template>
 
-            <n-form-item label="Operating System" path="operatingSystem">
-              <n-select
-                v-model:value="formValue.operatingSystem"
-                placeholder="Select Category"
-                filterable
-                multiple
-                tag
-                clearable
-                :options="codeMetadataJSON.operatingSystemOptions"
-              />
-            </n-form-item>
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item
+                label="Programming Language"
+                path="programmingLanguage"
+              >
+                <n-select
+                  v-model:value="formValue.programmingLanguages"
+                  placeholder="Select Category"
+                  filterable
+                  multiple
+                  tag
+                  clearable
+                  :options="codeMetadataJSON.programmingLanguageOptions"
+                />
+              </n-form-item>
 
-            <n-form-item
-              label="Other Software Requirements"
-              path="otherSoftwareRequirements"
-            >
-              <n-dynamic-input
-                v-model:value="formValue.otherSoftwareRequirements"
-                placeholder="Input Related Link"
-              />
-            </n-form-item>
-          </n-card>
-        </template>
-      </LayoutLargeForm>
+              <n-form-item label="Runtime Platform" path="runtimePlatform">
+                <n-select
+                  v-model:value="formValue.runtimePlatform"
+                  placeholder="Select Category"
+                  filterable
+                  multiple
+                  tag
+                  clearable
+                  :options="codeMetadataJSON.runtimePlatformOptions"
+                />
+              </n-form-item>
 
-      <LayoutLargeForm>
-        <template #info>
-          <h2>Current version of the software</h2>
-        </template>
+              <n-form-item label="Operating System" path="operatingSystem">
+                <n-select
+                  v-model:value="formValue.operatingSystem"
+                  placeholder="Select Category"
+                  filterable
+                  multiple
+                  tag
+                  clearable
+                  :options="codeMetadataJSON.operatingSystemOptions"
+                />
+              </n-form-item>
 
-        <template #form>
-          <n-card class="rounded-lg bg-[#f9fafb]">
-            <n-form-item label="Current Version" path="currentVersion">
-              <n-input
-                v-model:value="formValue.currentVersion"
-                placeholder="1.2.5"
-              />
-            </n-form-item>
+              <n-form-item
+                label="Other Software Requirements"
+                path="otherSoftwareRequirements"
+              >
+                <n-dynamic-input
+                  v-model:value="formValue.otherSoftwareRequirements"
+                  placeholder="Input Related Link"
+                />
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
 
-            <n-form-item label="Description" path="description">
-              <n-input
-                v-model:value="formValue.description"
-                placeholder="Input Description"
-                type="textarea"
-                :rows="4"
-              />
-            </n-form-item>
+        <LayoutLargeForm>
+          <template #info>
+            <h2>Current version of the software</h2>
+          </template>
 
-            <n-form-item
-              label="Creation Version Release Date"
-              path="currentVersionReleaseDate"
-            >
-              <n-date-picker
-                v-model:value="formValue.currentVersionReleaseDate as number"
-                type="date"
-              />
-            </n-form-item>
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item label="Current Version" path="currentVersion">
+                <n-input
+                  v-model:value="formValue.currentVersion"
+                  placeholder="1.2.5"
+                />
+              </n-form-item>
 
-            <n-form-item
-              label="Current Version Download URL"
-              path="currentVersionDownloadURL"
-            >
-              <n-input
-                v-model:value="formValue.currentVersionDownloadURL"
-                placeholder="https://example.com/download/1.0.0"
-              />
-            </n-form-item>
+              <n-form-item label="Description" path="description">
+                <n-input
+                  v-model:value="formValue.description"
+                  placeholder="Input Description"
+                  type="textarea"
+                  :rows="4"
+                />
+              </n-form-item>
 
-            <n-form-item
-              label="Current Version Release Notes"
-              path="currentVersionReleaseNotes"
-            >
-              <n-input
-                v-model:value="formValue.currentVersionReleaseNotes"
-                placeholder="Initial stable release."
-                type="textarea"
-                :rows="4"
-              />
-            </n-form-item>
-          </n-card>
-        </template>
-      </LayoutLargeForm>
+              <n-form-item
+                label="Creation Version Release Date"
+                path="currentVersionReleaseDate"
+              >
+                <n-date-picker
+                  v-model:value="formValue.currentVersionReleaseDate as number"
+                  type="date"
+                />
+              </n-form-item>
 
-      <LayoutLargeForm>
-        <template #info>
-          <n-space vertical size="large" class="pr-6">
-            <h2>Additional Information</h2>
+              <n-form-item
+                label="Current Version Download URL"
+                path="currentVersionDownloadURL"
+              >
+                <n-input
+                  v-model:value="formValue.currentVersionDownloadURL"
+                  placeholder="https://example.com/download/1.0.0"
+                />
+              </n-form-item>
 
-            <p>Additional information about the software.</p>
-          </n-space>
-        </template>
+              <n-form-item
+                label="Current Version Release Notes"
+                path="currentVersionReleaseNotes"
+              >
+                <n-input
+                  v-model:value="formValue.currentVersionReleaseNotes"
+                  placeholder="Initial stable release."
+                  type="textarea"
+                  :rows="4"
+                />
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
 
-        <template #form>
-          <n-card class="rounded-lg bg-[#f9fafb]">
-            <n-form-item label="Development Status" path="developmentStatus">
-              <n-select
-                v-model:value="formValue.developmentStatus"
-                placeholder="Select Category"
-                :options="codeMetadataJSON.developmentStatusOptions"
-                @update:value="handleDevelopmentStatusChange"
-              />
-            </n-form-item>
+        <LayoutLargeForm>
+          <template #info>
+            <n-space vertical size="large" class="pr-6">
+              <h2>Additional Information</h2>
 
-            <n-form-item label="Is Source Code Of" path="isSourceCodeOf">
-              <n-input
-                v-model:value="formValue.isSourceCodeOf"
-                placeholder="Bigger Application"
-              />
-            </n-form-item>
+              <p>Additional information about the software.</p>
+            </n-space>
+          </template>
 
-            <n-form-item label="Is Part Of" path="isPartOf">
-              <n-input
-                v-model:value="formValue.isPartOf"
-                placeholder="Bigger Suite"
-              />
-            </n-form-item>
-          </n-card>
-        </template>
-      </LayoutLargeForm>
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item label="Development Status" path="developmentStatus">
+                <n-select
+                  v-model:value="formValue.developmentStatus"
+                  placeholder="Select Category"
+                  :options="codeMetadataJSON.developmentStatusOptions"
+                  @update:value="handleDevelopmentStatusChange"
+                />
+              </n-form-item>
 
-      <LayoutLargeForm>
-        <template #info>
-          <n-space vertical size="large" class="pr-6">
-            <h2>Editorial Review</h2>
+              <n-form-item label="Is Source Code Of" path="isSourceCodeOf">
+                <n-input
+                  v-model:value="formValue.isSourceCodeOf"
+                  placeholder="Bigger Application"
+                />
+              </n-form-item>
 
-            <p>
-              Information about the review of the software by the editorial
-              board.
-            </p>
-          </n-space>
-        </template>
+              <n-form-item label="Is Part Of" path="isPartOf">
+                <n-input
+                  v-model:value="formValue.isPartOf"
+                  placeholder="Bigger Suite"
+                />
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
 
-        <template #form>
-          <n-card class="rounded-lg bg-[#f9fafb]">
-            <n-form-item
-              label="Reference Publication"
-              path="referencePublication"
-            >
-              <n-input
-                v-model:value="formValue.referencePublication"
-                placeholder="Doe, J. (2023). Example Project. Journal of Examples."
-              />
-            </n-form-item>
+        <LayoutLargeForm>
+          <template #info>
+            <n-space vertical size="large" class="pr-6">
+              <h2>Editorial Review</h2>
 
-            <n-form-item label="Review Aspect" path="reviewAspect">
-              <n-input
-                v-model:value="formValue.reviewAspect"
-                placeholder="Code Quality"
-              />
-            </n-form-item>
+              <p>
+                Information about the review of the software by the editorial
+                board.
+              </p>
+            </n-space>
+          </template>
 
-            <n-form-item label="Review Body" path="reviewBody">
-              <n-input
-                v-model:value="formValue.reviewBody"
-                placeholder="This project has been thoroughly reviewed for code quality."
-                type="textarea"
-                :rows="4"
-              />
-            </n-form-item>
-          </n-card>
-        </template>
-      </LayoutLargeForm>
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item
+                label="Reference Publication"
+                path="referencePublication"
+              >
+                <n-input
+                  v-model:value="formValue.referencePublication"
+                  placeholder="Doe, J. (2023). Example Project. Journal of Examples."
+                />
+              </n-form-item>
 
-      <LayoutLargeForm class="">
-        <template #info>
-          <n-space vertical size="large" class="pr-6">
-            <h2>Authors and Contributors</h2>
+              <n-form-item label="Review Aspect" path="reviewAspect">
+                <n-input
+                  v-model:value="formValue.reviewAspect"
+                  placeholder="Code Quality"
+                />
+              </n-form-item>
 
-            <p>
-              Information about the authors and contributors of the software.
-            </p>
-          </n-space>
-        </template>
+              <n-form-item label="Review Body" path="reviewBody">
+                <n-input
+                  v-model:value="formValue.reviewBody"
+                  placeholder="This project has been thoroughly reviewed for code quality."
+                  type="textarea"
+                  :rows="4"
+                />
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
 
-        <template #form>
-          <n-card class="rounded-lg bg-[#f9fafb]">
-            <n-form-item
-              label="Authors"
-              path="authors"
-              :rule="{
-                message: 'Please enter at least one author',
-                required: true,
-                type: 'array',
-                trigger: ['blur', 'input'],
-              }"
-              class="w-full"
-            >
-              <n-flex vertical size="large" class="w-full">
-                <CardCollapsible
-                  v-for="(author, index) in formValue.authors"
-                  :key="index"
-                  :title="
-                    author.givenName
-                      ? `${author.givenName} ${author.familyName || ''}`
-                      : `Author ${index + 1}`
-                  "
-                  bordered
-                  class="bg-white"
-                >
-                  <template #header-extra>
-                    <n-popconfirm @positive-click="removeAuthor(index)">
-                      <template #trigger>
-                        <n-button type="error" secondary>
-                          <template #icon>
-                            <Icon name="ep:delete" />
-                          </template>
+        <LayoutLargeForm class="">
+          <template #info>
+            <n-space vertical size="large" class="pr-6">
+              <h2>Authors and Contributors</h2>
 
-                          Remove Author
-                        </n-button>
-                      </template>
+              <p>
+                Information about the authors and contributors of the software.
+              </p>
+            </n-space>
+          </template>
 
-                      Are you sure you want to remove this author?
-                    </n-popconfirm>
-                  </template>
-
-                  <n-form-item
-                    label="Given Name"
-                    :path="`authors[${index}].givenName`"
-                    :rule="{
-                      message: 'Please enter a name',
-                      required: true,
-                      trigger: ['blur', 'input'],
-                    }"
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item
+                label="Authors"
+                path="authors"
+                :rule="{
+                  message: 'Please enter at least one author',
+                  required: true,
+                  type: 'array',
+                  trigger: ['blur', 'input'],
+                }"
+                class="w-full"
+              >
+                <n-flex vertical size="large" class="w-full">
+                  <CardCollapsible
+                    v-for="(author, index) in formValue.authors"
+                    :key="index"
+                    :title="
+                      author.givenName
+                        ? `${author.givenName} ${author.familyName || ''}`
+                        : `Author ${index + 1}`
+                    "
+                    bordered
+                    class="bg-white"
                   >
-                    <n-input
-                      v-model:value="author.givenName"
-                      placeholder="Bertolt"
-                      clearable
-                    />
-                  </n-form-item>
+                    <template #header-extra>
+                      <n-popconfirm @positive-click="removeAuthor(index)">
+                        <template #trigger>
+                          <n-button type="error" secondary>
+                            <template #icon>
+                              <Icon name="ep:delete" />
+                            </template>
 
-                  <n-form-item
-                    label="Family Name"
-                    :path="`authors[${index}].familyName`"
-                  >
-                    <n-input
-                      v-model:value="author.familyName"
-                      placeholder="Brecht"
-                      clearable
-                    />
-                  </n-form-item>
+                            Remove Author
+                          </n-button>
+                        </template>
 
-                  <n-form-item label="Email" :path="`authors[${index}].email`">
-                    <n-input
-                      v-model:value="author.email"
-                      placeholder="hello@codefair.io"
-                      clearable
-                    />
-                  </n-form-item>
-
-                  <n-form-item
-                    label="Affiliation"
-                    :path="`authors[${index}].affiliation`"
-                  >
-                    <n-input
-                      v-model:value="author.affiliation"
-                      placeholder="University of Example"
-                      clearable
-                    />
-                  </n-form-item>
-
-                  <n-form-item label="URI" :path="`authors[${index}].uri`">
-                    <n-input
-                      v-model:value="author.uri"
-                      placeholder="https://example.com/bertoltbrecht"
-                      clearable
-                    />
-                  </n-form-item>
-
-                  <n-flex vertical size="large">
-                    <CardCollapsible
-                      v-for="(role, roleIndex) in author.roles"
-                      :key="roleIndex"
-                      :title="role.role || `Role ${roleIndex + 1}`"
-                      bordered
-                      class="mb-4"
-                    >
-                      <template #header-extra>
-                        <n-button
-                          type="error"
-                          @click="
-                            formValue.authors[index].roles.splice(roleIndex, 1)
-                          "
-                        >
-                          <template #icon>
-                            <Icon name="ep:delete" />
-                          </template>
-
-                          Remove Role
-                        </n-button>
-                      </template>
-
-                      <n-form-item
-                        label="Role"
-                        :path="`authors[${index}].roles[${roleIndex}].role`"
-                        :rule="{
-                          message: 'Please enter a role',
-                          required: true,
-                          trigger: ['blur', 'input'],
-                        }"
-                      >
-                        <n-input
-                          v-model:value="role.role"
-                          placeholder="Developer"
-                          clearable
-                        />
-                      </n-form-item>
-
-                      <n-form-item
-                        label="Start Date"
-                        :path="`authors[${index}].roles[${roleIndex}].startDate`"
-                      >
-                        <n-date-picker
-                          v-model:value="role.startDate"
-                          type="date"
-                          clearable
-                        />
-                      </n-form-item>
-
-                      <n-form-item
-                        label="End Date"
-                        :path="`authors[${index}].roles[${roleIndex}].endDate`"
-                      >
-                        <n-date-picker
-                          v-model:value="role.endDate"
-                          type="date"
-                          clearable
-                        />
-                      </n-form-item>
-                    </CardCollapsible>
-                  </n-flex>
-
-                  <n-button
-                    @click="formValue.authors[index].roles.push({ role: '' })"
-                  >
-                    <template #icon>
-                      <Icon name="gridicons:user-add" />
+                        Are you sure you want to remove this author?
+                      </n-popconfirm>
                     </template>
 
-                    Add Role
-                  </n-button>
-                </CardCollapsible>
-
-                <n-button
-                  type="primary"
-                  @click="
-                    formValue.authors.push({
-                      roles: [],
-                      givenName: '',
-                    })
-                  "
-                >
-                  <template #icon>
-                    <Icon name="gridicons:user-add" />
-                  </template>
-
-                  Add Author
-                </n-button>
-              </n-flex>
-            </n-form-item>
-          </n-card>
-
-          <n-card class="rounded-lg bg-[#f9fafb]">
-            <n-form-item
-              label="Contributors"
-              path="contributors"
-              class="w-full"
-            >
-              <n-flex vertical size="large" class="w-full">
-                <CardCollapsible
-                  v-for="(contributor, index) in formValue.contributors"
-                  :key="index"
-                  :title="
-                    contributor.givenName
-                      ? `${contributor.givenName} ${contributor.familyName}`
-                      : `Contributor ${index + 1}`
-                  "
-                  bordered
-                  class="bg-white"
-                >
-                  <template #header-extra>
-                    <n-popconfirm @positive-click="removeContributor(index)">
-                      <template #trigger>
-                        <n-button type="error" secondary>
-                          <template #icon>
-                            <Icon name="ep:delete" />
-                          </template>
-
-                          Remove Contributor
-                        </n-button>
-                      </template>
-
-                      Are you sure you want to remove this contributor?
-                    </n-popconfirm>
-                  </template>
-
-                  <n-form-item
-                    label="Given Name"
-                    :path="`contributors[${index}].givenName`"
-                    :rule="{
-                      message: 'Please enter a name',
-                      required: true,
-                      trigger: ['blur', 'input'],
-                    }"
-                  >
-                    <n-input
-                      v-model:value="contributor.givenName"
-                      placeholder="Bertolt"
-                      clearable
-                    />
-                  </n-form-item>
-
-                  <n-form-item
-                    label="Family Name"
-                    :path="`contributors[${index}].familyName`"
-                  >
-                    <n-input
-                      v-model:value="contributor.familyName"
-                      placeholder="Brecht"
-                      clearable
-                    />
-                  </n-form-item>
-
-                  <n-form-item
-                    label="Email"
-                    :path="`contributors[${index}].email`"
-                  >
-                    <n-input
-                      v-model:value="contributor.email"
-                      placeholder="hello@codefair.io"
-                      clearable
-                    />
-                  </n-form-item>
-
-                  <n-form-item
-                    label="Affiliation"
-                    :path="`contributors[${index}].affiliation`"
-                  >
-                    <n-input
-                      v-model:value="contributor.affiliation"
-                      placeholder="University of Example"
-                      clearable
-                    />
-                  </n-form-item>
-
-                  <n-form-item label="URI" :path="`contributors[${index}].uri`">
-                    <n-input
-                      v-model:value="contributor.uri"
-                      placeholder="https://example.com/bertoltbrecht"
-                      clearable
-                    />
-                  </n-form-item>
-
-                  <n-flex vertical size="large">
-                    <CardCollapsible
-                      v-for="(role, roleIndex) in contributor.roles"
-                      :key="roleIndex"
-                      :title="role.role || `Role ${roleIndex + 1}`"
-                      bordered
-                      class="mb-4"
+                    <n-form-item
+                      label="Given Name"
+                      :path="`authors[${index}].givenName`"
+                      :rule="{
+                        message: 'Please enter a name',
+                        required: true,
+                        trigger: ['blur', 'input'],
+                      }"
                     >
-                      <template #header-extra>
-                        <n-button
-                          type="error"
-                          @click="
-                            formValue.contributors[index].roles.splice(
-                              roleIndex,
-                              1,
-                            )
-                          "
-                        >
-                          <template #icon>
-                            <Icon name="ep:delete" />
-                          </template>
+                      <n-input
+                        v-model:value="author.givenName"
+                        placeholder="Bertolt"
+                        clearable
+                      />
+                    </n-form-item>
 
-                          Remove Role
-                        </n-button>
+                    <n-form-item
+                      label="Family Name"
+                      :path="`authors[${index}].familyName`"
+                    >
+                      <n-input
+                        v-model:value="author.familyName"
+                        placeholder="Brecht"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="Email"
+                      :path="`authors[${index}].email`"
+                    >
+                      <n-input
+                        v-model:value="author.email"
+                        placeholder="hello@codefair.io"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="Affiliation"
+                      :path="`authors[${index}].affiliation`"
+                    >
+                      <n-input
+                        v-model:value="author.affiliation"
+                        placeholder="University of Example"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item label="URI" :path="`authors[${index}].uri`">
+                      <n-input
+                        v-model:value="author.uri"
+                        placeholder="https://example.com/bertoltbrecht"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-flex vertical size="large">
+                      <CardCollapsible
+                        v-for="(role, roleIndex) in author.roles"
+                        :key="roleIndex"
+                        :title="role.role || `Role ${roleIndex + 1}`"
+                        bordered
+                        class="mb-4"
+                      >
+                        <template #header-extra>
+                          <n-button
+                            type="error"
+                            @click="
+                              formValue.authors[index].roles.splice(
+                                roleIndex,
+                                1,
+                              )
+                            "
+                          >
+                            <template #icon>
+                              <Icon name="ep:delete" />
+                            </template>
+
+                            Remove Role
+                          </n-button>
+                        </template>
+
+                        <n-form-item
+                          label="Role"
+                          :path="`authors[${index}].roles[${roleIndex}].role`"
+                          :rule="{
+                            message: 'Please enter a role',
+                            required: true,
+                            trigger: ['blur', 'input'],
+                          }"
+                        >
+                          <n-input
+                            v-model:value="role.role"
+                            placeholder="Developer"
+                            clearable
+                          />
+                        </n-form-item>
+
+                        <n-form-item
+                          label="Start Date"
+                          :path="`authors[${index}].roles[${roleIndex}].startDate`"
+                        >
+                          <n-date-picker
+                            v-model:value="role.startDate"
+                            type="date"
+                            clearable
+                          />
+                        </n-form-item>
+
+                        <n-form-item
+                          label="End Date"
+                          :path="`authors[${index}].roles[${roleIndex}].endDate`"
+                        >
+                          <n-date-picker
+                            v-model:value="role.endDate"
+                            type="date"
+                            clearable
+                          />
+                        </n-form-item>
+                      </CardCollapsible>
+                    </n-flex>
+
+                    <n-button
+                      @click="formValue.authors[index].roles.push({ role: '' })"
+                    >
+                      <template #icon>
+                        <Icon name="gridicons:user-add" />
                       </template>
 
-                      <n-form-item
-                        label="Role"
-                        :path="`contributors[${index}].roles[${roleIndex}].role`"
-                        :rule="{
-                          message: 'Please enter a role',
-                          required: true,
-                          trigger: ['blur', 'input'],
-                        }"
-                      >
-                        <n-input
-                          v-model:value="role.role"
-                          placeholder="Developer"
-                          clearable
-                        />
-                      </n-form-item>
-
-                      <n-form-item
-                        label="Start Date"
-                        :path="`contributors[${index}].roles[${roleIndex}].startDate`"
-                      >
-                        <n-date-picker
-                          v-model:value="role.startDate"
-                          type="date"
-                          clearable
-                        />
-                      </n-form-item>
-
-                      <n-form-item
-                        label="End Date"
-                        :path="`contributors[${index}].roles[${roleIndex}].endDate`"
-                      >
-                        <n-date-picker
-                          v-model:value="role.endDate"
-                          type="date"
-                          clearable
-                        />
-                      </n-form-item>
-                    </CardCollapsible>
-                  </n-flex>
+                      Add Role
+                    </n-button>
+                  </CardCollapsible>
 
                   <n-button
+                    type="primary"
                     @click="
-                      formValue.contributors[index].roles.push({ role: '' })
+                      formValue.authors.push({
+                        roles: [],
+                        givenName: '',
+                      })
                     "
                   >
                     <template #icon>
                       <Icon name="gridicons:user-add" />
                     </template>
 
-                    Add Role
+                    Add Author
                   </n-button>
-                </CardCollapsible>
+                </n-flex>
+              </n-form-item>
+            </n-card>
 
-                <n-button
-                  type="primary"
-                  @click="
-                    formValue.contributors.push({
-                      roles: [],
-                      givenName: '',
-                    })
-                  "
-                >
-                  <template #icon>
-                    <Icon name="gridicons:user-add" />
-                  </template>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item
+                label="Contributors"
+                path="contributors"
+                class="w-full"
+              >
+                <n-flex vertical size="large" class="w-full">
+                  <CardCollapsible
+                    v-for="(contributor, index) in formValue.contributors"
+                    :key="index"
+                    :title="
+                      contributor.givenName
+                        ? `${contributor.givenName} ${contributor.familyName}`
+                        : `Contributor ${index + 1}`
+                    "
+                    bordered
+                    class="bg-white"
+                  >
+                    <template #header-extra>
+                      <n-popconfirm @positive-click="removeContributor(index)">
+                        <template #trigger>
+                          <n-button type="error" secondary>
+                            <template #icon>
+                              <Icon name="ep:delete" />
+                            </template>
 
-                  Add Contributor
-                </n-button>
-              </n-flex>
-            </n-form-item>
-          </n-card>
-        </template>
-      </LayoutLargeForm>
+                            Remove Contributor
+                          </n-button>
+                        </template>
 
-      <n-form-item>
-        <n-flex horizontal justify="space-between" class="w-full">
-          <n-button
-            color="black"
-            size="large"
-            class="my-4"
-            @click="handleValidateClick"
-          >
-            <template #icon>
-              <Icon name="grommet-icons:validate" />
-            </template>
-            Validate
-          </n-button>
+                        Are you sure you want to remove this contributor?
+                      </n-popconfirm>
+                    </template>
 
-          <n-flex class="my-4">
+                    <n-form-item
+                      label="Given Name"
+                      :path="`contributors[${index}].givenName`"
+                      :rule="{
+                        message: 'Please enter a name',
+                        required: true,
+                        trigger: ['blur', 'input'],
+                      }"
+                    >
+                      <n-input
+                        v-model:value="contributor.givenName"
+                        placeholder="Bertolt"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="Family Name"
+                      :path="`contributors[${index}].familyName`"
+                    >
+                      <n-input
+                        v-model:value="contributor.familyName"
+                        placeholder="Brecht"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="Email"
+                      :path="`contributors[${index}].email`"
+                    >
+                      <n-input
+                        v-model:value="contributor.email"
+                        placeholder="hello@codefair.io"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="Affiliation"
+                      :path="`contributors[${index}].affiliation`"
+                    >
+                      <n-input
+                        v-model:value="contributor.affiliation"
+                        placeholder="University of Example"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="URI"
+                      :path="`contributors[${index}].uri`"
+                    >
+                      <n-input
+                        v-model:value="contributor.uri"
+                        placeholder="https://example.com/bertoltbrecht"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-flex vertical size="large">
+                      <CardCollapsible
+                        v-for="(role, roleIndex) in contributor.roles"
+                        :key="roleIndex"
+                        :title="role.role || `Role ${roleIndex + 1}`"
+                        bordered
+                        class="mb-4"
+                      >
+                        <template #header-extra>
+                          <n-button
+                            type="error"
+                            @click="
+                              formValue.contributors[index].roles.splice(
+                                roleIndex,
+                                1,
+                              )
+                            "
+                          >
+                            <template #icon>
+                              <Icon name="ep:delete" />
+                            </template>
+
+                            Remove Role
+                          </n-button>
+                        </template>
+
+                        <n-form-item
+                          label="Role"
+                          :path="`contributors[${index}].roles[${roleIndex}].role`"
+                          :rule="{
+                            message: 'Please enter a role',
+                            required: true,
+                            trigger: ['blur', 'input'],
+                          }"
+                        >
+                          <n-input
+                            v-model:value="role.role"
+                            placeholder="Developer"
+                            clearable
+                          />
+                        </n-form-item>
+
+                        <n-form-item
+                          label="Start Date"
+                          :path="`contributors[${index}].roles[${roleIndex}].startDate`"
+                        >
+                          <n-date-picker
+                            v-model:value="role.startDate"
+                            type="date"
+                            clearable
+                          />
+                        </n-form-item>
+
+                        <n-form-item
+                          label="End Date"
+                          :path="`contributors[${index}].roles[${roleIndex}].endDate`"
+                        >
+                          <n-date-picker
+                            v-model:value="role.endDate"
+                            type="date"
+                            clearable
+                          />
+                        </n-form-item>
+                      </CardCollapsible>
+                    </n-flex>
+
+                    <n-button
+                      @click="
+                        formValue.contributors[index].roles.push({ role: '' })
+                      "
+                    >
+                      <template #icon>
+                        <Icon name="gridicons:user-add" />
+                      </template>
+
+                      Add Role
+                    </n-button>
+                  </CardCollapsible>
+
+                  <n-button
+                    type="primary"
+                    @click="
+                      formValue.contributors.push({
+                        roles: [],
+                        givenName: '',
+                      })
+                    "
+                  >
+                    <template #icon>
+                      <Icon name="gridicons:user-add" />
+                    </template>
+
+                    Add Contributor
+                  </n-button>
+                </n-flex>
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
+
+        <n-form-item>
+          <n-flex horizontal justify="space-between" class="w-full">
             <n-button
-              size="large"
               color="black"
-              :loading="submitLoading"
-              @click="saveCodeMetadataDraft"
+              size="large"
+              class="my-4"
+              @click="handleValidateClick"
             >
               <template #icon>
-                <Icon name="material-symbols:save" />
+                <Icon name="grommet-icons:validate" />
               </template>
-
-              Save draft
+              Validate
             </n-button>
 
-            <n-button
-              size="large"
-              color="black"
-              :loading="submitLoading"
-              @click="pushToRepository"
-            >
-              <template #icon>
-                <Icon name="ion:push" />
-              </template>
-              Save and push to repository
-            </n-button>
+            <n-flex class="my-4">
+              <n-button
+                size="large"
+                color="black"
+                :loading="submitLoading"
+                @click="saveCodeMetadataDraft"
+              >
+                <template #icon>
+                  <Icon name="material-symbols:save" />
+                </template>
+
+                Save draft
+              </n-button>
+
+              <n-button
+                size="large"
+                color="black"
+                :loading="submitLoading"
+                @click="pushToRepository"
+              >
+                <template #icon>
+                  <Icon name="ion:push" />
+                </template>
+                Save and push to repository
+              </n-button>
+            </n-flex>
           </n-flex>
-        </n-flex>
-      </n-form-item>
-    </n-form>
+        </n-form-item>
+      </n-form>
 
-    <n-collapse class="mt-8">
-      <n-collapse-item title="data" name="data">
-        <pre>{{ data }}</pre>
-      </n-collapse-item>
+      <n-collapse class="mt-8">
+        <n-collapse-item title="data" name="data">
+          <pre>{{ data }}</pre>
+        </n-collapse-item>
 
-      <n-collapse-item title="formValue" name="formValue">
-        <pre>{{ formValue }}</pre>
-      </n-collapse-item>
-    </n-collapse>
+        <n-collapse-item title="formValue" name="formValue">
+          <pre>{{ formValue }}</pre>
+        </n-collapse-item>
+      </n-collapse>
+    </div>
   </main>
 </template>
