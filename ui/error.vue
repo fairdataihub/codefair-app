@@ -11,7 +11,7 @@ const props = defineProps({
 
 const statusCode = props.error?.statusCode ?? 500;
 
-console.log(props.error.data);
+console.error(props.error);
 
 const showNotAuthorizedError = ref(false);
 const requestClosed = ref(false);
@@ -35,7 +35,7 @@ if (props.error) {
       title: "Something went wrong",
     });
 
-    throw new Error("Failed to fetch license details");
+    throw new Error("Failed to fetch details from the database");
   }
 }
 </script>
@@ -76,7 +76,7 @@ if (props.error) {
           </p>
         </n-flex>
 
-        <n-flex v-else class="grid place-items-center px-6 lg:px-8">
+        <n-flex v-else vertical size="large">
           <h1 class="text-5xl font-bold">Something went wrong</h1>
 
           <p class="text-lg">

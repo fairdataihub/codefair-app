@@ -1,3 +1,5 @@
+import { gatherRepoAuthors } from "../tools/index.js";
+
 export async function checkForCitation(context, owner, repo) {
   try {
     await context.octokit.rest.repos.getContent({
@@ -12,6 +14,7 @@ export async function checkForCitation(context, owner, repo) {
   }
 }
 
+// TODO: Verify if this is still needed
 export async function gatherCitationInfo(context, owner, repo) {
   // Verify there is no PR open already for the CITATION.cff file
   const openPR = await context.octokit.pulls.list({

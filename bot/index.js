@@ -1,6 +1,10 @@
 import { MongoClient } from "mongodb";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
-import { getDefaultBranch, checkEnvVariable } from "./utils/tools/index.js";
+import {
+  getDefaultBranch,
+  checkEnvVariable,
+  verifyRepoName,
+} from "./utils/tools/index.js";
 
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
@@ -21,13 +25,14 @@ const client = new MongoClient(MONGODB_URI, {});
  */
 export default async (app) => {
   // Connect to the MongoDB database
+  console.log("Connecting to MongoDB");
   await client.connect();
 
   const db = client.db(MONGODB_DB_NAME);
   const ping = db.collection("ping");
 
   await ping.insertOne({
-    timestamp: new Date(),
+    timestamp: Date.now(),
   });
 
   // When the app is installed on an Org or Repository
@@ -37,13 +42,12 @@ export default async (app) => {
 
     // shows all repos you've installed the app on
     for (const repository of context.payload.repositories) {
-      const repo = repository.name;
+      const repoName = repository.name;
       const installationId = context.payload.installation.id;
 
       // Check if the installation is already in the database
       const installation = await installationCollection.findOne({
         installationId,
-        repo,
         repositoryId: repository.id,
       });
 
@@ -52,23 +56,24 @@ export default async (app) => {
         await installationCollection.insertOne({
           installationId,
           owner,
-          repo,
+          repo: repoName,
           repositoryId: repository.id,
-          timestamp: new Date(),
+          timestamp: Date.now(),
         });
+      } else {
+        verifyRepoName(
+          installation.repo,
+          repoName,
+          owner,
+          installationCollection,
+        );
       }
 
-      const issueBody = await renderIssues(
-        context,
-        owner,
-        repository,
-        // subjects,
-        db,
-      );
+      const issueBody = await renderIssues(context, owner, repository, db);
       const title = `FAIR-BioRS Compliance Issues`;
 
       // Create an issue with the compliance issues
-      await createIssue(context, owner, repo, title, issueBody);
+      await createIssue(context, owner, repoName, title, issueBody);
     }
   });
 
@@ -81,13 +86,12 @@ export default async (app) => {
 
     for (const repository of context.payload.repositories_added) {
       // Loop through the added respotories
-      const repo = repository.name;
+      const repoName = repository.name;
 
       // Check if the installation is already in the database
       const installation = await installationCollection.findOne({
         installationId,
         owner,
-        repo,
         repositoryId: repository.id,
       });
 
@@ -96,10 +100,17 @@ export default async (app) => {
         await installationCollection.insertOne({
           installationId,
           owner,
-          repo,
+          repo: repoName,
           repositoryId: repository.id,
-          timestamp: new Date(),
+          timestamp: Date.now(),
         });
+      } else {
+        verifyRepoName(
+          installation.repo,
+          repoName,
+          owner,
+          installationCollection,
+        );
       }
 
       const issueBody = await renderIssues(context, owner, repository, db);
@@ -107,7 +118,7 @@ export default async (app) => {
 
       // Create an issue with the compliance issues
       // console.log("CREATING ISSUE");
-      await createIssue(context, owner, repo, title, issueBody);
+      await createIssue(context, owner, repoName, title, issueBody);
     }
   });
 
@@ -115,9 +126,11 @@ export default async (app) => {
   app.on("push", async (context) => {
     // Event for when a push is made to the repository (listens to all branches)
     const owner = context.payload.repository.owner.login;
-    const repo = context.payload.repository.name;
-    // Check if push is going to the default branch
-    const defaultBranch = await getDefaultBranch(context, owner, repo);
+    const repoName = context.payload.repository.name;
+    const repoId = context.payload.repository.id;
+    const repository = context.payload.repository;
+
+    const defaultBranch = await getDefaultBranch(context, owner, repoName);
 
     // If push is not going to the default branch don't do anything
     if (context.payload.ref !== `refs/heads/${defaultBranch.data.name}`) {
@@ -125,13 +138,27 @@ export default async (app) => {
       return;
     }
 
+    // Check if the repo name is the same as the one in the database
+    const installationCollection = db.collection("installation");
+    const installation = await installationCollection.findOne({
+      owner,
+      repositoryId: repoId,
+    });
+
+    await verifyRepoName(
+      installation.repo,
+      repoName,
+      owner,
+      installationCollection,
+    );
+
     // Grab the commits being pushed
     const { commits } = context.payload;
 
     const issueBody = await renderIssues(
       context,
       owner,
-      repo,
+      repository,
       db,
       "",
       "",
@@ -141,13 +168,13 @@ export default async (app) => {
     const title = `FAIR-BioRS Compliance Issues`;
 
     // Update the dashboard issue
-    await createIssue(context, owner, repo, title, issueBody);
+    await createIssue(context, owner, repoName, title, issueBody);
   });
 
   // When a comment is made on an issue
   app.on("issue_comment.created", async (context) => {
     const owner = context.payload.repository.owner.login;
-    const repo = context.payload.repository.name;
+    const repoName = context.payload.repository.name;
     const userComment = context.payload.comment.body;
     const authorAssociation = context.payload.comment.author_association;
 
@@ -165,7 +192,7 @@ export default async (app) => {
       console.log("License user responded with: " + selection);
 
       // Create a new file with the license on the new branch and open pull request
-      await createLicense(context, owner, repo, selection);
+      await createLicense(context, owner, repoName, selection);
     }
 
     if (
@@ -176,7 +203,7 @@ export default async (app) => {
     ) {
       if (userComment.includes("Yes")) {
         // Gather the information for the CITATION.cff file
-        await gatherCitationInfo(context, owner, repo);
+        await gatherCitationInfo(context, owner, repoName);
       }
     }
 
@@ -188,7 +215,7 @@ export default async (app) => {
     ) {
       if (userComment.includes("Yes")) {
         // Gather the information for the codemeta.json file
-        await gatherCodeMetaInfo(context, owner, repo);
+        await gatherCodeMetaInfo(context, owner, repoName);
       }
     }
   });
@@ -197,9 +224,24 @@ export default async (app) => {
   app.on("pull_request.opened", async (context) => {
     console.log("PULL REQUEST OPENED");
     const owner = context.payload.repository.owner.login;
-    const repo = context.payload.repository.name;
+    const repoName = context.payload.repository.name;
+    const repoId = context.payload.repository.id;
+    const repository = context.payload.repository;
     const prTitle = context.payload.pull_request.title;
-    console.log(context);
+
+    // Check if the repo name is the same as the one in the database
+    const installationCollection = db.collection("installation");
+    const installation = await installationCollection.findOne({
+      owner,
+      repositoryId: repoId,
+    });
+
+    await verifyRepoName(
+      installation.repo,
+      repoName,
+      owner,
+      installationCollection,
+    );
 
     if (prTitle === "feat: ✨ LICENSE file added") {
       const prNumber = context.payload.pull_request.number;
@@ -210,7 +252,7 @@ export default async (app) => {
       const issueBody = await renderIssues(
         context,
         owner,
-        repo,
+        repository,
         db,
         prTitle,
         prNumber,
@@ -219,7 +261,7 @@ export default async (app) => {
       await createIssue(
         context,
         owner,
-        repo,
+        repoName,
         "FAIR-BioRS Compliance Issues",
         issueBody,
       );

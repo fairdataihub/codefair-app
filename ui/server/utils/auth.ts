@@ -6,8 +6,13 @@ import mongoose from "mongoose";
 if (!process.env.MONGODB_URI) {
   throw new Error("Please add your Mongo URI to .env");
 }
+if (!process.env.MONGODB_DB_NAME) {
+  throw new Error("Please add your Mongo database name to .env");
+}
 
-await mongoose.connect(process.env.MONGODB_URI);
+await mongoose.connect(process.env.MONGODB_URI, {
+  dbName: process.env.MONGODB_DB_NAME,
+});
 
 const userSchema = new mongoose.Schema(
   {
@@ -39,10 +44,6 @@ const sessionsSchema = new mongoose.Schema(
       required: true,
       type: String,
     },
-    access_token: {
-      required: false,
-      type: String,
-    },
     expires_at: {
       required: true,
       type: Date,
@@ -68,11 +69,6 @@ const adapter = new MongodbAdapter(
 );
 
 export const lucia = new Lucia(adapter, {
-  getSessionAttributes: (attributes) => {
-    return {
-      access_token: attributes.access_token,
-    };
-  },
   getUserAttributes: (attributes) => {
     return {
       username: attributes.username,

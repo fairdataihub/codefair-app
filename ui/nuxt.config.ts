@@ -35,7 +35,6 @@ export default defineNuxtConfig({
   css: [
     "@/assets/css/tailwind.css",
     "md-editor-v3/lib/style.css",
-    "primevue/resources/themes/aura-light-green/theme.css",
     "notivue/notification.css", // Only needed if using built-in notifications
     "notivue/animations.css", // Only needed if using built-in animations
   ],
@@ -47,7 +46,8 @@ export default defineNuxtConfig({
     "@bg-dev/nuxt-naiveui",
     "notivue/nuxt",
     "@nuxtjs/color-mode",
-    "nuxt-primevue",
+    "dayjs-nuxt",
+
     [
       "@nuxtjs/google-fonts",
       {
@@ -69,9 +69,5 @@ export default defineNuxtConfig({
 
   notivue: {
     position: "bottom-right",
-  },
-
-  primevue: {
-    cssLayerOrder: "reset,primevue",
   },
 });

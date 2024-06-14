@@ -274,17 +274,3 @@ body {
 .menu-header:hover {
   color: #0284c7;
 }
-
-.n-alert__icon .n-base-icon svg {
-  color: #0284c7;
-}
-.n-alert .n-alert-body .n-alert-body__title {
-  font-weight: bold;
-}
-.n-divider:not(.n-divider--vertical) {
-  margin-top: 4px;
-}
-
-.n-tree-node-content__text {
-  min-width: 19rem;
-}
