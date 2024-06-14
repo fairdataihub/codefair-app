@@ -1,6 +1,17 @@
 /**
  * @fileoverview Utility functions for the bot
  */
+import { init } from "@paralleldrive/cuid2";
+import human from "humanparser";
+
+/**
+ * * Create a unique identifier for database entries
+ */
+export const createId = init({
+  fingerprint: "a-custom-host-fingerprint",
+  length: 10,
+  random: Math.random,
+});
 
 /**
  * * Verify that the required environment variables are set
@@ -117,6 +128,7 @@ export async function closeOpenIssue(context, owner, repo, title) {
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
  * @param {string} fileType - The type of file to gather information for (CITATION.cff or codemeta.json)
+ * @param {boolean} role - Whether to include the role of the contributor
  *
  * @returns {array} - An array of objects containing the information for the authors of the repository
  */
@@ -147,6 +159,8 @@ export async function gatherRepoAuthors(context, owner, repo, fileType) {
       const parsedNames = human.parseName(author.data.name);
       const authorObj = {
         orcid: "",
+        roles: [],
+        uri: "",
       };
 
       if (author.data.company && fileType === "citation") {
@@ -161,10 +175,10 @@ export async function gatherRepoAuthors(context, owner, repo, fileType) {
       }
 
       if (parsedNames.firstName) {
-        authorObj["given-names"] = parsedNames.firstName;
+        authorObj.givenName = parsedNames.firstName;
       }
       if (parsedNames.lastName) {
-        authorObj["family-names"] = parsedNames.lastName;
+        authorObj.familyName = parsedNames.lastName;
       }
       if (author.data.email) {
         authorObj.email = author.data.email;
@@ -228,5 +242,27 @@ export async function getDOI(context, owner, repoName) {
     }
   } catch (error) {
     return [false, ""];
+  }
+}
+
+export async function verifyRepoName(dbRepoName, repoName, owner) {
+  console.log("Verifying repository name...");
+  console.log(`DB Repo Name: ${dbRepoName}`);
+  console.log(`Repo Name: ${repoName}`);
+  if (dbRepoName !== repoName) {
+    console.log(
+      `Repository name for ${owner} has changed from ${dbRepoName} to ${repoName}`,
+    );
+
+    // Check if the installation is already in the database
+    await installationCollection.updateOne(
+      { installationId, repositoryId: repository },
+      {
+        $set: {
+          owner,
+          repo: repoName,
+        },
+      },
+    );
   }
 }

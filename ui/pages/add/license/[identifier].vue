@@ -193,6 +193,7 @@ const saveLicenseAndPush = async () => {
         <n-text type="secondary">
           You can select a license from the list below and edit it in the
           editor. Once you are done, you can save the draft or push the license to the repository as a pull request.
+          If you need help with choosing a license, you can check out https://choosealicense.com.
         </n-text>
 
         <n-select

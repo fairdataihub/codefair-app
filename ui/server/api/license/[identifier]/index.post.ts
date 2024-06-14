@@ -39,6 +39,7 @@ export default defineEventHandler(async (event) => {
 
   const db = client.db(process.env.MONGODB_DB_NAME);
   const collection = db.collection("licenseRequests");
+  const installation = db.collection("installation");
 
   const licenseRequest = await collection.findOne({
     identifier,
@@ -48,6 +49,17 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 404,
       message: "License request not found",
+    });
+  }
+
+  const installationId = await installation.findOne({
+    repositoryId: licenseRequest.repositoryId,
+  });
+
+  if (!installationId) {
+    throw createError({
+      statusCode: 404,
+      message: "Installation not found",
     });
   }
 
@@ -73,7 +85,7 @@ export default defineEventHandler(async (event) => {
 
   // Get the installation instance for the app
   const octokit = await app.getInstallationOctokit(
-    licenseRequest.installationId,
+    installationId.installationId,
   );
 
   // Get the default branch of the repository
@@ -89,7 +101,6 @@ export default defineEventHandler(async (event) => {
   );
 
   const defaultBranch = repoData.default_branch;
-  console.log("📢 [index.post.ts:89]", defaultBranch);
 
   // Get the default branch reference
   const { data: refData } = await octokit.request(
@@ -106,7 +117,6 @@ export default defineEventHandler(async (event) => {
 
   // Create a new branch for the license addition
   const newBranchName = `license-${nanoid()}`;
-  console.log("📢 [index.post.ts:103]", newBranchName);
 
   // Create a new branch from the default branch
   await octokit.request("POST /repos/{owner}/{repo}/git/refs", {
@@ -172,6 +182,18 @@ export default defineEventHandler(async (event) => {
       // body: `Resolves #${context.payload.issue.number}`,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
+      },
+    },
+  );
+
+  // Save the PR URL to the database
+  const updateLicenseRequest = await collection.updateOne(
+    {
+      identifier,
+    },
+    {
+      $set: {
+        pullRequestURL: pullRequestData.html_url,
       },
     },
   );

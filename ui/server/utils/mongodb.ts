@@ -43,7 +43,6 @@ export interface DatabaseUser {
 
 export interface DatabaseSession {
   id: String;
-  access_token: String;
 }
 
 // Export a module-scoped MongoClient promise. By doing this in a
