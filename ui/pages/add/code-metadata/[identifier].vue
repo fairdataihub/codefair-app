@@ -286,7 +286,7 @@ const handleDevelopmentStatusChange = (value: string) => {
 </script>
 
 <template>
-  <main class="mx-auto max-w-screen-xl p-8">
+  <main class="mx-auto mb-4 max-w-screen-xl rounded bg-white p-8 shadow-md">
     <n-form
       ref="formRef"
       :label-width="80"
@@ -296,11 +296,15 @@ const handleDevelopmentStatusChange = (value: string) => {
     >
       <LayoutLargeForm>
         <template #info>
-          <h2>Basic Information</h2>
+          <n-space vertical size="large" class="pr-6">
+            <h2>Basic Information</h2>
+
+            <p>General information of the repository.</p>
+          </n-space>
         </template>
 
         <template #form>
-          <n-card>
+          <n-card class="rounded-lg bg-[#f9fafb]">
             <n-form-item label="Software Name" path="name">
               <n-input
                 v-model:value="formValue.name"
@@ -336,11 +340,17 @@ const handleDevelopmentStatusChange = (value: string) => {
 
       <LayoutLargeForm>
         <template #info>
-          <h2>Discoverability</h2>
+          <n-space vertical size="large" class="pr-6">
+            <h2>Discoverability</h2>
+
+            <p>
+              Information to help users discover the software in the repository.
+            </p>
+          </n-space>
         </template>
 
         <template #form>
-          <n-card>
+          <n-card class="rounded-lg bg-[#f9fafb]">
             <n-form-item label="Unique Identifier" path="uniqueIdentifier">
               <n-input
                 v-model:value="formValue.uniqueIdentifier"
@@ -389,11 +399,15 @@ const handleDevelopmentStatusChange = (value: string) => {
 
       <LayoutLargeForm>
         <template #info>
-          <h2>Development Tools</h2>
+          <n-space vertical size="large" class="pr-6">
+            <h2>License</h2>
+
+            <p>Information about the license of the software.</p>
+          </n-space>
         </template>
 
         <template #form>
-          <n-card>
+          <n-card class="rounded-lg bg-[#f9fafb]">
             <n-form-item label="Code Repository" path="codeRepository">
               <n-input
                 v-model:value="formValue.codeRepository"
@@ -430,11 +444,18 @@ const handleDevelopmentStatusChange = (value: string) => {
 
       <LayoutLargeForm>
         <template #info>
-          <h2>Run-time Environment</h2>
+          <n-space vertical size="large" class="pr-6">
+            <h2>Software Requirements</h2>
+
+            <p>
+              Information about the run-time environment required to run the
+              software.
+            </p>
+          </n-space>
         </template>
 
         <template #form>
-          <n-card>
+          <n-card class="rounded-lg bg-[#f9fafb]">
             <n-form-item
               label="Programming Language"
               path="programmingLanguage"
@@ -493,7 +514,7 @@ const handleDevelopmentStatusChange = (value: string) => {
         </template>
 
         <template #form>
-          <n-card>
+          <n-card class="rounded-lg bg-[#f9fafb]">
             <n-form-item label="Current Version" path="currentVersion">
               <n-input
                 v-model:value="formValue.currentVersion"
@@ -547,11 +568,15 @@ const handleDevelopmentStatusChange = (value: string) => {
 
       <LayoutLargeForm>
         <template #info>
-          <h2>Additional Information</h2>
+          <n-space vertical size="large" class="pr-6">
+            <h2>Additional Information</h2>
+
+            <p>Additional information about the software.</p>
+          </n-space>
         </template>
 
         <template #form>
-          <n-card>
+          <n-card class="rounded-lg bg-[#f9fafb]">
             <n-form-item label="Development Status" path="developmentStatus">
               <n-select
                 v-model:value="formValue.developmentStatus"
@@ -580,11 +605,18 @@ const handleDevelopmentStatusChange = (value: string) => {
 
       <LayoutLargeForm>
         <template #info>
-          <h2>Editorial Review</h2>
+          <n-space vertical size="large" class="pr-6">
+            <h2>Editorial Review</h2>
+
+            <p>
+              Information about the review of the software by the editorial
+              board.
+            </p>
+          </n-space>
         </template>
 
         <template #form>
-          <n-card>
+          <n-card class="rounded-lg bg-[#f9fafb]">
             <n-form-item
               label="Reference Publication"
               path="referencePublication"
@@ -616,11 +648,17 @@ const handleDevelopmentStatusChange = (value: string) => {
 
       <LayoutLargeForm class="">
         <template #info>
-          <h2>Authors and Contributors</h2>
+          <n-space vertical size="large" class="pr-6">
+            <h2>Authors and Contributors</h2>
+
+            <p>
+              Information about the authors and contributors of the software.
+            </p>
+          </n-space>
         </template>
 
         <template #form>
-          <n-card>
+          <n-card class="rounded-lg bg-[#f9fafb]">
             <n-form-item
               label="Authors"
               path="authors"
@@ -642,6 +680,7 @@ const handleDevelopmentStatusChange = (value: string) => {
                       : `Author ${index + 1}`
                   "
                   bordered
+                  class="bg-white"
                 >
                   <template #header-extra>
                     <n-popconfirm @positive-click="removeAuthor(index)">
@@ -806,7 +845,7 @@ const handleDevelopmentStatusChange = (value: string) => {
             </n-form-item>
           </n-card>
 
-          <n-card>
+          <n-card class="rounded-lg bg-[#f9fafb]">
             <n-form-item
               label="Contributors"
               path="contributors"
@@ -822,6 +861,7 @@ const handleDevelopmentStatusChange = (value: string) => {
                       : `Contributor ${index + 1}`
                   "
                   bordered
+                  class="bg-white"
                 >
                   <template #header-extra>
                     <n-popconfirm @positive-click="removeContributor(index)">
