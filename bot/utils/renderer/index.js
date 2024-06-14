@@ -264,7 +264,7 @@ export async function applyLicenseTemplate(
     }
     // No license file found text
     const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
-    baseTemplate += `## LICENSE\n\nNo LICENSE file found in the repository. To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). Any open license requests that were created are listed here. It is important to choose your license early since it will affect your software's dependencies. If you would like me to add a license file for you, please click the button below a license from the [SPDX License List](https://spdx.org/licenses/). I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will close this issue when I detect it on the main branch. If you need help with choosing a license, you can check out https://choosealicense.com. You edit the license and push it when you are happy with the terms.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE\n\nNo LICENSE file found in the repository. To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like me to add a license file for you, please click the button below to visit our license editor. I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will update the dashboard when I detect it on the main branch.\n\n${licenseBadge}`;
   } else {
     // License file found text
     const licenseBadge = `![License](https://img.shields.io/badge/License_Added-22c55e.svg)`;
@@ -355,30 +355,6 @@ export async function renderIssues(
   if (prTitle === "feat: ✨ metadata files added") {
     baseTemplate += `\n\nA pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
   }
-
-  // baseTemplate = await applyCitationTemplate(
-  //   subjects,
-  //   baseTemplate,
-  //   db,
-  //   repository,
-  //   owner,
-  // );
-
-  // if (prTitle === "feat: ✨ CITATION.cff file added") {
-  //   baseTemplate += `\n\nA pull request for the CITATION.cff file is open. You can view the pull request:\n\n[![Citation](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
-  // }
-
-  // baseTemplate = await applyCodemetaTemplate(
-  //   subjects,
-  //   baseTemplate,
-  //   db,
-  //   repository,
-  //   owner,
-  // );
-
-  // if (prTitle === "feat: ✨ codemeta.json file added") {
-  //   baseTemplate += `\n\nA pull request for the codemeta.json file is open. You can view the pull request:\n\n[![CodeMeta](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
-  // }
 
   return baseTemplate;
 }
