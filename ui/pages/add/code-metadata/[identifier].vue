@@ -1062,31 +1062,19 @@ const handleDevelopmentStatusChange = (value: string) => {
         <n-form-item>
           <n-flex horizontal justify="space-between" class="w-full">
             <n-button
-              color="black"
               size="large"
-              class="my-4"
-              @click="handleValidateClick"
+              color="black"
+              :loading="submitLoading"
+              @click="saveCodeMetadataDraft"
             >
               <template #icon>
-                <Icon name="grommet-icons:validate" />
+                <Icon name="material-symbols:save" />
               </template>
-              Validate
+
+              Save draft
             </n-button>
 
             <n-flex class="my-4">
-              <n-button
-                size="large"
-                color="black"
-                :loading="submitLoading"
-                @click="saveCodeMetadataDraft"
-              >
-                <template #icon>
-                  <Icon name="material-symbols:save" />
-                </template>
-
-                Save draft
-              </n-button>
-
               <n-button
                 size="large"
                 color="black"
@@ -1102,16 +1090,6 @@ const handleDevelopmentStatusChange = (value: string) => {
           </n-flex>
         </n-form-item>
       </n-form>
-
-      <n-collapse class="mt-8">
-        <n-collapse-item title="data" name="data">
-          <pre>{{ data }}</pre>
-        </n-collapse-item>
-
-        <n-collapse-item title="formValue" name="formValue">
-          <pre>{{ formValue }}</pre>
-        </n-collapse-item>
-      </n-collapse>
     </div>
   </main>
 </template>
