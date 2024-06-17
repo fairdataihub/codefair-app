@@ -1,10 +1,6 @@
 import { MongoClient } from "mongodb";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
-import {
-  getDefaultBranch,
-  checkEnvVariable,
-  verifyRepoName,
-} from "./utils/tools/index.js";
+import { checkEnvVariable, verifyRepoName } from "./utils/tools/index.js";
 
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
@@ -130,10 +126,13 @@ export default async (app) => {
     const repoId = context.payload.repository.id;
     const repository = context.payload.repository;
 
-    const defaultBranch = await getDefaultBranch(context, owner, repoName);
+    // const defaultBranch = await getDefaultBranch(context, owner, repoName);
 
     // If push is not going to the default branch don't do anything
-    if (context.payload.ref !== `refs/heads/${defaultBranch.data.name}`) {
+    if (
+      context.payload.ref !==
+      `refs/heads/${context.payload.repository.default_branch}`
+    ) {
       console.log("Not pushing to default branch");
       return;
     }
