@@ -76,13 +76,6 @@ const toggleMobileMenu = () => {
           </NuxtLink>
 
           <NuxtLink
-            href="#contact"
-            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-          >
-            Contact
-          </NuxtLink>
-
-          <NuxtLink
             href="https://github.com/fairdataihub/codefair-app"
             class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
           >
@@ -172,14 +165,6 @@ const toggleMobileMenu = () => {
               @click="toggleMobileMenu"
             >
               FAIR Software
-            </NuxtLink>
-
-            <NuxtLink
-              to="#contact"
-              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-              @click="toggleMobileMenu"
-            >
-              Contact
             </NuxtLink>
 
             <NuxtLink

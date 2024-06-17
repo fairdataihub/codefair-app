@@ -47,7 +47,6 @@ export default defineNuxtConfig({
     "notivue/nuxt",
     "@nuxtjs/color-mode",
     "dayjs-nuxt",
-
     [
       "@nuxtjs/google-fonts",
       {

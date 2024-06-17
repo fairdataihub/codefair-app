@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import sanitizeHtml from "sanitize-html";
 import { MdEditor, config } from "md-editor-v3";
-import type { FormInst, FormItemRule, SelectOption } from "naive-ui";
 import licensesJSON from "@/assets/data/licenses.json";
 import TargetBlankExtension from "@/utils/TargetBlankExtension";
 
@@ -187,13 +186,17 @@ const saveLicenseAndPush = async () => {
       <n-flex vertical size="large" class="pb-5">
         <h1 class="text-2xl font-bold">Edit LICENSE</h1>
         <n-text type="secondary" class="mt-2 text-lg">
-          To make your software reusable a license file is expected at the root level of your repository, as recommended in the FAIR-BioRS Guidelines. It is important to choose your license early since it will affect your software's dependencies.
+          To make your software reusable a license file is expected at the root
+          level of your repository, as recommended in the FAIR-BioRS Guidelines.
+          It is important to choose your license early since it will affect your
+          software's dependencies.
         </n-text>
 
         <n-text type="secondary">
           You can select a license from the list below and edit it in the
-          editor. Once you are done, you can save the draft or push the license to the repository as a pull request.
-          If you need help with choosing a license, you can check out https://choosealicense.com.
+          editor. Once you are done, you can save the draft or push the license
+          to the repository as a pull request. If you need help with choosing a
+          license, you can check out https://choosealicense.com.
         </n-text>
 
         <n-select
@@ -208,7 +211,8 @@ const saveLicenseAndPush = async () => {
 
         <!-- help text -->
         <n-text v-if="displayLicenseEditor" class="mt-2">
-            Your edits will update the preview on the right side. You can edit the license content on the left side using the editor.
+          Your edits will update the preview on the right side. You can edit the
+          license content on the left side using the editor.
         </n-text>
 
         <TransitionFade>
@@ -216,7 +220,14 @@ const saveLicenseAndPush = async () => {
             <MdEditor
               v-model="licenseContent"
               language="en-US"
-              :toolbars-exclude="['preview', 'fullscreen', 'save', 'pageFullscreen', 'github', 'catalog']"
+              :toolbars-exclude="[
+                'preview',
+                'fullscreen',
+                'save',
+                'pageFullscreen',
+                'github',
+                'catalog',
+              ]"
               preview-theme="github"
               :show-code-row-number="true"
               :sanitize="sanitize"
@@ -244,7 +255,8 @@ const saveLicenseAndPush = async () => {
 
         <n-button
           size="large"
-          color="black"x
+          color="black"
+          x
           @click="saveLicenseAndPush"
           :disabled="!licenseId || !licenseContent"
           :loading="submitLoading"

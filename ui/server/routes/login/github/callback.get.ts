@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
 
   const code = query.code?.toString() ?? null;
   const state = query.state?.toString() ?? null;
+  const requestedRedirect = query.redirect?.toString() ?? null;
 
   const storedState = getCookie(event, "github_oauth_state") ?? null;
 
@@ -69,7 +70,10 @@ export default defineEventHandler(async (event) => {
         lucia.createSessionCookie(session.id).serialize(),
       );
 
-      return sendRedirect(event, "/");
+      return sendRedirect(
+        event,
+        requestedRedirect ? decodeURIComponent(requestedRedirect) : "/",
+      );
     }
 
     const userId = generateIdFromEntropySize(10); // 16 characters long
@@ -89,7 +93,10 @@ export default defineEventHandler(async (event) => {
       "Set-Cookie",
       lucia.createSessionCookie(session.id).serialize(),
     );
-    return sendRedirect(event, "/");
+    return sendRedirect(
+      event,
+      requestedRedirect ? decodeURIComponent(requestedRedirect) : "/",
+    );
   } catch (e) {
     // the specific error message depends on the provider
     if (e instanceof OAuth2RequestError) {
