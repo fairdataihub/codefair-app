@@ -102,7 +102,7 @@ export async function applyCodemetaTemplate(
 ) {
   if (!subjects.codemeta && subjects.license) {
     // License was found but no codemeta.json exists
-    const identifier = nanoid();
+    const identifier = createId();
 
     let url = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
 
@@ -169,7 +169,7 @@ export async function applyCitationTemplate(
 ) {
   if (!subjects.citation && subjects.license) {
     // License was found but no citation file was found
-    const identifier = nanoid();
+    const identifier = createId();
 
     let url = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
     const citationCollection = db.collection("citationRequests");
@@ -233,7 +233,7 @@ export async function applyLicenseTemplate(
   owner,
 ) {
   if (!subjects.license) {
-    const identifier = nanoid();
+    const identifier = createId();
     let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
     const licenseCollection = db.collection("licenseRequests");
     const existingLicense = await licenseCollection.findOne({
