@@ -70,13 +70,13 @@ export async function applyMetadataTemplate(
   if (subjects.codemeta && subjects.citation && subjects.license) {
     // License, codemeta.json and CITATION.cff files were found
     const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Added-22c55e.svg)`;
-    baseTemplate += `\n\n## Metadata\n\nA CITATION.cff and codemeta.json file found in the repository.\n\n${metadataBadge}`;
+    baseTemplate += `\n\n## Metadata\n\nCITATION.cff and codemeta.json file were found in the repository. They may need to update over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
   }
 
   if (!subjects.license) {
     // License was not found
     const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## Metadata\n\nA CITATION.cff and codemeta.json file will be checked after a license file is added. To make your software reusable a CITATION.cff and codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines).\n\n${metadataBadge}`;
+    baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemetada.json metadata files are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). Codefair will check for these files after a license file is detected.\n\n${metadataBadge}`;
   }
 
   return baseTemplate;
@@ -268,7 +268,7 @@ export async function applyLicenseTemplate(
   } else {
     // License file found text
     const licenseBadge = `![License](https://img.shields.io/badge/License_Added-22c55e.svg)`;
-    baseTemplate += `## LICENSE\n\nA LICENSE file found in the repository.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE\n\nLICENSE file found at the root level of the repository.\n\n${licenseBadge}`;
   }
 
   return baseTemplate;
