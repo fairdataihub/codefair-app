@@ -31,6 +31,8 @@ export default async (app) => {
     timestamp: Date.now(),
   });
 
+  const issueTitle = `FAIR Compliance Dashboard`;
+
   // When the app is installed on an Org or Repository
   app.on("installation.created", async (context) => {
     const owner = context.payload.installation.account.login;
@@ -66,10 +68,9 @@ export default async (app) => {
       }
 
       const issueBody = await renderIssues(context, owner, repository, db);
-      const title = `FAIR-BioRS Compliance Issues`;
 
       // Create an issue with the compliance issues
-      await createIssue(context, owner, repoName, title, issueBody);
+      await createIssue(context, owner, repoName, issueTitle, issueBody);
     }
   });
 
@@ -110,11 +111,10 @@ export default async (app) => {
       }
 
       const issueBody = await renderIssues(context, owner, repository, db);
-      const title = `FAIR-BioRS Compliance Issues`;
 
       // Create an issue with the compliance issues
       // console.log("CREATING ISSUE");
-      await createIssue(context, owner, repoName, title, issueBody);
+      await createIssue(context, owner, repoName, issueTitle, issueBody);
     }
   });
 
@@ -164,10 +164,9 @@ export default async (app) => {
       "",
       commits,
     );
-    const title = `FAIR-BioRS Compliance Issues`;
 
     // Update the dashboard issue
-    await createIssue(context, owner, repoName, title, issueBody);
+    await createIssue(context, owner, repoName, issueTitle, issueBody);
   });
 
   // When a comment is made on an issue
@@ -257,13 +256,7 @@ export default async (app) => {
         prNumber,
         prLink,
       );
-      await createIssue(
-        context,
-        owner,
-        repoName,
-        "FAIR-BioRS Compliance Issues",
-        issueBody,
-      );
+      await createIssue(context, owner, repoName, issueTitle, issueBody);
     }
   });
 };
