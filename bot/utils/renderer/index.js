@@ -63,7 +63,7 @@ export async function applyMetadataTemplate(
     }
 
     const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
-    baseTemplate += `\n\n## Metadata\n\nA CITATION.cff and codemeta.json file were not found in the repository. To make your software reusable a CITATION.cff and codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines).\n\n${metadataBadge}`;
+    baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR, a CITATION.cff and codemetada.json are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). These files are not found in the repository. If you would like codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
   }
 
   // TODO: If metadata files are found, fetch and add the metadata to the db (allow for continuous updates)
