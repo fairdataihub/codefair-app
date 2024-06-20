@@ -34,6 +34,8 @@ const route = useRoute();
 
 const { identifier } = route.params as { identifier: string };
 
+const githubRepo = ref<string | null>(null);
+
 const licenseId = ref<string | null>(null);
 const licenseContent = ref<string>("");
 
@@ -57,6 +59,7 @@ if (error.value) {
 }
 
 if (data.value) {
+  githubRepo.value = `${data.value.owner}/${data.value.repo}`;
   licenseId.value = data.value.licenseId ?? null;
   licenseContent.value = data.value.licenseContent ?? "";
 
@@ -184,7 +187,16 @@ const saveLicenseAndPush = async () => {
   <main class="mx-auto max-w-screen-xl">
     <div class="bg-white p-8">
       <n-flex vertical size="large" class="pb-5">
-        <h1 class="text-2xl font-bold">Edit LICENSE for {{ data?.repo }}</h1>
+        <h1 class="text-2xl font-bold">
+          Edit LICENSE for
+          <NuxtLink
+            :to="`https://github.com/${githubRepo}`"
+            target="_blank"
+            class="text-blue-500 underline transition-all hover:text-blue-600"
+          >
+            {{ data?.repo }}
+          </NuxtLink>
+        </h1>
 
         <div class="border-b border-dashed py-2">
           <p class="text-base">
