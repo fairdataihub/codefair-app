@@ -38,7 +38,6 @@ const githubRepo = ref<string | null>(null);
 
 const licenseId = ref<string | null>(null);
 const licenseContent = ref<string>("");
-const githubRepo = ref<string | null>(null);
 
 const displayLicenseEditor = ref(false);
 const getLicenseLoading = ref(false);
