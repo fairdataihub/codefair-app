@@ -6,7 +6,7 @@
       class="mx-auto flex max-w-screen-xl flex-col justify-between gap-6 px-4 sm:gap-10 md:gap-16 md:px-8 lg:flex-row"
     >
       <div
-        class="flex flex-col justify-center sm:text-center lg:py-12 lg:text-left xl:w-5/12 xl:py-24"
+        class="flex flex-col justify-center sm:text-center lg:pb-12 lg:text-left xl:w-5/12 xl:pb-24"
       >
         <h1
           class="mb-4 text-4xl font-bold text-black sm:text-5xl md:mb-4 md:text-5xl"
@@ -16,7 +16,7 @@
 
         <p class="text-gray-500 lg:w-full xl:text-xl">
           Let codefair handle the complexities of making your research software
-          FAIR, so you can focus on what matters most.
+          FAIR, so you can focus on what matters most to you.
         </p>
 
         <div
@@ -168,12 +168,13 @@
             <p>
               With codefair, you do not have to think about making your software
               FAIR. Just install codefair from the GitHub marketplace on your
-              software's GitHub repository. By communicating with you through
-              GitHub issues and submitting pull requests, codefair will then
-              make sure that your software follows best coding practices,
-              provides metadata in standard format, includes a license file, is
-              archived on Zenodo, and much more to align with the FAIR4RS
-              principles.
+              software's GitHub repository. You can then track FAIR-compliance
+              issues through the codefair issue dashboard and address them
+              through the codefair website. Through intuitive interfaces and
+              automated pull requests, codefair will allow you to make sure that
+              your software follows best coding practices, provides metadata in
+              standard format, includes a license file, is archived on Zenodo,
+              and much more to align with the FAIR4RS principles
             </p>
           </div>
 

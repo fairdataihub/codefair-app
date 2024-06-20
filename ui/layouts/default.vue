@@ -1,6 +1,7 @@
 <script setup lang="ts">
-const devMode = process.env.NODE_ENV === "development";
+const user = useUser();
 
+const devMode = process.env.NODE_ENV === "development";
 const showMobileMenu = ref(false);
 
 const toggleMobileMenu = () => {
@@ -43,9 +44,7 @@ const toggleMobileMenu = () => {
     </div>
 
     <div class="relative z-20 mx-auto w-full max-w-screen-xl px-4 md:px-8">
-      <header
-        class="mb-8 flex items-center justify-between py-4 md:mb-12 md:py-8 xl:mb-16"
-      >
+      <header class="mb-10 flex items-center justify-between py-6">
         <a
           href="/"
           class="inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
@@ -62,24 +61,32 @@ const toggleMobileMenu = () => {
 
         <nav class="hidden items-center gap-8 lg:flex">
           <NuxtLink
-            href="codefair"
+            to="codefair"
             class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
           >
             About
           </NuxtLink>
 
           <NuxtLink
-            href="fairsoftware"
+            to="fairsoftware"
             class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
           >
             FAIR Software
           </NuxtLink>
 
           <NuxtLink
-            href="https://github.com/fairdataihub/codefair-app"
+            to="https://github.com/fairdataihub/codefair-app"
             class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
           >
             GitHub
+          </NuxtLink>
+
+          <NuxtLink
+            v-if="devMode"
+            :to="`/dashboard/${user?.username}`"
+            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+          >
+            Dashboard
           </NuxtLink>
 
           <div>
@@ -183,7 +190,7 @@ const toggleMobileMenu = () => {
       <slot />
     </div>
 
-    <footer class="mx-auto max-w-screen-xl border-t px-5">
+    <footer class="mx-auto mt-10 max-w-screen-xl border-t px-5 pt-3">
       <div
         class="grid grid-rows-1 items-center gap-12 pb-4 pt-8 md:grid-cols-3 md:grid-rows-1"
       >

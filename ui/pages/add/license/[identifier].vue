@@ -34,9 +34,10 @@ const route = useRoute();
 
 const { identifier } = route.params as { identifier: string };
 
+const githubRepo = ref<string | null>(null);
+
 const licenseId = ref<string | null>(null);
 const licenseContent = ref<string>("");
-const githubRepo = ref<string | null>(null);
 
 const displayLicenseEditor = ref(false);
 const getLicenseLoading = ref(false);
@@ -58,6 +59,7 @@ if (error.value) {
 }
 
 if (data.value) {
+  githubRepo.value = `${data.value.owner}/${data.value.repo}`;
   licenseId.value = data.value.licenseId ?? null;
   licenseContent.value = data.value.licenseContent ?? "";
   githubRepo.value = `${data.value.owner}/${data.value.repo}`;
@@ -125,8 +127,8 @@ const saveLicenseDraft = async () => {
   })
     .then((_response) => {
       push.success({
-        title: "License draft saved",
-        message: "You can continue editing",
+        title: "Draft saved",
+        message: "You can continue editing now or come back later",
       });
     })
     .catch((error) => {
@@ -186,65 +188,90 @@ const saveLicenseAndPush = async () => {
   <main class="mx-auto max-w-screen-xl">
     <div class="bg-white p-8">
       <n-flex vertical size="large" class="pb-5">
-        <h1 class="text-2xl font-bold">Edit license for: 
-          <NuxtLink :to="`https://github.com/${githubRepo}`" target="_blank" class="text-blue-500">
-            {{ githubRepo }}
+        <h1 class="text-2xl font-bold">
+          Edit LICENSE for
+          <NuxtLink
+            :to="`https://github.com/${githubRepo}`"
+            target="_blank"
+            class="text-blue-500 underline transition-all hover:text-blue-600"
+          >
+            {{ data?.repo }}
           </NuxtLink>
         </h1>
-        <n-text type="secondary" class="mt-2 text-lg">
-          To make your software reusable a license file is expected at the root
-          level of your repository, as recommended in the FAIR-BioRS Guidelines.
-          It is important to choose your license early since it will affect your
-          software's dependencies.
-        </n-text>
 
-        <n-text type="secondary">
-          You can select a license from the list below and edit it in the
-          editor. Once you are done, you can save the draft or push the license
-          to the repository as a pull request. If you need help with choosing a
-          license, you can check out https://choosealicense.com.
-        </n-text>
+        <div class="border-b border-dashed py-2">
+          <p class="text-base">
+            You can select a license from the list below and edit further. Once
+            you are done, you can save the draft or push the license to the
+            repository. If you need help with with deciding which one to pick,
+            you can check out
+            <NuxtLink
+              to="https://choosealicense.com"
+              target="_blank"
+              class="text-blue-500 underline transition-all hover:text-blue-600"
+              >https://choosealicense.com</NuxtLink
+            >.
+          </p>
 
-        <n-select
-          v-model:value="licenseId"
-          placeholder="MIT License Modern Variant"
-          clearable
-          size="large"
-          filterable
-          @update:value="updateLicenseContent"
-          :options="licenseOptions"
-        />
+          <p class="pt-1 text-sm text-stone-600">
+            To make your software reusable a license file is expected at the
+            root level of your repository, as recommended in the
+            <NuxtLink
+              to="https://fair-biors.org/docs/guidelines"
+              target="_blank"
+              class="text-sm text-blue-400 underline transition-all hover:text-blue-500"
+            >
+              FAIR-BioRS Guidelines</NuxtLink
+            >. It is important to choose your license early since it will affect
+            your software's dependencies.
+          </p>
+        </div>
 
-        <!-- help text -->
-        <n-text v-if="displayLicenseEditor" class="mt-2">
-          Your edits will update the preview on the right side. You can edit the
-          license content on the left side using the editor.
-        </n-text>
+        <n-form-item
+          label="Select a license"
+          class="mb-3 mt-5"
+          :show-feedback="false"
+        >
+          <n-select
+            v-model:value="licenseId"
+            placeholder="MIT License Modern Variant"
+            clearable
+            size="large"
+            filterable
+            @update:value="updateLicenseContent"
+            :options="licenseOptions"
+          />
+        </n-form-item>
 
         <TransitionFade>
-          <div v-if="displayLicenseEditor" class="my-5">
-            <MdEditor
-              v-model="licenseContent"
-              language="en-US"
-              :toolbars-exclude="[
-                'preview',
-                'fullscreen',
-                'save',
-                'pageFullscreen',
-                'github',
-                'catalog',
-              ]"
-              preview-theme="github"
-              :show-code-row-number="true"
-              :sanitize="sanitize"
-            />
+          <div v-if="displayLicenseEditor">
+            <n-form-item
+              label="Edit your license if required:"
+              :show-feedback="false"
+            >
+              <MdEditor
+                v-model="licenseContent"
+                language="en-US"
+                :toolbars-exclude="[
+                  'preview',
+                  'fullscreen',
+                  'save',
+                  'pageFullscreen',
+                  'github',
+                  'catalog',
+                ]"
+                preview-theme="github"
+                :show-code-row-number="true"
+                :sanitize="sanitize"
+              />
+            </n-form-item>
           </div>
         </TransitionFade>
       </n-flex>
 
       <n-divider />
 
-      <n-flex class="my-4">
+      <n-flex class="my-4" justify="space-between">
         <n-button
           size="large"
           color="black"

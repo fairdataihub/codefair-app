@@ -134,24 +134,6 @@ const removeContributor = (idx: number) => {
   formValue.value.contributors.splice(idx, 1);
 };
 
-const handleValidateClick = (e: MouseEvent) => {
-  e.preventDefault();
-  formRef.value?.validate((errors) => {
-    if (!errors) {
-      push.success({
-        title: "Valid",
-        message: "Form is valid",
-      });
-    } else {
-      console.error(errors);
-      push.error({
-        title: "Invalid",
-        message: "Form is invalid",
-      });
-    }
-  });
-};
-
 const saveCodeMetadataDraft = (e: MouseEvent) => {
   e.preventDefault();
   formRef.value?.validate(async (errors) => {
@@ -287,19 +269,41 @@ const handleDevelopmentStatusChange = (value: string) => {
 
 <template>
   <main>
-    <div class="mx-auto mb-4 max-w-screen-xl">
-      <h1 class="mb-4 text-2xl font-bold">Edit Codemeta</h1>
-
-      <n-text type="secondary" class="mt-2 text-lg">
-        The metadata of the software repository is used to describe the software
-        and it development process. It is used to help users discover the
-        software in the repository and to provide information about the software
-        to the users. The metadata gathered here will be used to create your
-        CITATION.cff and codemeta.json files.
-      </n-text>
-    </div>
-
     <div class="mx-auto mb-4 max-w-screen-xl rounded bg-white p-8 shadow-md">
+      <n-flex vertical size="large" class="pb-5">
+        <h1 class="text-2xl font-bold">
+          Edit code metadata for {{ data?.repo }}
+        </h1>
+
+        <div class="border-b border-dashed py-2">
+          <p class="text-base">
+            The metadata of the software repository is used to describe the
+            software and it development process. Provide metadata about your
+            software below and codefair will submit a pull request with these
+            files for you.
+          </p>
+
+          <p class="pt-1 text-sm text-stone-600">
+            The
+            <NuxtLink
+              to="https://fair-biors.org/docs/guidelines"
+              target="_blank"
+              class="text-sm text-blue-400 underline transition-all hover:text-blue-500"
+            >
+              FAIR-BioRS Guidelines</NuxtLink
+            >
+
+            recommend to provide metadata in a <code>CITATION.cff</code>
+
+            and a
+            <code>codemeta.json</code>
+            files. It is used to help users discover the software in the
+            repository and to provide information about the software to the
+            users.
+          </p>
+        </div>
+      </n-flex>
+
       <n-form
         ref="formRef"
         :label-width="80"
@@ -660,7 +664,7 @@ const handleDevelopmentStatusChange = (value: string) => {
           </template>
         </LayoutLargeForm>
 
-        <LayoutLargeForm class="">
+        <LayoutLargeForm :bottom-line="false">
           <template #info>
             <n-space vertical size="large" class="pr-6">
               <h2>Authors and Contributors</h2>
@@ -865,6 +869,8 @@ const handleDevelopmentStatusChange = (value: string) => {
               </n-form-item>
             </n-card>
 
+            <n-divider />
+
             <n-card class="rounded-lg bg-[#f9fafb]">
               <n-form-item
                 label="Contributors"
@@ -1059,36 +1065,34 @@ const handleDevelopmentStatusChange = (value: string) => {
           </template>
         </LayoutLargeForm>
 
-        <n-form-item>
-          <n-flex horizontal justify="space-between" class="w-full">
-            <n-button
-              size="large"
-              color="black"
-              :loading="submitLoading"
-              @click="saveCodeMetadataDraft"
-            >
-              <template #icon>
-                <Icon name="material-symbols:save" />
-              </template>
+        <n-divider />
 
-              Save draft
-            </n-button>
+        <n-flex class="my-4 w-full" justify="space-between">
+          <n-button
+            size="large"
+            color="black"
+            :loading="submitLoading"
+            @click="saveCodeMetadataDraft"
+          >
+            <template #icon>
+              <Icon name="material-symbols:save" />
+            </template>
 
-            <n-flex class="my-4">
-              <n-button
-                size="large"
-                color="black"
-                :loading="submitLoading"
-                @click="pushToRepository"
-              >
-                <template #icon>
-                  <Icon name="ion:push" />
-                </template>
-                Save and push to repository
-              </n-button>
-            </n-flex>
-          </n-flex>
-        </n-form-item>
+            Save draft
+          </n-button>
+
+          <n-button
+            size="large"
+            color="black"
+            :loading="submitLoading"
+            @click="pushToRepository"
+          >
+            <template #icon>
+              <Icon name="ion:push" />
+            </template>
+            Save and push to repository
+          </n-button>
+        </n-flex>
       </n-form>
     </div>
   </main>

@@ -51,10 +51,10 @@ export default defineEventHandler(async (event) => {
       await db.collection("users").updateOne(
         {
           _id,
-          access_token: tokens.accessToken,
         },
         {
           $set: {
+            access_token: tokens.accessToken,
             last_login: Date.now(),
           },
         },
