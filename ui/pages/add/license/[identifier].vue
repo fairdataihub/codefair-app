@@ -38,6 +38,7 @@ const githubRepo = ref<string | null>(null);
 
 const licenseId = ref<string | null>(null);
 const licenseContent = ref<string>("");
+const githubRepo = ref<string | null>(null);
 
 const displayLicenseEditor = ref(false);
 const getLicenseLoading = ref(false);
@@ -62,6 +63,7 @@ if (data.value) {
   githubRepo.value = `${data.value.owner}/${data.value.repo}`;
   licenseId.value = data.value.licenseId ?? null;
   licenseContent.value = data.value.licenseContent ?? "";
+  githubRepo.value = `${data.value.owner}/${data.value.repo}`;
 
   if (licenseContent.value) {
     displayLicenseEditor.value = true;

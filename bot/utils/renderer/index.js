@@ -63,20 +63,20 @@ export async function applyMetadataTemplate(
     }
 
     const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
-    baseTemplate += `\n\n## Metadata\n\nA CITATION.cff and codemeta.json file were not found in the repository. To make your software reusable a CITATION.cff and codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines).\n\n${metadataBadge}`;
+    baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR, a CITATION.cff and codemetada.json are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). These files are not found in the repository. If you would like codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
   }
 
   // TODO: If metadata files are found, fetch and add the metadata to the db (allow for continuous updates)
   if (subjects.codemeta && subjects.citation && subjects.license) {
     // License, codemeta.json and CITATION.cff files were found
     const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Added-22c55e.svg)`;
-    baseTemplate += `\n\n## Metadata\n\nA CITATION.cff and codemeta.json file found in the repository.\n\n${metadataBadge}`;
+    baseTemplate += `\n\n## Metadata\n\nCITATION.cff and codemeta.json file were found in the repository. They may need to update over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
   }
 
   if (!subjects.license) {
     // License was not found
     const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## Metadata\n\nA CITATION.cff and codemeta.json file will be checked after a license file is added. To make your software reusable a CITATION.cff and codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines).\n\n${metadataBadge}`;
+    baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemetada.json metadata files are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). Codefair will check for these files after a license file is detected.\n\n${metadataBadge}`;
   }
 
   return baseTemplate;
@@ -264,11 +264,11 @@ export async function applyLicenseTemplate(
     }
     // No license file found text
     const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
-    baseTemplate += `## LICENSE\n\nNo LICENSE file found in the repository. To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like me to add a license file for you, please click the button below to visit our license editor. I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will update the dashboard when I detect it on the main branch.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and codefair will update the the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
   } else {
     // License file found text
     const licenseBadge = `![License](https://img.shields.io/badge/License_Added-22c55e.svg)`;
-    baseTemplate += `## LICENSE\n\nA LICENSE file found in the repository.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE\n\nLICENSE file found at the root level of the repository.\n\n${licenseBadge}`;
   }
 
   return baseTemplate;
