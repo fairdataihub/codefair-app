@@ -36,6 +36,7 @@ const { identifier } = route.params as { identifier: string };
 
 const licenseId = ref<string | null>(null);
 const licenseContent = ref<string>("");
+const githubRepo = ref<string | null>(null);
 
 const displayLicenseEditor = ref(false);
 const getLicenseLoading = ref(false);
@@ -59,6 +60,7 @@ if (error.value) {
 if (data.value) {
   licenseId.value = data.value.licenseId ?? null;
   licenseContent.value = data.value.licenseContent ?? "";
+  githubRepo.value = `${data.value.owner}/${data.value.repo}`;
 
   if (licenseContent.value) {
     displayLicenseEditor.value = true;
@@ -184,7 +186,11 @@ const saveLicenseAndPush = async () => {
   <main class="mx-auto max-w-screen-xl">
     <div class="bg-white p-8">
       <n-flex vertical size="large" class="pb-5">
-        <h1 class="text-2xl font-bold">Edit LICENSE</h1>
+        <h1 class="text-2xl font-bold">Edit license for: 
+          <NuxtLink :to="`https://github.com/${githubRepo}`" target="_blank" class="text-blue-500">
+            {{ githubRepo }}
+          </NuxtLink>
+        </h1>
         <n-text type="secondary" class="mt-2 text-lg">
           To make your software reusable a license file is expected at the root
           level of your repository, as recommended in the FAIR-BioRS Guidelines.
