@@ -3,7 +3,13 @@ const user = useUser();
 const route = useRoute();
 
 const loggedIn = computed(() => !!user.value);
-const onLoginPage = computed(() => route.path === "/login");
+
+const hideLoginPages = ["/login", "/", "/fairsoftware", "/codefair"];
+
+const onHideLoginPages = computed(() => {
+  return hideLoginPages.includes(route.path);
+  // return false;
+});
 
 async function logout() {
   await $fetch("/api/logout", {
@@ -15,7 +21,7 @@ async function logout() {
 
 <template>
   <n-flex v-if="loggedIn" align="center">
-    <NuxtLink to="/profile" class="flex items-center">
+    <NuxtLink :to="`/`" class="flex items-center">
       <n-avatar
         round
         :src="`https://avatars.githubusercontent.com/u/${user?.github_id}?v=4`"
@@ -28,7 +34,7 @@ async function logout() {
   </n-flex>
 
   <div v-else>
-    <a v-if="!onLoginPage" href="/login/github">
+    <a v-if="!onHideLoginPages" href="/login/github">
       <n-button color="black">
         <template #icon>
           <Icon name="bi:github" />

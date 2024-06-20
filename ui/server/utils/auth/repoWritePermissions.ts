@@ -25,6 +25,12 @@ const repoWritePermissions = async (
   );
 
   if (!permissions.ok) {
+    console.error(
+      permissions.status,
+      permissions.statusText,
+      await permissions.text(),
+    );
+
     if (permissions.status === 404) {
       throw createError({
         statusCode: 404,
@@ -40,8 +46,8 @@ const repoWritePermissions = async (
     }
 
     throw createError({
-      message: "Internal Server Error. Failed to fetch repository permissions",
       statusCode: 500,
+      statusMessage: "repo-permissions-fetch-failed",
     });
   }
 
