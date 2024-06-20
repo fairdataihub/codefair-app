@@ -264,7 +264,7 @@ export async function applyLicenseTemplate(
     }
     // No license file found text
     const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
-    baseTemplate += `## LICENSE\n\nNo LICENSE file found in the repository. To make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like me to add a license file for you, please click the button below to visit our license editor. I will then create a new branch with the corresponding license file and open a pull request for you to review and approve. You can also add a license file yourself and I will update the dashboard when I detect it on the main branch.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and codefair will update the the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
   } else {
     // License file found text
     const licenseBadge = `![License](https://img.shields.io/badge/License_Added-22c55e.svg)`;
