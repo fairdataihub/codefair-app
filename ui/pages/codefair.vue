@@ -2,9 +2,9 @@
 
 <template>
   <section>
-    <div class="bg-[#e7ddfa4f] py-8">
+    <!-- <div class="bg-[#e7ddfa4f] py-8">
       <div class="mx-auto max-w-screen-xl px-4 md:px-8">
-        <div class="flex justify-start">
+        <div class="flex justify-center">
           <h1
             class="font-inter mb-4 text-4xl font-bold text-black sm:text-5xl md:mb-4 md:text-5xl"
           >
@@ -12,19 +12,19 @@
           </h1>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <div class="">
       <div class="mx-auto flex max-w-screen-xl justify-start px-4 md:px-8">
-        <div class="flex max-w-screen-xl flex-col py-8">
+        <div class="flex w-full flex-col py-8">
           <div class="flex flex-col">
             <h2
-              class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              class="mb-4 self-center bg-gradient-to-b from-[#6366f1] to-[#64748b] bg-clip-text text-xl font-bold text-transparent sm:text-5xl md:mb-4 md:text-4xl"
             >
               What is codefair?
             </h2>
 
-            <p>
+            <p class="max-w-screen-sm self-center text-center">
               codefair is a free and open source GitHub app that acts as your
               personal assistant when it comes to making your research software
               reusable and especially complying with the Findable, Accessible,
@@ -34,13 +34,31 @@
           </div>
 
           <div
-            class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start"
+            class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-center"
           >
             <a
               href="http://fair-biors.org/"
               class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
               >Learn more about the FAIR4RS principles -></a
             >
+          </div>
+
+          <div class="flex-2 my-4 flex flex-row self-center">
+            <img
+              src="/assets/images/dashboard.png"
+              loading="lazy"
+              alt="Info image"
+              style="height: 30rem"
+              class="rounded-lg"
+            />
+
+            <img
+              src="/assets/images/metadata-ui.png"
+              loading="lazy"
+              alt="Info image"
+              style="height: 30rem"
+              class="ml-4 rounded-lg"
+            />
           </div>
         </div>
       </div>

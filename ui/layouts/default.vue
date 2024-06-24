@@ -44,7 +44,7 @@ const toggleMobileMenu = () => {
     </div>
 
     <div class="relative z-20 mx-auto w-full max-w-screen-xl px-4 md:px-8">
-      <header class="mb-10 flex items-center justify-between py-6">
+      <header class="mb-0 flex items-center justify-between py-6">
         <a
           href="/"
           class="inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
@@ -190,7 +190,7 @@ const toggleMobileMenu = () => {
       <slot />
     </div>
 
-    <footer class="mx-auto mt-10 max-w-screen-xl border-t px-5 pt-3">
+    <footer class="mx-auto max-w-screen-xl border-t px-5 pt-3">
       <div
         class="grid grid-rows-1 items-center gap-12 pb-4 pt-8 md:grid-cols-3 md:grid-rows-1"
       >
