@@ -61,7 +61,6 @@ export async function applyMetadataTemplate(
 
       url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
     }
-
     const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
     baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR, a CITATION.cff and codemetada.json are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). These files are not found in the repository. If you would like codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
   }
@@ -69,7 +68,39 @@ export async function applyMetadataTemplate(
   // TODO: If metadata files are found, fetch and add the metadata to the db (allow for continuous updates)
   if (subjects.codemeta && subjects.citation && subjects.license) {
     // License, codemeta.json and CITATION.cff files were found
-    const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Added-22c55e.svg)`;
+    const identifier = createId();
+
+    let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
+
+    const metadataCollection = db.collection("codeMetadata");
+    const existingMetadata = await metadataCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (!existingMetadata) {
+      // Entry does not exist in db, create a new one
+      const newDate = Date.now();
+      const gatheredMetadata = await gatherMetadata(context, owner, repository);
+      await metadataCollection.insertOne({
+        created_at: newDate,
+        identifier,
+        metadata: gatheredMetadata,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing metadata request
+      await metadataCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { updated_at: Date.now() } },
+      );
+
+      url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
+    }
+    const metadataBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-dc2626.svg)](${url})`;
     baseTemplate += `\n\n## Metadata\n\nCITATION.cff and codemeta.json file were found in the repository. They may need to update over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
   }
 
@@ -289,6 +320,12 @@ export async function applyLicenseTemplate(
     baseTemplate += `## LICENSE\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and codefair will update the the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
   } else {
     // License file found text
+    const identifier = createId();
+    let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
+    const licenseCollection = db.collection("licenseRequests");
+    const existingLicense = await licenseCollection.findOne({
+      repositoryId: repository.id,
+    });
 
     if (!existingLicense) {
       // Entry does not exist in db, create a new one
