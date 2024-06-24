@@ -138,7 +138,29 @@ export async function applyCodemetaTemplate(
   } else if (subjects.codemeta && subjects.license) {
     // License was found and codemetata.json also exists
     // Then add codemeta section mentioning it will be checked after license is added
-    const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/Codemeta_Added-6366f1.svg)`;
+
+    if (!existingLicense) {
+      // Entry does not exist in db, create a new one
+      const newDate = Date.now();
+      await licenseCollection.insertOne({
+        created_at: newDate,
+        identifier,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing license request
+      // Update the database
+      await licenseCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { updated_at: Date.now() } },
+      );
+      url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
+    }
+    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Edit_Codemeta-dc2626.svg)](${url})`;
     baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file found in the repository.\n\n${codemetaBadge}`;
   } else {
     // codemeta and license does not exist
@@ -267,7 +289,29 @@ export async function applyLicenseTemplate(
     baseTemplate += `## LICENSE\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and codefair will update the the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
   } else {
     // License file found text
-    const licenseBadge = `![License](https://img.shields.io/badge/License_Added-22c55e.svg)`;
+
+    if (!existingLicense) {
+      // Entry does not exist in db, create a new one
+      const newDate = Date.now();
+      await licenseCollection.insertOne({
+        created_at: newDate,
+        identifier,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing license request
+      // Update the database
+      await licenseCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { updated_at: Date.now() } },
+      );
+      url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
+    }
+    const licenseBadge = `[![License](https://img.shields.io/badge/Edit_License-dc2626.svg)](${url})`;
     baseTemplate += `## LICENSE\n\nLICENSE file found at the root level of the repository.\n\n${licenseBadge}`;
   }
 
