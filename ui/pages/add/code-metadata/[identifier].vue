@@ -7,15 +7,6 @@ definePageMeta({
 });
 
 const route = useRoute();
-const router = useRouter();
-if (route.query.rebase) {
-  await navigateTo(route.path, {
-    open: {
-      target: "_blank",
-    },
-  });
-  router.back();
-}
 
 const formRef = ref<FormInst | null>(null);
 const formValue = ref<CodeMetadataRequest>({
