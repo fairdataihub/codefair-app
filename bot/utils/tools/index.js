@@ -247,8 +247,6 @@ export async function getDOI(context, owner, repoName) {
 
 export async function verifyRepoName(dbRepoName, repoName, owner, collection) {
   console.log("Verifying repository name...");
-  console.log(`DB Repo Name: ${dbRepoName}`);
-  console.log(`Repo Name: ${repoName}`);
   if (dbRepoName !== repoName) {
     console.log(
       `Repository name for ${owner} has changed from ${dbRepoName} to ${repoName}`,

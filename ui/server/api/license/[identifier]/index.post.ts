@@ -187,12 +187,15 @@ export default defineEventHandler(async (event) => {
   );
 
   // Save the PR URL to the database
+  // Update the license content and the license id in the database
   const updateLicenseRequest = await collection.updateOne(
     {
       identifier,
     },
     {
       $set: {
+        licenseContent,
+        licenseId,
         pullRequestURL: pullRequestData.html_url,
       },
     },
