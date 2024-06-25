@@ -100,7 +100,7 @@ export async function applyMetadataTemplate(
 
       url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
     }
-    const metadataBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-dc2626.svg)](${url})`;
+    const metadataBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-dc2626.svg)](${url}?rebase=true)`;
     baseTemplate += `\n\n## Metadata\n\nCITATION.cff and codemeta.json file were found in the repository. They may need to update over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
   }
 
@@ -316,7 +316,7 @@ export async function applyLicenseTemplate(
       console.log("Existing license request: " + url);
     }
     // No license file found text
-    const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
+    const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url}?rebase=true)`;
     baseTemplate += `## LICENSE\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and codefair will update the the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
   } else {
     // License file found text
@@ -348,7 +348,7 @@ export async function applyLicenseTemplate(
       );
       url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     }
-    const licenseBadge = `[![License](https://img.shields.io/badge/Edit_License-dc2626.svg)](${url})`;
+    const licenseBadge = `[![License](https://img.shields.io/badge/Edit_License-dc2626.svg)](${url}?rebase=true)`;
     baseTemplate += `## LICENSE\n\nLICENSE file found at the root level of the repository.\n\n${licenseBadge}`;
   }
 

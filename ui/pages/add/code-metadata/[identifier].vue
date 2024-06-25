@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FormInst, FormRules } from "naive-ui";
+import type { FormInst, FormRules, FormItemRule } from "naive-ui";
 import codeMetadataJSON from "@/assets/data/codeMetadata.json";
 
 definePageMeta({
@@ -7,6 +7,15 @@ definePageMeta({
 });
 
 const route = useRoute();
+const router = useRouter();
+if (route.query.rebase) {
+  await navigateTo(route.path, {
+    open: {
+      target: "_blank",
+    },
+  });
+  router.back();
+}
 
 const formRef = ref<FormInst | null>(null);
 const formValue = ref<CodeMetadataRequest>({
@@ -78,10 +87,40 @@ const rules = ref<FormRules>({
     required: true,
     trigger: "blur",
   },
+  codeRepository: {
+    message: "Please input a valid code repository URL",
+    trigger: "blur",
+    validator: (_rule, value) => {
+      if (value && !isURL(value)) {
+        return false;
+      }
+      return true;
+    },
+  },
+  currentVersionDownloadURL: {
+    message: "Please input a valid download URL for the current version",
+    trigger: ["blur", "input"],
+    validator: (_rule, value) => {
+      if (value && !isURL(value)) {
+        return false;
+      }
+      return true;
+    },
+  },
   description: {
     message: "Please input the description or abstract for the software",
     required: true,
     trigger: "blur",
+  },
+  issueTracker: {
+    message: "Please input a valid issue tracker URL",
+    trigger: "blur",
+    validator: (_rule, value) => {
+      if (value && !isURL(value)) {
+        return false;
+      }
+      return true;
+    },
   },
   keywords: {
     message: "Please input at least one keyword",
@@ -132,6 +171,16 @@ const removeAuthor = (idx: number) => {
 
 const removeContributor = (idx: number) => {
   formValue.value.contributors.splice(idx, 1);
+};
+
+const isURL = (value: string) => {
+  try {
+    // eslint-disable-next-line no-new
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const saveCodeMetadataDraft = (e: MouseEvent) => {
@@ -746,6 +795,11 @@ const handleDevelopmentStatusChange = (value: string) => {
                     <n-form-item
                       label="Email"
                       :path="`authors[${index}].email`"
+                      :rule="{
+                        message: 'Please enter a valid email address',
+                        trigger: ['blur', 'input'],
+                        type: 'email',
+                      }"
                     >
                       <n-input
                         v-model:value="author.email"
@@ -765,7 +819,20 @@ const handleDevelopmentStatusChange = (value: string) => {
                       />
                     </n-form-item>
 
-                    <n-form-item label="URI" :path="`authors[${index}].uri`">
+                    <n-form-item
+                      label="URI"
+                      :path="`authors[${index}].uri`"
+                      :rule="{
+                        message: 'Please enter a valid URL',
+                        trigger: ['blur', 'input'],
+                        validator: (_rule: FormItemRule, value: string) => {
+                          if (value && !isURL(value)) {
+                            return false;
+                          }
+                          return true;
+                        },
+                      }"
+                    >
                       <n-input
                         v-model:value="author.uri"
                         placeholder="https://example.com/bertoltbrecht"
@@ -935,6 +1002,11 @@ const handleDevelopmentStatusChange = (value: string) => {
                     <n-form-item
                       label="Email"
                       :path="`contributors[${index}].email`"
+                      :rule="{
+                        message: 'Please enter a valid email address',
+                        trigger: ['blur', 'input'],
+                        type: 'email',
+                      }"
                     >
                       <n-input
                         v-model:value="contributor.email"
@@ -957,6 +1029,16 @@ const handleDevelopmentStatusChange = (value: string) => {
                     <n-form-item
                       label="URI"
                       :path="`contributors[${index}].uri`"
+                      :rule="{
+                        message: 'Please enter a valid URL',
+                        trigger: ['blur', 'input'],
+                        validator: (_rule: FormItemRule, value: string) => {
+                          if (value && !isURL(value)) {
+                            return false;
+                          }
+                          return true;
+                        },
+                      }"
                     >
                       <n-input
                         v-model:value="contributor.uri"
