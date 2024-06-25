@@ -245,7 +245,7 @@ export async function getDOI(context, owner, repoName) {
   }
 }
 
-export async function verifyRepoName(dbRepoName, repoName, owner) {
+export async function verifyRepoName(dbRepoName, repoName, owner, collection) {
   console.log("Verifying repository name...");
   console.log(`DB Repo Name: ${dbRepoName}`);
   console.log(`Repo Name: ${repoName}`);
@@ -255,7 +255,7 @@ export async function verifyRepoName(dbRepoName, repoName, owner) {
     );
 
     // Check if the installation is already in the database
-    await installationCollection.updateOne(
+    await collection.updateOne(
       { installationId, repositoryId: repository },
       {
         $set: {

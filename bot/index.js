@@ -37,6 +37,7 @@ export default async (app) => {
   app.on("installation.created", async (context) => {
     const owner = context.payload.installation.account.login;
     const installationCollection = db.collection("installation");
+    const analyticsCollection = db.collection("analytics");
 
     // shows all repos you've installed the app on
     for (const repository of context.payload.repositories) {
@@ -46,6 +47,10 @@ export default async (app) => {
       // Check if the installation is already in the database
       const installation = await installationCollection.findOne({
         installationId,
+        repositoryId: repository.id,
+      });
+
+      const analytics = await analyticsCollection.findOne({
         repositoryId: repository.id,
       });
 
@@ -67,6 +72,17 @@ export default async (app) => {
         );
       }
 
+      if (!analytics) {
+        await analyticsCollection.insertOne({
+          owner,
+          repo: repoName,
+          repositoryId: repository.id,
+          timestamp: Date.now(),
+        });
+      } else {
+        verifyRepoName(analytics.repo, repoName, owner, analyticsCollection);
+      }
+
       const issueBody = await renderIssues(context, owner, repository, db);
 
       // Create an issue with the compliance issues
@@ -80,6 +96,7 @@ export default async (app) => {
     const owner = context.payload.installation.account.login;
     const installationId = context.payload.installation.id;
     const installationCollection = db.collection("installation");
+    const analyticsCollection = db.collection("analytics");
 
     for (const repository of context.payload.repositories_added) {
       // Loop through the added respotories
@@ -89,6 +106,9 @@ export default async (app) => {
       const installation = await installationCollection.findOne({
         installationId,
         owner,
+        repositoryId: repository.id,
+      });
+      const analytics = await analyticsCollection.findOne({
         repositoryId: repository.id,
       });
 
@@ -108,6 +128,17 @@ export default async (app) => {
           owner,
           installationCollection,
         );
+      }
+
+      if (!analytics) {
+        await analyticsCollection.insertOne({
+          owner,
+          repo: repoName,
+          repositoryId: repository.id,
+          timestamp: Date.now(),
+        });
+      } else {
+        verifyRepoName(analytics.repo, repoName, owner, analyticsCollection);
       }
 
       const issueBody = await renderIssues(context, owner, repository, db);
