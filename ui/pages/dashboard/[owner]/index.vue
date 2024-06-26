@@ -53,7 +53,11 @@ if (error.value) {
       <n-divider />
 
       <n-flex vertical>
-        <n-card v-for="repo in data" :key="repo.repositoryId">
+        <n-card
+          v-for="repo in data"
+          :key="repo.repositoryId"
+          class="mt-2 rounded-lg shadow-md"
+        >
           <n-flex align="center">
             <div class="flex-1">
               <span class="text-lg font-medium">
