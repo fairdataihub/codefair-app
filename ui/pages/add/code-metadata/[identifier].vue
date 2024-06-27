@@ -312,18 +312,33 @@ const handleDevelopmentStatusChange = (value: string) => {
     <div class="mx-auto mb-4 max-w-screen-xl rounded bg-white p-8 shadow-md">
       <n-flex vertical size="large" class="pb-5">
         <h1 class="text-2xl font-bold">
-          Edit code metadata for {{ data?.repo }}
+          Edit metadata for
+          <NuxtLink
+            :to="`https://github.com/${githubRepo}`"
+            target="_blank"
+            class="text-blue-500 underline transition-all hover:text-blue-600"
+          >
+            {{ data?.repo }}
+          </NuxtLink>
         </h1>
 
         <div class="border-b border-dashed py-2">
           <p class="text-base">
-            The metadata of the software repository is used to describe the
-            software and it development process. Provide metadata about your
-            software below and codefair will submit a pull request with these
-            files for you.
+            To make your software FAIR, a CITATION.cff and codemeta.json file
+            are expected at the root level of your repository, as recommended in
+            the
+            <NuxtLink
+              to="https://fair-biors.org/docs/guidelines"
+              target="_blank"
+              class="text-blue-400 underline transition-all hover:text-blue-500"
+              >FAIR-BioRS Guidelines</NuxtLink
+            >. They help people discover your software and provide information
+            about your software to them. Provide metadata about your software
+            below and codefair will submit a pull request with a CITATION.cff
+            and codemeta.json file for you.
           </p>
 
-          <p class="pt-1 text-sm text-stone-600">
+          <!-- <p class="pt-1 text-sm text-stone-600">
             The
             <NuxtLink
               to="https://fair-biors.org/docs/guidelines"
@@ -340,7 +355,7 @@ const handleDevelopmentStatusChange = (value: string) => {
             files. It is used to help users discover the software in the
             repository and to provide information about the software to the
             users.
-          </p>
+          </p> -->
         </div>
       </n-flex>
 
@@ -396,315 +411,6 @@ const handleDevelopmentStatusChange = (value: string) => {
         </LayoutLargeForm>
 
         <LayoutLargeForm>
-          <template #info>
-            <n-space vertical size="large" class="pr-6">
-              <h2>Discoverability</h2>
-
-              <p>
-                Information to help users discover the software in the
-                repository.
-              </p>
-            </n-space>
-          </template>
-
-          <template #form>
-            <n-card class="rounded-lg bg-[#f9fafb]">
-              <n-form-item label="Unique Identifier" path="uniqueIdentifier">
-                <n-input
-                  v-model:value="formValue.uniqueIdentifier"
-                  placeholder="10.60775/fairhub.1"
-                />
-              </n-form-item>
-
-              <n-form-item
-                label="Application Category"
-                path="applicationCategory"
-              >
-                <n-select
-                  v-model:value="formValue.applicationCategory"
-                  placeholder="Select Category"
-                  :options="applicationCategoryOptions"
-                  @update:value="handleApplicationCategoryChange"
-                />
-              </n-form-item>
-
-              <n-form-item label="Keywords" path="keywords">
-                <n-dynamic-input
-                  v-model:value="formValue.keywords"
-                  placeholder="Input Related Link"
-                />
-              </n-form-item>
-
-              <n-form-item label="Funding Code" path="fundingCode">
-                <n-input
-                  v-model:value="formValue.fundingCode"
-                  placeholder="Input Funding Code"
-                />
-              </n-form-item>
-
-              <n-form-item
-                label="Funding Organization"
-                path="fundingOrganization"
-              >
-                <n-input
-                  v-model:value="formValue.fundingOrganization"
-                  placeholder="Input Funding Organization"
-                />
-              </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
-
-        <LayoutLargeForm>
-          <template #info>
-            <n-space vertical size="large" class="pr-6">
-              <h2>License</h2>
-
-              <p>Information about the license of the software.</p>
-            </n-space>
-          </template>
-
-          <template #form>
-            <n-card class="rounded-lg bg-[#f9fafb]">
-              <n-form-item label="Code Repository" path="codeRepository">
-                <n-input
-                  v-model:value="formValue.codeRepository"
-                  placeholder="https://github.com/fairdataihub/codefair-app"
-                />
-              </n-form-item>
-
-              <n-form-item
-                label="Continuous Integration"
-                path="continuousIntegration"
-              >
-                <n-input
-                  v-model:value="formValue.continuousIntegration"
-                  placeholder="https://ci.example.com"
-                />
-              </n-form-item>
-
-              <n-form-item label="Issue Tracker" path="issueTracker">
-                <n-input
-                  v-model:value="formValue.issueTracker"
-                  placeholder="https://issues.example.com"
-                />
-              </n-form-item>
-
-              <n-form-item label="Related Links" path="relatedLinks">
-                <n-dynamic-input
-                  v-model:value="formValue.relatedLinks"
-                  placeholder="Input Related Link"
-                />
-              </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
-
-        <LayoutLargeForm>
-          <template #info>
-            <n-space vertical size="large" class="pr-6">
-              <h2>Software Requirements</h2>
-
-              <p>
-                Information about the run-time environment required to run the
-                software.
-              </p>
-            </n-space>
-          </template>
-
-          <template #form>
-            <n-card class="rounded-lg bg-[#f9fafb]">
-              <n-form-item
-                label="Programming Language"
-                path="programmingLanguage"
-              >
-                <n-select
-                  v-model:value="formValue.programmingLanguages"
-                  placeholder="Select Category"
-                  filterable
-                  multiple
-                  tag
-                  clearable
-                  :options="codeMetadataJSON.programmingLanguageOptions"
-                />
-              </n-form-item>
-
-              <n-form-item label="Runtime Platform" path="runtimePlatform">
-                <n-select
-                  v-model:value="formValue.runtimePlatform"
-                  placeholder="Select Category"
-                  filterable
-                  multiple
-                  tag
-                  clearable
-                  :options="codeMetadataJSON.runtimePlatformOptions"
-                />
-              </n-form-item>
-
-              <n-form-item label="Operating System" path="operatingSystem">
-                <n-select
-                  v-model:value="formValue.operatingSystem"
-                  placeholder="Select Category"
-                  filterable
-                  multiple
-                  tag
-                  clearable
-                  :options="codeMetadataJSON.operatingSystemOptions"
-                />
-              </n-form-item>
-
-              <n-form-item
-                label="Other Software Requirements"
-                path="otherSoftwareRequirements"
-              >
-                <n-dynamic-input
-                  v-model:value="formValue.otherSoftwareRequirements"
-                  placeholder="Input Related Link"
-                />
-              </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
-
-        <LayoutLargeForm>
-          <template #info>
-            <h2>Current version of the software</h2>
-          </template>
-
-          <template #form>
-            <n-card class="rounded-lg bg-[#f9fafb]">
-              <n-form-item label="Current Version" path="currentVersion">
-                <n-input
-                  v-model:value="formValue.currentVersion"
-                  placeholder="1.2.5"
-                />
-              </n-form-item>
-
-              <n-form-item label="Description" path="description">
-                <n-input
-                  v-model:value="formValue.description"
-                  placeholder="Input Description"
-                  type="textarea"
-                  :rows="4"
-                />
-              </n-form-item>
-
-              <n-form-item
-                label="Creation Version Release Date"
-                path="currentVersionReleaseDate"
-              >
-                <n-date-picker
-                  v-model:value="formValue.currentVersionReleaseDate as number"
-                  type="date"
-                />
-              </n-form-item>
-
-              <n-form-item
-                label="Current Version Download URL"
-                path="currentVersionDownloadURL"
-              >
-                <n-input
-                  v-model:value="formValue.currentVersionDownloadURL"
-                  placeholder="https://example.com/download/1.0.0"
-                />
-              </n-form-item>
-
-              <n-form-item
-                label="Current Version Release Notes"
-                path="currentVersionReleaseNotes"
-              >
-                <n-input
-                  v-model:value="formValue.currentVersionReleaseNotes"
-                  placeholder="Initial stable release."
-                  type="textarea"
-                  :rows="4"
-                />
-              </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
-
-        <LayoutLargeForm>
-          <template #info>
-            <n-space vertical size="large" class="pr-6">
-              <h2>Additional Information</h2>
-
-              <p>Additional information about the software.</p>
-            </n-space>
-          </template>
-
-          <template #form>
-            <n-card class="rounded-lg bg-[#f9fafb]">
-              <n-form-item label="Development Status" path="developmentStatus">
-                <n-select
-                  v-model:value="formValue.developmentStatus"
-                  placeholder="Select Category"
-                  :options="codeMetadataJSON.developmentStatusOptions"
-                  @update:value="handleDevelopmentStatusChange"
-                />
-              </n-form-item>
-
-              <n-form-item label="Is Source Code Of" path="isSourceCodeOf">
-                <n-input
-                  v-model:value="formValue.isSourceCodeOf"
-                  placeholder="Bigger Application"
-                />
-              </n-form-item>
-
-              <n-form-item label="Is Part Of" path="isPartOf">
-                <n-input
-                  v-model:value="formValue.isPartOf"
-                  placeholder="Bigger Suite"
-                />
-              </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
-
-        <LayoutLargeForm>
-          <template #info>
-            <n-space vertical size="large" class="pr-6">
-              <h2>Editorial Review</h2>
-
-              <p>
-                Information about the review of the software by the editorial
-                board.
-              </p>
-            </n-space>
-          </template>
-
-          <template #form>
-            <n-card class="rounded-lg bg-[#f9fafb]">
-              <n-form-item
-                label="Reference Publication"
-                path="referencePublication"
-              >
-                <n-input
-                  v-model:value="formValue.referencePublication"
-                  placeholder="Doe, J. (2023). Example Project. Journal of Examples."
-                />
-              </n-form-item>
-
-              <n-form-item label="Review Aspect" path="reviewAspect">
-                <n-input
-                  v-model:value="formValue.reviewAspect"
-                  placeholder="Code Quality"
-                />
-              </n-form-item>
-
-              <n-form-item label="Review Body" path="reviewBody">
-                <n-input
-                  v-model:value="formValue.reviewBody"
-                  placeholder="This project has been thoroughly reviewed for code quality."
-                  type="textarea"
-                  :rows="4"
-                />
-              </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
-
-        <LayoutLargeForm :bottom-line="false">
           <template #info>
             <n-space vertical size="large" class="pr-6">
               <h2>Authors and Contributors</h2>
@@ -1133,6 +839,315 @@ const handleDevelopmentStatusChange = (value: string) => {
                     Add Contributor
                   </n-button>
                 </n-flex>
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
+
+        <LayoutLargeForm>
+          <template #info>
+            <n-space vertical size="large" class="pr-6">
+              <h2>Discoverability</h2>
+
+              <p>
+                Information to help users discover the software in the
+                repository.
+              </p>
+            </n-space>
+          </template>
+
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item label="Unique Identifier" path="uniqueIdentifier">
+                <n-input
+                  v-model:value="formValue.uniqueIdentifier"
+                  placeholder="10.60775/fairhub.1"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Application Category"
+                path="applicationCategory"
+              >
+                <n-select
+                  v-model:value="formValue.applicationCategory"
+                  placeholder="Select Category"
+                  :options="applicationCategoryOptions"
+                  @update:value="handleApplicationCategoryChange"
+                />
+              </n-form-item>
+
+              <n-form-item label="Keywords" path="keywords">
+                <n-dynamic-input
+                  v-model:value="formValue.keywords"
+                  placeholder="Input Related Link"
+                />
+              </n-form-item>
+
+              <n-form-item label="Funding Code" path="fundingCode">
+                <n-input
+                  v-model:value="formValue.fundingCode"
+                  placeholder="Input Funding Code"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Funding Organization"
+                path="fundingOrganization"
+              >
+                <n-input
+                  v-model:value="formValue.fundingOrganization"
+                  placeholder="Input Funding Organization"
+                />
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
+
+        <LayoutLargeForm>
+          <template #info>
+            <n-space vertical size="large" class="pr-6">
+              <h2>License</h2>
+
+              <p>Information about the license of the software.</p>
+            </n-space>
+          </template>
+
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item label="Code Repository" path="codeRepository">
+                <n-input
+                  v-model:value="formValue.codeRepository"
+                  placeholder="https://github.com/fairdataihub/codefair-app"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Continuous Integration"
+                path="continuousIntegration"
+              >
+                <n-input
+                  v-model:value="formValue.continuousIntegration"
+                  placeholder="https://ci.example.com"
+                />
+              </n-form-item>
+
+              <n-form-item label="Issue Tracker" path="issueTracker">
+                <n-input
+                  v-model:value="formValue.issueTracker"
+                  placeholder="https://issues.example.com"
+                />
+              </n-form-item>
+
+              <n-form-item label="Related Links" path="relatedLinks">
+                <n-dynamic-input
+                  v-model:value="formValue.relatedLinks"
+                  placeholder="Input Related Link"
+                />
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
+
+        <LayoutLargeForm>
+          <template #info>
+            <n-space vertical size="large" class="pr-6">
+              <h2>Software Requirements</h2>
+
+              <p>
+                Information about the run-time environment required to run the
+                software.
+              </p>
+            </n-space>
+          </template>
+
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item
+                label="Programming Language"
+                path="programmingLanguage"
+              >
+                <n-select
+                  v-model:value="formValue.programmingLanguages"
+                  placeholder="Select Category"
+                  filterable
+                  multiple
+                  tag
+                  clearable
+                  :options="codeMetadataJSON.programmingLanguageOptions"
+                />
+              </n-form-item>
+
+              <n-form-item label="Runtime Platform" path="runtimePlatform">
+                <n-select
+                  v-model:value="formValue.runtimePlatform"
+                  placeholder="Select Category"
+                  filterable
+                  multiple
+                  tag
+                  clearable
+                  :options="codeMetadataJSON.runtimePlatformOptions"
+                />
+              </n-form-item>
+
+              <n-form-item label="Operating System" path="operatingSystem">
+                <n-select
+                  v-model:value="formValue.operatingSystem"
+                  placeholder="Select Category"
+                  filterable
+                  multiple
+                  tag
+                  clearable
+                  :options="codeMetadataJSON.operatingSystemOptions"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Other Software Requirements"
+                path="otherSoftwareRequirements"
+              >
+                <n-dynamic-input
+                  v-model:value="formValue.otherSoftwareRequirements"
+                  placeholder="Input Related Link"
+                />
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
+
+        <LayoutLargeForm>
+          <template #info>
+            <h2>Current version of the software</h2>
+          </template>
+
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item label="Current Version" path="currentVersion">
+                <n-input
+                  v-model:value="formValue.currentVersion"
+                  placeholder="1.2.5"
+                />
+              </n-form-item>
+
+              <n-form-item label="Description" path="description">
+                <n-input
+                  v-model:value="formValue.description"
+                  placeholder="Input Description"
+                  type="textarea"
+                  :rows="4"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Creation Version Release Date"
+                path="currentVersionReleaseDate"
+              >
+                <n-date-picker
+                  v-model:value="formValue.currentVersionReleaseDate as number"
+                  type="date"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Current Version Download URL"
+                path="currentVersionDownloadURL"
+              >
+                <n-input
+                  v-model:value="formValue.currentVersionDownloadURL"
+                  placeholder="https://example.com/download/1.0.0"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Current Version Release Notes"
+                path="currentVersionReleaseNotes"
+              >
+                <n-input
+                  v-model:value="formValue.currentVersionReleaseNotes"
+                  placeholder="Initial stable release."
+                  type="textarea"
+                  :rows="4"
+                />
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
+
+        <LayoutLargeForm>
+          <template #info>
+            <n-space vertical size="large" class="pr-6">
+              <h2>Additional Information</h2>
+
+              <p>Additional information about the software.</p>
+            </n-space>
+          </template>
+
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item label="Development Status" path="developmentStatus">
+                <n-select
+                  v-model:value="formValue.developmentStatus"
+                  placeholder="Select Category"
+                  :options="codeMetadataJSON.developmentStatusOptions"
+                  @update:value="handleDevelopmentStatusChange"
+                />
+              </n-form-item>
+
+              <n-form-item label="Is Source Code Of" path="isSourceCodeOf">
+                <n-input
+                  v-model:value="formValue.isSourceCodeOf"
+                  placeholder="Bigger Application"
+                />
+              </n-form-item>
+
+              <n-form-item label="Is Part Of" path="isPartOf">
+                <n-input
+                  v-model:value="formValue.isPartOf"
+                  placeholder="Bigger Suite"
+                />
+              </n-form-item>
+            </n-card>
+          </template>
+        </LayoutLargeForm>
+
+        <LayoutLargeForm :bottom-line="false">
+          <template #info>
+            <n-space vertical size="large" class="pr-6">
+              <h2>Editorial Review</h2>
+
+              <p>
+                Information about the review of the software by the editorial
+                board.
+              </p>
+            </n-space>
+          </template>
+
+          <template #form>
+            <n-card class="rounded-lg bg-[#f9fafb]">
+              <n-form-item
+                label="Reference Publication"
+                path="referencePublication"
+              >
+                <n-input
+                  v-model:value="formValue.referencePublication"
+                  placeholder="Doe, J. (2023). Example Project. Journal of Examples."
+                />
+              </n-form-item>
+
+              <n-form-item label="Review Aspect" path="reviewAspect">
+                <n-input
+                  v-model:value="formValue.reviewAspect"
+                  placeholder="Code Quality"
+                />
+              </n-form-item>
+
+              <n-form-item label="Review Body" path="reviewBody">
+                <n-input
+                  v-model:value="formValue.reviewBody"
+                  placeholder="This project has been thoroughly reviewed for code quality."
+                  type="textarea"
+                  :rows="4"
+                />
               </n-form-item>
             </n-card>
           </template>
