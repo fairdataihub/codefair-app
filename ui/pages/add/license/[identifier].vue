@@ -210,11 +210,7 @@ const saveLicenseAndPush = async () => {
               target="_blank"
               class="text-blue-500 underline transition-all hover:text-blue-600"
               >https://choosealicense.com</NuxtLink
-            >.
-          </p>
-
-          <p class="pt-1 text-sm text-stone-600">
-            To make your software reusable a license file is expected at the
+            >.             To make your software reusable a license file is expected at the
             root level of your repository, as recommended in the
             <NuxtLink
               to="https://fair-biors.org/docs/guidelines"
@@ -228,10 +224,12 @@ const saveLicenseAndPush = async () => {
         </div>
 
         <n-form-item
-          label="Select a license"
-          class="mb-3 mt-5"
+          class="mb-3 mt-5 font-bold"
           :show-feedback="false"
         >
+        <template #label>
+              <span class="font-medium">Select a license</span>
+            </template>
           <n-select
             v-model:value="licenseId"
             placeholder="MIT License Modern Variant"
@@ -246,9 +244,11 @@ const saveLicenseAndPush = async () => {
         <TransitionFade>
           <div v-if="displayLicenseEditor">
             <n-form-item
-              label="Edit your license if required:"
               :show-feedback="false"
             >
+            <template #label>
+              <span class="font-medium">Edit your license if required</span>
+            </template>
               <MdEditor
                 v-model="licenseContent"
                 language="en-US"
@@ -303,3 +303,10 @@ const saveLicenseAndPush = async () => {
     </div>
   </main>
 </template>
+
+<style>
+.n-form-item-label__text {
+  font-size: 16px;
+  font-weight: 600;
+}
+</style>
