@@ -218,8 +218,6 @@ export default async (app) => {
       const selection =
         splitComment[splitComment.indexOf(`@${GITHUB_APP_NAME} license`) + 1];
 
-      console.log("License user responded with: " + selection);
-
       // Create a new file with the license on the new branch and open pull request
       await createLicense(context, owner, repoName, selection);
     }

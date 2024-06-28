@@ -314,7 +314,7 @@ const handleDevelopmentStatusChange = (value: string) => {
         <h1 class="text-2xl font-bold">
           Edit metadata for
           <NuxtLink
-            :to="`https://github.com/${githubRepo}`"
+            :to="`https://github.com/${data?.owner}/${data?.repo}`"
             target="_blank"
             class="text-blue-500 underline transition-all hover:text-blue-600"
           >

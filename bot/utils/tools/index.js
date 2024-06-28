@@ -74,7 +74,6 @@ export async function verifyFirstIssue(context, owner, repo, title) {
     let noIssue = false;
     for (let i = 0; i < issues.data.length; i++) {
       if (issues.data[i].title === title) {
-        console.log("Issue already exists, will not recreate");
         noIssue = true;
         break;
       }

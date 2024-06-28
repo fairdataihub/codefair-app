@@ -227,9 +227,9 @@ const saveLicenseAndPush = async () => {
           class="mb-3 mt-5 font-bold"
           :show-feedback="false"
         >
-        <template #label>
-              <span class="font-medium">Select a license</span>
-            </template>
+          <template #label>
+              <span class="font-bold">Select a license</span>
+          </template>
           <n-select
             v-model:value="licenseId"
             placeholder="MIT License Modern Variant"
@@ -247,7 +247,7 @@ const saveLicenseAndPush = async () => {
               :show-feedback="false"
             >
             <template #label>
-              <span class="font-medium">Edit your license if required</span>
+              <span class="font-bold">Edit your license if required</span>
             </template>
               <MdEditor
                 v-model="licenseContent"
@@ -303,10 +303,3 @@ const saveLicenseAndPush = async () => {
     </div>
   </main>
 </template>
-
-<style>
-.n-form-item-label__text {
-  font-size: 16px;
-  font-weight: 600;
-}
-</style>
