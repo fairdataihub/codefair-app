@@ -1073,7 +1073,7 @@ const handleDevelopmentStatusChange = (value: string) => {
           </template>
         </LayoutLargeForm>
 
-        <LayoutLargeForm>
+        <LayoutLargeForm :bottom-line="false">
           <template #info>
             <n-space vertical size="large" class="pr-6">
               <h2>Additional Information</h2>
@@ -1110,7 +1110,7 @@ const handleDevelopmentStatusChange = (value: string) => {
           </template>
         </LayoutLargeForm>
 
-        <LayoutLargeForm :bottom-line="false">
+        <!-- <LayoutLargeForm :bottom-line="false">
           <template #info>
             <n-space vertical size="large" class="pr-6">
               <h2>Editorial Review</h2>
@@ -1151,7 +1151,7 @@ const handleDevelopmentStatusChange = (value: string) => {
               </n-form-item>
             </n-card>
           </template>
-        </LayoutLargeForm>
+        </LayoutLargeForm> -->
 
         <n-divider />
 
