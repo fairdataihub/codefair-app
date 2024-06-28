@@ -101,7 +101,11 @@ const licenseRequests = computed(() => {
               <div>
                 <h3>{{ licenseRequest.identifier }}</h3>
 
-                <p>{{ licenseRequest.timestamp }}</p>
+                <p>
+                  {{
+                    new Date(licenseRequest.timestamp * 1000).toLocaleString()
+                  }}
+                </p>
               </div>
 
               <NuxtLink
@@ -165,6 +169,14 @@ const licenseRequests = computed(() => {
         <n-flex align="center" justify="space-between">
           <div>
             <h3>{{ data?.codeMetadataRequest.identifier }}</h3>
+
+            <p>
+              {{
+                new Date(
+                  data?.codeMetadataRequest.timestamp * 1000,
+                ).toLocaleString()
+              }}
+            </p>
           </div>
 
           <NuxtLink
