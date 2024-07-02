@@ -132,7 +132,7 @@ export default defineEventHandler(async (event) => {
   ];
 
   const codeMeta = {
-    name: "dsfsdf",
+    name: codeMetadataRecord.name,
     "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
     ...(codeMetadataRecord.applicationCategory && {
       applicationCategory: codeMetadataRecord.applicationCategory,
