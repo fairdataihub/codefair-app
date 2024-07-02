@@ -223,10 +223,10 @@ const generateSeed = (seed: string) => {
       </CardCollapsible>
     </div>
 
-    <n-collapse class="mt-8">
+    <!-- <n-collapse class="mt-8">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
       </n-collapse-item>
-    </n-collapse>
+    </n-collapse> -->
   </main>
 </template>

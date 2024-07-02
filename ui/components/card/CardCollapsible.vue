@@ -57,7 +57,7 @@ const toggleCollapse = () => {
       <div>
         <div class="text-xl font-bold">{{ title }}</div>
 
-        <div class="mt-1 text-sm text-slate-500">{{ subheader }}</div>
+        <div class="text-sm text-slate-500">{{ subheader }}</div>
       </div>
 
       <div class="flex items-center">

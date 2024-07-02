@@ -93,10 +93,10 @@ if (error.value) {
       </n-flex>
     </n-flex>
 
-    <n-collapse class="mt-8">
+    <!-- <n-collapse class="mt-8">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
       </n-collapse-item>
-    </n-collapse>
+    </n-collapse> -->
   </main>
 </template>
