@@ -1018,6 +1018,11 @@ const handleDevelopmentStatusChange = (value: string) => {
         <LayoutLargeForm>
           <template #info>
             <h2>Current version of the software</h2>
+
+            <p>
+              Information about the current version of the software and its
+              release notes.
+            </p>
           </template>
 
           <template #form>
