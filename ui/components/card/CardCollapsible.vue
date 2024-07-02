@@ -67,7 +67,7 @@ const toggleCollapse = () => {
 
         <n-button
           text
-          class="rounded-full p-2 text-3xl transition-all hover:!bg-purple-100"
+          class="rounded-full p-2 text-3xl transition-all hover:!bg-indigo-100"
           type="info"
           @click="toggleCollapse"
         >
@@ -78,7 +78,7 @@ const toggleCollapse = () => {
           <Icon
             name="icon-park-outline:up"
             size="25"
-            class="transition-all hover:text-purple-500"
+            class="transition-all hover:text-indigo-500"
             :class="{
               'text-gray-600': !contentCollapsed,
               'rotate-180 text-gray-400': contentCollapsed,
