@@ -30,6 +30,7 @@
     "nuxt": "3.11.1",
     "nuxt-mongoose": "^1.0.5",
     "octokit": "^4.0.2",
+    "random-words": "^2.0.1",
     "sanitize-html": "^2.13.0",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0",

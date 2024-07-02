@@ -23,11 +23,7 @@ const themeConfig: ThemeConfig = {
   light: {}, // Theme options applied on light mode
   mobile: {}, // Theme options applied on mobile only
   mobileOrTablet: {}, // Theme options applied on mobile and tablet
-  shared: {
-    Tree: {
-      fontSize: "17px",
-    },
-  }, // Common theme options
+  shared: {}, // Common theme options
 };
 
 useHead({
