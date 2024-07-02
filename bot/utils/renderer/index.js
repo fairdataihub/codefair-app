@@ -6,6 +6,95 @@ import { gatherMetadata } from "../metadata/index.js";
 
 const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
+
+export function convertMetadataForDB(codemetaContent) {
+  // TODO: License is a url, db needs the SPDX identifier
+  const metadata = {
+    name: codemetaContent?.name,
+    applicationCategory: codemetaContent?.applicationCategory,
+    // authors: codemetaContent.author,
+    codeRepository: codemetaContent?.codeRepository,
+    continuousIntegration:
+      codemetaContent?.["codemeta:continuousIntegration"]?.id || "",
+    creationDate: codemetaContent?.dateCreated || "",
+    currentVersion: codemetaContent?.version || "",
+    currentVersionDownloadURL: codemetaContent?.downloadUrl,
+    currentVersionReleaseDate: codemetaContent.dateModified,
+    currentVersionReleaseNotes: codemetaContent["schema:releaseNotes"],
+    description: codemetaContent.description,
+    developmentStatus: codemetaContent.developmentStatus,
+    firstReleaseDate: codemetaContent.datePublished,
+    fundingCode: codemetaContent.fundingCode,
+    fundingOrganization: codemetaContent.fundingOrganization,
+    isPartOf: codemetaContent.isPartOf,
+    isSourceCodeOf: codemetaContent["codemeta:isSourceCodeOf"].id,
+    issueTracker: codemetaContent.issueTracker,
+    keywords: codemetaContent.keywords,
+    license: codemetaContent.license,
+    operatingSystem: codemetaContent.operatingSystem,
+    otherSoftwareRequirements: codemetaContent.softwareRequirements,
+    programmingLanguages: codemetaContent.programmingLanguage,
+    referencePublication: codemetaContent.referencePublication,
+    relatedLinks: codemetaContent?.relatedLinks || [],
+    reviewAspect: codemetaContent.reviewAspect || "",
+    reviewBody: codemetaContent.reviewBody || "",
+    runtimePlatform: codemetaContent.runtimePlatform,
+    uniqueIdentifier: codemetaContent.identifier,
+  };
+
+  if (codemetaContent.author) {
+    // Map the author to the metadata object
+    metadata.authors = codemetaContent.author.map((author) => {
+      if (author?.type === "schema:Role" && metadata.authors.length > 0) {
+        for (let i = 0; i < metadata.authors.length; i++) {
+          if (metadata.authors[i].uri === author?.["schema:author"]) {
+            metadata.authors[i].roles = {
+              endDate: author?.["schema:endDate"],
+              role: author?.["schema:roleName"],
+              startDate: author?.["schema:startDate"],
+            };
+          }
+        }
+      }
+      return {
+        affiliation: author?.affiliation?.name,
+        email: author?.email,
+        familyName: author?.familyName,
+        givenName: author?.givenName,
+        uri: author?.id,
+      };
+    });
+  }
+
+  if (codemetaContent.contributor) {
+    metadata.contributors = codemetaContent.contributor.map((contributor) => {
+      if (
+        contributor?.type === "schema:Role" &&
+        metadata.contributors.length > 0
+      ) {
+        for (let i = 0; i < metadata.contributors.length; i++) {
+          if (
+            metadata.contributors[i].uri === contributor?.["schema:contributor"]
+          ) {
+            metadata.contributors[i].roles = {
+              endDate: contributor?.["schema:endDate"],
+              role: contributor?.["schema:roleName"],
+              startDate: contributor?.["schema:startDate"],
+            };
+          }
+        }
+      }
+
+      return {
+        affiliation: contributor?.affiliation?.name,
+        email: contributor?.email,
+        familyName: contributor?.familyName,
+        givenName: contributor?.givenName,
+        uri: contributor?.id,
+      };
+    });
+  }
+}
 /**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
  *
@@ -67,6 +156,22 @@ export async function applyMetadataTemplate(
 
   // TODO: If metadata files are found, fetch and add the metadata to the db (allow for continuous updates)
   if (subjects.codemeta && subjects.citation && subjects.license) {
+    // Download the codemeta.json file from the repo
+    const codemetaFile = await context.octokit.repos.getContent({
+      owner,
+      path: "codemeta.json",
+      repo: repository.name,
+    });
+
+    // Convert the content to a json object
+    const codemetaContent = JSON.parse(
+      Buffer.from(codemetaFile.data.content, "base64").toString(),
+    );
+
+    // Convert the content to the structure we use for code metadata
+    const metadata = convertMetadataForDB(codemetaContent);
+    console.log(metadata);
+
     // License, codemeta.json and CITATION.cff files were found
     const identifier = createId();
 
