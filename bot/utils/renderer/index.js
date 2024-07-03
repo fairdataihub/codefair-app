@@ -428,6 +428,16 @@ export async function applyLicenseTemplate(
     const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
     baseTemplate += `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and codefair will update the the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
   } else {
+    // Download the license file from the repo
+    const licenseFile = await context.octokit.repos.getContent({
+      owner,
+      path: "LICENSE",
+      repo: repository.name,
+    });
+
+    // Get the identifier of the license file
+    const licenseId = licenseFile.data.sha;
+
     // License file found text
     const identifier = createId();
     let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
