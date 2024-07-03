@@ -27,11 +27,14 @@ const collapseContent = () => {
         'col-span-8': collapsed,
       }"
     >
-      <div class="cursor-pointer pt-1" @click="collapseContent">
+      <div
+        class="cursor-pointer rounded-full pt-1 hover:bg-indigo-100"
+        @click="collapseContent"
+      >
         <Icon
           name="icon-park-outline:right"
           size="25"
-          class="transition-all hover:text-purple-500"
+          class="transition-all hover:text-indigo-500"
           :class="{
             'text-gray-600': !collapsed,
             'rotate-90 text-gray-400': collapsed,
