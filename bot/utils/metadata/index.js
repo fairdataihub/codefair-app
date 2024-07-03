@@ -4,28 +4,103 @@ import {
   getDOI,
 } from "../tools/index.js";
 
+export function convertDateToUnix(date) {
+  // Convert to a Date object
+  const newDate = new Date(date);
+
+  // Convert to Unix timestamp (in milliseconds) and then divide by 1000 to get seconds
+  return Math.floor(newDate.getTime() / 1000);
+}
+
 export function convertMetadataForDB(codemetaContent) {
+  let sortedAuthors = [];
+  let sortedContributors = [];
+
+  if (codemetaContent?.author) {
+    // Map the author to the metadata object
+    codemetaContent.author.forEach((author) => {
+      if (author?.type === "Role" && sortedAuthors.length > 0) {
+        for (let i = 0; i < metadata.authors.length; i++) {
+          if (sortedAuthors[i].uri === author?.["schema:author"]) {
+            sortedAuthors[i].roles = {
+              endDate: author?.["schema:endDate"],
+              role: author?.["schema:roleName"],
+              startDate: author?.["schema:startDate"],
+            };
+          }
+        }
+      }
+      sortedAuthors.push({
+        affiliation: author?.affiliation?.name,
+        email: author?.email,
+        familyName: author?.familyName,
+        givenName: author?.givenName,
+        uri: author?.id,
+      });
+    });
+  }
+
+  if (codemetaContent?.contributor) {
+    codemetaContent.contributor.map((contributor) => {
+      if (
+        contributor?.type === "schema:Role" &&
+        sortedContributors.length > 0
+      ) {
+        for (let i = 0; i < sortedContributors.length; i++) {
+          if (
+            sortedContributors[i].uri === contributor?.["schema:contributor"]
+          ) {
+            sortedContributors[i].roles = {
+              endDate: contributor?.["schema:endDate"],
+              role: contributor?.["schema:roleName"],
+              startDate: contributor?.["schema:startDate"],
+            };
+          }
+        }
+      }
+
+      sortedContributors.push({
+        affiliation: contributor?.affiliation?.name,
+        email: contributor?.email,
+        familyName: contributor?.familyName,
+        givenName: contributor?.givenName,
+        uri: contributor?.id,
+      });
+    });
+  }
+
+  const regex = /https:\/\/spdx\.org\/licenses\/(.*)/;
+  const url = codemetaContent.license;
+
+  const match = url.match(regex);
+  let license = null;
+
+  if (match) {
+    license = match[1];
+  }
+
   // TODO: License is a url, db needs the SPDX identifier
   const metadata = {
     name: codemetaContent?.name || null,
     applicationCategory: codemetaContent?.applicationCategory || null,
-    // authors: codemetaContent.author,
+    author: sortedAuthors,
+    contributor: sortedContributors,
     codeRepository: codemetaContent?.codeRepository,
     continuousIntegration:
       codemetaContent?.["codemeta:continuousIntegration"]?.id || "",
     creationDate: codemetaContent?.dateCreated
-      ? new Date(codemetaContent.dateCreated).getTime() / 1000
+      ? convertDateToUnix(codemetaContent?.dateCreated) / 1000
       : null,
     currentVersion: codemetaContent?.version || "",
     currentVersionDownloadURL: codemetaContent?.downloadUrl || "",
     currentVersionReleaseDate: codemetaContent?.dateModified
-      ? new Date(codemetaContent?.dateModified).getTime() / 1000
+      ? convertDateToUnix(codemetaContent?.dateModified)
       : null,
     currentVersionReleaseNotes: codemetaContent?.["schema:releaseNotes"] || "",
     description: codemetaContent?.description || "",
     developmentStatus: codemetaContent?.developmentStatus || null,
     firstReleaseDate: codemetaContent?.datePublished
-      ? new Date(codemetaContent.datePublished).getTime() / 1000
+      ? convertDateToUnix(codemetaContent?.datePublished)
       : null,
     fundingCode: codemetaContent?.funding || "",
     fundingOrganization: codemetaContent?.funding.name || "",
@@ -33,7 +108,7 @@ export function convertMetadataForDB(codemetaContent) {
     isSourceCodeOf: codemetaContent?.["codemeta:isSourceCodeOf"]?.id || "",
     issueTracker: codemetaContent?.issueTracker || "",
     keywords: codemetaContent?.keywords || [],
-    license: codemetaContent?.license || null,
+    license: license,
     operatingSystem: codemetaContent?.operatingSystem || [],
     otherSoftwareRequirements: codemetaContent?.softwareRequirements || [],
     programmingLanguages: codemetaContent?.programmingLanguage || [],
@@ -44,59 +119,6 @@ export function convertMetadataForDB(codemetaContent) {
     runtimePlatform: codemetaContent?.runtimePlatform || [],
     uniqueIdentifier: codemetaContent?.identifier || "",
   };
-
-  if (codemetaContent.author) {
-    // Map the author to the metadata object
-    metadata.authors = codemetaContent.author.map((author) => {
-      if (author?.type === "Role" && metadata.authors.length > 0) {
-        for (let i = 0; i < metadata.authors.length; i++) {
-          if (metadata.authors[i].uri === author?.["schema:author"]) {
-            metadata.authors[i].roles = {
-              endDate: author?.["schema:endDate"],
-              role: author?.["schema:roleName"],
-              startDate: author?.["schema:startDate"],
-            };
-          }
-        }
-      }
-      return {
-        affiliation: author?.affiliation?.name,
-        email: author?.email,
-        familyName: author?.familyName,
-        givenName: author?.givenName,
-        uri: author?.id,
-      };
-    });
-  }
-
-  if (codemetaContent.contributor) {
-    metadata.contributors = codemetaContent.contributor.map((contributor) => {
-      if (
-        contributor?.type === "schema:Role" &&
-        metadata.contributors.length > 0
-      ) {
-        for (let i = 0; i < metadata.contributors.length; i++) {
-          if (
-            metadata.contributors[i].uri === contributor?.["schema:contributor"]
-          ) {
-            metadata.contributors[i].roles = {
-              endDate: contributor?.["schema:endDate"],
-              role: contributor?.["schema:roleName"],
-              startDate: contributor?.["schema:startDate"],
-            };
-          }
-        }
-      }
-
-      return {
-        affiliation: contributor?.affiliation?.name,
-        email: contributor?.email,
-        familyName: contributor?.familyName,
-        givenName: contributor?.givenName,
-        uri: contributor?.id,
-      };
-    });
-  }
 
   return metadata;
 }
