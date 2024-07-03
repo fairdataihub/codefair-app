@@ -86,10 +86,10 @@ export function convertMetadataForDB(codemetaContent) {
   const url = codemetaContent.license;
 
   const match = url.match(regex);
-  let license = null;
+  let licenseId = null;
 
   if (match) {
-    license = match[1];
+    licenseId = match[1];
   }
 
   return {
@@ -120,7 +120,7 @@ export function convertMetadataForDB(codemetaContent) {
     isSourceCodeOf: codemetaContent?.["codemeta:isSourceCodeOf"]?.id || "",
     issueTracker: codemetaContent?.issueTracker || "",
     keywords: codemetaContent?.keywords || [],
-    license: license,
+    license: licenseId,
     operatingSystem: codemetaContent?.operatingSystem || [],
     otherSoftwareRequirements: codemetaContent?.softwareRequirements || [],
     programmingLanguages: codemetaContent?.programmingLanguage || [],
