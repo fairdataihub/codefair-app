@@ -8,8 +8,8 @@ export function convertDateToUnix(date) {
   // Convert to a Date object
   const newDate = new Date(date);
 
-  // Convert to Unix timestamp (in milliseconds) and then divide by 1000 to get seconds
-  return Math.floor(newDate.getTime() / 1000);
+  // Convert to Unix timestamp (in milliseconds)
+  return Math.floor(newDate.getTime());
 }
 
 export function convertMetadataForDB(codemetaContent) {
@@ -20,22 +20,23 @@ export function convertMetadataForDB(codemetaContent) {
     // Map the author to the metadata object
     codemetaContent.author.forEach((author) => {
       if (author?.type === "Role" && sortedAuthors.length > 0) {
-        for (let i = 0; i < metadata.authors.length; i++) {
+        for (let i = 0; i < sortedAuthors.length; i++) {
           if (sortedAuthors[i].uri === author?.["schema:author"]) {
             sortedAuthors[i].roles = {
-              endDate: author?.["schema:endDate"],
-              role: author?.["schema:roleName"],
-              startDate: author?.["schema:startDate"],
+              endDate: author?.["endDate"] || null,
+              role: author?.["roleName"] || null,
+              startDate: author?.["startDate"] || null,
             };
+            return;
           }
         }
       }
       sortedAuthors.push({
-        affiliation: author?.affiliation?.name,
-        email: author?.email,
-        familyName: author?.familyName,
-        givenName: author?.givenName,
-        uri: author?.id,
+        affiliation: author?.affiliation?.name || "",
+        email: author?.email || "",
+        familyName: author?.familyName || "",
+        givenName: author?.givenName || "",
+        uri: author?.id || "",
       });
     });
   }
@@ -43,7 +44,7 @@ export function convertMetadataForDB(codemetaContent) {
   if (codemetaContent?.contributor) {
     codemetaContent.contributor.map((contributor) => {
       if (
-        contributor?.type === "schema:Role" &&
+        contributor?.type === "Role" &&
         sortedContributors.length > 0
       ) {
         for (let i = 0; i < sortedContributors.length; i++) {
@@ -51,20 +52,21 @@ export function convertMetadataForDB(codemetaContent) {
             sortedContributors[i].uri === contributor?.["schema:contributor"]
           ) {
             sortedContributors[i].roles = {
-              endDate: contributor?.["schema:endDate"],
-              role: contributor?.["schema:roleName"],
-              startDate: contributor?.["schema:startDate"],
+              endDate: contributor?.["endDate"] || null,
+              role: contributor?.["roleName"] || null,
+              startDate: contributor?.["startDate"] || null,
             };
+            return;
           }
         }
       }
 
       sortedContributors.push({
-        affiliation: contributor?.affiliation?.name,
-        email: contributor?.email,
-        familyName: contributor?.familyName,
-        givenName: contributor?.givenName,
-        uri: contributor?.id,
+        affiliation: contributor?.affiliation?.name || "",
+        email: contributor?.email || "",
+        familyName: contributor?.familyName || "",
+        givenName: contributor?.givenName || "",
+        uri: contributor?.id || "",
       });
     });
   }
@@ -79,8 +81,7 @@ export function convertMetadataForDB(codemetaContent) {
     license = match[1];
   }
 
-  // TODO: License is a url, db needs the SPDX identifier
-  const metadata = {
+  return {
     name: codemetaContent?.name || null,
     applicationCategory: codemetaContent?.applicationCategory || null,
     author: sortedAuthors,
@@ -89,7 +90,7 @@ export function convertMetadataForDB(codemetaContent) {
     continuousIntegration:
       codemetaContent?.["codemeta:continuousIntegration"]?.id || "",
     creationDate: codemetaContent?.dateCreated
-      ? convertDateToUnix(codemetaContent?.dateCreated) / 1000
+      ? convertDateToUnix(codemetaContent?.dateCreated)
       : null,
     currentVersion: codemetaContent?.version || "",
     currentVersionDownloadURL: codemetaContent?.downloadUrl || "",
@@ -119,8 +120,6 @@ export function convertMetadataForDB(codemetaContent) {
     runtimePlatform: codemetaContent?.runtimePlatform || [],
     uniqueIdentifier: codemetaContent?.identifier || "",
   };
-
-  return metadata;
 }
 
 /**
