@@ -2,101 +2,11 @@ import { createId } from "../tools/index.js";
 import { checkForCitation } from "../citation/index.js";
 import { checkForCodeMeta } from "../codemeta/index.js";
 import { checkForLicense } from "../license/index.js";
-import { gatherMetadata } from "../metadata/index.js";
+import { gatherMetadata, convertMetadataForDB } from "../metadata/index.js";
 
 const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
-export function convertMetadataForDB(codemetaContent) {
-  // TODO: License is a url, db needs the SPDX identifier
-  const metadata = {
-    name: codemetaContent?.name,
-    applicationCategory: codemetaContent?.applicationCategory,
-    // authors: codemetaContent.author,
-    codeRepository: codemetaContent?.codeRepository,
-    continuousIntegration:
-      codemetaContent?.["codemeta:continuousIntegration"]?.id || "",
-    creationDate: codemetaContent?.dateCreated || "",
-    currentVersion: codemetaContent?.version || "",
-    currentVersionDownloadURL: codemetaContent?.downloadUrl,
-    currentVersionReleaseDate: codemetaContent.dateModified,
-    currentVersionReleaseNotes: codemetaContent["schema:releaseNotes"],
-    description: codemetaContent.description,
-    developmentStatus: codemetaContent.developmentStatus,
-    firstReleaseDate: codemetaContent.datePublished,
-    fundingCode: codemetaContent.funding,
-    fundingOrganization: codemetaContent.funding.name,
-    isPartOf: codemetaContent.isPartOf,
-    isSourceCodeOf: codemetaContent["codemeta:isSourceCodeOf"].id,
-    issueTracker: codemetaContent.issueTracker,
-    keywords: codemetaContent.keywords,
-    license: codemetaContent.license,
-    operatingSystem: codemetaContent.operatingSystem,
-    otherSoftwareRequirements: codemetaContent.softwareRequirements,
-    programmingLanguages: codemetaContent.programmingLanguage,
-    referencePublication: codemetaContent.referencePublication,
-    relatedLinks: codemetaContent?.relatedLinks || [],
-    reviewAspect: codemetaContent.reviewAspect || "",
-    reviewBody: codemetaContent.reviewBody || "",
-    runtimePlatform: codemetaContent.runtimePlatform,
-    uniqueIdentifier: codemetaContent.identifier,
-  };
-
-  if (codemetaContent.author) {
-    // Map the author to the metadata object
-    metadata.authors = codemetaContent.author.map((author) => {
-      if (author?.type === "schema:Role" && metadata.authors.length > 0) {
-        for (let i = 0; i < metadata.authors.length; i++) {
-          if (metadata.authors[i].uri === author?.["schema:author"]) {
-            metadata.authors[i].roles = {
-              endDate: author?.["schema:endDate"],
-              role: author?.["schema:roleName"],
-              startDate: author?.["schema:startDate"],
-            };
-          }
-        }
-      }
-      return {
-        affiliation: author?.affiliation?.name,
-        email: author?.email,
-        familyName: author?.familyName,
-        givenName: author?.givenName,
-        uri: author?.id,
-      };
-    });
-  }
-
-  if (codemetaContent.contributor) {
-    metadata.contributors = codemetaContent.contributor.map((contributor) => {
-      if (
-        contributor?.type === "schema:Role" &&
-        metadata.contributors.length > 0
-      ) {
-        for (let i = 0; i < metadata.contributors.length; i++) {
-          if (
-            metadata.contributors[i].uri === contributor?.["schema:contributor"]
-          ) {
-            metadata.contributors[i].roles = {
-              endDate: contributor?.["schema:endDate"],
-              role: contributor?.["schema:roleName"],
-              startDate: contributor?.["schema:startDate"],
-            };
-          }
-        }
-      }
-
-      return {
-        affiliation: contributor?.affiliation?.name,
-        email: contributor?.email,
-        familyName: contributor?.familyName,
-        givenName: contributor?.givenName,
-        uri: contributor?.id,
-      };
-    });
-  }
-
-  return metadata;
-}
 /**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
  *
@@ -156,7 +66,6 @@ export async function applyMetadataTemplate(
     baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemetada.json are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). These files are not found in the repository. If you would like codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
   }
 
-  // TODO: If metadata files are found, fetch and add the metadata to the db (allow for continuous updates)
   if (subjects.codemeta && subjects.citation && subjects.license) {
     // Download the codemeta.json file from the repo
     const codemetaFile = await context.octokit.repos.getContent({
@@ -393,6 +302,7 @@ export async function applyLicenseTemplate(
   db,
   repository,
   owner,
+  context,
 ) {
   if (!subjects.license) {
     const identifier = createId();
@@ -429,14 +339,14 @@ export async function applyLicenseTemplate(
     baseTemplate += `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and codefair will update the the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
   } else {
     // Download the license file from the repo
-    const licenseFile = await context.octokit.repos.getContent({
-      owner,
-      path: "LICENSE",
-      repo: repository.name,
-    });
+    // const licenseFile = await context.octokit.repos.getContent({
+    //   owner,
+    //   path: "LICENSE",
+    //   repo: repository.name,
+    // });
 
-    // Get the identifier of the license file
-    const licenseId = licenseFile.data.sha;
+    // // Get the identifier of the license file
+    // const licenseId = licenseFile.data.sha;
 
     // License file found text
     const identifier = createId();
@@ -535,6 +445,7 @@ export async function renderIssues(
     db,
     repository,
     owner,
+    context,
   );
 
   // If License PR is open, add the PR number to the dashboard
