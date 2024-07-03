@@ -95,8 +95,8 @@ export function convertMetadataForDB(codemetaContent) {
   return {
     name: codemetaContent?.name || null,
     applicationCategory: codemetaContent?.applicationCategory || null,
-    author: sortedAuthors,
-    contributor: sortedContributors,
+    authors: sortedAuthors,
+    contributors: sortedContributors,
     codeRepository: codemetaContent?.codeRepository || "",
     continuousIntegration:
       codemetaContent?.["codemeta:continuousIntegration"]?.id || "",

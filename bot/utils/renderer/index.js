@@ -98,7 +98,7 @@ export async function applyMetadataTemplate(
     if (!existingMetadata) {
       // Entry does not exist in db, create a new one
       const newDate = Date.now();
-      const gatheredMetadata = await gatherMetadata(context, owner, repository);
+      // const gatheredMetadata = await gatherMetadata(context, owner, repository);
       await metadataCollection.insertOne({
         created_at: newDate,
         identifier,
@@ -338,15 +338,19 @@ export async function applyLicenseTemplate(
     const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
     baseTemplate += `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and codefair will update the the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
   } else {
-    // Download the license file from the repo
-    // const licenseFile = await context.octokit.repos.getContent({
-    //   owner,
-    //   path: "LICENSE",
-    //   repo: repository.name,
-    // });
+    // Get the license identifier
+    const licenseRequest = await context.octokit.rest.licenses.getForRepo({
+      owner,
+      repo: repository.name,
+    });
 
-    // // Get the identifier of the license file
-    // const licenseId = licenseFile.data.sha;
+    console.log("license found!");
+    let licenseId = licenseRequest.data.license.spdx_id;
+    let licenseContent = licenseRequest.data.license.body;
+    if (licenseRequest.data.license.spdx_id === "no-license" || licenseRequest.data.license.spdx_id === "NOASSERTION") {
+      licenseId = null;
+      licenseContent = null;
+    }
 
     // License file found text
     const identifier = createId();
@@ -367,13 +371,15 @@ export async function applyLicenseTemplate(
         repo: repository.name,
         repositoryId: repository.id,
         updated_at: newDate,
+        licenseId,
+        licenseContent,
       });
     } else {
       // Get the identifier of the existing license request
       // Update the database
       await licenseCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
+        { $set: { updated_at: Date.now(), licenseId, licenseContent } },
       );
       url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     }
