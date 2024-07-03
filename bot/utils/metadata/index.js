@@ -37,9 +37,9 @@ export function convertMetadataForDB(codemetaContent) {
         for (let i = 0; i < sortedAuthors.length; i++) {
           if (sortedAuthors[i].uri === author?.["schema:author"]) {
             sortedAuthors[i].roles = {
-              endDate: author?.["endDate"] || null,
+              endDate: author?.["endDate"] ? convertDateToUnix(author?.["endDate"]) : null,
               role: author?.["roleName"] || null,
-              startDate: author?.["startDate"] || null,
+              startDate: author?.["startDate"] ? convertDateToUnix(author?.["startDate"]) : null,
             };
             return;
           }
@@ -63,9 +63,9 @@ export function convertMetadataForDB(codemetaContent) {
         for (let i = 0; i < sortedContributors.length; i++) {
           if (sortedContributors[i].uri === contributor?.["schema:contributor"]) {
             sortedContributors[i].roles = {
-              endDate: contributor?.["endDate"] || null,
+              endDate: contributor?.["endDate"] ? convertDateToUnix(contributor?.["endDate"]) : null,
               role: contributor?.["roleName"] || null,
-              startDate: contributor?.["startDate"] || null,
+              startDate: contributor?.["startDate"] ? convertDateToUnix(contributor?.["startDate"]) : null,
             };
             return;
           }
