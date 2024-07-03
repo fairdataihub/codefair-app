@@ -37,20 +37,17 @@ export function convertMetadataForDB(codemetaContent) {
         familyName: author?.familyName || "",
         givenName: author?.givenName || "",
         uri: author?.id || "",
+        roles: [],
       });
     });
   }
 
   if (codemetaContent?.contributor) {
-    codemetaContent.contributor.map((contributor) => {
-      if (
-        contributor?.type === "Role" &&
-        sortedContributors.length > 0
-      ) {
+    // Map the author to the metadata object
+    codemetaContent.contributor.forEach((contributor) => {
+      if (contributor?.type === "Role" && sortedContributors.length > 0) {
         for (let i = 0; i < sortedContributors.length; i++) {
-          if (
-            sortedContributors[i].uri === contributor?.["schema:contributor"]
-          ) {
+          if (sortedContributors[i].uri === contributor?.["schema:contributor"]) {
             sortedContributors[i].roles = {
               endDate: contributor?.["endDate"] || null,
               role: contributor?.["roleName"] || null,
@@ -60,13 +57,13 @@ export function convertMetadataForDB(codemetaContent) {
           }
         }
       }
-
       sortedContributors.push({
         affiliation: contributor?.affiliation?.name || "",
         email: contributor?.email || "",
         familyName: contributor?.familyName || "",
         givenName: contributor?.givenName || "",
         uri: contributor?.id || "",
+        roles: [],
       });
     });
   }
