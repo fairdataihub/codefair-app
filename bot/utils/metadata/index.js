@@ -4,6 +4,13 @@ import {
   getDOI,
 } from "../tools/index.js";
 
+/**
+ * * Converts the date to a Unix timestamp
+ * 
+ * @param {string} date - The date to convert to Unix timestamp 
+ * 
+ * @returns {number} - The Unix timestamp of the date
+ */
 export function convertDateToUnix(date) {
   // Convert to a Date object
   const newDate = new Date(date);
@@ -12,6 +19,13 @@ export function convertDateToUnix(date) {
   return Math.floor(newDate.getTime());
 }
 
+/**
+ * * Converts the codemeta.json file content to a metadata object for the database
+ * 
+ * @param {JSON} codemetaContent - The codemeta.json file content
+ * 
+ * @returns {JSON} - The metadata object for the database
+ */
 export function convertMetadataForDB(codemetaContent) {
   let sortedAuthors = [];
   let sortedContributors = [];
@@ -45,7 +59,7 @@ export function convertMetadataForDB(codemetaContent) {
   if (codemetaContent?.contributor) {
     // Map the author to the metadata object
     codemetaContent.contributor.forEach((contributor) => {
-      if (contributor?.type === "Role" && sortedContributors.length > 0) {
+      if (contributor?.roleName && sortedContributors.length > 0) {
         for (let i = 0; i < sortedContributors.length; i++) {
           if (sortedContributors[i].uri === contributor?.["schema:contributor"]) {
             sortedContributors[i].roles = {
@@ -83,7 +97,7 @@ export function convertMetadataForDB(codemetaContent) {
     applicationCategory: codemetaContent?.applicationCategory || null,
     author: sortedAuthors,
     contributor: sortedContributors,
-    codeRepository: codemetaContent?.codeRepository,
+    codeRepository: codemetaContent?.codeRepository || "",
     continuousIntegration:
       codemetaContent?.["codemeta:continuousIntegration"]?.id || "",
     creationDate: codemetaContent?.dateCreated
