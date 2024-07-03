@@ -24,8 +24,8 @@ export function convertMetadataForDB(codemetaContent) {
     description: codemetaContent.description,
     developmentStatus: codemetaContent.developmentStatus,
     firstReleaseDate: codemetaContent.datePublished,
-    fundingCode: codemetaContent.fundingCode,
-    fundingOrganization: codemetaContent.fundingOrganization,
+    fundingCode: codemetaContent.funding,
+    fundingOrganization: codemetaContent.funding.name,
     isPartOf: codemetaContent.isPartOf,
     isSourceCodeOf: codemetaContent["codemeta:isSourceCodeOf"].id,
     issueTracker: codemetaContent.issueTracker,
@@ -94,6 +94,8 @@ export function convertMetadataForDB(codemetaContent) {
       };
     });
   }
+
+  return metadata;
 }
 /**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
@@ -170,7 +172,9 @@ export async function applyMetadataTemplate(
 
     // Convert the content to the structure we use for code metadata
     const metadata = convertMetadataForDB(codemetaContent);
+    console.log("metadata found");
     console.log(metadata);
+    console.log("metadata found");
 
     // License, codemeta.json and CITATION.cff files were found
     const identifier = createId();
@@ -189,7 +193,7 @@ export async function applyMetadataTemplate(
       await metadataCollection.insertOne({
         created_at: newDate,
         identifier,
-        metadata: gatheredMetadata,
+        metadata,
         open: true,
         owner,
         repo: repository.name,
@@ -200,7 +204,7 @@ export async function applyMetadataTemplate(
       // Get the identifier of the existing metadata request
       await metadataCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
+        { $set: { metadata, updated_at: Date.now() } },
       );
 
       url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
