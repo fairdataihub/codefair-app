@@ -15,6 +15,10 @@ export default defineNuxtConfig({
           "data-website-id": "80e10200-5878-4adb-9a9e-ac0f23cb1f33",
           src: "https://umami.fairdataihub.org/mushroom",
         },
+        {
+          async: true,
+          src: "https://tally.so/widgets/embed.js",
+        },
       ],
     },
     layoutTransition: { name: "layout", mode: "out-in" },
