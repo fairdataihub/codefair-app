@@ -81,13 +81,15 @@ const toggleMobileMenu = () => {
             GitHub
           </NuxtLink>
 
-          <NuxtLink
-            v-if="devMode"
-            :to="`/dashboard/${user?.username}`"
-            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-          >
-            Dashboard
-          </NuxtLink>
+          <n-badge value="beta" type="warning">
+            <NuxtLink
+              v-if="devMode"
+              :to="`/dashboard/${user?.username}`"
+              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+            >
+              <span class=""> Dashboard </span>
+            </NuxtLink>
+          </n-badge>
 
           <div>
             <ProfileStatus />
