@@ -9,10 +9,6 @@ const main = () => {
   // sourcery skip: use-object-destructuring
   const COOLIFY_API_TOKEN = process.env.COOLIFY_API_TOKEN;
 
-  if (process.env.DEPLOY_ENVIROMENT === undefined) {
-    throw new Error("DEPLOY_ENVIROMENT is not set");
-  }
-
   const BOT_DEPLOY_HOOK = process.env.BOT_DEPLOY_HOOK || "";
 
   console.log("Deploying bot...");
