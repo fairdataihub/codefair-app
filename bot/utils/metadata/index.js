@@ -6,9 +6,9 @@ import {
 
 /**
  * * Converts the date to a Unix timestamp
- * 
- * @param {string} date - The date to convert to Unix timestamp 
- * 
+ *
+ * @param {string} date - The date to convert to Unix timestamp
+ *
  * @returns {number} - The Unix timestamp of the date
  */
 export function convertDateToUnix(date) {
@@ -21,13 +21,13 @@ export function convertDateToUnix(date) {
 
 /**
  * * Converts the codemeta.json file content to a metadata object for the database
- * 
  * @param {JSON} codemetaContent - The codemeta.json file content
- * 
  * @returns {JSON} - The metadata object for the database
  */
 export function convertMetadataForDB(codemetaContent) {
+  // eslint-disable-next-line prefer-const
   let sortedAuthors = [];
+  // eslint-disable-next-line prefer-const
   let sortedContributors = [];
 
   if (codemetaContent?.author) {
@@ -36,19 +36,19 @@ export function convertMetadataForDB(codemetaContent) {
       if (author?.type === "Role" && sortedAuthors.length > 0) {
         for (let i = 0; i < sortedAuthors.length; i++) {
           if (sortedAuthors[i].uri === author?.["schema:author"]) {
-            if (author?.["roleName"]) {
-              sortedAuthors[i].roles.role = author?.["roleName"];
+            if (author?.roleName) {
+              sortedAuthors[i].roles.role = author?.roleName;
             }
 
-            if (author?.["startDate"]) {
+            if (author?.startDate) {
               sortedAuthors[i].roles.startDate = convertDateToUnix(
-                author?.["startDate"],
+                author?.startDate,
               );
             }
 
-            if (author?.["endDate"]) {
+            if (author?.endDate) {
               sortedAuthors[i].roles.endDate = convertDateToUnix(
-                author?.["endDate"],
+                author?.endDate,
               );
             }
             return;
@@ -60,8 +60,8 @@ export function convertMetadataForDB(codemetaContent) {
         email: author?.email || "",
         familyName: author?.familyName || "",
         givenName: author?.givenName || "",
-        uri: author?.id || "",
         roles: [],
+        uri: author?.id || "",
       });
     });
   }
@@ -71,20 +71,22 @@ export function convertMetadataForDB(codemetaContent) {
     codemetaContent.contributor.forEach((contributor) => {
       if (contributor?.roleName && sortedContributors.length > 0) {
         for (let i = 0; i < sortedContributors.length; i++) {
-          if (sortedContributors[i].uri === contributor?.["schema:contributor"]) {
-            if (contributor?.["roleName"]) {
-              sortedContributors[i].roles.role = contributor?.["roleName"];
+          if (
+            sortedContributors[i].uri === contributor?.["schema:contributor"]
+          ) {
+            if (contributor?.roleName) {
+              sortedContributors[i].roles.role = contributor?.roleName;
             }
 
-            if (contributor?.["startDate"]) {
+            if (contributor?.startDate) {
               sortedContributors[i].roles.startDate = convertDateToUnix(
-                contributor?.["startDate"],
+                contributor?.startDate,
               );
             }
 
-            if (contributor?.["endDate"]) {
+            if (contributor?.endDate) {
               sortedContributors[i].roles.endDate = convertDateToUnix(
-                contributor?.["endDate"],
+                contributor?.endDate,
               );
             }
             return;
@@ -96,8 +98,8 @@ export function convertMetadataForDB(codemetaContent) {
         email: contributor?.email || "",
         familyName: contributor?.familyName || "",
         givenName: contributor?.givenName || "",
-        uri: contributor?.id || "",
         roles: [],
+        uri: contributor?.id || "",
       });
     });
   }
@@ -116,10 +118,10 @@ export function convertMetadataForDB(codemetaContent) {
     name: codemetaContent?.name || null,
     applicationCategory: codemetaContent?.applicationCategory || null,
     authors: sortedAuthors,
-    contributors: sortedContributors,
     codeRepository: codemetaContent?.codeRepository || "",
     continuousIntegration:
       codemetaContent?.["codemeta:continuousIntegration"]?.id || "",
+    contributors: sortedContributors,
     creationDate: codemetaContent?.dateCreated
       ? convertDateToUnix(codemetaContent?.dateCreated)
       : null,
