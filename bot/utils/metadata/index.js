@@ -36,11 +36,21 @@ export function convertMetadataForDB(codemetaContent) {
       if (author?.type === "Role" && sortedAuthors.length > 0) {
         for (let i = 0; i < sortedAuthors.length; i++) {
           if (sortedAuthors[i].uri === author?.["schema:author"]) {
-            sortedAuthors[i].roles = {
-              endDate: author?.["endDate"] ? convertDateToUnix(author?.["endDate"]) : null,
-              role: author?.["roleName"] || null,
-              startDate: author?.["startDate"] ? convertDateToUnix(author?.["startDate"]) : null,
-            };
+            if (author?.["roleName"]) {
+              sortedAuthors[i].roles.role = author?.["roleName"];
+            }
+
+            if (author?.["startDate"]) {
+              sortedAuthors[i].roles.startDate = convertDateToUnix(
+                author?.["startDate"],
+              );
+            }
+
+            if (author?.["endDate"]) {
+              sortedAuthors[i].roles.endDate = convertDateToUnix(
+                author?.["endDate"],
+              );
+            }
             return;
           }
         }
@@ -62,11 +72,21 @@ export function convertMetadataForDB(codemetaContent) {
       if (contributor?.roleName && sortedContributors.length > 0) {
         for (let i = 0; i < sortedContributors.length; i++) {
           if (sortedContributors[i].uri === contributor?.["schema:contributor"]) {
-            sortedContributors[i].roles = {
-              endDate: contributor?.["endDate"] ? convertDateToUnix(contributor?.["endDate"]) : null,
-              role: contributor?.["roleName"] || null,
-              startDate: contributor?.["startDate"] ? convertDateToUnix(contributor?.["startDate"]) : null,
-            };
+            if (contributor?.["roleName"]) {
+              sortedContributors[i].roles.role = contributor?.["roleName"];
+            }
+
+            if (contributor?.["startDate"]) {
+              sortedContributors[i].roles.startDate = convertDateToUnix(
+                contributor?.["startDate"],
+              );
+            }
+
+            if (contributor?.["endDate"]) {
+              sortedContributors[i].roles.endDate = convertDateToUnix(
+                contributor?.["endDate"],
+              );
+            }
             return;
           }
         }
