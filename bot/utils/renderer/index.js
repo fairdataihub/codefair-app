@@ -346,7 +346,7 @@ export async function applyLicenseTemplate(
 
     console.log("license found!");
     let licenseId = licenseRequest.data.license.spdx_id;
-    let licenseContent = licenseRequest.data.license.body;
+    let licenseContent = Buffer.from(licenseRequest.data.content, 'base64').toString('utf-8');
     if (licenseRequest.data.license.spdx_id === "no-license" || licenseRequest.data.license.spdx_id === "NOASSERTION") {
       licenseId = null;
       licenseContent = null;
