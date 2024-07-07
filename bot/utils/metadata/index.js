@@ -36,21 +36,25 @@ export function convertMetadataForDB(codemetaContent) {
       if (author?.type === "Role" && sortedAuthors.length > 0) {
         for (let i = 0; i < sortedAuthors.length; i++) {
           if (sortedAuthors[i].uri === author?.["schema:author"]) {
+            let roleObj = {};
             if (author?.roleName) {
-              sortedAuthors[i].roles.role = author?.roleName;
+              roleObj.role = author?.roleName;
             }
 
             if (author?.startDate) {
-              sortedAuthors[i].roles.startDate = convertDateToUnix(
+              roleObj.startDate = convertDateToUnix(
                 author?.startDate,
               );
             }
 
             if (author?.endDate) {
-              sortedAuthors[i].roles.endDate = convertDateToUnix(
+              roleObj.endDate = convertDateToUnix(
                 author?.endDate,
               );
             }
+
+            sortedAuthors[i].roles.push(roleObj);
+
             return;
           }
         }
@@ -74,21 +78,25 @@ export function convertMetadataForDB(codemetaContent) {
           if (
             sortedContributors[i].uri === contributor?.["schema:contributor"]
           ) {
+            let roleObj = {};
             if (contributor?.roleName) {
-              sortedContributors[i].roles.role = contributor?.roleName;
+              roleObj.role = contributor?.roleName;
             }
 
             if (contributor?.startDate) {
-              sortedContributors[i].roles.startDate = convertDateToUnix(
+              roleObj.startDate = convertDateToUnix(
                 contributor?.startDate,
               );
             }
 
             if (contributor?.endDate) {
-              sortedContributors[i].roles.endDate = convertDateToUnix(
+              roleObj.endDate = convertDateToUnix(
                 contributor?.endDate,
               );
             }
+
+            sortedContributors[i].roles.push(roleObj);
+
             return;
           }
         }
@@ -102,6 +110,19 @@ export function convertMetadataForDB(codemetaContent) {
         uri: contributor?.id || "",
       });
     });
+  }
+
+  // Now search through sortedAuthors and sortedContributors and check if uri begins with '_:' and if so, delete the key
+  for (let i = 0; i < sortedAuthors.length; i++) {
+    if (sortedAuthors[i].uri.startsWith("_:")) {
+      delete sortedAuthors[i].uri;
+    }
+  }
+
+  for (let i = 0; i < sortedContributors.length; i++) {
+    if (sortedContributors[i].uri.startsWith("_:")) {
+      delete sortedContributors[i].uri;
+    }
   }
 
   const regex = /https:\/\/spdx\.org\/licenses\/(.*)/;
