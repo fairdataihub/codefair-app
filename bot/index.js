@@ -167,6 +167,23 @@ export default async (app) => {
     }
   });
 
+  app.on("installation_repositories.removed", async (context) => {
+    const installationCollection = db.collection("installation");
+
+    for (const repository of context.payload.repositories_removed) {
+      const installation = await installationCollection.findOne({
+        repositoryId: repository.id,
+      });
+
+      if (installation) {
+        // Remove from the database
+        await installationCollection.deleteOne({
+          repositoryId: repository.id,
+        })
+      }
+    }
+  });
+
   // When a push is made to a repository
   app.on("push", async (context) => {
     // Event for when a push is made to the repository (listens to all branches)
