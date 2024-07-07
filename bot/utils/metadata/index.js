@@ -158,7 +158,7 @@ export function convertMetadataForDB(codemetaContent) {
       ? convertDateToUnix(codemetaContent?.datePublished)
       : null,
     fundingCode: codemetaContent?.funding || "",
-    fundingOrganization: codemetaContent?.funding.name || "",
+    fundingOrganization: codemetaContent?.funding?.name || "",
     isPartOf: codemetaContent?.isPartOf || "",
     isSourceCodeOf: codemetaContent?.["codemeta:isSourceCodeOf"]?.id || "",
     issueTracker: codemetaContent?.issueTracker || "",
