@@ -43,7 +43,7 @@
             >
           </div>
 
-          <div class="flex-2 my-4 flex flex-row self-center">
+          <n-flex justify="space-around">
             <img
               src="/assets/images/dashboard.png"
               loading="lazy"
@@ -57,9 +57,9 @@
               loading="lazy"
               alt="Info image"
               style="height: 30rem"
-              class="ml-4 rounded-lg"
+              class="rounded-lg"
             />
-          </div>
+          </n-flex>
         </div>
       </div>
     </div>
