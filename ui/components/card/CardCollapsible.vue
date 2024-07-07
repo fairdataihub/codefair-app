@@ -12,6 +12,10 @@ const props = defineProps({
     default: false,
     type: Boolean,
   },
+  subheader: {
+    default: "",
+    type: String,
+  },
 });
 
 const slots = useSlots();
@@ -50,7 +54,11 @@ const toggleCollapse = () => {
         'bg-slate-50/50': !contentCollapsed,
       }"
     >
-      <div class="text-xl font-semibold">{{ title }}</div>
+      <div>
+        <div class="text-xl font-bold">{{ title }}</div>
+
+        <div class="text-sm text-slate-500">{{ subheader }}</div>
+      </div>
 
       <div class="flex items-center">
         <slot name="header-extra"></slot>
@@ -59,16 +67,25 @@ const toggleCollapse = () => {
 
         <n-button
           text
-          class="rounded-full p-2 text-3xl transition-all hover:!bg-cyan-100"
+          class="rounded-full p-2 text-3xl transition-all hover:!bg-indigo-100"
           type="info"
           @click="toggleCollapse"
         >
-          <Icon
+          <!-- <Icon
             v-if="contentCollapsed"
             name="fluent:arrow-maximize-vertical-24-filled"
+          /> -->
+          <Icon
+            name="icon-park-outline:up"
+            size="25"
+            class="transition-all hover:text-indigo-500"
+            :class="{
+              'text-gray-600': !contentCollapsed,
+              'rotate-180 text-gray-400': contentCollapsed,
+            }"
           />
 
-          <Icon v-else name="fluent:arrow-minimize-vertical-24-filled" />
+          <!-- <Icon v-else name="fluent:arrow-minimize-vertical-24-filled" /> -->
         </n-button>
       </div>
     </div>

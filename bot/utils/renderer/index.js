@@ -2,10 +2,11 @@ import { createId } from "../tools/index.js";
 import { checkForCitation } from "../citation/index.js";
 import { checkForCodeMeta } from "../codemeta/index.js";
 import { checkForLicense } from "../license/index.js";
-import { gatherMetadata } from "../metadata/index.js";
+import { gatherMetadata, convertMetadataForDB } from "../metadata/index.js";
 
 const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
+
 /**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
  *
@@ -65,8 +66,25 @@ export async function applyMetadataTemplate(
     baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemetada.json are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). These files are not found in the repository. If you would like codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
   }
 
-  // TODO: If metadata files are found, fetch and add the metadata to the db (allow for continuous updates)
   if (subjects.codemeta && subjects.citation && subjects.license) {
+    // Download the codemeta.json file from the repo
+    const codemetaFile = await context.octokit.repos.getContent({
+      owner,
+      path: "codemeta.json",
+      repo: repository.name,
+    });
+
+    // Convert the content to a json object
+    const codemetaContent = JSON.parse(
+      Buffer.from(codemetaFile.data.content, "base64").toString(),
+    );
+
+    // Convert the content to the structure we use for code metadata
+    const metadata = convertMetadataForDB(codemetaContent);
+    console.log("metadata found");
+    console.log(metadata);
+    console.log("metadata found");
+
     // License, codemeta.json and CITATION.cff files were found
     const identifier = createId();
 
@@ -80,11 +98,11 @@ export async function applyMetadataTemplate(
     if (!existingMetadata) {
       // Entry does not exist in db, create a new one
       const newDate = Date.now();
-      const gatheredMetadata = await gatherMetadata(context, owner, repository);
+      // const gatheredMetadata = await gatherMetadata(context, owner, repository);
       await metadataCollection.insertOne({
         created_at: newDate,
         identifier,
-        metadata: gatheredMetadata,
+        metadata,
         open: true,
         owner,
         repo: repository.name,
@@ -95,7 +113,7 @@ export async function applyMetadataTemplate(
       // Get the identifier of the existing metadata request
       await metadataCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
+        { $set: { metadata, updated_at: Date.now() } },
       );
 
       url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
@@ -284,6 +302,7 @@ export async function applyLicenseTemplate(
   db,
   repository,
   owner,
+  context,
 ) {
   if (!subjects.license) {
     const identifier = createId();
@@ -319,6 +338,20 @@ export async function applyLicenseTemplate(
     const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
     baseTemplate += `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and codefair will update the the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
   } else {
+    // Get the license identifier
+    const licenseRequest = await context.octokit.rest.licenses.getForRepo({
+      owner,
+      repo: repository.name,
+    });
+
+    console.log("license found!");
+    let licenseId = licenseRequest.data.license.spdx_id;
+    let licenseContent = licenseRequest.data.license.body;
+    if (licenseRequest.data.license.spdx_id === "no-license" || licenseRequest.data.license.spdx_id === "NOASSERTION") {
+      licenseId = null;
+      licenseContent = null;
+    }
+
     // License file found text
     const identifier = createId();
     let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
@@ -338,13 +371,15 @@ export async function applyLicenseTemplate(
         repo: repository.name,
         repositoryId: repository.id,
         updated_at: newDate,
+        licenseId,
+        licenseContent,
       });
     } else {
       // Get the identifier of the existing license request
       // Update the database
       await licenseCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
+        { $set: { updated_at: Date.now(), licenseId, licenseContent } },
       );
       url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     }
@@ -416,6 +451,7 @@ export async function renderIssues(
     db,
     repository,
     owner,
+    context,
   );
 
   // If License PR is open, add the PR number to the dashboard

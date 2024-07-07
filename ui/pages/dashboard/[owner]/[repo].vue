@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { generate } from "random-words";
 const route = useRoute();
 
 const { owner, repo } = route.params as { owner: string; repo: string };
@@ -47,6 +48,15 @@ const licenseRequests = computed(() => {
     open: openLicenseRequests,
   };
 });
+
+const generateSeed = (seed: string) => {
+  return generate({
+    join: "-",
+    max: 3,
+    min: 3,
+    seed,
+  });
+};
 </script>
 
 <template>
@@ -87,111 +97,136 @@ const licenseRequests = computed(() => {
     <div v-else>
       <n-divider />
 
-      <h2>License</h2>
+      <CardCollapsible
+        title="License"
+        subheader="The license for the repository is shown here. You can review open
+          license requests and view closed license requests."
+        class="rounded-lg bg-white shadow-md"
+        bordered
+      >
+        <div class="my-3">
+          <!-- <h3>Open License Requests</h3> -->
 
-      <div>
-        <h3>Open License Requests</h3>
+          <div
+            v-for="licenseRequest in licenseRequests.open"
+            :key="licenseRequest.identifier"
+          >
+            <n-card>
+              <n-flex align="center" justify="space-between">
+                <div>
+                  <!-- <h3>{{ licenseRequest.identifier }}</h3> -->
+                  <h3>ID: {{ generateSeed(licenseRequest.identifier) }}</h3>
 
-        <div
-          v-for="licenseRequest in licenseRequests.open"
-          :key="licenseRequest.identifier"
-        >
-          <n-card>
+                  <p>
+                    {{
+                      $dayjs
+                        .unix(parseInt(licenseRequest.timestamp) / 1000)
+                        .format("MMMM DD, YYYY HH:mmA")
+                    }}
+                  </p>
+                </div>
+
+                <NuxtLink
+                  :to="`/add/license/${licenseRequest.identifier}`"
+                  target="__blank"
+                >
+                  <n-button type="primary">View License</n-button>
+                </NuxtLink>
+              </n-flex>
+            </n-card>
+          </div>
+
+          <!-- <n-divider />
+
+          <h3>Closed License Requests</h3>
+
+          <n-alert
+            v-if="licenseRequests.closed.length === 0"
+            type="info"
+            class="my-5"
+          >
+            There are no closed license requests for this repository.
+          </n-alert>
+
+          <div
+            v-for="licenseRequest in licenseRequests.closed"
+            v-else
+            :key="licenseRequest.identifier"
+            :to="`/dashboard/${owner}/${repo}/license/${licenseRequest.identifier}`"
+          >
+            <n-card>
+              <n-flex align="center" justify="space-between">
+                <div>
+                  <h3>{{ licenseRequest.identifier }}</h3>
+
+                  <p>{{ licenseRequest.timestamp }}</p>
+                </div>
+
+                <NuxtLink :to="licenseRequest.pullRequest" target="__blank">
+                  <n-button type="primary">View Pull Request</n-button>
+                </NuxtLink>
+              </n-flex>
+            </n-card>
+          </div> -->
+        </div>
+      </CardCollapsible>
+
+      <n-divider />
+
+      <CardCollapsible
+        title="Code Metadata"
+        subheader="The code metadata for the repository is shown here. This includes
+            the number of files, the number of lines of code, and the number of
+            commits."
+        class="rounded-lg bg-white shadow-md"
+        bordered
+      >
+        <!-- <h2>Code Metadata</h2> -->
+
+        <div>
+          <!-- <p>
+            The code metadata for the repository is shown here. This includes
+            the number of files, the number of lines of code, and the number of
+            commits.
+          </p> -->
+
+          <n-alert v-if="!data?.codeMetadataRequest" type="info" class="my-5">
+            There are no codemetadata requests for this repository yet.
+          </n-alert>
+
+          <n-card v-else class="my-3">
             <n-flex align="center" justify="space-between">
               <div>
-                <h3>{{ licenseRequest.identifier }}</h3>
+                <h3>
+                  ID: {{ generateSeed(data?.codeMetadataRequest.identifier) }}
+                </h3>
 
                 <p>
                   {{
-                    new Date(licenseRequest.timestamp * 1000).toLocaleString()
+                    $dayjs
+                      .unix(
+                        parseInt(data?.codeMetadataRequest.timestamp) / 1000,
+                      )
+                      .format("MMMM DD, YYYY HH:mmA")
                   }}
                 </p>
               </div>
 
               <NuxtLink
-                :to="`/add/license/${licenseRequest.identifier}`"
-                target="__blank"
+                :to="`/add/code-metadata/${data?.codeMetadataRequest.identifier}`"
               >
-                <n-button type="primary">Review Request</n-button>
+                <n-button type="primary">View Code Metadata</n-button>
               </NuxtLink>
             </n-flex>
           </n-card>
         </div>
-
-        <n-divider />
-
-        <h3>Closed License Requests</h3>
-
-        <n-alert
-          v-if="licenseRequests.closed.length === 0"
-          type="info"
-          class="my-5"
-        >
-          There are no closed license requests for this repository.
-        </n-alert>
-
-        <div
-          v-for="licenseRequest in licenseRequests.closed"
-          v-else
-          :key="licenseRequest.identifier"
-          :to="`/dashboard/${owner}/${repo}/license/${licenseRequest.identifier}`"
-        >
-          <n-card>
-            <n-flex align="center" justify="space-between">
-              <div>
-                <h3>{{ licenseRequest.identifier }}</h3>
-
-                <p>{{ licenseRequest.timestamp }}</p>
-              </div>
-
-              <NuxtLink :to="licenseRequest.pullRequest" target="__blank">
-                <n-button type="primary">View Pull Request</n-button>
-              </NuxtLink>
-            </n-flex>
-          </n-card>
-        </div>
-      </div>
-
-      <n-divider />
-
-      <h2>Code Metadata</h2>
-
-      <p>
-        The code metadata for the repository is shown here. This includes the
-        number of files, the number of lines of code, and the number of commits.
-      </p>
-
-      <n-alert v-if="!data?.codeMetadataRequest" type="info" class="my-5">
-        There are no codemetadata requests for this repository yet.
-      </n-alert>
-
-      <n-card v-else class="my-5">
-        <n-flex align="center" justify="space-between">
-          <div>
-            <h3>{{ data?.codeMetadataRequest.identifier }}</h3>
-
-            <p>
-              {{
-                new Date(
-                  data?.codeMetadataRequest.timestamp * 1000,
-                ).toLocaleString()
-              }}
-            </p>
-          </div>
-
-          <NuxtLink
-            :to="`/add/code-metadata/${data?.codeMetadataRequest.identifier}`"
-          >
-            <n-button type="primary">View Code Metadata</n-button>
-          </NuxtLink>
-        </n-flex>
-      </n-card>
+      </CardCollapsible>
     </div>
 
-    <n-collapse class="mt-8">
+    <!-- <n-collapse class="mt-8">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
       </n-collapse-item>
-    </n-collapse>
+    </n-collapse> -->
   </main>
 </template>
