@@ -188,16 +188,23 @@ const saveLicenseAndPush = async () => {
   <main class="mx-auto max-w-screen-xl">
     <div class="bg-white p-8">
       <n-flex vertical size="large" class="pb-5">
-        <h1 class="text-2xl font-bold">
-          Edit LICENSE for
+        <div class="flex flex-row justify-between">
+          <h1 class="text-2xl font-bold">
+            Edit LICENSE for
+            <NuxtLink
+              :to="`https://github.com/${githubRepo}`"
+              target="_blank"
+              class="text-blue-500 underline transition-all hover:text-blue-600"
+            >
+              {{ data?.repo }}
+            </NuxtLink>
+          </h1>
+
           <NuxtLink
-            :to="`https://github.com/${githubRepo}`"
             target="_blank"
-            class="text-blue-500 underline transition-all hover:text-blue-600"
-          >
-            {{ data?.repo }}
-          </NuxtLink>
-        </h1>
+            class="text-blue-400 underline transition-all hover:text-blue-500"
+            >Need help?</NuxtLink>
+        </div>
 
         <div class="border-b border-dashed py-2">
           <p class="text-base">

@@ -36,21 +36,17 @@ export function convertMetadataForDB(codemetaContent) {
       if (author?.type === "Role" && sortedAuthors.length > 0) {
         for (let i = 0; i < sortedAuthors.length; i++) {
           if (sortedAuthors[i].uri === author?.["schema:author"]) {
-            let roleObj = {};
+            const roleObj = {};
             if (author?.roleName) {
               roleObj.role = author?.roleName;
             }
 
             if (author?.startDate) {
-              roleObj.startDate = convertDateToUnix(
-                author?.startDate,
-              );
+              roleObj.startDate = convertDateToUnix(author?.startDate);
             }
 
             if (author?.endDate) {
-              roleObj.endDate = convertDateToUnix(
-                author?.endDate,
-              );
+              roleObj.endDate = convertDateToUnix(author?.endDate);
             }
 
             sortedAuthors[i].roles.push(roleObj);
@@ -78,21 +74,17 @@ export function convertMetadataForDB(codemetaContent) {
           if (
             sortedContributors[i].uri === contributor?.["schema:contributor"]
           ) {
-            let roleObj = {};
+            const roleObj = {};
             if (contributor?.roleName) {
               roleObj.role = contributor?.roleName;
             }
 
             if (contributor?.startDate) {
-              roleObj.startDate = convertDateToUnix(
-                contributor?.startDate,
-              );
+              roleObj.startDate = convertDateToUnix(contributor?.startDate);
             }
 
             if (contributor?.endDate) {
-              roleObj.endDate = convertDateToUnix(
-                contributor?.endDate,
-              );
+              roleObj.endDate = convertDateToUnix(contributor?.endDate);
             }
 
             sortedContributors[i].roles.push(roleObj);
