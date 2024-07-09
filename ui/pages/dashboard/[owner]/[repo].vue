@@ -221,6 +221,41 @@ const generateSeed = (seed: string) => {
           </n-card>
         </div>
       </CardCollapsible>
+
+      <n-divider />
+
+      <CardCollapsible
+        title="Zenodo - Coming Soon"
+        subheader="The Zenodo integration for the repository is coming soon. You will be
+            able to view the Zenodo metadata for the repository here."
+        class="rounded-lg bg-white shadow-md"
+        bordered
+        :collapse="true"
+      >
+        <div>
+          <n-card class="my-3">
+            <n-flex align="center" justify="space-between">
+              <div>
+                <h3>ID: {{ generateSeed("test") }}</h3>
+
+                <p>
+                  {{
+                    $dayjs
+                      .unix(parseInt(Date.now()) / 1000)
+                      .format("MMMM DD, YYYY HH:mmA")
+                  }}
+                </p>
+              </div>
+
+              <NuxtLink>
+                <n-button disabled class="bg-gray-300"
+                  >View Code Metadata</n-button
+                >
+              </NuxtLink>
+            </n-flex>
+          </n-card>
+        </div>
+      </CardCollapsible>
     </div>
 
     <!-- <n-collapse class="mt-8">
