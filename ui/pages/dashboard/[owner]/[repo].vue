@@ -227,7 +227,7 @@ const generateSeed = (seed: string) => {
       <CardCollapsible
         title="Zenodo - Coming Soon"
         subheader="The Zenodo integration for the repository is coming soon. You will be
-            able to view the Zenodo metadata for the repository here."
+            able to archive each version of your repository on Zenodo."
         class="rounded-lg bg-white shadow-md"
         bordered
         :collapse="true"
