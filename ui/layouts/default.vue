@@ -163,7 +163,7 @@ const toggleMobileMenu = () => {
       </header>
     </div>
 
-    <div
+    <!-- <div
       class="absolute top-0 z-0 w-full transform-gpu overflow-hidden bg-gradient-to-b from-blue-500 to-red-500"
       aria-hidden="true"
     >
@@ -176,7 +176,7 @@ const toggleMobileMenu = () => {
           class="z-0 max-h-[600px] w-full bg-gradient-to-b from-blue-500 to-red-500 object-cover object-top"
         />
       </div>
-    </div>
+    </div> -->
 
     <div class="relative z-10 grow">
       <slot />
