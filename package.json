@@ -14,5 +14,8 @@
     "dev": "pnpm --stream -r dev",
     "scripts:deploy": "tsx ./scripts/deploy.ts"
   },
-  "packageManager": "pnpm@latest"
+  "packageManager": "pnpm@latest",
+  "engines": {
+    "node": ">20"
+  }
 }
