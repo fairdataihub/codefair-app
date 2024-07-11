@@ -30,7 +30,7 @@ watchEffect(() => {
       </a>
 
       <p class="pt-3 text-center">
-        Your GitHub account is also your login on codefair!
+        Your GitHub account is also your login on Codefair!
       </p>
     </div>
   </main>

@@ -1,6 +1,6 @@
 export default defineAppConfig({
   docus: {
-    title: "codefair",
+    title: "Codefair",
     aside: {
       collapsed: false,
       exclude: [],

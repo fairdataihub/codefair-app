@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   app: {
     head: {
-      title: "codefair",
+      title: "Codefair",
       meta: [
         {
           name: "viewport",

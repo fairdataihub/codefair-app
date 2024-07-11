@@ -36,7 +36,7 @@ const themeConfig: ThemeConfig = {
 };
 
 useHead({
-  title: "codefair",
+  title: "Codefair",
   bodyAttrs: {
     class: "test",
   },
@@ -73,7 +73,7 @@ useHead({
     {
       name: "description",
       content:
-        "codefair is a free and open source GitHub app that acts as your personal assistant when it comes to making your research software reusable and especially complying with the Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software (FAIR4RS Principles).",
+        "Codefair is a free and open source GitHub app that acts as your personal assistant when it comes to making your research software reusable and especially complying with the Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software (FAIR4RS Principles).",
     },
     {
       name: "msapplication-TileColor",
@@ -87,14 +87,14 @@ useHead({
 });
 
 useSeoMeta({
-  title: "codefair",
+  title: "Codefair",
   description:
-    "codefair is a free and open source GitHub app that acts as your personal assistant when it comes to making your research software reusable and especially complying with the Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software (FAIR4RS Principles).",
+    "Codefair is a free and open source GitHub app that acts as your personal assistant when it comes to making your research software reusable and especially complying with the Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software (FAIR4RS Principles).",
   ogDescription:
-    "codefair is a free and open source GitHub app that acts as your personal assistant when it comes to making your research software reusable and especially complying with the Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software (FAIR4RS Principles).",
+    "Codefair is a free and open source GitHub app that acts as your personal assistant when it comes to making your research software reusable and especially complying with the Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software (FAIR4RS Principles).",
   ogImage:
     "https://kalai.fairdataihub.org/api/generate?title=codefair&description=Make%20your%20research%20software%20reusable%20without%20breaking%20a%20sweat!&app=codefair&org=fairdataihub",
-  ogTitle: "codefair",
+  ogTitle: "Codefair",
   twitterCard: "summary_large_image",
 });
 </script>

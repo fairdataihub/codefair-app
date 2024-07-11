@@ -32,7 +32,7 @@ const toggleMobileMenu = () => {
             class="h-10 w-10 md:h-12 md:w-12"
           />
 
-          codefair
+          Codefair
         </a>
 
         <nav class="hidden items-center gap-8 lg:flex">
@@ -111,7 +111,7 @@ const toggleMobileMenu = () => {
               class="h-10 w-10"
             />
 
-            codefair
+            Codefair
           </a>
 
           <button
@@ -199,12 +199,12 @@ const toggleMobileMenu = () => {
                 class="h-10 w-10 md:h-12 md:w-12"
               />
 
-              codefair
+              Codefair
             </a>
           </div>
 
           <p class="mb-6 text-gray-500 sm:pr-8">
-            With codefair by your side, you're not just managing repositories
+            With Codefair by your side, you're not just managing repositories
             but you are advocating for the development of FAIR software
           </p>
 

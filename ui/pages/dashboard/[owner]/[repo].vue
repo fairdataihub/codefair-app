@@ -90,7 +90,7 @@ const generateSeed = (seed: string) => {
     </n-flex>
 
     <n-alert v-if="botNotInstalled" type="error" class="my-5">
-      The codefair bot is not installed on this repository. Please install the
+      The Codefair bot is not installed on this repository. Please install the
       bot to view the compliance dashboard.
     </n-alert>
 

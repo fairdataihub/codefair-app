@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -16,7 +16,7 @@
     <link rel="icon" type="image/x-icon" href="./assets/images/favicon.ico" />
     <script src="./assets/js/scripts.js" defer></script>
   </head>
-  <body class="relative font-inter">
+  <body class="font-inter relative">
     <!-- TOP GRADIENT -->
     <div
       class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
@@ -62,7 +62,7 @@
             <img
               src="./assets/images/codefair_logo.png"
               alt="codefair"
-              class="w-10 h-10 md:w-12 md:h-12"
+              class="h-10 w-10 md:h-12 md:w-12"
             />
 
             codefair
@@ -128,18 +128,18 @@
           </button>
           <div
             id="mobile-menu"
-            class="hidden fixed inset-0 bg-purple-50 z-50 flex flex-col items-center justify-center gap-6"
-            style="height: fit-content; padding: 6rem;"
+            class="fixed inset-0 z-50 flex hidden flex-col items-center justify-center gap-6 bg-purple-50"
+            style="height: fit-content; padding: 6rem"
           >
             <a
               href="/"
-              class="font-inter absolute top-4 left-4 inline-flex items-center gap-2.5 text-2xl font-bold text-black"
+              class="font-inter absolute left-4 top-4 inline-flex items-center gap-2.5 text-2xl font-bold text-black"
               aria-label="logo"
             >
               <img
                 src="./assets/images/codefair_logo.png"
                 alt="codefair"
-                class="w-10 h-10"
+                class="h-10 w-10"
               />
 
               codefair
@@ -148,7 +148,7 @@
             <button
               id="mobile-menu-close"
               type="button"
-              class="absolute top-6 right-4 text-gray-500"
+              class="absolute right-4 top-6 text-gray-500"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -166,10 +166,10 @@
 
             <nav class="flex flex-col gap-6">
               <a
-              href="codefair.html"
-              class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-              >About</a
-            >
+                href="codefair.html"
+                class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+                >About</a
+              >
               <a
                 href="fairsoftware.html"
                 class="font-inter text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
@@ -200,21 +200,22 @@
             <h1
               class="font-inter mb-4 text-4xl font-bold text-black sm:text-5xl md:mb-4 md:text-5xl"
             >
-            Make your research software reusable without breaking a sweat!
+              Make your research software reusable without breaking a sweat!
             </h1>
 
             <div class="font-inter text-justify">
               <p class="leading-relaxed text-gray-500 lg:w-full xl:text-xl">
-                Let codefair handle the complexities of making your research software FAIR, so you can focus on what matters most.
+                Let codefair handle the complexities of making your research
+                software FAIR, so you can focus on what matters most.
               </p>
             </div>
 
             <div
-              class="flex flex-col gap-2.5 mt-8 sm:flex-row sm:justify-center lg:justify-start md:mt-8"
+              class="mt-8 flex flex-col gap-2.5 sm:flex-row sm:justify-center md:mt-8 lg:justify-start"
             >
               <a
                 href="https://github.com/marketplace/codefair-app"
-                class="w-3/5 self-center md:w-auto font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                class="font-inter inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
                 >Get codefair -></a
               >
 
@@ -225,19 +226,19 @@
 
           <!-- image - start -->
           <div
-            class="animate-float-item hidden lg:flex h-48 lg:h-auto xl:w-5/12 relative"
+            class="animate-float-item relative hidden h-48 lg:flex lg:h-auto xl:w-5/12"
           >
             <img
               src="./assets/images/second_layer_hero.png"
               loading="lazy"
               alt="Hero image"
-              class="animate-float-opposite h-[25rem] w-[25rem] object-cover object-center absolute left-24 top-8"
+              class="animate-float-opposite absolute left-24 top-8 h-[25rem] w-[25rem] object-cover object-center"
             />
             <img
               src="./assets/images/first_layer_hero.png"
               loading="lazy"
               alt="Hero image"
-              class="animate-float-item h[25rem]- w-[25rem] object-cover object-center absolute -left-[4rem] top-10"
+              class="animate-float-item h[25rem]- absolute -left-[4rem] top-10 w-[25rem] object-cover object-center"
             />
           </div>
           <!-- image - end -->
@@ -271,17 +272,17 @@
     <section id="information-section">
       <div class="bg-[#e7ddfa4f] py-4 md:py-8">
         <div
-          class="flex flex-col-reverse md:flex-row mx-auto max-w-screen-xl container justify-between"
+          class="container mx-auto flex max-w-screen-xl flex-col-reverse justify-between md:flex-row"
         >
           <div class="flex-2 self-center">
             <img
               src="./assets/images/Saly-38.png"
               loading="lazy"
               alt="Info image"
-              class="w-[15rem] h-[15rem] md:w-[25rem] md:h-[25rem]"
+              class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
             />
           </div>
-          <div class="flex flex-col justify-evenly flex-1 p-4 max-w-2xl">
+          <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
             <div class="flex flex-col">
               <h2
                 class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
@@ -290,21 +291,22 @@
               </h2>
               <p>
                 codefair is a free and open source GitHub app that acts as your
-                personal assistant when it comes to making your research software
-                reusable and especially complying with the Findable, Accessible,
-                Interoperable, Reusable (FAIR) Principles for Research Software
-                (FAIR4RS Principles). Whether you are developing artificial
-                intelligence (AI)/machine learning (ML) models with Python, data
-                visualization tools with Jupyter notebook, or data analysis code
-                with R, codefair is here to assist you.
+                personal assistant when it comes to making your research
+                software reusable and especially complying with the Findable,
+                Accessible, Interoperable, Reusable (FAIR) Principles for
+                Research Software (FAIR4RS Principles). Whether you are
+                developing artificial intelligence (AI)/machine learning (ML)
+                models with Python, data visualization tools with Jupyter
+                notebook, or data analysis code with R, codefair is here to
+                assist you.
               </p>
             </div>
             <div
-              class="flex py-8 lg:py-0 flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
+              class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start lg:py-0"
             >
               <a
                 href="https://github.com/fairdataihub/codefair-app"
-                class="w-3/5 self-center md:w-auto font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                class="font-inter inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
                 >View the source code -></a
               >
 
@@ -315,9 +317,9 @@
       </div>
       <div class="py-4 md:py-8">
         <div
-          class="flex flex-col md:flex-row mx-auto max-w-screen-xl container justify-between"
+          class="container mx-auto flex max-w-screen-xl flex-col justify-between md:flex-row"
         >
-          <div class="flex flex-col justify-evenly flex-1 p-4 max-w-2xl">
+          <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
             <div class="flex flex-col">
               <h2
                 class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
@@ -334,11 +336,11 @@
               </p>
             </div>
             <div
-              class="py-8 lg:py-0 flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
+              class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start lg:py-0"
             >
               <a
                 href="fairsoftware.html"
-                class="w-auto self-center font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                class="font-inter inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
                 >Learn more about FAIR software -></a
               >
 
@@ -350,24 +352,24 @@
               src="./assets/images/Other 08.png"
               loading="lazy"
               alt="Info image"
-              class="h-[15rem] w-[15rem] md:w-[25rem] md:h-[25rem]"
+              class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
             />
           </div>
         </div>
       </div>
       <div class="bg-[#e7ddfa4f] py-4 md:py-8">
         <div
-          class="flex justify-between flex-col-reverse lg:flex-row mx-auto max-w-screen-xl container"
+          class="container mx-auto flex max-w-screen-xl flex-col-reverse justify-between lg:flex-row"
         >
           <div class="flex-2 self-center">
             <img
               src="./assets/images/Saly-16.png"
               loading="lazy"
               alt="Info image"
-              class="h-[15rem] w-[15rem] md:w-[25rem] md:h-[25rem]"
+              class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
             />
           </div>
-          <div class="flex flex-col justify-evenly flex-1 p-4 max-w-2xl">
+          <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
             <div class="flex flex-col">
               <h2
                 class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
@@ -386,11 +388,11 @@
               </p>
             </div>
             <div
-              class="py-8 md:py-0 flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
+              class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center md:py-0 lg:justify-start"
             >
               <a
                 href="codefair.html"
-                class="w-auto self-center font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                class="font-inter inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
                 >Learn more about codefair -></a
               >
 
@@ -401,9 +403,9 @@
       </div>
       <div class="py-4 md:py-8">
         <div
-          class="flex flex-col lg:flex-row mx-auto max-w-screen-xl container justify-between"
+          class="container mx-auto flex max-w-screen-xl flex-col justify-between lg:flex-row"
         >
-          <div class="flex-1 flex flex-col justify-evenly p-4 max-w-2xl">
+          <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
             <div>
               <h2
                 class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
@@ -411,7 +413,7 @@
                 Who are we?
               </h2>
               <p>
-                codefair is being developed by the team at the FAIR Data
+                Codefair is being developed by the team at the FAIR Data
                 Innovations Hub, a division of the non profit biomedical
                 research institue called California Medical Innovations
                 Institute. As developers of research software, we experienced
@@ -423,11 +425,11 @@
               </p>
             </div>
             <div
-              class="py-8 md:py-0 flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
+              class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center md:py-0 lg:justify-start"
             >
               <a
                 href="https://fairdataihub.org/"
-                class="w-3/5 self-center md:w-auto font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                class="font-inter inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
                 >Learn more about us -></a
               >
 
@@ -439,24 +441,24 @@
               src="./assets/images/DRIP_18.png"
               loading="lazy"
               alt="Info image"
-              class="h-[15rem] w-[15rem] md:w-[25rem] md:h-[25rem]"
+              class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
             />
           </div>
         </div>
       </div>
       <div class="bg-[#e7ddfa4f] py-4 md:py-8">
         <div
-          class="flex flex-col-reverse lg:flex-row mx-auto max-w-screen-xl container justify-between"
+          class="container mx-auto flex max-w-screen-xl flex-col-reverse justify-between lg:flex-row"
         >
           <div class="self-center">
             <img
               src="./assets/images/Other 02.png"
               loading="lazy"
               alt="Info image"
-              class="h-[15rem] w-[15rem] md:w-[25rem] md:h-[25rem]"
+              class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
             />
           </div>
-          <div class="flex-1 flex flex-col justify-evenly p-4 max-w-2xl">
+          <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
             <div>
               <h2
                 class="font-inter mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
@@ -469,11 +471,11 @@
               </p>
             </div>
             <div
-              class="py-8 md:py-0 flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start md:-mt-8"
+              class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center md:-mt-8 md:py-0 lg:justify-start"
             >
               <a
                 href="https://github.com/fairdataihub/codefair-app/issues"
-                class="w-3/5 self-center md:w-auto font-inter inline-block rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+                class="font-inter inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
                 >Open a GitHub issue -></a
               >
 
@@ -489,9 +491,9 @@
       <div>
         <div class="mx-auto max-w-screen-xl border-t px-4 md:px-8">
           <div
-            class="my-4 md:my-20 gap-12 grid items-center grid-rows-1 md:grid-cols-3 md:grid-rows-1"
+            class="my-4 grid grid-rows-1 items-center gap-12 md:my-20 md:grid-cols-3 md:grid-rows-1"
           >
-            <div class="lg:my-0 my-8 md:col-span-2">
+            <div class="my-8 md:col-span-2 lg:my-0">
               <!-- logo - start -->
               <div class="mb-4 lg:-mt-2">
                 <a
@@ -502,7 +504,7 @@
                   <img
                     src="./assets/images/codefair_logo.png"
                     alt="codefair"
-                    class="w-10 h-10 md:w-12 md:h-12"
+                    class="h-10 w-10 md:h-12 md:w-12"
                   />
 
                   codefair
@@ -511,7 +513,9 @@
               <!-- logo - end -->
 
               <p class="mb-6 text-gray-500 sm:pr-8">
-                With codefair by your side, you're not just managing repositories but you are advocating for the development of FAIR software
+                With codefair by your side, you're not just managing
+                repositories but you are advocating for the development of FAIR
+                software
               </p>
 
               <!-- social - start -->
@@ -597,12 +601,30 @@
           </div>
 
           <div class="border-t py-8 text-center text-sm text-gray-400">
-            <p class="flex align-center self-center text-center justify-center -mb-4">Made with <svg style="margin-top:.1rem" xmlns="http://www.w3.org/2000/svg" width="30" height="20" viewBox="0 0 256 256">
-              <g fill="#a782ec">
-                <path d="M232 102c0 66-104 122-104 122S24 168 24 102a54 54 0 0 1 54-54c22.59 0 41.94 12.31 50 32c8.06-19.69 27.41-32 50-32a54 54 0 0 1 54 54" opacity="0.2" />
-                <path d="M178 40c-20.65 0-38.73 8.88-50 23.89C116.73 48.88 98.65 40 78 40a62.07 62.07 0 0 0-62 62c0 70 103.79 126.66 108.21 129a8 8 0 0 0 7.58 0C136.21 228.66 240 172 240 102a62.07 62.07 0 0 0-62-62m-50 174.8c-18.26-10.64-96-59.11-96-112.8a46.06 46.06 0 0 1 46-46c19.45 0 35.78 10.36 42.6 27a8 8 0 0 0 14.8 0c6.82-16.67 23.15-27 42.6-27a46.06 46.06 0 0 1 46 46c0 53.61-77.76 102.15-96 112.8" />
-              </g>
-            </svg> by the FAIR Data Innovations Hub</p><br>
+            <p
+              class="align-center -mb-4 flex justify-center self-center text-center"
+            >
+              Made with
+              <svg
+                style="margin-top: 0.1rem"
+                xmlns="http://www.w3.org/2000/svg"
+                width="30"
+                height="20"
+                viewBox="0 0 256 256"
+              >
+                <g fill="#a782ec">
+                  <path
+                    d="M232 102c0 66-104 122-104 122S24 168 24 102a54 54 0 0 1 54-54c22.59 0 41.94 12.31 50 32c8.06-19.69 27.41-32 50-32a54 54 0 0 1 54 54"
+                    opacity="0.2"
+                  />
+                  <path
+                    d="M178 40c-20.65 0-38.73 8.88-50 23.89C116.73 48.88 98.65 40 78 40a62.07 62.07 0 0 0-62 62c0 70 103.79 126.66 108.21 129a8 8 0 0 0 7.58 0C136.21 228.66 240 172 240 102a62.07 62.07 0 0 0-62-62m-50 174.8c-18.26-10.64-96-59.11-96-112.8a46.06 46.06 0 0 1 46-46c19.45 0 35.78 10.36 42.6 27a8 8 0 0 0 14.8 0c6.82-16.67 23.15-27 42.6-27a46.06 46.06 0 0 1 46 46c0 53.61-77.76 102.15-96 112.8"
+                  />
+                </g>
+              </svg>
+              by the FAIR Data Innovations Hub
+            </p>
+            <br />
             © 2024 - FAIR Data Innovations Hub. All rights reserved.
           </div>
         </div>
