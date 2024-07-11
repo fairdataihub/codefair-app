@@ -43,7 +43,7 @@ if (props.error) {
 <template>
   <NuxtLayout name="default">
     <main
-      class="grid place-items-center px-6 text-center text-lg text-slate-700 lg:px-8"
+      class="grid place-items-center px-6 pb-8 text-center text-lg text-slate-700 lg:px-8"
     >
       <img
         src="/assets/images/error/404.svg"

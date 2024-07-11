@@ -25,7 +25,7 @@
           <NuxtLink
             to="https://github.com/marketplace/codefair-app"
             target="_blank"
-            class="mb-4 inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base lg:mb-0"
+            class="mb-4 inline-block w-4/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-base font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-lg lg:mb-0"
           >
             Get codefair ->
           </NuxtLink>

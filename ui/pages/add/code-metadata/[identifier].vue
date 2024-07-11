@@ -311,16 +311,24 @@ const handleDevelopmentStatusChange = (value: string) => {
   <main>
     <div class="mx-auto mb-4 max-w-screen-xl rounded bg-white p-8 shadow-md">
       <n-flex vertical size="large" class="pb-5">
-        <h1 class="text-2xl font-bold">
-          Edit metadata for
+        <div class="flex flex-row justify-between">
+          <h1 class="text-2xl font-bold">
+            Edit metadata for
+            <NuxtLink
+              :to="`https://github.com/${data?.owner}/${data?.repo}`"
+              target="_blank"
+              class="text-blue-500 underline transition-all hover:text-blue-600"
+            >
+              {{ data?.repo }}
+            </NuxtLink>
+          </h1>
+
           <NuxtLink
-            :to="`https://github.com/${data?.owner}/${data?.repo}`"
             target="_blank"
-            class="text-blue-500 underline transition-all hover:text-blue-600"
+            class="text-blue-400 underline transition-all hover:text-blue-500"
+            >Need help?</NuxtLink
           >
-            {{ data?.repo }}
-          </NuxtLink>
-        </h1>
+        </div>
 
         <div class="border-b border-dashed py-2">
           <p class="text-base">
@@ -337,25 +345,6 @@ const handleDevelopmentStatusChange = (value: string) => {
             below and codefair will submit a pull request with a CITATION.cff
             and codemeta.json file for you.
           </p>
-
-          <!-- <p class="pt-1 text-sm text-stone-600">
-            The
-            <NuxtLink
-              to="https://fair-biors.org/docs/guidelines"
-              target="_blank"
-              class="text-sm text-blue-400 underline transition-all hover:text-blue-500"
-            >
-              FAIR-BioRS Guidelines</NuxtLink
-            >
-
-            recommend to provide metadata in a <code>CITATION.cff</code>
-
-            and a
-            <code>codemeta.json</code>
-            files. It is used to help users discover the software in the
-            repository and to provide information about the software to the
-            users.
-          </p> -->
         </div>
       </n-flex>
 
