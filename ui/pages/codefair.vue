@@ -2,9 +2,9 @@
 
 <template>
   <section>
-    <div class="bg-[#e7ddfa4f] py-8">
+    <!-- <div class="bg-[#e7ddfa4f] py-8">
       <div class="mx-auto max-w-screen-xl px-4 md:px-8">
-        <div class="flex justify-start">
+        <div class="flex justify-center">
           <h1
             class="font-inter mb-4 text-4xl font-bold text-black sm:text-5xl md:mb-4 md:text-5xl"
           >
@@ -12,26 +12,29 @@
           </h1>
         </div>
       </div>
-    </div>
+    </div> -->
+
     <div class="">
       <div class="mx-auto flex max-w-screen-xl justify-start px-4 md:px-8">
-        <div class="flex max-w-screen-xl flex-col py-8">
+        <div class="flex w-full flex-col py-8">
           <div class="flex flex-col">
             <h2
-              class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
+              class="mb-4 self-center bg-gradient-to-b from-[#6366f1] to-[#64748b] bg-clip-text text-xl font-bold text-transparent sm:text-5xl md:mb-4 md:text-4xl"
             >
               What is codefair?
             </h2>
-            <p>
+
+            <p class="max-w-screen-sm self-center text-center">
               codefair is a free and open source GitHub app that acts as your
               personal assistant when it comes to making your research software
-              reusable and especially complying with the Findable, Accessible,
+              reusable and especially complying with the Findable, Accessible,
               Interoperable, Reusable (FAIR) Principles for Research Software
               (FAIR4RS Principles).
             </p>
           </div>
+
           <div
-            class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start"
+            class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-center"
           >
             <a
               href="http://fair-biors.org/"
@@ -39,9 +42,28 @@
               >Learn more about the FAIR4RS principles -></a
             >
           </div>
+
+          <n-flex justify="space-around">
+            <img
+              src="/assets/images/dashboard.png"
+              loading="lazy"
+              alt="Info image"
+              style="height: 30rem"
+              class="rounded-lg"
+            />
+
+            <img
+              src="/assets/images/metadata-ui.png"
+              loading="lazy"
+              alt="Info image"
+              style="height: 30rem"
+              class="rounded-lg"
+            />
+          </n-flex>
         </div>
       </div>
     </div>
+
     <div class="bg-[#e7ddfa4f]">
       <div class="mx-auto flex max-w-screen-xl justify-start px-4 md:px-8">
         <div class="my-8 flex h-auto max-w-screen-xl flex-col py-8">
@@ -51,6 +73,7 @@
             >
               How does codefair work?
             </h2>
+
             <p>
               Just install codefair from the GitHub marketplace on your
               software's GitHub repository. By communicating with you through
@@ -61,6 +84,7 @@
               principles.
             </p>
           </div>
+
           <div
             class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start"
           >
@@ -73,6 +97,7 @@
         </div>
       </div>
     </div>
+
     <div class="">
       <div class="mx-auto flex max-w-screen-xl justify-start px-4 md:px-8">
         <div class="my-8 flex h-auto max-w-screen-xl flex-col py-8">
@@ -82,6 +107,7 @@
             >
               Who should use codefair?
             </h2>
+
             <div>
               <p>
                 Currently, codefair helps make software FAIR by following the
@@ -100,6 +126,7 @@
         </div>
       </div>
     </div>
+
     <div class="bg-[#e7ddfa4f]">
       <div class="mx-auto flex max-w-screen-xl justify-start px-4 md:px-8">
         <div class="my-8 flex max-w-lg flex-col py-8">
@@ -108,6 +135,7 @@
           >
             How is codefair developed?
           </h2>
+
           <p>
             codefair is developed using Probot and is deployed on Vercel as a
             serverless function. The GitHub app is configured to receive

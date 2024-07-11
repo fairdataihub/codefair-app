@@ -12,8 +12,12 @@ export default defineNuxtConfig({
       script: [
         {
           async: true,
-          "data-website-id": "",
+          "data-website-id": "80e10200-5878-4adb-9a9e-ac0f23cb1f33",
           src: "https://umami.fairdataihub.org/mushroom",
+        },
+        {
+          async: true,
+          src: "https://tally.so/widgets/embed.js",
         },
       ],
     },
@@ -21,11 +25,32 @@ export default defineNuxtConfig({
     pageTransition: { name: "page", mode: "out-in" },
   },
 
+  colorMode: {
+    classPrefix: "",
+    classSuffix: "-mode",
+    componentName: "ColorScheme",
+    fallback: "light", // fallback value if not system preference found
+    globalName: "__NUXT_COLOR_MODE__",
+    hid: "nuxt-color-mode-script",
+    preference: "light", // default value of $colorMode.preference
+    storageKey: "nuxt-color-mode",
+  },
+
+  css: [
+    "@/assets/css/tailwind.css",
+    "md-editor-v3/lib/style.css",
+    "notivue/notification.css", // Only needed if using built-in notifications
+    "notivue/animations.css", // Only needed if using built-in animations
+  ],
+
+  devtools: { enabled: true },
+
   modules: [
     "@nuxtjs/tailwindcss",
     "@bg-dev/nuxt-naiveui",
     "notivue/nuxt",
     "@nuxtjs/color-mode",
+    "dayjs-nuxt",
     [
       "@nuxtjs/google-fonts",
       {
@@ -37,26 +62,15 @@ export default defineNuxtConfig({
     "nuxt-icon",
   ],
 
-  colorMode: {
-    preference: "light", // default value of $colorMode.preference
-    fallback: "light", // fallback value if not system preference found
-    hid: "nuxt-color-mode-script",
-    globalName: "__NUXT_COLOR_MODE__",
-    componentName: "ColorScheme",
-    classPrefix: "",
-    classSuffix: "-mode",
-    storageKey: "nuxt-color-mode",
+  nitro: {
+    esbuild: {
+      options: {
+        target: "esnext",
+      },
+    },
   },
-
-  css: [
-    // "@/assets/css/tailwind.css",
-    "notivue/notification.css", // Only needed if using built-in notifications
-    "notivue/animations.css", // Only needed if using built-in animations
-  ],
 
   notivue: {
     position: "bottom-right",
   },
-
-  devtools: { enabled: true },
 });

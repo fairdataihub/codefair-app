@@ -2,13 +2,16 @@
   "name": "codefair-monorepo",
   "private": "true",
   "devDependencies": {
-    "npm-run-all": "^4.1.5"
+    "dotenv": "^16.4.5",
+    "npm-run-all": "^4.1.5",
+    "tsx": "^4.16.2"
   },
   "scripts": {
     "bot:dev": "pnpm -C bot dev",
     "bot:build": "pnpm -C bot build",
     "ui:dev": "pnpm -C ui dev",
     "ui:build": "pnpm -C ui build",
-    "dev": "pnpm --stream -r dev"
+    "dev": "pnpm --stream -r dev",
+    "scripts:deploy": "tsx ./scripts/deploy.ts"
   }
 }

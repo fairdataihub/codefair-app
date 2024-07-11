@@ -2,15 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Reset CSS */
+@layer reset {
+  button,
+  input {
+    /* CSS to Reset */
+  }
+}
+
 html,
 body {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   margin: 0px;
   padding: 0px;
   overflow: auto;
   @apply bg-slate-50;
   @apply text-slate-700;
+}
+
+body {
+  @apply min-h-full;
 }
 
 @layer base {
@@ -58,6 +70,14 @@ body {
 
   pre {
     @apply whitespace-pre-wrap text-xs;
+  }
+
+  ol {
+    @apply list-decimal;
+  }
+
+  ul {
+    @apply list-disc;
   }
 
   /* #endregion  /**======== Typography =========== */
@@ -253,18 +273,4 @@ body {
 .router-link-active .menu-header,
 .menu-header:hover {
   color: #0284c7;
-}
-
-.n-alert__icon .n-base-icon svg {
-  color: #0284c7;
-}
-.n-alert .n-alert-body .n-alert-body__title {
-  font-weight: bold;
-}
-.n-divider:not(.n-divider--vertical) {
-  margin-top: 4px;
-}
-
-.n-tree-node-content__text {
-  min-width: 19rem;
 }
