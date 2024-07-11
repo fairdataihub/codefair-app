@@ -35,7 +35,7 @@ export default async (app, { getRouter }) => {
 
   router.use(express.static("public"));
 
-  router.get("/health-check", (req, res) => {
+  router.get("/healthcheck", (req, res) => {
     res.status(200).send("Health check passed");
   });
 
