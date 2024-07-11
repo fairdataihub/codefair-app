@@ -81,9 +81,8 @@ const toggleMobileMenu = () => {
             GitHub
           </NuxtLink>
 
-          <n-badge value="beta" type="warning">
+          <n-badge v-if="devMode" value="beta" type="warning">
             <NuxtLink
-              v-if="devMode"
               :to="`/dashboard/${user?.username}`"
               class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
@@ -194,7 +193,7 @@ const toggleMobileMenu = () => {
 
     <footer class="mx-auto max-w-screen-xl border-t px-5 pt-3">
       <div
-        class="grid grid-rows-1 items-center gap-12 pb-4 pt-8 md:grid-cols-3 md:grid-rows-1"
+        class="grid grid-rows-1 items-center gap-12 pb-4 pt-8 lg:grid-cols-3 lg:grid-rows-1"
       >
         <div class="md:col-span-2">
           <div class="mb-4 lg:-mt-2">
@@ -237,11 +236,11 @@ const toggleMobileMenu = () => {
           </div>
         </div>
 
-        <div class="py-8 text-right text-sm text-gray-400">
-          <p class="align-center -mb-4 flex justify-end self-center text-right">
-            Made with
+        <n-flex vertical size="small" class="py-8 text-base text-gray-400">
+          <div class="flex items-center justify-end">
+            <span class="text-right"> Made with </span>
+
             <svg
-              style="margin-top: 0.1rem"
               xmlns="http://www.w3.org/2000/svg"
               width="30"
               height="20"
@@ -258,12 +257,22 @@ const toggleMobileMenu = () => {
                 />
               </g>
             </svg>
-            by the FAIR Data Innovations Hub
-          </p>
 
-          <br />
-          © 2024 - FAIR Data Innovations Hub. All rights reserved.
-        </div>
+            <span class="text-right"> by the </span>
+
+            <NuxtLink
+              to="https://fairdataihub.org"
+              class="pl-1 text-gray-500 transition-all hover:text-gray-600 active:text-gray-700"
+              target="_blank"
+            >
+              FAIR Data Innovations Hub
+            </NuxtLink>
+          </div>
+
+          <span class="text-right text-sm">
+            © 2024 - FAIR Data Innovations Hub. All rights reserved.
+          </span>
+        </n-flex>
       </div>
     </footer>
 
