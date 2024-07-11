@@ -13,10 +13,12 @@ const toggleMobileMenu = () => {
   <div
     class="relative mx-auto flex h-full min-h-screen w-full flex-col bg-slate-50"
     :class="{ 'debug-screens': devMode }"
+    style="background-image: url(&quot;/Hexagon.svg&quot;); filer: blur"
   >
-    <div
+    <!-- <div
       class="absolute inset-x-0 -top-40 z-0 transform-gpu overflow-hidden blur-3xl sm:-top-80"
       aria-hidden="true"
+      style="background-image: url(&quot;/Hexagon.svg&quot;)"
     >
       <div
         class="relative aspect-[1155/678] w-full bg-cover bg-no-repeat"
@@ -28,7 +30,7 @@ const toggleMobileMenu = () => {
           class="absolute inset-0 h-full w-full object-cover"
         />
       </div>
-    </div>
+    </div> -->
 
     <div class="relative z-20 mx-auto w-full max-w-screen-xl px-4 md:px-8">
       <header class="mb-0 flex items-center justify-between py-6">
