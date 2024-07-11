@@ -173,13 +173,13 @@
 
         <div class="flex flex-col py-8" style="margin-top: 2rem">
           <h2 class="mb-4 text-xl font-bold text-black md:mb-4 md:text-3xl">
-            Solution 2: codefair
+            Solution 2: Codefair
           </h2>
 
           <p>
             While these guidelines are designed to be easy to follow, they can
             still be time consuming and difficult to implement (we experienced
-            this firsthand). This is why we are developing codefair, so that
+            this firsthand). This is why we are developing Codefair, so that
             making your software FAIR is seamless.
           </p>
         </div>
@@ -190,7 +190,7 @@
           <a
             href="https://doi.org/10.1038/s41597-022-01710-x"
             class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
-            >Learn more about codefair -></a
+            >Learn more about Codefair -></a
           >
         </div>
       </div>

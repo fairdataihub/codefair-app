@@ -32,19 +32,19 @@ const toggleMobileMenu = () => {
             class="h-10 w-10 md:h-12 md:w-12"
           />
 
-          codefair
+          Codefair
         </a>
 
         <nav class="hidden items-center gap-8 lg:flex">
           <NuxtLink
-            to="codefair"
+            to="/codefair"
             class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
           >
             About
           </NuxtLink>
 
           <NuxtLink
-            to="fairsoftware"
+            to="/fairsoftware"
             class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
           >
             FAIR Software
@@ -111,7 +111,7 @@ const toggleMobileMenu = () => {
               class="h-10 w-10"
             />
 
-            codefair
+            Codefair
           </a>
 
           <button
@@ -136,7 +136,7 @@ const toggleMobileMenu = () => {
 
           <nav class="flex flex-col gap-6">
             <NuxtLink
-              to="codefair"
+              to="/codefair"
               class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
               @click="toggleMobileMenu"
             >
@@ -144,7 +144,7 @@ const toggleMobileMenu = () => {
             </NuxtLink>
 
             <NuxtLink
-              to="fairsoftware"
+              to="/fairsoftware"
               class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
               @click="toggleMobileMenu"
             >
@@ -199,12 +199,12 @@ const toggleMobileMenu = () => {
                 class="h-10 w-10 md:h-12 md:w-12"
               />
 
-              codefair
+              Codefair
             </a>
           </div>
 
           <p class="mb-6 text-gray-500 sm:pr-8">
-            With codefair by your side, you're not just managing repositories
+            With Codefair by your side, you're not just managing repositories
             but you are advocating for the development of FAIR software
           </p>
 

@@ -45,7 +45,7 @@ Your coding assistant to make research software reusable without breaking a swea
 
 ## Description
 
-Codefair is your personal assistant when it comes to making your research software reusable and especially complying with the [Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software](https://doi.org/10.1038/s41597-022-01710-x). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, codefair is here to assist you. By communicating with you through GitHub issues and submitting pull requests, codefair will make sure that your software follows best coding practices, provides metadata in standard format, includes a license file, is archived on Zenodo, and much more. With codefair by your side, you're not just developing software but you're advocating for better software practices. Learn more on the app's website [codefair.io](https://codefair.io/).
+Codefair is your personal assistant when it comes to making your research software reusable and especially complying with the [Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software](https://doi.org/10.1038/s41597-022-01710-x). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, Codefair is here to assist you. By communicating with you through GitHub issues and submitting pull requests, Codefair will make sure that your software follows best coding practices, provides metadata in standard format, includes a license file, is archived on Zenodo, and much more. With Codefair by your side, you're not just developing software but you're advocating for better software practices. Learn more on the app's website [codefair.io](https://codefair.io/).
 
 ![screenshot of the License issue up to where is it closed with the PR](https://imgur.com/fcOuzTC.png)
 
@@ -53,9 +53,9 @@ Codefair is your personal assistant when it comes to making your research softwa
 
 ### Installing
 
-1. Install codefair from the [GitHub market place](https://github.com/marketplace/codefair-app) on the GitHub organizations or repositories of your choice
+1. Install Codefair from the [GitHub market place](https://github.com/marketplace/codefair-app) on the GitHub organizations or repositories of your choice
 2. Code as usual
-3. Track FAIR compliance issues through the codefair issue dashboard and address them through the codefair website.
+3. Track FAIR compliance issues through the Codefair issue dashboard and address them through the Codefair website.
 
 > [!NOTE]
 > While Codefair is free, installing it via the GitHub Marketplace may still require a credit card to be associated with your (or your organization’s) GitHub account. To circumvent this requirement, you can alternatively install Codefair directly from the [app page](https://github.com/apps/codefair-app).
@@ -97,10 +97,10 @@ cd ui
 pnpm dev
 ```
 
-## How codefair is developed
+## How Codefair is developed
 
-Codefair is developed using Probot and is deployed on Vercel as a serverless function. The GitHub app is configured to receive webhooks for important actions such as pushing code, opening or closing issues, opening or merging pull requests and commenting on discussions.
-By leveraging a serverless environment on Vercel, codefair can automatically scale to handle the workload of the GitHub app. The app is written in Node.js and utilizes the Octokit library to interact with the GitHub APIenabling seamless integration with GitHub's features and functionality.
+Codefair is developed using Probot and is deployed on a server as a serverless function. The GitHub app is configured to receive webhooks for important actions such as pushing code, opening or closing issues, opening or merging pull requests and commenting on discussions.
+By leveraging a serverless environment on a server, Codefair can automatically scale to handle the workload of the GitHub app. The app is written in Node.js and utilizes the Octokit library to interact with the GitHub APIenabling seamless integration with GitHub's features and functionality.
 
 ## Contributing
 
@@ -144,7 +144,7 @@ If you are using this package or reusing the source code from this repository fo
 <div align="center">
 
 <a href="https://codefair.io">
-  <img src="https://raw.githubusercontent.com/fairdataihub/codefair-app/main/public/assets/images/codefair_logo_name.png" alt="logo" width="200" height="auto" />
+  <img src="https://raw.githubusercontent.com/fairdataihub/codefair-app/main/ui/public/assets/images/codefair_logo_name.png" alt="logo" width="200" height="auto" />
 </a>
 
 </div>

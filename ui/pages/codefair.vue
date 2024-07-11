@@ -8,7 +8,7 @@
           <h1
             class="font-inter mb-4 text-4xl font-bold text-black sm:text-5xl md:mb-4 md:text-5xl"
           >
-            About codefair
+            About Codefair
           </h1>
         </div>
       </div>
@@ -21,11 +21,11 @@
             <h2
               class="mb-4 self-center bg-gradient-to-b from-[#6366f1] to-[#64748b] bg-clip-text text-xl font-bold text-transparent sm:text-5xl md:mb-4 md:text-4xl"
             >
-              What is codefair?
+              What is Codefair?
             </h2>
 
             <p class="max-w-screen-sm self-center text-center">
-              codefair is a free and open source GitHub app that acts as your
+              Codefair is a free and open source GitHub app that acts as your
               personal assistant when it comes to making your research software
               reusable and especially complying with the Findable, Accessible,
               Interoperable, Reusable (FAIR) Principles for Research Software
@@ -71,13 +71,13 @@
             <h2
               class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
             >
-              How does codefair work?
+              How does Codefair work?
             </h2>
 
             <p>
-              Just install codefair from the GitHub marketplace on your
+              Just install Codefair from the GitHub marketplace on your
               software's GitHub repository. By communicating with you through
-              GitHub issues and submitting pull requests, codefair will then
+              GitHub issues and submitting pull requests, Codefair will then
               make sure that your software follows best coding practices,
               provides metadata in standard format, includes a license file, is
               archived on Zenodo, and much more to align with the FAIR4RS
@@ -105,21 +105,21 @@
             <h2
               class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
             >
-              Who should use codefair?
+              Who should use Codefair?
             </h2>
 
             <div>
               <p>
-                Currently, codefair helps make software FAIR by following the
+                Currently, Codefair helps make software FAIR by following the
                 FAIR Biomedical Research software (FAIR-BioRS) guidelines.
                 Therefore it is design mainly for biomedical research software.
                 However, most of the steps of the FAIR-BioRS guidelines are
                 applicable to any research software irrespective of the field of
                 research. Therefore, anyone developing a research software can
-                use codefair. Whether you are developing artificial intelligence
+                use Codefair. Whether you are developing artificial intelligence
                 (AI)/machine learning (ML) models with Python, data
                 visualization tools with Jupyter notebook, or data analysis code
-                with R, codefair is here to assist you.
+                with R, Codefair is here to assist you.
               </p>
             </div>
           </div>
@@ -133,16 +133,16 @@
           <h2
             class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
           >
-            How is codefair developed?
+            How is Codefair developed?
           </h2>
 
           <p>
-            codefair is developed using Probot and is deployed on Vercel as a
+            Codefair is developed using Probot and is deployed on Vercel as a
             serverless function. The GitHub app is configured to receive
             webhooks for important actions such as pushing code, opening or
             closing issues, opening or merging pull requests, and commenting on
             discussions. By leveraging a serverless environment on Vercel,
-            codefair can automatically scale to handle the workload of the
+            Codefair can automatically scale to handle the workload of the
             GitHub app. The app is written in Node.js and utilizes the Octokit
             library to interact with the GitHub API, enabling seamless
             integration with GitHub's features and functionality.

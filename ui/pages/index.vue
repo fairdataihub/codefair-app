@@ -15,7 +15,7 @@
         </h1>
 
         <p class="text-gray-500 lg:w-full xl:text-xl">
-          Let codefair handle the complexities of making your research software
+          Let Codefair handle the complexities of making your research software
           FAIR, so you can focus on what matters most to you.
         </p>
 
@@ -27,7 +27,7 @@
             target="_blank"
             class="mb-4 inline-block w-4/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-base font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-lg lg:mb-0"
           >
-            Get codefair ->
+            Get Codefair ->
           </NuxtLink>
         </div>
       </div>
@@ -69,18 +69,18 @@
             <h2
               class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
             >
-              What is codefair?
+              What is Codefair?
             </h2>
 
             <p>
-              codefair is a free and open source GitHub app that acts as your
+              Codefair is a free and open source GitHub app that acts as your
               personal assistant when it comes to making your research software
               reusable and especially complying with the Findable, Accessible,
               Interoperable, Reusable (FAIR) Principles for Research Software
               (FAIR4RS Principles). Whether you are developing artificial
               intelligence (AI)/machine learning (ML) models with Python, data
               visualization tools with Jupyter notebook, or data analysis code
-              with R, codefair is here to assist you.
+              with R, Codefair is here to assist you.
             </p>
           </div>
 
@@ -162,16 +162,16 @@
             <h2
               class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
             >
-              Why should you use codefair?
+              Why should you use Codefair?
             </h2>
 
             <p>
-              With codefair, you do not have to think about making your software
-              FAIR. Just install codefair from the GitHub marketplace on your
+              With Codefair, you do not have to think about making your software
+              FAIR. Just install Codefair from the GitHub marketplace on your
               software's GitHub repository. You can then track FAIR-compliance
-              issues through the codefair issue dashboard and address them
-              through the codefair website. Through intuitive interfaces and
-              automated pull requests, codefair will allow you to make sure that
+              issues through the Codefair issue dashboard and address them
+              through the Codefair website. Through intuitive interfaces and
+              automated pull requests, Codefair will allow you to make sure that
               your software follows best coding practices, provides metadata in
               standard format, includes a license file, is archived on Zenodo,
               and much more to align with the FAIR4RS principles
@@ -185,7 +185,7 @@
               to="codefair"
               class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
             >
-              Learn more about codefair ->
+              Learn more about Codefair ->
             </NuxtLink>
           </div>
         </div>
@@ -205,12 +205,12 @@
             </h2>
 
             <p>
-              codefair is being developed by the team at the FAIR Data
+              Codefair is being developed by the team at the FAIR Data
               Innovations Hub, a division of the non profit biomedical research
               institue called California Medical Innovations Institute. As
               developers of research software, we experienced firsthand the
               challenges of making software FAIR which prompted us to develop
-              codefair. The project is not receiving any financial support yet,
+              Codefair. The project is not receiving any financial support yet,
               but we are hoping we will in the future so we can dedicate more
               time and effort to this much needed tool. We would also love if
               others would join us in this effort!
@@ -263,7 +263,7 @@
             </h2>
 
             <p>
-              Reach out to us via the GitHub issues of the codefair repo and we
+              Reach out to us via the GitHub issues of the Codefair repo and we
               will be happy to connect with you.
             </p>
           </div>
