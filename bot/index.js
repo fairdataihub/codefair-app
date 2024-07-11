@@ -1,4 +1,5 @@
 import { MongoClient } from "mongodb";
+import * as express from "express";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
 import { checkEnvVariable, verifyRepoName } from "./utils/tools/index.js";
 
@@ -18,7 +19,7 @@ const client = new MongoClient(MONGODB_URI, {});
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
-export default async (app) => {
+export default async (app, { getRouter }) => {
   // Connect to the MongoDB database
   console.log("Connecting to MongoDB");
   await client.connect();
@@ -28,6 +29,14 @@ export default async (app) => {
 
   await ping.insertOne({
     timestamp: Date.now(),
+  });
+
+  const router = getRouter("/");
+
+  router.use(express.static("public"));
+
+  router.get("/health-check", (req, res) => {
+    res.status(200).send("Health check passed");
   });
 
   const issueTitle = `FAIR Compliance Dashboard`;

@@ -164,7 +164,7 @@ const toggleMobileMenu = () => {
     </div>
 
     <div
-      class="absolute top-0 z-0 w-full transform-gpu overflow-hidden"
+      class="absolute top-0 z-0 w-full transform-gpu overflow-hidden bg-gradient-to-b from-blue-500 to-red-500"
       aria-hidden="true"
     >
       <div
@@ -253,7 +253,7 @@ const toggleMobileMenu = () => {
 
             <NuxtLink
               to="https://fairdataihub.org"
-              class="pl-1 text-gray-500 transition-all hover:text-gray-600 active:text-gray-700"
+              class="pl-1 text-indigo-500 transition-all hover:text-indigo-600 active:text-indigo-700"
               target="_blank"
             >
               FAIR Data Innovations Hub
