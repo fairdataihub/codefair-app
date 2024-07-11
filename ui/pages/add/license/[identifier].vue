@@ -201,6 +201,7 @@ const saveLicenseAndPush = async () => {
           </h1>
 
           <NuxtLink
+            to="https://docs.codefair.io/docs/license.html"
             target="_blank"
             class="text-blue-400 underline transition-all hover:text-blue-500"
             >Need help?</NuxtLink>
