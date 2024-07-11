@@ -119,7 +119,7 @@ export async function applyMetadataTemplate(
       url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
     }
     const metadataBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-0ea5e9.svg)](${url}?)`;
-    baseTemplate += `\n\n## Metadata ✔️\n\nCITATION.cff and codemeta.json file were found in the repository. They may need to be updated over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
+    baseTemplate += `\n\n## Metadata ✔️\n\nA CITATION.cff and a codemeta.json file are found in the repository. They may need to be updated over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
   }
 
   if (!subjects.license) {
@@ -390,7 +390,7 @@ export async function applyLicenseTemplate(
       url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     }
     const licenseBadge = `[![License](https://img.shields.io/badge/Edit_License-0ea5e9.svg)](${url})`;
-    baseTemplate += `## LICENSE ✔️\n\nLICENSE file found at the root level of the repository.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE ✔️\n\nA LICENSE file is found at the root level of the repository.\n\n${licenseBadge}`;
   }
 
   return baseTemplate;
@@ -449,7 +449,7 @@ export async function renderIssues(
     codemeta,
     license,
   };
-  let baseTemplate = `# Check the FAIRness of your software\n\nThis issue is your repository's dashboard for all things FAIR. You can read the [documentation](https://docs.codefair.io/dashboard) to learn more.\n\n`;
+  let baseTemplate = `# Check the FAIRness of your software\n\nThis issue is your repository's dashboard for all things FAIR. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n`;
 
   baseTemplate = await applyLicenseTemplate(
     subjects,
