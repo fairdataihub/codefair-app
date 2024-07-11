@@ -144,7 +144,7 @@ If you are using this package or reusing the source code from this repository fo
 <div align="center">
 
 <a href="https://codefair.io">
-  <img src="https://raw.githubusercontent.com/fairdataihub/codefair-app/main/public/assets/images/codefair_logo_name.png" alt="logo" width="200" height="auto" />
+  <img src="https://raw.githubusercontent.com/fairdataihub/codefair-app/main/ui/public/assets/images/codefair_logo_name.png" alt="logo" width="200" height="auto" />
 </a>
 
 </div>
