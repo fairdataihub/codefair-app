@@ -4,7 +4,7 @@
 
 <br />
 
-<h1>codefair</h1>
+<h1>Codefair</h1>
 
 <p>
 Your coding assistant to make research software reusable without breaking a sweat!
@@ -45,56 +45,25 @@ Your coding assistant to make research software reusable without breaking a swea
 
 ## Description
 
-codefair is your personal assistant when it comes to making your research software reusable and especially complying with the [Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software](https://doi.org/10.1038/s41597-022-01710-x). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, codefair is here to assist you. By communicating with you through GitHub issues and submitting pull requests, codefair will make sure that your software follows best coding practices, provides metadata in standard format, includes a license file, is archived on Zenodo, and much more. With codefair by your side, you're not just developing software but you're advocating for better software practices. Learn more on the app's website [codefair.io](https://codefair.io/).
+Codefair is your personal assistant when it comes to making your research software reusable and especially complying with the [Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software](https://doi.org/10.1038/s41597-022-01710-x). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, codefair is here to assist you. By communicating with you through GitHub issues and submitting pull requests, codefair will make sure that your software follows best coding practices, provides metadata in standard format, includes a license file, is archived on Zenodo, and much more. With codefair by your side, you're not just developing software but you're advocating for better software practices. Learn more on the app's website [codefair.io](https://codefair.io/).
 
-![screenshot of the License issue up to where is it closed with the PR](https://i.imgur.com/JamRWHF.png)
+![screenshot of the License issue up to where is it closed with the PR](https://imgur.com/fcOuzTC.png)
 
 ## Getting started
 
 ### Installing
 
-1. Install codefair-app on the GitHub organizations or repositories of your choice
-2. Code and develop your software as usual
-3. Follow codefair-app's instructions when it opens an issue or submit a pull request
+1. Install codefair from the [GitHub market place](https://github.com/marketplace/codefair-app) on the GitHub organizations or repositories of your choice
+2. Code as usual
+3. Track FAIR compliance issues through the codefair issue dashboard and address them through the codefair website.
 
-### Permissions Required
+> [!NOTE]
+> While Codefair is free, installing it via the GitHub Marketplace may still require a credit card to be associated with your (or your organization’s) GitHub account. To circumvent this requirement, you can alternatively install Codefair directly from the [app page](https://github.com/apps/codefair-app).
 
-codefair requires a few repository permissions to be able to listen to events happening on a repository and act accordingly to make software FAIR.
-The permissions required include:
+### Documentation
+See the our [dedicated webpage](https://docs.codefair.io) for the full documentation, including details about each features and how to use them.
 
-- Read access to:
-  - Repository contents
-  - Repository metadata
-  - Repository pull requests
-  - Repository issues
-- Write access to:
-  - Repository pull requests
-  - Repository issues
-  - Repository contents
-
-### Features
-
-List of features:
-
-- License checker (released): This feature checks for a LICENSE file in repositories that have at lease one commit and opens a GitHub issue if no LICENSE file is found. Users can find helpful ressources for selecting a license in the issue message. Users can also reply with the name of the desired license and the app automatically submits a pull request with a LICENSE file that contains license terms associated with the desired license.
-- CITATION.cff generator (released): This features checks for a CITATION.cff file in repositories that have a LICENSE file and opens a GitHub issue if no CITATION.cff file is found. Users can find helpful resources for preparing a CITATION.cff file. Users can also request the app to create one and submit a pull request while also being provided a link to edit within the GitHub UI if needed.
-- Zenodo archival (upcoming): This feature checks if a GitHub repository is already archived on Zenodo. If not, the app open a Github issue that guides users into linking their GitHub repository with their Zenodo account so every GitHub release of the software is automatically archived on Zenodo by the app with CITATION.cff file updated before the release.
-
-More features are in the work!
-
-## Testing
-
-You can follow these steps for testing the app:
-
-- Create a GitHub repository with e.g., a README file or some other code files included but no LICENSE specified
-- Install codefair on that repository from the GitHub markplace: https://github.com/marketplace/codefair-app
-- Check the GitHub issue opened by the app about missing license file.
-- Interact with the app by replying to the issue. E.g., reply with a non existing license name first like "@codefair-app random license" and then with an existing one like "@codefair-app MIT".
-- Check out and merge the pull request opened by the app to see the issue being closed automatically.
-
-A demo video is available [here](https://youtu.be/_fjUz52mKwM).
-
-## Run the github app locally
+## Run the GitHub app locally
 
 ### Setup
 
@@ -130,7 +99,7 @@ pnpm dev
 
 ## How codefair is developed
 
-codefair is developed using Probot and is deployed on Vercel as a serverless function. The GitHub app is configured to receive webhooks for imoprtants actions such as pushing code, opening or closing issues, opening or merging pull requests and commenting on discussions.
+Codefair is developed using Probot and is deployed on Vercel as a serverless function. The GitHub app is configured to receive webhooks for important actions such as pushing code, opening or closing issues, opening or merging pull requests and commenting on discussions.
 By leveraging a serverless environment on Vercel, codefair can automatically scale to handle the workload of the GitHub app. The app is written in Node.js and utilizes the Octokit library to interact with the GitHub APIenabling seamless integration with GitHub's features and functionality.
 
 ## Contributing
@@ -145,7 +114,7 @@ If you are interested in reporting/fixing issues and contributing directly to th
 
 ## Issues and Feedback
 
-To report any issues with the software, suggest improvements, or request a new feature, please open a new issue via the [Issues](https://github.com/fairdataihub/codefair-app/issues) tab. Provide adequate information (operating system, steps leading to error, screenshots) so we can help you efficiently.
+To report any issues with the software, suggest improvements, or request a new feature, please open a new issue via the [Issues](https://github.com/fairdataihub/codefair-app/issues) tab. Alternatively, you can also use our [contact form](https://tally.so/r/3E0dao). Provide adequate information (operating system, steps leading to error, etc.) so we can help you efficiently.
 
 ## License
 
