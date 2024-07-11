@@ -4,11 +4,20 @@
 [NODE]
 version = "20" # replace with your desired Node.js version
 
-# Custom build pack configuration
-[build]
+# Phases definition
+[phases.setup]
 commands = [
   "npm install -g pnpm",  # Install pnpm globally
-  "pnpm install"          # Install project dependencies using pnpm
+]
+
+[phases.install]
+commands = [
+  "pnpm install",  # Install project dependencies using pnpm
+]
+
+[phases.build]
+commands = [
+  "pnpm run build",  # Build the application using pnpm
 ]
 
 # Optionally specify environment variables
