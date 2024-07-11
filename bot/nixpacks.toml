@@ -1,0 +1,16 @@
+# nixpacks.toml
+
+# Specify the version of Node.js you want to use
+[NODE]
+version = "20" # replace with your desired Node.js version
+
+# Custom build pack configuration
+[build]
+commands = [
+  "npm install -g pnpm",  # Install pnpm globally
+  "pnpm install"          # Install project dependencies using pnpm
+]
+
+# Optionally specify environment variables
+[env]
+NIXPACKS_NODE_VERSION = "20"  # replace with your desired Node.js version
