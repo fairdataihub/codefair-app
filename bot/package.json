@@ -43,5 +43,10 @@
   },
   "jest": {
     "testEnvironment": "node"
-  }
+  },
+  "packageManager": "pnpm@9.1.4",
+  "engines": {
+    "node": ">20"
+  },
+  "package-manager-strict": false
 }

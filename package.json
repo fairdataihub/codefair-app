@@ -13,9 +13,5 @@
     "ui:build": "pnpm -C ui build",
     "dev": "pnpm --stream -r dev",
     "scripts:deploy": "tsx ./scripts/deploy.ts"
-  },
-  "packageManager": "pnpm@latest",
-  "engines": {
-    "node": ">20"
   }
 }
