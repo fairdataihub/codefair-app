@@ -105,8 +105,6 @@ const generateSeed = (seed: string) => {
         bordered
       >
         <div class="my-3">
-          <!-- <h3>Open License Requests</h3> -->
-
           <div
             v-for="licenseRequest in licenseRequests.open"
             :key="licenseRequest.identifier"
@@ -114,7 +112,6 @@ const generateSeed = (seed: string) => {
             <n-card>
               <n-flex align="center" justify="space-between">
                 <div>
-                  <!-- <h3>{{ licenseRequest.identifier }}</h3> -->
                   <h3>ID: {{ generateSeed(licenseRequest.identifier) }}</h3>
 
                   <p>

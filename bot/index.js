@@ -5,7 +5,6 @@ import { checkEnvVariable, verifyRepoName } from "./utils/tools/index.js";
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
 checkEnvVariable("GITHUB_APP_NAME");
-checkEnvVariable("DOPPLER_ENVIRONMENT");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
 // sourcery skip: use-object-destructuring
@@ -179,7 +178,7 @@ export default async (app) => {
         // Remove from the database
         await installationCollection.deleteOne({
           repositoryId: repository.id,
-        })
+        });
       }
     }
   });
