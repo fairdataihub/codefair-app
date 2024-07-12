@@ -281,10 +281,19 @@ export async function verifyRepoName(dbRepoName, repoName, owner, collection) {
  * @returns {bool} - Returns true if the repository is empty, false otherwise
  */
 export async function isRepoEmpty(context, owner, repo) {
-  const repoContent = await context.octokit.repos.getContent({
-    owner,
-    repo,
-  });
+  try {
+    const repoContent = await context.octokit.repos.getContent({
+      owner,
+      repo,
+    });
 
-  return repoContent.data.length === 0;
+    return repoContent.data.length === 0;
+  } catch (error) {
+    console.log("Error getting the repository content");
+    console.log(error);
+    if (error.status === 404) {
+      return true;
+    }
+  }
+
 }

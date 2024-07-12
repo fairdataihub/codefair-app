@@ -63,7 +63,6 @@ export default async (app, { getRouter }) => {
       });
 
       const emptyRepo = await isRepoEmpty(context, owner, repoName);
-      console.log("Empty Repo: ", emptyRepo);
 
       if (!installation) {
         // If the installation is not in the database, add it
@@ -94,7 +93,7 @@ export default async (app, { getRouter }) => {
         verifyRepoName(analytics.repo, repoName, owner, analyticsCollection);
       }
 
-      const issueBody = await renderIssues(context, owner, repository, db);
+      const issueBody = await renderIssues(context, owner, repository, db, emptyRepo);
 
       // Create an issue with the compliance issues
       await createIssue(context, owner, repoName, issueTitle, issueBody);
@@ -155,7 +154,7 @@ export default async (app, { getRouter }) => {
         verifyRepoName(analytics.repo, repoName, owner, analyticsCollection);
       }
 
-      const issueBody = await renderIssues(context, owner, repository, db);
+      const issueBody = await renderIssues(context, owner, repository, db, emptyRepo);
 
       // Create an issue with the compliance issues
       // console.log("CREATING ISSUE");
@@ -253,6 +252,7 @@ export default async (app, { getRouter }) => {
       owner,
       repository,
       db,
+      emptyRepo,
       "",
       "",
       "",
@@ -357,6 +357,7 @@ export default async (app, { getRouter }) => {
         owner,
         repository,
         db,
+        emptyRepo,
         prTitle,
         prNumber,
         prLink,
