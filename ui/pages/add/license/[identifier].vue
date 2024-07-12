@@ -204,7 +204,8 @@ const saveLicenseAndPush = async () => {
             to="https://docs.codefair.io/docs/license.html"
             target="_blank"
             class="text-blue-400 underline transition-all hover:text-blue-500"
-            >Need help?</NuxtLink>
+            >Need help?</NuxtLink
+          >
         </div>
 
         <div class="border-b border-dashed py-2">
@@ -218,7 +219,7 @@ const saveLicenseAndPush = async () => {
               target="_blank"
               class="text-blue-500 underline transition-all hover:text-blue-600"
               >https://choosealicense.com</NuxtLink
-            >.             To make your software reusable a license file is expected at the
+            >. To make your software reusable a license file is expected at the
             root level of your repository, as recommended in the
             <NuxtLink
               to="https://fair-biors.org/docs/guidelines"
@@ -234,9 +235,10 @@ const saveLicenseAndPush = async () => {
         <n-form-item
           class="mb-3 mt-5 font-bold"
           :show-feedback="false"
+          size="large"
         >
           <template #label>
-              <span class="font-bold">Select a license</span>
+            <p class="pb-1 text-base font-bold">Select a license</p>
           </template>
           <n-select
             v-model:value="licenseId"
@@ -251,12 +253,16 @@ const saveLicenseAndPush = async () => {
 
         <TransitionFade>
           <div v-if="displayLicenseEditor">
-            <n-form-item
-              :show-feedback="false"
-            >
-            <template #label>
-              <span class="font-bold">Edit your license if required</span>
-            </template>
+            <n-form-item :show-feedback="false" size="large">
+              <template #label>
+                <p class="pb-1 text-base font-bold">
+                  Edit your license if required
+                  <span class="text-right text-xs text-stone-500">
+                    (You can use the left panel to edit the content and right
+                    panel to preview the changes)
+                  </span>
+                </p>
+              </template>
               <MdEditor
                 v-model="licenseContent"
                 language="en-US"

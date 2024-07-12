@@ -538,6 +538,8 @@ const handleDevelopmentStatusChange = (value: string) => {
                         <template #header-extra>
                           <n-button
                             type="error"
+                            size="small"
+                            secondary
                             @click="
                               formValue.authors[index].roles.splice(
                                 roleIndex,
@@ -594,6 +596,10 @@ const handleDevelopmentStatusChange = (value: string) => {
                     </n-flex>
 
                     <n-button
+                      class="w-full"
+                      strong
+                      type="primary"
+                      dashed
                       @click="formValue.authors[index].roles.push({ role: '' })"
                     >
                       <template #icon>
@@ -745,6 +751,8 @@ const handleDevelopmentStatusChange = (value: string) => {
                         <template #header-extra>
                           <n-button
                             type="error"
+                            secondary
+                            size="small"
                             @click="
                               formValue.contributors[index].roles.splice(
                                 roleIndex,
@@ -801,6 +809,10 @@ const handleDevelopmentStatusChange = (value: string) => {
                     </n-flex>
 
                     <n-button
+                      class="w-full"
+                      strong
+                      type="primary"
+                      dashed
                       @click="
                         formValue.contributors[index].roles.push({ role: '' })
                       "
@@ -897,9 +909,11 @@ const handleDevelopmentStatusChange = (value: string) => {
         <LayoutLargeForm>
           <template #info>
             <n-space vertical size="large" class="pr-6">
-              <h2>License</h2>
+              <h2>Development Community</h2>
 
-              <p>Information about the license of the software.</p>
+              <p>
+                Information about the development community of the software.
+              </p>
             </n-space>
           </template>
 
@@ -1017,24 +1031,15 @@ const handleDevelopmentStatusChange = (value: string) => {
 
           <template #form>
             <n-card class="rounded-lg bg-[#f9fafb]">
-              <n-form-item label="Current Version" path="currentVersion">
+              <n-form-item label="Version Number" path="currentVersion">
                 <n-input
                   v-model:value="formValue.currentVersion"
                   placeholder="1.2.5"
                 />
               </n-form-item>
 
-              <n-form-item label="Description" path="description">
-                <n-input
-                  v-model:value="formValue.description"
-                  placeholder="Input Description"
-                  type="textarea"
-                  :rows="4"
-                />
-              </n-form-item>
-
               <n-form-item
-                label="Creation Version Release Date"
+                label="Release Date"
                 path="currentVersionReleaseDate"
               >
                 <n-date-picker
@@ -1044,7 +1049,7 @@ const handleDevelopmentStatusChange = (value: string) => {
               </n-form-item>
 
               <n-form-item
-                label="Current Version Download URL"
+                label="Download URL"
                 path="currentVersionDownloadURL"
               >
                 <n-input

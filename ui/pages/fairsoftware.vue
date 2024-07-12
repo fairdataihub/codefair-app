@@ -23,7 +23,7 @@
             What is a research software?
           </h2>
 
-          <p>
+          <p class="font-onest text-lg text-slate-800">
             The commonly accepted definition of research software is “Any
             software created during the research process or for a research
             purpose”. It can come in many format and could be developed for
@@ -55,7 +55,7 @@
               What does making a research software FAIR means?
             </h2>
 
-            <p>
+            <p class="font-onest text-lg text-slate-800">
               The FAIR (Findable, Accessible, Interoperable, Reusable)
               Principles for Research Software (FAIR4RS Principles) are a set of
               high-level instructions established by the research software
@@ -88,12 +88,14 @@
             </h2>
 
             <div>
-              <p style="padding-bottom: 0.2rem">
+              <p class="font-onest text-lg text-slate-800">
                 Making software reusable is critical for many reason including
                 to:
               </p>
 
-              <ul style="list-style-position: inside; list-style-type: disc">
+              <ul
+                class="font-onest list-inside list-disc text-base text-slate-800"
+              >
                 <li>Enable reproducible, transparent research</li>
 
                 <li>Prevent duplicate effort</li>
@@ -103,12 +105,14 @@
                 </li>
               </ul>
 
-              <p style="margin-top: 1rem; padding-bottom: 0.2rem">
+              <p class="font-onest pt-2 text-lg text-slate-800">
                 In addition to promoting software development practices, making
                 software FAIR can also benefit you personally:
               </p>
 
-              <ol style="list-style-position: inside; list-style-type: disc">
+              <ol
+                class="font-onest list-inside list-disc text-base text-slate-800"
+              >
                 <li>
                   Get recognition when your software is reused through proper
                   citation
@@ -139,7 +143,7 @@
             What are the challenges of making software FAIR?
           </h2>
 
-          <p>
+          <p class="font-onest text-lg text-slate-800">
             The FAIR4RS Principles, by design, are intended to provide a
             high-level framework for making software reusable and do not provide
             clear actionable instructions. Therefore, making software FAIR
@@ -153,7 +157,7 @@
             Solution 1: FAIR-BioRS guidelines
           </h2>
 
-          <p>
+          <p class="font-onest text-lg text-slate-800">
             To fill this gap, we established the FAIR Biomedical Research
             Software (FAIR-BioRS) guideline, which are clear, actionable, and
             step-by-step guidelines for making biomedical research software
@@ -176,7 +180,7 @@
             Solution 2: Codefair
           </h2>
 
-          <p>
+          <p class="font-onest text-lg text-slate-800">
             While these guidelines are designed to be easy to follow, they can
             still be time consuming and difficult to implement (we experienced
             this firsthand). This is why we are developing Codefair, so that
