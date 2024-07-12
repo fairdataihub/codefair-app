@@ -1,7 +1,7 @@
 import { MongoClient } from "mongodb";
 import * as express from "express";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
-import { checkEnvVariable, verifyRepoName } from "./utils/tools/index.js";
+import { checkEnvVariable, isRepoEmpty, verifyRepoName } from "./utils/tools/index.js";
 
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
@@ -62,6 +62,9 @@ export default async (app, { getRouter }) => {
         repositoryId: repository.id,
       });
 
+      const emptyRepo = await isRepoEmpty(context, owner, repoName);
+      console.log("Empty Repo: ", emptyRepo);
+
       if (!installation) {
         // If the installation is not in the database, add it
         await installationCollection.insertOne({
@@ -119,6 +122,9 @@ export default async (app, { getRouter }) => {
       const analytics = await analyticsCollection.findOne({
         repositoryId: repository.id,
       });
+
+      const emptyRepo = await isRepoEmpty(context, owner, repoName);
+      console.log("Empty Repo: ", emptyRepo);
 
       if (!installation) {
         // If the installation is not in the database, add it
@@ -218,12 +224,26 @@ export default async (app, { getRouter }) => {
       repositoryId: repoId,
     });
 
-    await verifyRepoName(
-      installation.repo,
-      repoName,
-      owner,
-      installationCollection,
-    );
+    const emptyRepo = await isRepoEmpty(context, owner, repoName);
+    console.log("Empty Repo: ", emptyRepo);
+
+    if (!installation) {
+      await installationCollection.insertOne({
+        installationId: context.payload.installation.id,
+        owner,
+        repo: repoName,
+        repositoryId: repoId,
+        timestamp: Date.now(),
+      })
+    } else {
+      await verifyRepoName(
+        installation.repo,
+        repoName,
+        owner,
+        installationCollection,
+      );
+    }
+
 
     // Grab the commits being pushed
     const { commits } = context.payload;
@@ -306,12 +326,25 @@ export default async (app, { getRouter }) => {
       repositoryId: repoId,
     });
 
-    await verifyRepoName(
-      installation.repo,
-      repoName,
-      owner,
-      installationCollection,
-    );
+    const emptyRepo = await isRepoEmpty(context, owner, repoName);
+    console.log("Empty Repo: ", emptyRepo);
+
+    if (!installation) {
+      await installationCollection.insertOne({
+        installationId: context.payload.installation.id,
+        owner,
+        repo: repoName,
+        repositoryId: repoId,
+        timestamp: Date.now(),
+      })
+    } else {
+      await verifyRepoName(
+        installation.repo,
+        repoName,
+        owner,
+        installationCollection,
+      );
+    }
 
     if (prTitle === "feat: ✨ LICENSE file added") {
       const prNumber = context.payload.pull_request.number;
