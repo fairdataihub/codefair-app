@@ -38,9 +38,11 @@ export default defineEventHandler(async (event) => {
     const ownerIsOrganization = ownerProfileJson.type === "Organization";
 
     if (ownerIsOrganization) {
-      // Get the user's organizations
-      const userOrganizations = await fetch(
-        `https://api.github.com/users/${user.username}/orgs`,
+      // Check organization membership for a user
+      // https://docs.github.com/en/rest/orgs/members?apiVersion=2022-11-28#check-organization-membership-for-a-user
+
+      const isOrgMember = await fetch(
+        `https://api.github.com/orgs/${owner}/members/${user.username}`,
         {
           headers: {
             Authorization: `Bearer ${user.access_token}`,
@@ -48,21 +50,7 @@ export default defineEventHandler(async (event) => {
         },
       );
 
-      if (!userOrganizations.ok) {
-        throw createError({
-          statusCode: 500,
-          statusMessage: "failed-to-fetch-organizations",
-        });
-      }
-
-      const orgs = await userOrganizations.json();
-
-      // Check if the owner is in the user's organizations
-      const ownerIsInOrgs = orgs.some(
-        (org: { login: string }) => org.login === owner,
-      );
-
-      if (!ownerIsInOrgs) {
+      if (!isOrgMember.ok) {
         throw createError({
           statusCode: 403,
           statusMessage: "unauthorized-account-access",
