@@ -56,6 +56,7 @@ export default defineNuxtConfig({
       {
         families: {
           Inter: true,
+          Onest: true,
         },
       },
     ],

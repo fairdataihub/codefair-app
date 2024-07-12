@@ -22,7 +22,8 @@ module.exports = {
         "float-opposite": "float-diff 4s ease-in-out infinite",
       },
       fontFamily: {
-        inter: ['"Inter"', ...defaultTheme.fontFamily.sans],
+        inter: ['Inter', ...defaultTheme.fontFamily.sans],
+        onest: ["Onest", ...defaultTheme.fontFamily.sans],
         primary: ["Inter", ...fontFamily.sans],
       },
       keyframes: {

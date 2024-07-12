@@ -14,7 +14,7 @@
           Make your research software reusable without breaking a sweat!
         </h1>
 
-        <p class="text-gray-500 lg:w-full xl:text-xl">
+        <p class="text-gray-600 font-onest lg:w-full xl:text-xl">
           Let Codefair handle the complexities of making your research software
           FAIR, so you can focus on what matters most to you.
         </p>
@@ -72,7 +72,7 @@
               What is Codefair?
             </h2>
 
-            <p>
+            <p class="font-onest text-lg text-slate-800">
               Codefair is a free and open source GitHub app that acts as your
               personal assistant when it comes to making your research software
               reusable and especially complying with the Findable, Accessible,
@@ -111,13 +111,12 @@
               Why make research software reusable?
             </h2>
 
-            <p>
+            <p class="font-onest text-lg text-slate-800">
               Making research software FAIR, i.e. optimally reusable, is
               critical to enable reproducible and transparent research, prevent
               duplicate effort and ultimately increase the pace of new
               scientific discoveries. Also, more and more funding agencies such
-              as the NIH and NSF are requiring research software to be reusable
-              (cha-ching).
+              as the NIH and NSF are requiring research software to be reusable.
             </p>
           </div>
 
@@ -165,7 +164,7 @@
               Why should you use Codefair?
             </h2>
 
-            <p>
+            <p class="font-onest text-lg text-slate-800 ">
               With Codefair, you do not have to think about making your software
               FAIR. Just install Codefair from the GitHub marketplace on your
               software's GitHub repository. You can then track FAIR-compliance
@@ -204,7 +203,7 @@
               Who are we?
             </h2>
 
-            <p>
+            <p class="font-onest text-lg text-slate-800">
               Codefair is being developed by the team at the FAIR Data
               Innovations Hub, a division of the non profit biomedical research
               institue called California Medical Innovations Institute. As
@@ -262,7 +261,7 @@
               Need help? Have suggestions? Want to contribute?
             </h2>
 
-            <p>
+            <p class="font-onest text-lg text-slate-800">
               Reach out to us via the GitHub issues of the Codefair repo and we
               will be happy to connect with you.
             </p>
