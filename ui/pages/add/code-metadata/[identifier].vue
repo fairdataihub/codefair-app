@@ -129,6 +129,9 @@ const rules = ref<FormRules>({
 
 const submitLoading = ref(false);
 
+const showSuccessModal = ref(false);
+const pullRequestURL = ref<string>("");
+
 const { identifier } = route.params as { identifier: string };
 
 const { data, error } = await useFetch(`/api/codeMetadata/${identifier}`, {
@@ -254,7 +257,8 @@ const pushToRepository = (e: MouseEvent) => {
                   message: "Review the changes in the repository",
                 });
 
-                window.open(response.prUrl, "_blank");
+                showSuccessModal.value = true;
+                pullRequestURL.value = response.prUrl;
               } else {
                 console.error(
                   "Failed to push code metadata to repository:",
@@ -304,6 +308,11 @@ const handleApplicationCategoryChange = (value: string) => {
 
 const handleDevelopmentStatusChange = (value: string) => {
   formValue.value.developmentStatus = value;
+};
+
+const navigateToPR = () => {
+  showSuccessModal.value = false;
+  window.open(pullRequestURL.value, "_blank");
 };
 </script>
 
@@ -1183,5 +1192,29 @@ const handleDevelopmentStatusChange = (value: string) => {
         </n-flex>
       </n-form>
     </div>
+
+    <n-modal v-model:show="showSuccessModal" transform-origin="center">
+      <n-card
+        style="width: 600px"
+        title="One more thing!"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        A pull request to update the code metadata files has been submitted.
+        Please approve the pull request to make the changes live.
+        <template #footer>
+          <n-flex justify="end">
+            <n-button type="success" @click="navigateToPR">
+              <template #icon>
+                <Icon name="icon-park-outline:success" />
+              </template>
+              View Pull Request
+            </n-button>
+          </n-flex>
+        </template>
+      </n-card>
+    </n-modal>
   </main>
 </template>

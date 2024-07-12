@@ -26,7 +26,7 @@
           <p class="font-onest text-lg text-slate-800">
             The commonly accepted definition of research software is “Any
             software created during the research process or for a research
-            purpose”. It can come in many format and could be developed for
+            purpose”. It can come in many formats and could be developed for
             different applications such as artificial intelligence (AI)/machine
             learning (ML) models with Python, data visualization tools with
             Jupyter notebook, or data analysis code with R.
