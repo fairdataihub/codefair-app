@@ -455,6 +455,7 @@ export async function renderIssues(
     codemeta,
     license,
   };
+
   let baseTemplate = `# Check the FAIRness of your software\n\nThis issue is your repository's dashboard for all things FAIR. Keep it open as making and keeping software FAIR is a continuous process that evolves along with the software. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n`;
 
   baseTemplate = await applyLicenseTemplate(

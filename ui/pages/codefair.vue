@@ -63,7 +63,6 @@
             >
               How does Codefair work?
             </h2>
-
             <p class="font-onest text-lg text-slate-800">
               Simply install Codefair from the GitHub marketplace on your
               software's GitHub repository. By communicating with you through
