@@ -116,7 +116,7 @@
 
     <div class="bg-[#e7ddfa4f]">
       <div class="mx-auto flex max-w-screen-xl justify-start px-4 md:px-8">
-        <div class="my-8 flex max-w-lg flex-col py-8">
+        <div class="my-8 h-auto max-w-screen-xl flex flex-col py-8">
           <h2
             class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
           >
