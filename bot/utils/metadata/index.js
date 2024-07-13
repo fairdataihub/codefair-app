@@ -118,13 +118,14 @@ export function convertMetadataForDB(codemetaContent) {
   }
 
   const regex = /https:\/\/spdx\.org\/licenses\/(.*)/;
-  const url = codemetaContent.license;
-
-  const match = url.match(regex);
   let licenseId = null;
+  if (codemetaContent?.license) {
+    const url = codemetaContent.license;
+    const match = url.match(regex);
 
-  if (match) {
-    licenseId = match[1];
+    if (match) {
+      licenseId = match[1];
+    }
   }
 
   return {

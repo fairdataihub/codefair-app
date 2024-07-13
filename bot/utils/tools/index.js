@@ -244,6 +244,14 @@ export async function getDOI(context, owner, repoName) {
   }
 }
 
+/**
+ * * Verify if repository name has changed and update the database if necessary
+ * 
+ * @param {string} dbRepoName - The repository name in the database 
+ * @param {string} repoName - The repository name from the event payload
+ * @param {string} owner - The owner of the repository
+ * @param {*} collection - The MongoDB collection
+ */
 export async function verifyRepoName(dbRepoName, repoName, owner, collection) {
   console.log("Verifying repository name...");
   if (dbRepoName !== repoName) {
@@ -262,4 +270,30 @@ export async function verifyRepoName(dbRepoName, repoName, owner, collection) {
       },
     );
   }
+}
+
+/**
+ * * Check if the repository is empty
+ * 
+ * @param {object} context - The GitHub context object
+ * @param {string} owner - The owner of the repository
+ * @param {string} repo - The name of the repository
+ * @returns {bool} - Returns true if the repository is empty, false otherwise
+ */
+export async function isRepoEmpty(context, owner, repo) {
+  try {
+    const repoContent = await context.octokit.repos.getContent({
+      owner,
+      repo,
+    });
+
+    return repoContent.data.length === 0;
+  } catch (error) {
+    console.log("Error getting the repository content");
+    console.log(error);
+    if (error.status === 404) {
+      return true;
+    }
+  }
+
 }

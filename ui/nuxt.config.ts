@@ -56,6 +56,7 @@ export default defineNuxtConfig({
       {
         families: {
           Inter: true,
+          Onest: true,
         },
       },
     ],
@@ -72,5 +73,13 @@ export default defineNuxtConfig({
 
   notivue: {
     position: "bottom-right",
+  },
+
+  vite: {
+    server: {
+      hmr: {
+        clientPort: 3000,
+      },
+    },
   },
 });

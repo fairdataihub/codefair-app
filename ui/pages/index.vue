@@ -14,7 +14,7 @@
           Make your research software reusable without breaking a sweat!
         </h1>
 
-        <p class="text-gray-500 lg:w-full xl:text-xl">
+        <p class="font-onest text-gray-600 lg:w-full xl:text-xl">
           Let Codefair handle the complexities of making your research software
           FAIR, so you can focus on what matters most to you.
         </p>
@@ -71,8 +71,7 @@
             >
               What is Codefair?
             </h2>
-
-            <p>
+            <p class="font-onest text-lg text-slate-800">
               Codefair is a free and open source GitHub app that acts as your
               personal assistant when it comes to making your research software
               reusable and especially complying with the Findable, Accessible,
@@ -111,13 +110,12 @@
               Why make research software reusable?
             </h2>
 
-            <p>
+            <p class="font-onest text-lg text-slate-800">
               Making research software FAIR, i.e. optimally reusable, is
               critical to enable reproducible and transparent research, prevent
               duplicate effort and ultimately increase the pace of new
               scientific discoveries. Also, more and more funding agencies such
-              as the NIH and NSF are requiring research software to be reusable
-              (cha-ching).
+              as the NIH and NSF are requiring research software to be reusable.
             </p>
           </div>
 
@@ -165,7 +163,7 @@
               Why should you use Codefair?
             </h2>
 
-            <p>
+            <p class="font-onest text-lg text-slate-800">
               With Codefair, you do not have to think about making your software
               FAIR. Just install Codefair from the GitHub marketplace on your
               software's GitHub repository. You can then track FAIR-compliance
@@ -174,7 +172,7 @@
               automated pull requests, Codefair will allow you to make sure that
               your software follows best coding practices, provides metadata in
               standard format, includes a license file, is archived on Zenodo,
-              and much more to align with the FAIR4RS principles
+              and much more to align with the FAIR4RS principles.
             </p>
           </div>
 
@@ -204,16 +202,16 @@
               Who are we?
             </h2>
 
-            <p>
-              Codefair is being developed by the team at the FAIR Data
-              Innovations Hub, a division of the non profit biomedical research
-              institue called California Medical Innovations Institute. As
-              developers of research software, we experienced firsthand the
-              challenges of making software FAIR which prompted us to develop
-              Codefair. The project is not receiving any financial support yet,
-              but we are hoping we will in the future so we can dedicate more
-              time and effort to this much needed tool. We would also love if
-              others would join us in this effort!
+            <p class="font-onest text-lg text-slate-800">
+              Codefair is being developed by the FAIR Data Innovations Hub team,
+              a division of the nonprofit biomedical research facility,
+              California Medical Innovations Institute. As developers of
+              research software, we have experienced firsthand the challenges of
+              making software FAIR, which prompted us to develop Codefair. The
+              project is not receiving any financial support yet, but we hope to
+              secure funding in the future so we can dedicate more time and
+              effort to this much-needed tool. We would also love for others to
+              join us in this effort!
             </p>
           </div>
 
@@ -262,9 +260,11 @@
               Need help? Have suggestions? Want to contribute?
             </h2>
 
-            <p>
+            <p class="font-onest text-lg text-slate-800">
               Reach out to us via the GitHub issues of the Codefair repo and we
-              will be happy to connect with you.
+              will be happy to connect with you. You may also use the Contact Us
+              form at the bottom right of this page to send us a message. We are
+              always looking for ways to make Codefair better!
             </p>
           </div>
 
