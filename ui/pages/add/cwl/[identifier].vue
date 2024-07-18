@@ -198,7 +198,7 @@ const navigateToPR = () => {
     <n-flex vertical size="large" class="pb-5">
       <div class="flex flex-row justify-between">
         <h1 class="text-2xl font-bold">
-          Edit .cwl file for
+          CWL validation report for
           <NuxtLink
             :to="`https://github.com/${githubRepo}`"
             target="_blank"
