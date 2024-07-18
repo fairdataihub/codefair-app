@@ -530,7 +530,7 @@ export async function applyCWLTemplate(
           url = `${CODEFAIR_DOMAIN}/add/cwl/${existingCWL.identifier}`;
         }
         const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
-        baseTemplate += `\n\n## CWL Standards ${isValidCWL ? "✔️" : "❌"}\n\nA ${isValidCWL ? "valid" : "invalid"} CWL file is found in the root of the repository.\n\n${isValidCWL ? "" : cwlBadge}`;
+        baseTemplate += `\n\n## CWL Standards ${isValidCWL ? "✔️" : "❌"}\n\n${isValidCWL ? "A valid" : "An invalid"} CWL file is found in the root of the repository.\n\n${isValidCWL ? "" : cwlBadge}`;
         break;
       }
     }
