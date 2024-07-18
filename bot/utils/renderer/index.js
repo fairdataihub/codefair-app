@@ -1,7 +1,10 @@
+import url from "url";
+import * as cwlTsAuto from "cwl-ts-auto";
 import { createId } from "../tools/index.js";
 import { checkForCitation } from "../citation/index.js";
 import { checkForCodeMeta } from "../codemeta/index.js";
 import { checkForLicense } from "../license/index.js";
+import { checkForCWLFile } from "../cwl/index.js";
 import { gatherMetadata, convertMetadataForDB } from "../metadata/index.js";
 
 const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
@@ -396,6 +399,146 @@ export async function applyLicenseTemplate(
   return baseTemplate;
 }
 
+export async function applyCWLTemplate(
+  subjects,
+  baseTemplate,
+  db,
+  repository,
+  owner,
+  context,
+) {
+  if (!subjects.cwl) {
+    const identifier = createId();
+    let url = `${CODEFAIR_DOMAIN}/add/cwl/${identifier}`;
+    const cwlCollection = db.collection("cwlRequests");
+
+    const existingCWL = await cwlCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (!existingCWL) {
+      // Entry does not exist in the db, create a new one
+      const newDate = Date.now();
+      await cwlCollection.insertOne({
+        created_at: newDate,
+        identifier,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+      });
+    } else {
+      // Get the identifier of the existing cwl request
+      await cwlCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { updated_at: Date.now() } },
+      );
+      url = `${CODEFAIR_DOMAIN}/add/cwl/${existingCWL.identifier}`;
+      console.log("Existing cwl request: " + url);
+    }
+
+    // no cwl file found text
+    const cwlBadge = `[![CWL](https://img.shields.io/badge/Add_CWL-dc2626.svg)](${url})`;
+    baseTemplate += `\n\n## CWL Standards ❌\n\nNo CWL file was found in the root of your repository. If you would like Codefair to add a cwl file, click the "Add CWL" button below to go to our interface for adding a cwl file. You can also add a cwl file yourself and Codefair will update the dashboard when it detects it on the main branch.\n\n${cwlBadge}`;
+  } else {
+    // Get the cwl file content
+    const cwlRequest = await context.octokit.repos.getContent({
+      owner,
+      repo: repository.name,
+    });
+
+    for (const file of cwlRequest.data) {
+      const fileSplit = file.name.split(".");
+      if (fileSplit.includes("cwl")) {
+        console.log("cwl file found");
+        // Extract the cwl file content and place into db
+        // const cwlContent = Buffer.from(file.content, "base64").toString("utf-8");
+
+        // extract the cwl file content with the url
+        const cwlContentResponse = await context.octokit.repos.getContent({
+          owner,
+          path: file.path,
+          repo: repository.name,
+        });
+        const cwlContent = Buffer.from(
+          cwlContentResponse.data.content,
+          "base64",
+        ).toString("utf-8");
+        // console.log(file);
+        // console.log("cwlContent");
+        // console.log(cwlContent);
+        // console.log("cwlContent");
+        // console.log(file.download_url);
+
+        let isValidCWL = false;
+        let validationMessage = "";
+        cwlTsAuto
+          .loadDocumentByString(cwlContent, file.download_url)
+          .then((doc) => {
+            if (doc instanceof cwlTsAuto.CommandLineTool) {
+              console.log(
+                "This document is a CommandLineTool with baseCommand: ",
+                doc.baseCommand,
+              );
+              isValidCWL = true;
+            }
+          })
+          .catch((e) => {
+            if (e instanceof cwlTsAuto.ValidationException) {
+              console.log("validation message here");
+              console.log(e.toString());
+              validationMessage = e.toString();
+              isValidCWL = false;
+            } else {
+              console.log(e);
+            }
+          });
+
+        const identifier = createId();
+        let url = `${CODEFAIR_DOMAIN}/add/cwl/${identifier}`;
+        const cwlCollection = db.collection("cwlRequests");
+        const existingCWL = await cwlCollection.findOne({
+          repositoryId: repository.id,
+        });
+
+        if (!existingCWL) {
+          // Entry does not exist in the db, create a new one
+          const newDate = Date.now();
+          await cwlCollection.insertOne({
+            created_at: newDate,
+            cwlContent,
+            identifier,
+            open: true,
+            owner,
+            repo: repository.name,
+            repositoryId: repository.id,
+            updated_at: newDate,
+            validation_message: validationMessage,
+          });
+        } else {
+          // Get the identifier of the existing cwl request
+          await cwlCollection.updateOne(
+            { repositoryId: repository.id },
+            {
+              $set: {
+                cwlContent,
+                updated_at: Date.now(),
+                validation_message: validationMessage,
+              },
+            },
+          );
+          url = `${CODEFAIR_DOMAIN}/add/cwl/${existingCWL.identifier}`;
+        }
+        const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
+        baseTemplate += `\n\n## CWL Standards ${isValidCWL ? "✔️" : "❌"}\n\nA ${isValidCWL ? "valid" : "invalid"} CWL file is found in the root of the repository.\n\n${isValidCWL ? "" : cwlBadge}`;
+        break;
+      }
+    }
+  }
+
+  return baseTemplate;
+}
+
 /**
  * * Renders the body of the dashboard issue message
  *
@@ -428,24 +571,33 @@ export async function renderIssues(
   let license = await checkForLicense(context, owner, repository.name);
   let citation = await checkForCitation(context, owner, repository.name);
   let codemeta = await checkForCodeMeta(context, owner, repository.name);
+  let cwl = await checkForCWLFile(context, owner, repository.name);
 
   // Check if any of the commits added a LICENSE, CITATION, or codemeta file
-  if (commits.length > 0) {
+  if (commits.length > 0 && commits?.added?.length > 0) {
     for (let i = 0; i < commits.length; i++) {
-      if (commits[i].added.includes("LICENSE")) {
-        console.log("LICENSE file added with this push");
-        license = true;
-        continue;
-      }
-      if (commits[i].added.includes("CITATION.cff")) {
-        console.log("CITATION.cff file added with this push");
-        citation = true;
-        continue;
-      }
-      if (commits[i].added.includes("codemeta.json")) {
-        console.log("codemeta.json file added with this push");
-        codemeta = true;
-        continue;
+      for (let j = 0; i < commits.added.length; j++) {
+        if (commits[i].added[j] === "LICENSE") {
+          console.log("LICENSE file added with this push");
+          license = true;
+          continue;
+        }
+        if (commits[i].added[j] === "CITATION.cff") {
+          console.log("CITATION.cff file added with this push");
+          citation = true;
+          continue;
+        }
+        if (commits[i].added[j] === "codemeta.json") {
+          console.log("codemeta.json file added with this push");
+          codemeta = true;
+          continue;
+        }
+        const fileSplit = commits[i].added[j].split(".");
+        if (fileSplit.includes("cwl")) {
+          console.log("cwl file detected");
+          cwl = true;
+          continue;
+        }
       }
     }
   }
@@ -453,6 +605,7 @@ export async function renderIssues(
   const subjects = {
     citation,
     codemeta,
+    cwl,
     license,
   };
 
@@ -485,6 +638,15 @@ export async function renderIssues(
   if (prTitle === "feat: ✨ metadata files added") {
     baseTemplate += `\n\nA pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
   }
+
+  baseTemplate = await applyCWLTemplate(
+    subjects,
+    baseTemplate,
+    db,
+    repository,
+    owner,
+    context,
+  );
 
   return baseTemplate;
 }
