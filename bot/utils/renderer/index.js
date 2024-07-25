@@ -155,7 +155,7 @@ export async function applyCodemetaTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
 
-    const codemetaCollection = db.collection("codemetaRequests");
+    const codemetaCollection = db.collection("codeMetadata");
     // console.log(repository);
     const existingCodemeta = await codemetaCollection.findOne({
       repositoryId: repository.id,

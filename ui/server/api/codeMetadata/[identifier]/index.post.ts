@@ -133,7 +133,7 @@ export default defineEventHandler(async (event) => {
 
   const codeMeta = {
     name: codeMetadataRecord.name,
-    "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+    "@context": "https://w3id.org/codemeta/3.0",
     ...(codeMetadataRecord.applicationCategory && {
       applicationCategory: codeMetadataRecord.applicationCategory,
     }),
