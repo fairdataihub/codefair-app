@@ -312,14 +312,10 @@ export async function verifyInstallationAnalytics(context, repository, db) {
   const analyticsCollection = await db.collection("analytics");
 
   const installation = await installationCollection.findOne({
-    installationId,
-    owner,
     repositoryId: repository.id,
   });
 
   const analytics = await analyticsCollection.findOne({
-    installationId,
-    owner,
     repositoryId: repository.id,
   });
 
