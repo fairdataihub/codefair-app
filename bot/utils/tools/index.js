@@ -246,8 +246,7 @@ export async function getDOI(context, owner, repoName) {
 
 /**
  * * Verify if repository name has changed and update the database if necessary
- * 
- * @param {string} dbRepoName - The repository name in the database 
+ * @param {string} dbRepoName - The repository name in the database
  * @param {string} repoName - The repository name from the event payload
  * @param {string} owner - The owner of the repository
  * @param {*} collection - The MongoDB collection
@@ -274,7 +273,6 @@ export async function verifyRepoName(dbRepoName, repoName, owner, collection) {
 
 /**
  * * Check if the repository is empty
- * 
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
@@ -295,5 +293,59 @@ export async function isRepoEmpty(context, owner, repo) {
       return true;
     }
   }
+}
 
+/**
+ * * Verify the installation and analytics collections
+ * @param {object} context - GitHub payload context
+ * @param {object} repository - The repository object
+ * @param {*} db - The MongoDB Database
+ */
+export async function verifyInstallationAnalytics(context, repository, db) {
+  const owner =
+    context.payload?.installation?.account?.login ||
+    context.payload?.repository?.owner?.login;
+
+  const installationId = context.payload.installation.id;
+
+  const installationCollection = await db.collection("installations");
+  const analyticsCollection = await db.collection("analytics");
+
+  const installation = await installationCollection.findOne({
+    repositoryId: repository.id,
+  });
+
+  const analytics = await analyticsCollection.findOne({
+    repositoryId: repository.id,
+  });
+
+  if (!installation) {
+    // If the installation is not in the database, add it
+    await installationCollection.insertOne({
+      installationId,
+      owner,
+      repo: repository.name,
+      repositoryId: repository.id,
+      timestamp: Date.now(),
+    });
+  } else {
+    verifyRepoName(
+      installation.repo,
+      repository.name,
+      owner,
+      installationCollection,
+    );
+  }
+
+  if (!analytics) {
+    // If the analytics for the installation is not in the database, add it
+    await analyticsCollection.insertOne({
+      owner,
+      repo: repository.name,
+      repositoryId: repository.id,
+      timestamp: Date.now(),
+    });
+  } else {
+    verifyRepoName(analytics.repo, repository.name, owner, analyticsCollection);
+  }
 }

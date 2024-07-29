@@ -135,160 +135,6 @@ export async function applyMetadataTemplate(
 }
 
 /**
- * * Applies the codemeta template to the base template
- *
- * @param {object} subjects - The subjects to check for
- * @param {string} baseTemplate - The base template to add to
- * @param {*} db - The database
- * @param {object} repository - The GitHub repository information
- * @param {string} owner - The owner of the repository
- *
- * @returns {string} - The updated base template
- */
-export async function applyCodemetaTemplate(
-  subjects,
-  baseTemplate,
-  db,
-  repository,
-  owner,
-) {
-  if (!subjects.codemeta && subjects.license) {
-    // License was found but no codemeta.json exists
-    const identifier = createId();
-
-    let url = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
-
-    const codemetaCollection = db.collection("codemetaRequests");
-    // console.log(repository);
-    const existingCodemeta = await codemetaCollection.findOne({
-      repositoryId: repository.id,
-    });
-
-    if (!existingCodemeta) {
-      // Entry does not exist in db, create a new one
-      const newDate = Date.now();
-      await codemetaCollection.insertOne({
-        created_at: newDate,
-        identifier,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
-      });
-    } else {
-      // Get the identifier of the existing codemeta request
-      await codemetaCollection.updateOne(
-        { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
-      );
-      url = `${CODEFAIR_DOMAIN}/add/codemeta/${existingCodemeta.identifier}`;
-    }
-
-    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Add_Codemeta-dc2626.svg)](${url})`;
-    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file was not found in the repository. To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org).\n\n${codemetaBadge}`;
-  } else if (subjects.codemeta && subjects.license) {
-    // License was found and codemetata.json also exists
-    // Then add codemeta section mentioning it will be checked after license is added
-
-    if (!existingLicense) {
-      // Entry does not exist in db, create a new one
-      const newDate = Date.now();
-      await licenseCollection.insertOne({
-        created_at: newDate,
-        identifier,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
-      });
-    } else {
-      // Get the identifier of the existing license request
-      // Update the database
-      await licenseCollection.updateOne(
-        { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
-      );
-      url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
-    }
-    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Edit_Codemeta-dc2626.svg)](${url})`;
-    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file found in the repository.\n\n${codemetaBadge}`;
-  } else {
-    // codemeta and license does not exist
-    const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/Codemeta_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file will be checked after a license file is added. To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org).\n\n${codemetaBadge}`;
-  }
-
-  return baseTemplate;
-}
-
-/**
- * * Applies the citation template to the base template
- *
- * @param {object} subjects - The subjects to check for
- * @param {string} baseTemplate - The base template to add to
- * @param {*} db - The database
- * @param {object} repository - The GitHub repository information
- * @param {string} owner - The owner of the repository
- *
- * @returns {string} - The updated base template
- */
-export async function applyCitationTemplate(
-  subjects,
-  baseTemplate,
-  db,
-  repository,
-  owner,
-) {
-  if (!subjects.citation && subjects.license) {
-    // License was found but no citation file was found
-    const identifier = createId();
-
-    let url = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
-    const citationCollection = db.collection("citationRequests");
-    // console.log(repository);
-    const existingCitation = await citationCollection.findOne({
-      repositoryId: repository.id,
-    });
-
-    if (!existingCitation) {
-      // Entry does not exist in db, create a new one
-      const newDate = Date.now();
-      await citationCollection.insertOne({
-        created_at: newDate,
-        identifier,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
-      });
-    } else {
-      // Get the identifier of the existing citation request
-      await citationCollection.updateOne(
-        { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
-      );
-      url = `${CODEFAIR_DOMAIN}/add/citation/${existingCitation.identifier}`;
-    }
-
-    const citationBadge = `[![Citation](https://img.shields.io/badge/Add_Citation-dc2626.svg)](${url})`;
-    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file was not found in the repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.\n\n${citationBadge}`;
-  } else if (subjects.citation && subjects.license) {
-    // Citation file was found and license was found
-    const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Added-6366f1.svg)`;
-    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file found in the repository.\n\n${citationBadge}`;
-  } else {
-    // Citation file was not found and license was not found
-    const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file will be checked after a license file is added. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.\n\n${citationBadge}`;
-  }
-
-  return baseTemplate;
-}
-
-/**
  * * Applies the license template to the base template
  *
  * @param {object} subjects - The subjects to check for
@@ -559,7 +405,6 @@ export async function renderIssues(
   db,
   emptyRepo,
   prTitle = "",
-  prNumber = "",
   prLink = "",
   commits = [],
 ) {
@@ -718,4 +563,160 @@ export async function createIssue(context, owner, repo, title, body) {
       repo,
     });
   }
+}
+
+// Functions below are temporarily being unused (metadata section was combined. Seperate sections might come back though)
+
+/**
+ * * Applies the codemeta template to the base template
+ *
+ * @param {object} subjects - The subjects to check for
+ * @param {string} baseTemplate - The base template to add to
+ * @param {*} db - The database
+ * @param {object} repository - The GitHub repository information
+ * @param {string} owner - The owner of the repository
+ *
+ * @returns {string} - The updated base template
+ */
+export async function applyCodemetaTemplate(
+  subjects,
+  baseTemplate,
+  db,
+  repository,
+  owner,
+) {
+  if (!subjects.codemeta && subjects.license) {
+    // License was found but no codemeta.json exists
+    const identifier = createId();
+
+    let url = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
+
+    const codemetaCollection = db.collection("codeMetadata");
+    // console.log(repository);
+    const existingCodemeta = await codemetaCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (!existingCodemeta) {
+      // Entry does not exist in db, create a new one
+      const newDate = Date.now();
+      await codemetaCollection.insertOne({
+        created_at: newDate,
+        identifier,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing codemeta request
+      await codemetaCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { updated_at: Date.now() } },
+      );
+      url = `${CODEFAIR_DOMAIN}/add/codemeta/${existingCodemeta.identifier}`;
+    }
+
+    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Add_Codemeta-dc2626.svg)](${url})`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file was not found in the repository. To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org).\n\n${codemetaBadge}`;
+  } else if (subjects.codemeta && subjects.license) {
+    // License was found and codemetata.json also exists
+    // Then add codemeta section mentioning it will be checked after license is added
+
+    if (!existingLicense) {
+      // Entry does not exist in db, create a new one
+      const newDate = Date.now();
+      await licenseCollection.insertOne({
+        created_at: newDate,
+        identifier,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing license request
+      // Update the database
+      await licenseCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { updated_at: Date.now() } },
+      );
+      url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
+    }
+    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Edit_Codemeta-dc2626.svg)](${url})`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file found in the repository.\n\n${codemetaBadge}`;
+  } else {
+    // codemeta and license does not exist
+    const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/Codemeta_Not_Checked-fbbf24)`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file will be checked after a license file is added. To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org).\n\n${codemetaBadge}`;
+  }
+
+  return baseTemplate;
+}
+
+/**
+ * * Applies the citation template to the base template
+ *
+ * @param {object} subjects - The subjects to check for
+ * @param {string} baseTemplate - The base template to add to
+ * @param {*} db - The database
+ * @param {object} repository - The GitHub repository information
+ * @param {string} owner - The owner of the repository
+ *
+ * @returns {string} - The updated base template
+ */
+export async function applyCitationTemplate(
+  subjects,
+  baseTemplate,
+  db,
+  repository,
+  owner,
+) {
+  if (!subjects.citation && subjects.license) {
+    // License was found but no citation file was found
+    const identifier = createId();
+
+    let url = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
+    const citationCollection = db.collection("citationRequests");
+    // console.log(repository);
+    const existingCitation = await citationCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (!existingCitation) {
+      // Entry does not exist in db, create a new one
+      const newDate = Date.now();
+      await citationCollection.insertOne({
+        created_at: newDate,
+        identifier,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing citation request
+      await citationCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { updated_at: Date.now() } },
+      );
+      url = `${CODEFAIR_DOMAIN}/add/citation/${existingCitation.identifier}`;
+    }
+
+    const citationBadge = `[![Citation](https://img.shields.io/badge/Add_Citation-dc2626.svg)](${url})`;
+    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file was not found in the repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.\n\n${citationBadge}`;
+  } else if (subjects.citation && subjects.license) {
+    // Citation file was found and license was found
+    const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Added-6366f1.svg)`;
+    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file found in the repository.\n\n${citationBadge}`;
+  } else {
+    // Citation file was not found and license was not found
+    const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Not_Checked-fbbf24)`;
+    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file will be checked after a license file is added. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.\n\n${citationBadge}`;
+  }
+
+  return baseTemplate;
 }

@@ -39,7 +39,7 @@ export async function gatherCodeMetaInfo(context, owner, repo) {
   // TODO: See if those two api calls are needed
 
   let metadata = {
-    "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+    "@context": "https://w3id.org/codemeta/3.0",
     "@type": "SoftwareSourceCode",
   };
 
