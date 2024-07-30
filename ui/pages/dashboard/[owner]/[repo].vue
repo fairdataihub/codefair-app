@@ -222,6 +222,39 @@ const generateSeed = (seed: string) => {
       <n-divider />
 
       <CardCollapsible
+        title="CWL Validation"
+        subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them to create workflows."
+        class="rounded-lg bg-white shadow-md"
+        bordered
+      >
+        <div>
+          <n-alert
+            v-if="!data?.cwlValidation || !data.cwlValidation.containsCWL"
+            type="info"
+            class="my-5"
+          >
+            There are no CWL files in this repository.
+          </n-alert>
+
+          <n-card v-else class="my-3">
+            <n-flex align="center" justify="space-between">
+              <div>
+                <h3>ID: {{ generateSeed(data?.cwlValidation.identifier) }}</h3>
+              </div>
+
+              <NuxtLink
+                :to="`/view/cwl-validation/${data?.cwlValidation.identifier}`"
+              >
+                <n-button type="primary">View CWL Validation Results</n-button>
+              </NuxtLink>
+            </n-flex>
+          </n-card>
+        </div>
+      </CardCollapsible>
+
+      <n-divider />
+
+      <CardCollapsible
         title="Zenodo - Coming Soon"
         subheader="The Zenodo integration for the repository is coming soon. You will be
             able to archive each version of your repository on Zenodo."
@@ -255,10 +288,10 @@ const generateSeed = (seed: string) => {
       </CardCollapsible>
     </div>
 
-    <!-- <n-collapse class="mt-8">
+    <n-collapse class="mt-8">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
       </n-collapse-item>
-    </n-collapse> -->
+    </n-collapse>
   </main>
 </template>
