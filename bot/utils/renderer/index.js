@@ -416,7 +416,7 @@ export async function renderIssues(
   let license = await checkForLicense(context, owner, repository.name);
   let citation = await checkForCitation(context, owner, repository.name);
   let codemeta = await checkForCodeMeta(context, owner, repository.name);
-  let cwl = await checkForCWLFile(context, owner, repository.name);
+  let cwl = await checkForCWLFile(context, owner, repository.name); // This variable is an array of cwl files
 
   // Check if any of the commits added a LICENSE, CITATION, or codemeta file
   if (commits.length > 0 && commits?.added?.length > 0) {
@@ -440,7 +440,7 @@ export async function renderIssues(
         const fileSplit = commits[i].added[j].split(".");
         if (fileSplit.includes("cwl")) {
           console.log("cwl file detected");
-          cwl = true;
+          cwl.push(commits[i].added[j]);
           continue;
         }
       }

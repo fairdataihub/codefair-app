@@ -1,6 +1,6 @@
 export async function checkForCWLFile(context, owner, repo) {
   const cwlFiles = [];
-  console.log("Checking for CWL file");
+  console.log("Checking for CWL files in the repository");
 
   async function searchDirectory(path) {
     try {
