@@ -1,7 +1,7 @@
 interface CWLValidationResult {
   path: string;
   validation_status: string;
-  validation_errors: string[];
+  validation_message: string;
   last_validated: number;
   last_modified: number;
 }

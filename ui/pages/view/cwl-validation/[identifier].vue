@@ -75,17 +75,11 @@ if (data.value) {
           :title="file.path"
           :name="file.path"
         >
-          <n-flex
-            v-if="file.validation_errors && file.validation_errors.length > 0"
-            vertical
-          >
-            <n-alert
-              v-for="validationError in file.validation_errors"
-              :key="validationError"
-              type="error"
-              :bordered="false"
-            >
-              {{ validationError }}
+          <n-flex v-if="file.validation_status === 'invalid'" vertical>
+            <n-alert type="error" :bordered="false">
+              <pre
+                >{{ file.validation_message }}
+              </pre>
             </n-alert>
           </n-flex>
 
