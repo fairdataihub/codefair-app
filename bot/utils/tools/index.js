@@ -287,7 +287,7 @@ export async function isRepoEmpty(context, owner, repo) {
 
     return repoContent.data.length === 0;
   } catch (error) {
-    console.log("Error getting the repository content");
+    console.log("Error checking if the repository is empty");
     console.log(error);
     if (error.status === 404) {
       return true;
@@ -308,7 +308,7 @@ export async function verifyInstallationAnalytics(context, repository, db) {
 
   const installationId = context.payload.installation.id;
 
-  const installationCollection = await db.collection("installations");
+  const installationCollection = await db.collection("installation");
   const analyticsCollection = await db.collection("analytics");
 
   const installation = await installationCollection.findOne({
@@ -347,5 +347,19 @@ export async function verifyInstallationAnalytics(context, repository, db) {
     });
   } else {
     verifyRepoName(analytics.repo, repository.name, owner, analyticsCollection);
+  }
+}
+
+export async function isRepoPrivate(context, owner, repoName) {
+  try {
+    const repoDetails = await context.octokit.repos.get({
+      owner,
+      repo: repoName,
+    });
+
+    return repoDetails.data.private;
+  } catch (error) {
+    console.log("Error verifying if the repository is private");
+    console.log(error);
   }
 }

@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   await client.connect();
 
   const db = client.db(process.env.MONGODB_DB_NAME);
-  const collection = db.collection("cwlRequests");
+  const collection = db.collection("cwlValidation");
 
   // Check if the request identifier exists in the database
   const cwlRequest = await collection.findOne({

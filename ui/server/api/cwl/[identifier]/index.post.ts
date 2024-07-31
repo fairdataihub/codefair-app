@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
   await client.connect();
 
   const db = client.db(process.env.MONGODB_DB_NAME);
-  const collection = db.collection("cwlRequests");
+  const collection = db.collection("cwlValidation");
   const installation = db.collection("installation");
 
   const licenseRequest = await collection.findOne({
