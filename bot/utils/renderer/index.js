@@ -264,7 +264,7 @@ export async function applyCWLTemplate(
 ) {
   const privateRepo = await isRepoPrivate(context, owner, repository.name);
   if (privateRepo) {
-    baseTemplate += `\n\n> [!WARNING]\n> Your repository is private. Codefair will not be able to validate any CWL files for you. You can check the CWL file yourself and update the dashboard when it is detected on the main branch.`;
+    baseTemplate += `\n\n## CWL Validations ❌\n\n> [!WARNING]\n> Your repository is private. Codefair will not be able to validate any CWL files for you. You can check the CWL file yourself using the [cwltool validator](https://cwltool.readthedocs.io/en/latest/)`;
 
     return baseTemplate;
   }
@@ -299,39 +299,25 @@ export async function applyCWLTemplate(
     }
 
     // no cwl file found text
-    baseTemplate += `\n\n## CWL Standards ❌\n\nNo CWL files were found in your repository. When Codefair detects a CWL file in the main branch it will validate that file.\n\n`;
+    baseTemplate += `\n\n## CWL Validations ❌\n\nNo CWL files were found in your repository. When Codefair detects a CWL file in the main branch it will validate that file.\n\n`;
   } else {
     const cwlFiles = [];
     let validOverall = true;
-    baseTemplate += `\n\n## CWL Validations\n\nHere is a list of the CWL files found in the repository and their validation status:\n\n`;
+    let tableContent = "";
+    let failedCount = 0;
     for (const file of subjects.cwl) {
       const fileSplit = file.name.split(".");
       if (fileSplit.includes("cwl")) {
-        // Extract the cwl file content and place into db
-        // const cwlContent = Buffer.from(file.content, "base64").toString("utf-8");
-
-        // extract the cwl file content with the url
-        // const cwlContentResponse = await context.octokit.repos.getContent({
-        //   owner,
-        //   path: file.path,
-        //   repo: repository.name,
-        // });
-        // const cwlContent = Buffer.from(
-        //   cwlContentResponse.data.content,
-        //   "base64",
-        // ).toString("utf-8");
-        // console.log(file);
-        // console.log("cwlContent");
-        // console.log(cwlContent);
-        // console.log("cwlContent");
-        // console.log(file.download_url);
-
         const [isValidCWL, validationMessage] = await validateCWLFile(
           file.download_url,
         );
 
         if (!isValidCWL && validOverall) {
           validOverall = false;
+        }
+
+        if (!isValidCWL) {
+          failedCount += 1;
         }
 
         const newDate = Date.now();
@@ -344,7 +330,7 @@ export async function applyCWLTemplate(
           validation_status: isValidCWL ? "valid" : "invalid",
         });
 
-        baseTemplate += `#### ${file.path}\n\n- **Validation Status**: ${isValidCWL ? "Valid ✔️" : "Invalid ❌"}\n`;
+        tableContent += `| ${file.path} | ${isValidCWL ? "✔️" : "❓"} |\n`;
       }
     }
     url = `${CODEFAIR_DOMAIN}/add/cwl/${identifier}`;
@@ -377,8 +363,9 @@ export async function applyCWLTemplate(
       );
       url = `${CODEFAIR_DOMAIN}/add/cwl/${existingCWL.identifier}`;
     }
+
     const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
-    baseTemplate += `\n\n To view the full report of each CWL file, click the "View CWL Report" button below.\n\n${cwlBadge}`;
+    baseTemplate += `\n\n## CWL Validations ${validOverall ? "✔️" : "❌"}\n\nCWL files were found in the repository and ***${failedCount}/${subjects.cwl.length}*** are considered valid by the [cwltool validator](https://cwltool.readthedocs.io/en/latest/).\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Status |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file, click the "View CWL Report" button below.\n\n${cwlBadge}`;
   }
 
   return baseTemplate;
