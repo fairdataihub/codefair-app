@@ -311,15 +311,15 @@ export async function applyCWLTemplate(
         // const cwlContent = Buffer.from(file.content, "base64").toString("utf-8");
 
         // extract the cwl file content with the url
-        const cwlContentResponse = await context.octokit.repos.getContent({
-          owner,
-          path: file.path,
-          repo: repository.name,
-        });
-        const cwlContent = Buffer.from(
-          cwlContentResponse.data.content,
-          "base64",
-        ).toString("utf-8");
+        // const cwlContentResponse = await context.octokit.repos.getContent({
+        //   owner,
+        //   path: file.path,
+        //   repo: repository.name,
+        // });
+        // const cwlContent = Buffer.from(
+        //   cwlContentResponse.data.content,
+        //   "base64",
+        // ).toString("utf-8");
         // console.log(file);
         // console.log("cwlContent");
         // console.log(cwlContent);
@@ -327,7 +327,6 @@ export async function applyCWLTemplate(
         // console.log(file.download_url);
 
         const [isValidCWL, validationMessage] = await validateCWLFile(
-          cwlContent,
           file.download_url,
         );
 
@@ -337,6 +336,7 @@ export async function applyCWLTemplate(
 
         const newDate = Date.now();
         cwlFiles.push({
+          href: file.html_url,
           last_modified: newDate,
           last_validated: newDate,
           path: file.path,
@@ -344,7 +344,7 @@ export async function applyCWLTemplate(
           validation_status: isValidCWL ? "valid" : "invalid",
         });
 
-        baseTemplate += `### ${file.path}\n\n- **Validation Status**: ${isValidCWL ? "Valid ✔️" : "Invalid ❌"}\n`;
+        baseTemplate += `#### ${file.path}\n\n- **Validation Status**: ${isValidCWL ? "Valid ✔️" : "Invalid ❌"}\n`;
       }
     }
     url = `${CODEFAIR_DOMAIN}/add/cwl/${identifier}`;

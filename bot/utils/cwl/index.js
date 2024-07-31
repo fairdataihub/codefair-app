@@ -2,8 +2,6 @@
  * * This file contains the functions to interact with the CWL files in the repository
  */
 
-import * as cwlTsAuto from "cwl-ts-auto";
-
 /**
  * * This function gets the CWL files in the repository
  * @param {Object} context - GitHub Event Context
@@ -51,18 +49,30 @@ export async function getCWLFiles(context, owner, repoName) {
   }
 }
 
-export async function validateCWLFile(fileContent, downloadUrl) {
+export async function validateCWLFile(downloadUrl) {
   try {
-    const doc = await cwlTsAuto.loadDocumentByString(fileContent, downloadUrl);
-    if (doc instanceof cwlTsAuto.CommandLineTool) {
-      return [true, ""];
+    const response = await fetch("https://cwl.saso.one/validate", {
+      body: JSON.stringify({
+        file_path: downloadUrl,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    });
+    if (!response.ok && response.status === 400) {
+      const error = await response.json();
+      return [false, error.error];
+    }
+    if (!response.ok && response.status === 500) {
+      return [false, "Error validating CWL file"];
+    }
+    if (response.ok) {
+      const data = await response.json();
+      return [true, data.output];
     }
   } catch (e) {
-    if (e instanceof cwlTsAuto.ValidationException) {
-      const validationMessage = e.toString();
-      return [false, validationMessage];
-    } else {
-      console.log(e);
-    }
+    console.log("Error validating CWL file");
+    console.log(e);
   }
 }
