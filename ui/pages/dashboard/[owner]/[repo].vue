@@ -199,7 +199,7 @@ const rerunCwlValidation = async () => {
         subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them to create workflows."
       >
         <template #icon>
-          <Icon name="mdi:wave" size="40" />
+          <Icon name="cib:common-workflow-language" size="40" />
         </template>
 
         <template #content>
