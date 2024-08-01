@@ -9,6 +9,7 @@ import { checkForCodeMeta } from "../codemeta/index.js";
 import { checkForLicense } from "../license/index.js";
 import { getCWLFiles, validateCWLFile } from "../cwl/index.js";
 import { gatherMetadata, convertMetadataForDB } from "../metadata/index.js";
+import dbInstance from "../../db.js";
 
 const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
@@ -18,7 +19,6 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  *
  * @param {object} subjects - The subjects to check for
  * @param {string} baseTemplate - The base template to add to
- * @param {*} db - The database
  * @param {object} repository - The GitHub repository information
  * @param {string} owner - The owner of the repository
  * @param {object} context - The GitHub context object
@@ -28,7 +28,6 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 export async function applyMetadataTemplate(
   subjects,
   baseTemplate,
-  db,
   repository,
   owner,
   context,
@@ -40,7 +39,7 @@ export async function applyMetadataTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
-    const metadataCollection = db.collection("codeMetadata");
+    const metadataCollection = dbInstance.getDb().collection("codeMetadata");
     const existingMetadata = await metadataCollection.findOne({
       repositoryId: repository.id,
     });
@@ -96,7 +95,7 @@ export async function applyMetadataTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
-    const metadataCollection = db.collection("codeMetadata");
+    const metadataCollection = dbInstance.getDb().collection("codeMetadata");
     const existingMetadata = await metadataCollection.findOne({
       repositoryId: repository.id,
     });
@@ -142,7 +141,6 @@ export async function applyMetadataTemplate(
  *
  * @param {object} subjects - The subjects to check for
  * @param {string} baseTemplate - The base template to add to
- * @param {*} db - The database
  * @param {object} repository - The GitHub repository information
  * @param {string} owner - The owner of the repository
  *
@@ -151,7 +149,6 @@ export async function applyMetadataTemplate(
 export async function applyLicenseTemplate(
   subjects,
   baseTemplate,
-  db,
   repository,
   owner,
   context,
@@ -159,7 +156,7 @@ export async function applyLicenseTemplate(
   if (!subjects.license) {
     const identifier = createId();
     let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
-    const licenseCollection = db.collection("licenseRequests");
+    const licenseCollection = dbInstance.getDb().collection("licenseRequests");
     const existingLicense = await licenseCollection.findOne({
       repositoryId: repository.id,
     });
@@ -213,7 +210,7 @@ export async function applyLicenseTemplate(
     // License file found text
     const identifier = createId();
     let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
-    const licenseCollection = db.collection("licenseRequests");
+    const licenseCollection = dbInstance.getDb().collection("licenseRequests");
     const existingLicense = await licenseCollection.findOne({
       repositoryId: repository.id,
     });
@@ -252,7 +249,6 @@ export async function applyLicenseTemplate(
  *
  * @param {Object} subjects - The subjects to check for
  * @param {String} baseTemplate - The base template to add to
- * @param {*} db - The database
  * @param {Object} repository - Repository object
  * @param {String} owner - Repository owner
  * @param {Object} context - GitHub context object
@@ -261,7 +257,6 @@ export async function applyLicenseTemplate(
 export async function applyCWLTemplate(
   subjects,
   baseTemplate,
-  db,
   repository,
   owner,
   context,
@@ -269,13 +264,12 @@ export async function applyCWLTemplate(
   const privateRepo = await isRepoPrivate(context, owner, repository.name);
   if (privateRepo) {
     baseTemplate += `\n\n## CWL Validations ❌\n\n> [!WARNING]\n> Your repository is private. Codefair will not be able to validate any CWL files for you. You can check the CWL file yourself using the [cwltool validator](https://cwltool.readthedocs.io/en/latest/)`;
-
     return baseTemplate;
   }
 
   let url = `${CODEFAIR_DOMAIN}/add/cwl/`;
   const identifier = createId();
-  const cwlCollection = db.collection("cwlValidation");
+  const cwlCollection = dbInstance.getDb().collection("cwlValidation");
   const existingCWL = await cwlCollection.findOne({
     repositoryId: repository.id,
   });
@@ -380,7 +374,6 @@ export async function applyCWLTemplate(
  *
  * @param {string} owner - The owner of the repository
  * @param {object} repository  - The repository
- * @param {*} db  - The database
  * @param {string} prTitle - The title of the PR
  * @param {string} prNumber - The number of the PR
  * @param {string} prLink - The link to the PR
@@ -392,7 +385,6 @@ export async function renderIssues(
   context,
   owner,
   repository,
-  db,
   emptyRepo,
   prTitle = "",
   prLink = "",
@@ -453,7 +445,6 @@ export async function renderIssues(
   baseTemplate = await applyLicenseTemplate(
     subjects,
     baseTemplate,
-    db,
     repository,
     owner,
     context,
@@ -468,7 +459,6 @@ export async function renderIssues(
   baseTemplate = await applyMetadataTemplate(
     subjects,
     baseTemplate,
-    db,
     repository,
     owner,
     context,
@@ -481,7 +471,6 @@ export async function renderIssues(
   baseTemplate = await applyCWLTemplate(
     subjects,
     baseTemplate,
-    db,
     repository,
     owner,
     context,
@@ -501,7 +490,7 @@ export async function renderIssues(
  */
 export async function createIssue(context, owner, repository, title, body) {
   // If issue has been created, create one
-  console.log("gathering issues");
+  console.log("Gathering open issues");
   const issue = await context.octokit.issues.listForRepo({
     title,
     creator: `${GITHUB_APP_NAME}[bot]`,
@@ -533,16 +522,11 @@ export async function createIssue(context, owner, repository, title, body) {
         repo: repository.name,
       });
 
-      console.log(response);
-
       await applyGitHubIssueToDatabase(response.data.number, repository.id);
     } else {
       // Update the issue with the new body
       console.log("++++++++++++++++");
-      // console.log(issue.data);
-      // console.log(issue);
       console.log("Updating existing issue: " + issueNumber);
-
       await context.octokit.issues.update({
         title,
         body,

@@ -318,15 +318,15 @@ export async function isRepoEmpty(context, owner, repo) {
  * @param {object} repository - The repository object
  * @param {*} db - The MongoDB Database
  */
-export async function verifyInstallationAnalytics(context, repository, db) {
+export async function verifyInstallationAnalytics(context, repository) {
   const owner =
     context.payload?.installation?.account?.login ||
     context.payload?.repository?.owner?.login;
 
   const installationId = context.payload.installation.id;
 
-  const installationCollection = await db.collection("installation");
-  const analyticsCollection = await db.collection("analytics");
+  const installationCollection = dbInstance.getDb().collection("installation");
+  const analyticsCollection = dbInstance.getDb().collection("analytics");
 
   const installation = await installationCollection.findOne({
     repositoryId: repository.id,

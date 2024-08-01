@@ -54,13 +54,12 @@ export default async (app, { getRouter }) => {
       const emptyRepo = await isRepoEmpty(context, owner, repoName);
 
       // Check if entry in installation and analytics collection
-      await verifyInstallationAnalytics(context, repository, db);
+      await verifyInstallationAnalytics(context, repository);
 
       const issueBody = await renderIssues(
         context,
         owner,
         repository,
-        db,
         emptyRepo,
       );
 
@@ -82,13 +81,12 @@ export default async (app, { getRouter }) => {
       console.log("Empty Repo: ", emptyRepo);
 
       // Check the installation and analytics collections
-      await verifyInstallationAnalytics(context, repository, db);
+      await verifyInstallationAnalytics(context, repository);
 
       const issueBody = await renderIssues(
         context,
         owner,
         repository,
-        db,
         emptyRepo,
       );
 
@@ -150,7 +148,7 @@ export default async (app, { getRouter }) => {
 
     const emptyRepo = await isRepoEmpty(context, owner, repoName);
 
-    await verifyInstallationAnalytics(context, repository, db);
+    await verifyInstallationAnalytics(context, repository);
 
     // Grab the commits being pushed
     const { commits } = context.payload;
@@ -159,7 +157,6 @@ export default async (app, { getRouter }) => {
       context,
       owner,
       repository,
-      db,
       emptyRepo,
       "",
       "",
@@ -229,7 +226,7 @@ export default async (app, { getRouter }) => {
     const emptyRepo = await isRepoEmpty(context, owner, repoName);
     console.log("Empty Repo: ", emptyRepo);
 
-    await verifyInstallationAnalytics(context, repository, db);
+    await verifyInstallationAnalytics(context, repository);
 
     if (prTitle === "feat: ✨ LICENSE file added") {
       const prLink = context.payload.pull_request.html_url;
@@ -239,7 +236,6 @@ export default async (app, { getRouter }) => {
         context,
         owner,
         repository,
-        db,
         emptyRepo,
         prTitle,
         prLink,
