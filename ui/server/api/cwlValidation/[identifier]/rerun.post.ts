@@ -77,6 +77,19 @@ export default defineEventHandler(async (event) => {
       },
     );
 
+    // Check if the issue was opened by the bot
+    if (
+      issue.user?.login !== "codefair-test[bot]" &&
+      issue.user?.login !== "codefair-staging[bot]" &&
+      issue.user?.login !== "codefair-app[bot]"
+    ) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Potentially not the dashboard issue",
+      });
+    }
+
+    // Check if the issue body already contains the hidden comment
     const issueBody = issue.body || "";
 
     if (issueBody.includes("<!-- @codefair-bot rerun-cwl-validation -->")) {

@@ -12,8 +12,6 @@ const { data, error } = await useFetch(`/api/dashboard/${owner}/${repo}`, {
 });
 
 if (error.value) {
-  console.error(error.value);
-
   if (error.value.statusMessage === "installation-not-found") {
     // codefair bot is not installed on the repo.
     botNotInstalled.value = true;
@@ -77,8 +75,6 @@ const rerunCwlValidation = async () => {
       });
     })
     .catch((error) => {
-      console.error("ee", error.statusMessage);
-
       if (error.statusMessage === "Validation already requested") {
         push.error({
           title: "Error",
