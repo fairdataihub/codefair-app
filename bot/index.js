@@ -15,11 +15,7 @@ checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
 // sourcery skip: use-object-destructuring
-// const MONGODB_URI = process.env.MONGODB_URI;
-// const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
 const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
-
-// const client = new MongoClient(MONGODB_URI, {});
 
 /**
  * This is the main entrypoint to your Probot app
