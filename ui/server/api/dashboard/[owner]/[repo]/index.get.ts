@@ -53,6 +53,14 @@ export default defineEventHandler(async (event) => {
     repositoryId,
   });
 
+  const cwlValidationCollection = db.collection("cwlValidation");
+
+  // Get the CWL validation data for the repository
+
+  const cwlValidation = await cwlValidationCollection.findOne({
+    repositoryId,
+  });
+
   return {
     codeMetadataRequest: codeMetadataRequest
       ? {
@@ -62,6 +70,15 @@ export default defineEventHandler(async (event) => {
           pullRequest: (codeMetadataRequest.pullRequestURL as string) || "",
           repo: codeMetadataRequest.repo as string,
           timestamp: codeMetadataRequest.updated_at as string,
+        }
+      : null,
+    cwlValidation: cwlValidation
+      ? {
+          containsCWL: cwlValidation.contains_cwl_files as boolean,
+          identifier: cwlValidation.identifier as string,
+          open: cwlValidation.open as boolean,
+          owner: cwlValidation.owner as string,
+          repo: cwlValidation.repo as string,
         }
       : null,
     licenseRequests: allLicenseRequests.map((licenseRequest) => ({

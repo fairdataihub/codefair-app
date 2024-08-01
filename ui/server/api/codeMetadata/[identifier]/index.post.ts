@@ -23,8 +23,8 @@ export default defineEventHandler(async (event) => {
 
   if (!codeMetadataRequest) {
     throw createError({
-      message: "Code metadata request not found",
       statusCode: 404,
+      statusMessage: "Code metadata request not found",
     });
   }
 
@@ -34,8 +34,8 @@ export default defineEventHandler(async (event) => {
 
   if (!installationId) {
     throw createError({
-      message: "Installation not found",
       statusCode: 404,
+      statusMessage: "Installation not found",
     });
   }
 

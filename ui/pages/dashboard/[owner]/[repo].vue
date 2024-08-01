@@ -5,14 +5,13 @@ const route = useRoute();
 const { owner, repo } = route.params as { owner: string; repo: string };
 
 const botNotInstalled = ref(false);
+const cwlValidationRerunRequestLoading = ref(false);
 
 const { data, error } = await useFetch(`/api/dashboard/${owner}/${repo}`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
 if (error.value) {
-  console.error(error.value);
-
   if (error.value.statusMessage === "installation-not-found") {
     // codefair bot is not installed on the repo.
     botNotInstalled.value = true;
@@ -56,6 +55,43 @@ const generateSeed = (seed: string) => {
     min: 3,
     seed,
   });
+};
+
+const rerunCwlValidation = async () => {
+  cwlValidationRerunRequestLoading.value = true;
+
+  await $fetch(
+    `/api/cwlValidation/${data.value?.cwlValidation?.identifier}/rerun`,
+    {
+      headers: useRequestHeaders(["cookie"]),
+      method: "POST",
+    },
+  )
+    .then(() => {
+      push.success({
+        title: "Success",
+        message:
+          "A request to rerun the cwl validator has been submitted succesfully. Please wait a few minutes for this process to take place.",
+      });
+    })
+    .catch((error) => {
+      if (error.statusMessage === "Validation already requested") {
+        push.error({
+          title: "Error",
+          message:
+            "A request to rerun the cwl validator has already been submitted. Please wait a few minutes for this process to take place.",
+        });
+      } else {
+        push.error({
+          title: "Error",
+          message:
+            "Failed to submit the request to rerun the cwl validator. Please try again later.",
+        });
+      }
+    })
+    .finally(() => {
+      cwlValidationRerunRequestLoading.value = false;
+    });
 };
 </script>
 
@@ -127,7 +163,7 @@ const generateSeed = (seed: string) => {
                   :to="`/add/license/${licenseRequest.identifier}`"
                   target="__blank"
                 >
-                  <n-button type="primary">View License</n-button>
+                  <n-button type="primary"> View License </n-button>
                 </NuxtLink>
               </n-flex>
             </n-card>
@@ -212,7 +248,7 @@ const generateSeed = (seed: string) => {
               <NuxtLink
                 :to="`/add/code-metadata/${data?.codeMetadataRequest.identifier}`"
               >
-                <n-button type="primary">View Code Metadata</n-button>
+                <n-button type="primary"> View Code Metadata </n-button>
               </NuxtLink>
             </n-flex>
           </n-card>
@@ -222,6 +258,59 @@ const generateSeed = (seed: string) => {
       <n-divider />
 
       <CardCollapsible
+        title="CWL Validation"
+        subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them to create workflows."
+        class="rounded-lg bg-white shadow-md"
+        bordered
+      >
+        <div>
+          <n-alert
+            v-if="!data?.cwlValidation || !data.cwlValidation.containsCWL"
+            type="info"
+            class="my-5"
+          >
+            There are no CWL files in this repository.
+          </n-alert>
+
+          <n-card v-else class="my-3">
+            <n-flex align="center" justify="space-between">
+              <h3>ID: {{ generateSeed(data?.cwlValidation.identifier) }}</h3>
+
+              <n-flex align="center" justify="end">
+                <n-tooltip trigger="hover" placement="bottom-start">
+                  <template #trigger>
+                    <n-button
+                      type="success"
+                      secondary
+                      :loading="cwlValidationRerunRequestLoading"
+                      @click="rerunCwlValidation"
+                    >
+                      <template #icon>
+                        <Icon name="mynaui:redo" size="16" />
+                      </template>
+
+                      Rerun CWL Validation
+                    </n-button>
+                  </template>
+                  This may take a few minutes to complete.
+                </n-tooltip>
+
+                <NuxtLink
+                  :to="`/view/cwl-validation/${data?.cwlValidation.identifier}`"
+                >
+                  <n-button type="primary">
+                    View CWL Validation Results
+                  </n-button>
+                </NuxtLink>
+              </n-flex>
+            </n-flex>
+          </n-card>
+        </div>
+      </CardCollapsible>
+
+      <n-divider />
+
+      <!-- <CardCollapsible
         title="Zenodo - Coming Soon"
         subheader="The Zenodo integration for the repository is coming soon. You will be
             able to archive each version of your repository on Zenodo."
@@ -238,21 +327,21 @@ const generateSeed = (seed: string) => {
                 <p>
                   {{
                     $dayjs
-                      .unix(parseInt(Date.now()) / 1000)
+                      .unix(Date.now() / 1000)
                       .format("MMMM DD, YYYY HH:mmA")
                   }}
                 </p>
               </div>
 
               <NuxtLink>
-                <n-button disabled class="bg-gray-300"
-                  >View Code Metadata</n-button
-                >
+                <n-button disabled class="bg-gray-300">
+                  View Code Metadata
+                </n-button>
               </NuxtLink>
             </n-flex>
           </n-card>
         </div>
-      </CardCollapsible>
+      </CardCollapsible> -->
     </div>
 
     <!-- <n-collapse class="mt-8">
