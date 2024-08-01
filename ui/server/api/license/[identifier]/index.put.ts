@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   if (!body) {
     throw createError({
       statusCode: 400,
-      message: "Missing required fields",
+      statusMessage: "Missing required fields",
     });
   }
 
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
 
   if (!parsedBody.success) {
     throw createError({
-      message: "The provided parameters are invalid",
+      statusMessage: "The provided parameters are invalid",
       statusCode: 400,
     });
   }
@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
   if (!licenseRequest) {
     throw createError({
       statusCode: 404,
-      message: "License request not found",
+      statusMessage: "License request not found",
     });
   }
 
@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
   if (!licenseRequest.open) {
     throw createError({
       statusCode: 400,
-      message: "License request is not open",
+      statusMessage: "License request is not open",
     });
   }
 
@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
   if (!updatedRecord) {
     throw createError({
       statusCode: 500,
-      message: "license-request-update-failed",
+      statusMessage: "license-request-update-failed",
     });
   }
 
