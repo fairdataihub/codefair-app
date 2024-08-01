@@ -65,7 +65,6 @@ if (data.value) {
   githubRepo.value = `${data.value.owner}/${data.value.repo}`;
   licenseId.value = data.value.licenseId ?? null;
   licenseContent.value = data.value.licenseContent ?? "";
-  githubRepo.value = `${data.value.owner}/${data.value.repo}`;
 
   if (licenseContent.value) {
     displayLicenseEditor.value = true;

@@ -25,7 +25,7 @@ if (error.value) {
 }
 
 if (data.value) {
-  githubRepo.value = data.value.repo;
+  githubRepo.value = `${data.value.owner}/${data.value.repo}`;
 }
 </script>
 
@@ -58,9 +58,7 @@ if (data.value) {
           possimus recusandae qui ut vel nihil sapiente, voluptas incidunt dicta
           beatae dolore aspernatur vitae hic! Veritatis adipisci ratione optio
           nisi praesentium. Lorem ipsum dolor sit amet consectetur, adipisicing
-          elit. Saepe possimus recusandae qui ut vel nihil sapiente, voluptas
-          incidunt dicta beatae dolore aspernatur vitae hic! Veritatis adipisci
-          ratione optio nisi praesentium.
+          elit.
 
           <br />
 
@@ -68,7 +66,7 @@ if (data.value) {
         </p>
       </div>
 
-      <n-collapse>
+      <n-collapse :trigger-areas="['main', 'arrow']">
         <n-collapse-item
           v-for="file in data?.files"
           :key="file.path"
@@ -87,16 +85,41 @@ if (data.value) {
             Workflow is valid
           </n-alert>
 
+          <p class="pt-2 text-sm">
+            This file was last validated on
+            <time>{{
+              $dayjs
+                .unix(parseInt(file.last_validated.toString()) / 1000)
+                .format("MMMM DD, YYYY [at] hh:mmA")
+            }}</time>
+          </p>
+
           <template #header-extra>
-            <Icon
-              :name="
-                file.validation_status === 'valid'
-                  ? 'lets-icons:check-fill'
-                  : 'lets-icons:alarm-fill'
-              "
-              :color="file.validation_status === 'valid' ? 'green' : 'orange'"
-              size="30"
-            />
+            <div class="flex items-center justify-end">
+              <NuxtLink :to="file.href" target="_blank">
+                <n-button type="success" size="small" secondary>
+                  <template #icon>
+                    <Icon name="eva:external-link-fill" size="16" />
+                  </template>
+
+                  View file
+                </n-button>
+              </NuxtLink>
+
+              <div>
+                <n-divider vertical />
+              </div>
+
+              <Icon
+                :name="
+                  file.validation_status === 'valid'
+                    ? 'lets-icons:check-fill'
+                    : 'lets-icons:alarm-fill'
+                "
+                :color="file.validation_status === 'valid' ? 'green' : 'orange'"
+                size="30"
+              />
+            </div>
           </template>
         </n-collapse-item>
       </n-collapse>
