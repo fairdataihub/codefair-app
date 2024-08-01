@@ -264,24 +264,29 @@ export async function getDOI(context, owner, repoName) {
 /**
  * * Verify if repository name has changed and update the database if necessary
  * @param {string} dbRepoName - The repository name in the database
- * @param {string} repoName - The repository name from the event payload
+ * @param {Object} repository - The repository name from the event payload
  * @param {string} owner - The owner of the repository
  * @param {*} collection - The MongoDB collection
  */
-export async function verifyRepoName(dbRepoName, repoName, owner, collection) {
+export async function verifyRepoName(
+  dbRepoName,
+  repository,
+  owner,
+  collection,
+) {
   console.log("Verifying repository name...");
-  if (dbRepoName !== repoName) {
+  if (dbRepoName !== repository.name) {
     console.log(
-      `Repository name for ${owner} has changed from ${dbRepoName} to ${repoName}`,
+      `Repository name for ${owner} has changed from ${dbRepoName} to ${repository.name}`,
     );
 
     // Check if the installation is already in the database
     await collection.updateOne(
-      { installationId, repositoryId: repository },
+      { installationId, repositoryId: repository.id },
       {
         $set: {
           owner,
-          repo: repoName,
+          repo: repository.name,
         },
       },
     );
@@ -348,7 +353,7 @@ export async function verifyInstallationAnalytics(context, repository) {
   } else {
     verifyRepoName(
       installation.repo,
-      repository.name,
+      repository,
       owner,
       installationCollection,
     );
@@ -363,7 +368,7 @@ export async function verifyInstallationAnalytics(context, repository) {
       timestamp: Date.now(),
     });
   } else {
-    verifyRepoName(analytics.repo, repository.name, owner, analyticsCollection);
+    verifyRepoName(analytics.repo, repository, owner, analyticsCollection);
   }
 }
 
