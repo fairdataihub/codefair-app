@@ -320,8 +320,7 @@ export async function isRepoEmpty(context, owner, repo) {
 /**
  * * Verify the installation and analytics collections
  * @param {object} context - GitHub payload context
- * @param {object} repository - The repository object
- * @param {*} db - The MongoDB Database
+ * @param {object} repository - The repository object metadata
  */
 export async function verifyInstallationAnalytics(context, repository) {
   const owner =
@@ -372,6 +371,13 @@ export async function verifyInstallationAnalytics(context, repository) {
   }
 }
 
+/**
+ * * Verify if repository is private
+ * @param {Object} context - The GitHub context object
+ * @param {String} owner - The owner of the repository
+ * @param {String} repoName - The name of the repository
+ * @returns {Boolean} - Returns true if the repository is private, false otherwise
+ */
 export async function isRepoPrivate(context, owner, repoName) {
   try {
     const repoDetails = await context.octokit.repos.get({
@@ -385,6 +391,12 @@ export async function isRepoPrivate(context, owner, repoName) {
     console.log(error);
   }
 }
+
+/**
+ * * Apply the GitHub issue number to the installation collection in the database
+ * @param {Number} issueNumber - The issue number to apply to the database
+ * @param {Number} repoId - The repository ID
+ */
 export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
   const collection = dbInstance.getDb().collection("installation");
 
@@ -396,6 +408,5 @@ export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
         issue_number: issueNumber,
       },
     },
-    { upsert: true }, // Add this option to insert a new document if it doesn't exist
   );
 }
