@@ -54,15 +54,14 @@ if (data.value) {
 
       <div class="border-b border-dashed py-2">
         <p class="text-base">
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Saepe
-          possimus recusandae qui ut vel nihil sapiente, voluptas incidunt dicta
-          beatae dolore aspernatur vitae hic! Veritatis adipisci ratione optio
-          nisi praesentium. Lorem ipsum dolor sit amet consectetur, adipisicing
-          elit.
-
-          <br />
-
-          The following files were run through the CWL validation process:
+          CWL is an open standard for describing how to run command line tools
+          and connect them together in workflows. It is used by various workflow
+          engines to execute scientific workflows. The CWL validation process
+          ensures that the CWL file is correctly formatted and can be executed
+          by a workflow engine. The validation process checks for syntax errors,
+          missing required fields, and other issues that may prevent the
+          workflow from running correctly. The following files were run through
+          the CWL validation process:
         </p>
       </div>
 
