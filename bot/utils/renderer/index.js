@@ -4,10 +4,7 @@ import {
   createId,
   isRepoPrivate,
 } from "../tools/index.js";
-import { checkForCitation } from "../citation/index.js";
-import { checkForCodeMeta } from "../codemeta/index.js";
-import { checkForLicense } from "../license/index.js";
-import { getCWLFiles, validateCWLFile } from "../cwl/index.js";
+import { validateCWLFile } from "../cwl/index.js";
 import { gatherMetadata, convertMetadataForDB } from "../metadata/index.js";
 import dbInstance from "../../db.js";
 
@@ -372,8 +369,10 @@ export async function applyCWLTemplate(
 /**
  * * Renders the body of the dashboard issue message
  *
+ * @param {Object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
- * @param {object} repository  - The repository
+ * @param {object} repository  - The repository metadata
+ * @param {object} prInfo  - The PR information
  * @param {string} prTitle - The title of the PR
  * @param {string} prNumber - The number of the PR
  * @param {string} prLink - The link to the PR
@@ -386,59 +385,13 @@ export async function renderIssues(
   owner,
   repository,
   emptyRepo,
-  prTitle = "",
-  prLink = "",
-  commits = [],
+  subjects,
+  prInfo = { title: "", link: "" },
 ) {
   if (emptyRepo) {
     console.log("emtpy repo and returning base");
     return `# Check the FAIRness of your software\n\nTThis issue is your repository's dashboard for all things FAIR. Keep it open as making and keeping software FAIR is a continuous process that evolves along with the software. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n> [!WARNING]\n> Currently your repository is empty and will not be checked until content is detected within your repository.\n\n## LICENSE\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). Codefair will check for a license file after you add content to your repository.\n\n![License](https://img.shields.io/badge/License_Not_Checked-fbbf24)\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemetada.json metadata files are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). Codefair will check for these files after a license file is detected.\n\n![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
   }
-
-  let license = await checkForLicense(context, owner, repository.name);
-  let citation = await checkForCitation(context, owner, repository.name);
-  let codemeta = await checkForCodeMeta(context, owner, repository.name);
-  const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
-
-  // Check if any of the commits added a LICENSE, CITATION, or codemeta file
-  if (commits.length > 0 && commits?.added?.length > 0) {
-    for (let i = 0; i < commits.length; i++) {
-      for (let j = 0; i < commits.added.length; j++) {
-        if (commits[i].added[j] === "LICENSE") {
-          license = true;
-          continue;
-        }
-        if (commits[i].added[j] === "CITATION.cff") {
-          citation = true;
-          continue;
-        }
-        if (commits[i].added[j] === "codemeta.json") {
-          codemeta = true;
-          continue;
-        }
-        // const fileSplit = commits[i].added[j].split(".");
-        // if (fileSplit.includes("cwl")) {
-        //   cwl.push(commits[i].added[j]);
-        //   continue;
-        // }
-      }
-      // TODO: This will only return the file name so request the file name and gather the file metadata
-      // for (let j = 0; i < commits.modified.length; j++) {
-      //   const fileSplit = commits[i].modified[j].split(".");
-      //   if (fileSplit.includes("cwl")) {
-      //     cwl.push(commits[i].modified[j]);
-      //     continue;
-      //   }
-      // }
-    }
-  }
-
-  const subjects = {
-    citation,
-    codemeta,
-    cwl,
-    license,
-  };
 
   let baseTemplate = `# Check the FAIRness of your software\n\nThis issue is your repository's dashboard for all things FAIR. Keep it open as making and keeping software FAIR is a continuous process that evolves along with the software. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n`;
 
@@ -451,9 +404,9 @@ export async function renderIssues(
   );
 
   // If License PR is open, add the PR number to the dashboard
-  console.log(prTitle);
-  if (prTitle === "feat: ✨ LICENSE file added") {
-    baseTemplate += `\n\nA pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
+  console.log(prInfo.title);
+  if (prInfo.title === "feat: ✨ LICENSE file added") {
+    baseTemplate += `\n\nA pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prInfo.link})`;
   }
 
   baseTemplate = await applyMetadataTemplate(
@@ -464,8 +417,8 @@ export async function renderIssues(
     context,
   );
 
-  if (prTitle === "feat: ✨ metadata files added") {
-    baseTemplate += `\n\nA pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
+  if (prInfo.title === "feat: ✨ metadata files added") {
+    baseTemplate += `\n\nA pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prInfo.link})`;
   }
 
   baseTemplate = await applyCWLTemplate(
