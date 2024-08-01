@@ -3,6 +3,23 @@
  */
 import { init } from "@paralleldrive/cuid2";
 import human from "humanparser";
+import dbInstance from "../../db.js";
+
+/**
+ * * Initialize the database connection
+ * @returns {Promise<boolean>} - Returns true if the database is connected, false otherwise
+ */
+export async function intializeDatabase() {
+  try {
+    console.log("Connecting to database");
+    await dbInstance.connect();
+    console.log("Connected to database");
+    return true;
+  } catch (error) {
+    console.log("Error connecting to database");
+    console.log(error);
+  }
+}
 
 /**
  * * Create a unique identifier for database entries
@@ -362,4 +379,18 @@ export async function isRepoPrivate(context, owner, repoName) {
     console.log("Error verifying if the repository is private");
     console.log(error);
   }
+}
+export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
+  const collection = dbInstance.getDb().collection("installation");
+
+  console.log("Applying issue number to database");
+  await collection.updateOne(
+    { repositoryId: repoId },
+    {
+      $set: {
+        issue_number: issueNumber,
+      },
+    },
+    { upsert: true }, // Add this option to insert a new document if it doesn't exist
+  );
 }

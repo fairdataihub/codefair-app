@@ -1,5 +1,9 @@
 import url from "url";
-import { createId, isRepoPrivate } from "../tools/index.js";
+import {
+  applyGitHubIssueToDatabase,
+  createId,
+  isRepoPrivate,
+} from "../tools/index.js";
 import { checkForCitation } from "../citation/index.js";
 import { checkForCodeMeta } from "../codemeta/index.js";
 import { checkForLicense } from "../license/index.js";
@@ -330,7 +334,7 @@ export async function applyCWLTemplate(
           validation_status: isValidCWL ? "valid" : "invalid",
         });
 
-        tableContent += `| ${file.path} | ${isValidCWL ? "✔️" : "❓"} |\n`;
+        tableContent += `| ${file.path} | ${isValidCWL ? "❗" : "❌"} |\n`;
       }
     }
     url = `${CODEFAIR_DOMAIN}/add/cwl/${identifier}`;
@@ -426,7 +430,7 @@ export async function renderIssues(
         //   continue;
         // }
       }
-      // // TODO: VERIFY IF THIS IS GIVING THE FILE METADATA AS WELL
+      // TODO: This will only return the file name so request the file name and gather the file metadata
       // for (let j = 0; i < commits.modified.length; j++) {
       //   const fileSplit = commits[i].modified[j].split(".");
       //   if (fileSplit.includes("cwl")) {
@@ -495,14 +499,14 @@ export async function renderIssues(
  * @param {string} title - The title of the issue
  * @param {string} body - The body of the issue
  */
-export async function createIssue(context, owner, repo, title, body) {
+export async function createIssue(context, owner, repository, title, body) {
   // If issue has been created, create one
   console.log("gathering issues");
   const issue = await context.octokit.issues.listForRepo({
     title,
     creator: `${GITHUB_APP_NAME}[bot]`,
     owner,
-    repo,
+    repo: repository.name,
     state: "open",
   });
 
@@ -522,36 +526,47 @@ export async function createIssue(context, owner, repo, title, body) {
     if (!noIssue) {
       console.log("Creating an issue since no open issue was found");
       // Issue has not been created so we create one
-      await context.octokit.issues.create({
+      const response = await context.octokit.issues.create({
         title,
         body,
         owner,
-        repo,
+        repo: repository.name,
       });
+
+      console.log(response);
+
+      await applyGitHubIssueToDatabase(response.data.number, repository.id);
     } else {
       // Update the issue with the new body
       console.log("++++++++++++++++");
       // console.log(issue.data);
       // console.log(issue);
       console.log("Updating existing issue: " + issueNumber);
+
       await context.octokit.issues.update({
         title,
         body,
         issue_number: issueNumber,
         owner,
-        repo,
+        repo: repository.name,
       });
+
+      await applyGitHubIssueToDatabase(issueNumber, repository.id);
     }
   }
 
   if (issue.data.length === 0) {
     // Issue has not been created so we create one
-    await context.octokit.issues.create({
+    const response = await context.octokit.issues.create({
       title,
       body,
       owner,
-      repo,
+      repo: repository.name,
     });
+
+    console.log(response.data.number);
+
+    await applyGitHubIssueToDatabase(response.data.number, repository.id);
   }
 }
 

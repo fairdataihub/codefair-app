@@ -1,10 +1,12 @@
-import { MongoClient } from "mongodb";
+// import { MongoClient } from "mongodb";
 import * as express from "express";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
+import dbInstance from "./db.js";
 import {
   checkEnvVariable,
   isRepoEmpty,
   verifyInstallationAnalytics,
+  intializeDatabase,
 } from "./utils/tools/index.js";
 
 checkEnvVariable("MONGODB_URI");
@@ -13,11 +15,11 @@ checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
 // sourcery skip: use-object-destructuring
-const MONGODB_URI = process.env.MONGODB_URI;
-const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
+// const MONGODB_URI = process.env.MONGODB_URI;
+// const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
 const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 
-const client = new MongoClient(MONGODB_URI, {});
+// const client = new MongoClient(MONGODB_URI, {});
 
 /**
  * This is the main entrypoint to your Probot app
@@ -25,10 +27,9 @@ const client = new MongoClient(MONGODB_URI, {});
  */
 export default async (app, { getRouter }) => {
   // Connect to the MongoDB database
-  console.log("Connecting to MongoDB");
-  await client.connect();
+  await intializeDatabase();
 
-  const db = client.db(MONGODB_DB_NAME);
+  const db = dbInstance.getDb();
   const ping = db.collection("ping");
 
   await ping.insertOne({
@@ -68,7 +69,7 @@ export default async (app, { getRouter }) => {
       );
 
       // Create an issue with the compliance issues
-      await createIssue(context, owner, repoName, issueTitle, issueBody);
+      await createIssue(context, owner, repository, issueTitle, issueBody);
     }
   });
 
@@ -96,7 +97,7 @@ export default async (app, { getRouter }) => {
       );
 
       // Create an issue with the compliance issues
-      await createIssue(context, owner, repoName, issueTitle, issueBody);
+      await createIssue(context, owner, repository, issueTitle, issueBody);
     }
   });
 
@@ -170,7 +171,7 @@ export default async (app, { getRouter }) => {
     );
 
     // Update the dashboard issue
-    await createIssue(context, owner, repoName, issueTitle, issueBody);
+    await createIssue(context, owner, repository, issueTitle, issueBody);
   });
 
   // When a comment is made on an issue
@@ -247,7 +248,7 @@ export default async (app, { getRouter }) => {
         prTitle,
         prLink,
       );
-      await createIssue(context, owner, repoName, issueTitle, issueBody);
+      await createIssue(context, owner, repository, issueTitle, issueBody);
     }
   });
 };
