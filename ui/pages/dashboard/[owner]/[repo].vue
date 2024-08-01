@@ -133,6 +133,118 @@ const rerunCwlValidation = async () => {
     <div v-else>
       <n-divider />
 
+      <CardDashboard
+        title="License"
+        subheader="The license for the repository is shown here."
+      >
+        <template #icon>
+          <Icon name="tabler:license" size="40" />
+        </template>
+
+        <template #content>
+          <p>A License is required according to the FAIR-BioRS guidelines</p>
+        </template>
+
+        <template #action>
+          <NuxtLink
+            :to="`/add/license/${licenseRequests.open[0].identifier}`"
+            target="__blank"
+          >
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="mdi:eye" size="16" />
+              </template>
+              View License
+            </n-button>
+          </NuxtLink>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <CardDashboard
+        title="Code Metadata"
+        subheader="The code metadata for the repository is shown here."
+      >
+        <template #icon>
+          <Icon name="tabler:code" size="40" />
+        </template>
+
+        <template #content>
+          <p>
+            The code metadata for the repository is shown here. This includes
+            the number of files, the number of lines of code, and the number of
+            commits.
+          </p>
+        </template>
+
+        <template #action>
+          <NuxtLink
+            :to="`/add/code-metadata/${data?.codeMetadataRequest?.identifier}`"
+          >
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="mdi:eye" size="16" />
+              </template>
+              View Code Metadata
+            </n-button>
+          </NuxtLink>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <CardDashboard
+        title="CWL Validation"
+        subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them to create workflows."
+      >
+        <template #icon>
+          <Icon name="mdi:wave" size="40" />
+        </template>
+
+        <template #content>
+          <p>
+            Common Workflow Language (CWL) is an open standard for describing
+            how to run command line tools and connect them to create workflows.
+          </p>
+        </template>
+
+        <template #action>
+          <div class="flex space-x-3">
+            <n-tooltip trigger="hover" placement="bottom-start">
+              <template #trigger>
+                <n-button
+                  type="success"
+                  secondary
+                  :loading="cwlValidationRerunRequestLoading"
+                  @click="rerunCwlValidation"
+                >
+                  <template #icon>
+                    <Icon name="mynaui:redo" size="16" />
+                  </template>
+
+                  Rerun CWL Validation
+                </n-button>
+              </template>
+              This may take a few minutes to complete.
+            </n-tooltip>
+
+            <NuxtLink
+              :to="`/view/cwl-validation/${data?.cwlValidation?.identifier}`"
+            >
+              <n-button type="primary">
+                <template #icon>
+                  <Icon name="mdi:eye" size="16" />
+                </template>
+                View CWL Validation Results
+              </n-button>
+            </NuxtLink>
+          </div>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
       <CardCollapsible
         title="License"
         subheader="The license for the repository is shown here. You can review open
