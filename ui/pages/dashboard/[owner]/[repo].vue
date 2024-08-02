@@ -146,10 +146,7 @@ const rerunCwlValidation = async () => {
         </template>
 
         <template #action>
-          <NuxtLink
-            :to="`/add/license/${licenseRequests.open[0].identifier}`"
-            target="__blank"
-          >
+          <NuxtLink :to="`/add/license/${licenseRequests.open[0].identifier}`">
             <n-button type="primary">
               <template #icon>
                 <Icon name="mdi:eye" size="16" />
