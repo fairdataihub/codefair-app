@@ -1,7 +1,11 @@
 import { MongoClient } from "mongodb";
 import * as express from "express";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
-import { checkEnvVariable, isRepoEmpty, verifyRepoName } from "./utils/tools/index.js";
+import {
+  checkEnvVariable,
+  isRepoEmpty,
+  verifyRepoName,
+} from "./utils/tools/index.js";
 
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
@@ -93,7 +97,13 @@ export default async (app, { getRouter }) => {
         verifyRepoName(analytics.repo, repoName, owner, analyticsCollection);
       }
 
-      const issueBody = await renderIssues(context, owner, repository, db, emptyRepo);
+      const issueBody = await renderIssues(
+        context,
+        owner,
+        repository,
+        db,
+        emptyRepo,
+      );
 
       // Create an issue with the compliance issues
       await createIssue(context, owner, repoName, issueTitle, issueBody);
@@ -154,7 +164,13 @@ export default async (app, { getRouter }) => {
         verifyRepoName(analytics.repo, repoName, owner, analyticsCollection);
       }
 
-      const issueBody = await renderIssues(context, owner, repository, db, emptyRepo);
+      const issueBody = await renderIssues(
+        context,
+        owner,
+        repository,
+        db,
+        emptyRepo,
+      );
 
       // Create an issue with the compliance issues
       // console.log("CREATING ISSUE");
@@ -227,13 +243,7 @@ export default async (app, { getRouter }) => {
     console.log("Empty Repo: ", emptyRepo);
 
     if (!installation) {
-      await installationCollection.insertOne({
-        installationId: context.payload.installation.id,
-        owner,
-        repo: repoName,
-        repositoryId: repoId,
-        timestamp: Date.now(),
-      })
+      return;
     } else {
       await verifyRepoName(
         installation.repo,
@@ -242,7 +252,6 @@ export default async (app, { getRouter }) => {
         installationCollection,
       );
     }
-
 
     // Grab the commits being pushed
     const { commits } = context.payload;
@@ -336,7 +345,7 @@ export default async (app, { getRouter }) => {
         repo: repoName,
         repositoryId: repoId,
         timestamp: Date.now(),
-      })
+      });
     } else {
       await verifyRepoName(
         installation.repo,
