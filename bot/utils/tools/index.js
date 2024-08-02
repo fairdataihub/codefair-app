@@ -3,6 +3,23 @@
  */
 import { init } from "@paralleldrive/cuid2";
 import human from "humanparser";
+import dbInstance from "../../db.js";
+
+/**
+ * * Initialize the database connection
+ * @returns {Promise<boolean>} - Returns true if the database is connected, false otherwise
+ */
+export async function intializeDatabase() {
+  try {
+    console.log("Connecting to database");
+    await dbInstance.connect();
+    console.log("Connected to database");
+    return true;
+  } catch (error) {
+    console.log("Error connecting to database");
+    console.log(error);
+  }
+}
 
 /**
  * * Create a unique identifier for database entries
@@ -247,24 +264,29 @@ export async function getDOI(context, owner, repoName) {
 /**
  * * Verify if repository name has changed and update the database if necessary
  * @param {string} dbRepoName - The repository name in the database
- * @param {string} repoName - The repository name from the event payload
+ * @param {Object} repository - The repository name from the event payload
  * @param {string} owner - The owner of the repository
  * @param {*} collection - The MongoDB collection
  */
-export async function verifyRepoName(dbRepoName, repoName, owner, collection) {
+export async function verifyRepoName(
+  dbRepoName,
+  repository,
+  owner,
+  collection,
+) {
   console.log("Verifying repository name...");
-  if (dbRepoName !== repoName) {
+  if (dbRepoName !== repository.name) {
     console.log(
-      `Repository name for ${owner} has changed from ${dbRepoName} to ${repoName}`,
+      `Repository name for ${owner} has changed from ${dbRepoName} to ${repository.name}`,
     );
 
     // Check if the installation is already in the database
     await collection.updateOne(
-      { installationId, repositoryId: repository },
+      { installationId, repositoryId: repository.id },
       {
         $set: {
           owner,
-          repo: repoName,
+          repo: repository.name,
         },
       },
     );
@@ -287,7 +309,7 @@ export async function isRepoEmpty(context, owner, repo) {
 
     return repoContent.data.length === 0;
   } catch (error) {
-    console.log("Error getting the repository content");
+    console.log("Error checking if the repository is empty");
     console.log(error);
     if (error.status === 404) {
       return true;
@@ -298,18 +320,17 @@ export async function isRepoEmpty(context, owner, repo) {
 /**
  * * Verify the installation and analytics collections
  * @param {object} context - GitHub payload context
- * @param {object} repository - The repository object
- * @param {*} db - The MongoDB Database
+ * @param {object} repository - The repository object metadata
  */
-export async function verifyInstallationAnalytics(context, repository, db) {
+export async function verifyInstallationAnalytics(context, repository) {
   const owner =
     context.payload?.installation?.account?.login ||
     context.payload?.repository?.owner?.login;
 
   const installationId = context.payload.installation.id;
 
-  const installationCollection = await db.collection("installations");
-  const analyticsCollection = await db.collection("analytics");
+  const installationCollection = dbInstance.getDb().collection("installation");
+  const analyticsCollection = dbInstance.getDb().collection("analytics");
 
   const installation = await installationCollection.findOne({
     repositoryId: repository.id,
@@ -331,7 +352,7 @@ export async function verifyInstallationAnalytics(context, repository, db) {
   } else {
     verifyRepoName(
       installation.repo,
-      repository.name,
+      repository,
       owner,
       installationCollection,
     );
@@ -346,6 +367,47 @@ export async function verifyInstallationAnalytics(context, repository, db) {
       timestamp: Date.now(),
     });
   } else {
-    verifyRepoName(analytics.repo, repository.name, owner, analyticsCollection);
+    verifyRepoName(analytics.repo, repository, owner, analyticsCollection);
   }
+}
+
+/**
+ * * Verify if repository is private
+ * @param {Object} context - The GitHub context object
+ * @param {String} owner - The owner of the repository
+ * @param {String} repoName - The name of the repository
+ * @returns {Boolean} - Returns true if the repository is private, false otherwise
+ */
+export async function isRepoPrivate(context, owner, repoName) {
+  try {
+    const repoDetails = await context.octokit.repos.get({
+      owner,
+      repo: repoName,
+    });
+
+    return repoDetails.data.private;
+  } catch (error) {
+    console.log("Error verifying if the repository is private");
+    console.log(error);
+  }
+}
+
+/**
+ * * Apply the GitHub issue number to the installation collection in the database
+ * @param {Number} issueNumber - The issue number to apply to the database
+ * @param {Number} repoId - The repository ID
+ */
+export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
+  const collection = dbInstance.getDb().collection("installation");
+
+  console.log("Applying issue number to database");
+  await collection.updateOne(
+    { repositoryId: repoId },
+    {
+      $set: {
+        disabled: false,
+        issue_number: issueNumber,
+      },
+    },
+  );
 }

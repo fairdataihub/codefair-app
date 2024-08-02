@@ -1,8 +1,12 @@
-import { createId } from "../tools/index.js";
-import { checkForCitation } from "../citation/index.js";
-import { checkForCodeMeta } from "../codemeta/index.js";
-import { checkForLicense } from "../license/index.js";
+import url from "url";
+import {
+  applyGitHubIssueToDatabase,
+  createId,
+  isRepoPrivate,
+} from "../tools/index.js";
+import { validateCWLFile } from "../cwl/index.js";
 import { gatherMetadata, convertMetadataForDB } from "../metadata/index.js";
+import dbInstance from "../../db.js";
 
 const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
@@ -12,7 +16,6 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  *
  * @param {object} subjects - The subjects to check for
  * @param {string} baseTemplate - The base template to add to
- * @param {*} db - The database
  * @param {object} repository - The GitHub repository information
  * @param {string} owner - The owner of the repository
  * @param {object} context - The GitHub context object
@@ -22,7 +25,6 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 export async function applyMetadataTemplate(
   subjects,
   baseTemplate,
-  db,
   repository,
   owner,
   context,
@@ -34,7 +36,7 @@ export async function applyMetadataTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
-    const metadataCollection = db.collection("codeMetadata");
+    const metadataCollection = dbInstance.getDb().collection("codeMetadata");
     const existingMetadata = await metadataCollection.findOne({
       repositoryId: repository.id,
     });
@@ -90,7 +92,7 @@ export async function applyMetadataTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
-    const metadataCollection = db.collection("codeMetadata");
+    const metadataCollection = dbInstance.getDb().collection("codeMetadata");
     const existingMetadata = await metadataCollection.findOne({
       repositoryId: repository.id,
     });
@@ -136,7 +138,6 @@ export async function applyMetadataTemplate(
  *
  * @param {object} subjects - The subjects to check for
  * @param {string} baseTemplate - The base template to add to
- * @param {*} db - The database
  * @param {object} repository - The GitHub repository information
  * @param {string} owner - The owner of the repository
  *
@@ -145,7 +146,6 @@ export async function applyMetadataTemplate(
 export async function applyLicenseTemplate(
   subjects,
   baseTemplate,
-  db,
   repository,
   owner,
   context,
@@ -153,7 +153,7 @@ export async function applyLicenseTemplate(
   if (!subjects.license) {
     const identifier = createId();
     let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
-    const licenseCollection = db.collection("licenseRequests");
+    const licenseCollection = dbInstance.getDb().collection("licenseRequests");
     const existingLicense = await licenseCollection.findOne({
       repositoryId: repository.id,
     });
@@ -207,7 +207,7 @@ export async function applyLicenseTemplate(
     // License file found text
     const identifier = createId();
     let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
-    const licenseCollection = db.collection("licenseRequests");
+    const licenseCollection = dbInstance.getDb().collection("licenseRequests");
     const existingLicense = await licenseCollection.findOne({
       repositoryId: repository.id,
     });
@@ -243,11 +243,136 @@ export async function applyLicenseTemplate(
 }
 
 /**
+ *
+ * @param {Object} subjects - The subjects to check for
+ * @param {String} baseTemplate - The base template to add to
+ * @param {Object} repository - Repository object
+ * @param {String} owner - Repository owner
+ * @param {Object} context - GitHub context object
+ * @returns
+ */
+export async function applyCWLTemplate(
+  subjects,
+  baseTemplate,
+  repository,
+  owner,
+  context,
+) {
+  const privateRepo = await isRepoPrivate(context, owner, repository.name);
+  if (privateRepo) {
+    baseTemplate += `\n\n## CWL Validations ❌\n\n> [!WARNING]\n> Your repository is private. Codefair will not be able to validate any CWL files for you. You can check the CWL file yourself using the [cwltool validator](https://cwltool.readthedocs.io/en/latest/)`;
+    return baseTemplate;
+  }
+
+  let url = `${CODEFAIR_DOMAIN}/add/cwl/`;
+  const identifier = createId();
+  const cwlCollection = dbInstance.getDb().collection("cwlValidation");
+  const existingCWL = await cwlCollection.findOne({
+    repositoryId: repository.id,
+  });
+
+  if (subjects.cwl.length <= 0) {
+    if (!existingCWL) {
+      // Entry does not exist in the db, create a new one
+      const newDate = Date.now();
+      await cwlCollection.insertOne({
+        contains_cwl_files: false,
+        created_at: newDate,
+        files: [],
+        identifier,
+        overall_status: "",
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+      });
+    } else {
+      // Get the identifier of the existing cwl request
+      await cwlCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { updated_at: Date.now() } },
+      );
+    }
+
+    // no cwl file found text
+    baseTemplate += `\n\n## CWL Validations ❌\n\nNo CWL files were found in your repository. When Codefair detects a CWL file in the main branch it will validate that file.\n\n`;
+  } else {
+    const cwlFiles = [];
+    let validOverall = true;
+    let tableContent = "";
+    let failedCount = 0;
+    for (const file of subjects.cwl) {
+      const fileSplit = file.name.split(".");
+      if (fileSplit.includes("cwl")) {
+        const [isValidCWL, validationMessage] = await validateCWLFile(
+          file.download_url,
+        );
+
+        if (!isValidCWL && validOverall) {
+          validOverall = false;
+        }
+
+        if (!isValidCWL) {
+          failedCount += 1;
+        }
+
+        const newDate = Date.now();
+        cwlFiles.push({
+          href: file.html_url,
+          last_modified: newDate,
+          last_validated: newDate,
+          path: file.path,
+          validation_message: validationMessage,
+          validation_status: isValidCWL ? "valid" : "invalid",
+        });
+
+        tableContent += `| ${file.path} | ${isValidCWL ? "❗" : "❌"} |\n`;
+      }
+    }
+    url = `${CODEFAIR_DOMAIN}/add/cwl/${identifier}`;
+    if (!existingCWL) {
+      // Entry does not exist in the db, create a new one
+      const newDate = Date.now();
+      await cwlCollection.insertOne({
+        contains_cwl_files: true,
+        created_at: newDate,
+        files: cwlFiles,
+        identifier,
+        overall_status: validOverall ? "valid" : "invalid",
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing cwl request
+      await cwlCollection.updateOne(
+        { repositoryId: repository.id },
+        {
+          $set: {
+            contains_cwl_files: true,
+            files: cwlFiles,
+            overall_status: validOverall ? "valid" : "invalid",
+            updated_at: Date.now(),
+          },
+        },
+      );
+      url = `${CODEFAIR_DOMAIN}/add/cwl/${existingCWL.identifier}`;
+    }
+
+    const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
+    baseTemplate += `\n\n## CWL Validations ${validOverall ? "✔️" : "❌"}\n\nCWL files were found in the repository and ***${failedCount}/${subjects.cwl.length}*** are considered valid by the [cwltool validator](https://cwltool.readthedocs.io/en/latest/).\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Status |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file, click the "View CWL Report" button below.\n\n${cwlBadge}`;
+  }
+
+  return baseTemplate;
+}
+
+/**
  * * Renders the body of the dashboard issue message
  *
+ * @param {Object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
- * @param {object} repository  - The repository
- * @param {*} db  - The database
+ * @param {object} repository  - The repository metadata
+ * @param {object} prInfo  - The PR information
  * @param {string} prTitle - The title of the PR
  * @param {string} prNumber - The number of the PR
  * @param {string} prLink - The link to the PR
@@ -259,77 +384,50 @@ export async function renderIssues(
   context,
   owner,
   repository,
-  db,
   emptyRepo,
-  prTitle = "",
-  prLink = "",
-  commits = [],
+  subjects,
+  prInfo = { title: "", link: "" },
 ) {
   if (emptyRepo) {
     console.log("emtpy repo and returning base");
     return `# Check the FAIRness of your software\n\nTThis issue is your repository's dashboard for all things FAIR. Keep it open as making and keeping software FAIR is a continuous process that evolves along with the software. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n> [!WARNING]\n> Currently your repository is empty and will not be checked until content is detected within your repository.\n\n## LICENSE\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). Codefair will check for a license file after you add content to your repository.\n\n![License](https://img.shields.io/badge/License_Not_Checked-fbbf24)\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemetada.json metadata files are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). Codefair will check for these files after a license file is detected.\n\n![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
   }
 
-  let license = await checkForLicense(context, owner, repository.name);
-  let citation = await checkForCitation(context, owner, repository.name);
-  let codemeta = await checkForCodeMeta(context, owner, repository.name);
-
-  // Check if any of the commits added a LICENSE, CITATION, or codemeta file
-  if (commits.length > 0) {
-    for (let i = 0; i < commits.length; i++) {
-      if (commits[i].added.includes("LICENSE")) {
-        console.log("LICENSE file added with this push");
-        license = true;
-        continue;
-      }
-      if (commits[i].added.includes("CITATION.cff")) {
-        console.log("CITATION.cff file added with this push");
-        citation = true;
-        continue;
-      }
-      if (commits[i].added.includes("codemeta.json")) {
-        console.log("codemeta.json file added with this push");
-        codemeta = true;
-        continue;
-      }
-    }
-  }
-
-  const subjects = {
-    citation,
-    codemeta,
-    license,
-  };
-
   let baseTemplate = `# Check the FAIRness of your software\n\nThis issue is your repository's dashboard for all things FAIR. Keep it open as making and keeping software FAIR is a continuous process that evolves along with the software. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n`;
 
   baseTemplate = await applyLicenseTemplate(
     subjects,
     baseTemplate,
-    db,
     repository,
     owner,
     context,
   );
 
   // If License PR is open, add the PR number to the dashboard
-  console.log(prTitle);
-  if (prTitle === "feat: ✨ LICENSE file added") {
-    baseTemplate += `\n\nA pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
+  console.log(prInfo.title);
+  if (prInfo.title === "feat: ✨ LICENSE file added") {
+    baseTemplate += `\n\nA pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prInfo.link})`;
   }
 
   baseTemplate = await applyMetadataTemplate(
     subjects,
     baseTemplate,
-    db,
     repository,
     owner,
     context,
   );
 
-  if (prTitle === "feat: ✨ metadata files added") {
-    baseTemplate += `\n\nA pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
+  if (prInfo.title === "feat: ✨ metadata files added") {
+    baseTemplate += `\n\nA pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prInfo.link})`;
   }
+
+  baseTemplate = await applyCWLTemplate(
+    subjects,
+    baseTemplate,
+    repository,
+    owner,
+    context,
+  );
 
   return baseTemplate;
 }
@@ -343,14 +441,14 @@ export async function renderIssues(
  * @param {string} title - The title of the issue
  * @param {string} body - The body of the issue
  */
-export async function createIssue(context, owner, repo, title, body) {
+export async function createIssue(context, owner, repository, title, body) {
   // If issue has been created, create one
-  console.log("gathering issues");
+  console.log("Gathering open issues");
   const issue = await context.octokit.issues.listForRepo({
     title,
     creator: `${GITHUB_APP_NAME}[bot]`,
     owner,
-    repo,
+    repo: repository.name,
     state: "open",
   });
 
@@ -370,36 +468,42 @@ export async function createIssue(context, owner, repo, title, body) {
     if (!noIssue) {
       console.log("Creating an issue since no open issue was found");
       // Issue has not been created so we create one
-      await context.octokit.issues.create({
+      const response = await context.octokit.issues.create({
         title,
         body,
         owner,
-        repo,
+        repo: repository.name,
       });
+
+      await applyGitHubIssueToDatabase(response.data.number, repository.id);
     } else {
       // Update the issue with the new body
       console.log("++++++++++++++++");
-      console.log(issue.data);
-      // console.log(issue);
       console.log("Updating existing issue: " + issueNumber);
       await context.octokit.issues.update({
         title,
         body,
         issue_number: issueNumber,
         owner,
-        repo,
+        repo: repository.name,
       });
+
+      await applyGitHubIssueToDatabase(issueNumber, repository.id);
     }
   }
 
   if (issue.data.length === 0) {
     // Issue has not been created so we create one
-    await context.octokit.issues.create({
+    const response = await context.octokit.issues.create({
       title,
       body,
       owner,
-      repo,
+      repo: repository.name,
     });
+
+    console.log(response.data.number);
+
+    await applyGitHubIssueToDatabase(response.data.number, repository.id);
   }
 }
 

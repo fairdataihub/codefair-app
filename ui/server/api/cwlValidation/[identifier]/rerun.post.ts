@@ -36,9 +36,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Check if the issueId is present in the installation
+  // Check if the issue_number is present in the installation
 
-  if (!installation.issueId) {
+  if (!installation.issue_number) {
     throw createError({
       statusCode: 404,
       statusMessage: "Issue Dashboard not found",
@@ -71,7 +71,7 @@ export default defineEventHandler(async (event) => {
     const { data: issue } = await octokit.request(
       "GET /repos/{owner}/{repo}/issues/{issue_number}",
       {
-        issue_number: installation.issueId,
+        issue_number: installation.issue_number,
         owner: cwlValidationRequest.owner,
         repo: cwlValidationRequest.repo,
       },
@@ -100,7 +100,7 @@ export default defineEventHandler(async (event) => {
 
     await octokit.request("PATCH /repos/{owner}/{repo}/issues/{issue_number}", {
       body: updatedIssueBody,
-      issue_number: installation.issueId,
+      issue_number: installation.issue_number,
       owner: cwlValidationRequest.owner,
       repo: cwlValidationRequest.repo,
     });
