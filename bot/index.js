@@ -250,7 +250,14 @@ export default async (app, { getRouter }) => {
 
     const emptyRepo = await isRepoEmpty(context, owner, repoName);
 
-    await verifyInstallationAnalytics(context, repository);
+    const installationCollection = db.collection("installation");
+    const installation = await installationCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (!installation) {
+      return;
+    }
 
     // Grab the commits being pushed
     const { commits } = context.payload;
