@@ -419,6 +419,7 @@ export default async (app, { getRouter }) => {
     }
   });
 
+  // When the issue has been edited
   app.on("issues.edited", async (context) => {
     const issueBody = context.payload.issue.body;
 
@@ -454,6 +455,96 @@ export default async (app, { getRouter }) => {
         owner,
         repo: repository.name,
       });
+    }
+  });
+
+  // When an issue is deleted
+  app.on("issues.deleted", async (context) => {
+    const issueTitle = context.payload.issue.title;
+    const repository = context.payload.repository;
+
+    if (issueTitle === "FAIR Compliance Dashboard") {
+      // Modify installation collection
+      const installationCollection = db.collection("installation");
+
+      const installation = await installationCollection.findOne({
+        repositoryId: repository.id,
+      });
+
+      if (installation) {
+        await installationCollection.updateOne(
+          { repositoryId: repository.id },
+          { $set: { disabled: true } },
+        );
+      }
+    }
+  });
+
+  app.on("issues.closed", async (context) => {
+    const issueTitle = context.payload.issue.title;
+    const repository = context.payload.repository;
+
+    if (issueTitle === "FAIR Compliance Dashboard") {
+      // Modify installation collection
+      const installationCollection = db.collection("installation");
+
+      const installation = await installationCollection.findOne({
+        repositoryId: repository.id,
+      });
+
+      if (installation) {
+        await installationCollection.updateOne(
+          { repositoryId: repository.id },
+          { $set: { disabled: true } },
+        );
+      }
+
+      // Update the body of the issue to reflect that the repository is disabled
+      const issueBody = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
+
+      await context.octokit.issues.update({
+        body: issueBody,
+        issue_number: context.payload.issue.number,
+        owner: repository.owner.login,
+        repo: repository.name,
+      });
+    }
+  });
+
+  app.on("issues.reopened", async (context) => {
+    const issueTitle = context.payload.issue.title;
+    const repository = context.payload.repository;
+    const owner = context.payload.repository.owner.login;
+
+    if (issueTitle === "FAIR Compliance Dashboard") {
+      // Check if the installation is already in the database
+      const emptyRepo = await isRepoEmpty(context, owner, repository.name);
+
+      // Check if entry in installation and analytics collection
+      await verifyInstallationAnalytics(context, repository);
+
+      const license = await checkForLicense(context, owner, repository.name);
+      const citation = await checkForCitation(context, owner, repository.name);
+      const codemeta = await checkForCodeMeta(context, owner, repository.name);
+      const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
+
+      const subjects = {
+        citation,
+        codemeta,
+        cwl,
+        license,
+      };
+
+      const issueBody = await renderIssues(
+        context,
+        owner,
+        repository,
+        emptyRepo,
+        subjects,
+      );
+
+      // Create an issue with the compliance issues
+      await createIssue(context, owner, repository, issueTitle, issueBody);
     }
   });
 };

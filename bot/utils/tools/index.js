@@ -405,6 +405,7 @@ export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
     { repositoryId: repoId },
     {
       $set: {
+        disabled: false,
         issue_number: issueNumber,
       },
     },
