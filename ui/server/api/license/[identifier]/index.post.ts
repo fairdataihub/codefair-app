@@ -175,7 +175,11 @@ export default defineEventHandler(async (event) => {
       title: "feat: ✨ LICENSE file added",
       head: newBranchName,
       base: defaultBranch,
-      body: `I have updated the LICENSE file with the ${licenseId} license terms. Please review and merge this PR.`,
+      body: `This pull request ${
+        existingLicenseSHA
+          ? "updates the existing LICENSE file"
+          : `adds the LICENSE file with the ${licenseId} license terms`
+      }. Please review the changes and merge the pull request if everything looks good.`,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
