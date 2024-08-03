@@ -167,10 +167,6 @@ export default defineEventHandler(async (event) => {
   });
 
   // Create a pull request for the new branch with the license content
-
-  /**
-   * todo: figure out how to resolve the issue number
-   */
   const { data: pullRequestData } = await octokit.request(
     "POST /repos/{owner}/{repo}/pulls",
     {
@@ -179,7 +175,7 @@ export default defineEventHandler(async (event) => {
       title: "feat: ✨ LICENSE file added",
       head: newBranchName,
       base: defaultBranch,
-      // body: `Resolves #${context.payload.issue.number}`,
+      body: `I have updated the LICENSE file with the ${licenseId} license terms. Please review and merge this PR.`,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },

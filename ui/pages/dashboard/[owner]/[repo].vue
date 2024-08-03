@@ -26,28 +26,6 @@ if (error.value) {
   }
 }
 
-const licenseRequests = computed(() => {
-  if (!data.value) {
-    return {
-      closed: [],
-      open: [],
-    };
-  }
-
-  const openLicenseRequests = data.value?.licenseRequests.filter(
-    (request) => request.open,
-  );
-
-  const closedLicenseRequests = data.value?.licenseRequests.filter(
-    (request) => !request.open,
-  );
-
-  return {
-    closed: closedLicenseRequests,
-    open: openLicenseRequests,
-  };
-});
-
 const generateSeed = (seed: string) => {
   return generate({
     join: "-",
@@ -146,7 +124,7 @@ const rerunCwlValidation = async () => {
         </template>
 
         <template #action>
-          <NuxtLink :to="`/add/license/${licenseRequests.open[0].identifier}`">
+          <NuxtLink :to="`/add/license/${data?.licenseRequest?.identifier}`">
             <n-button type="primary">
               <template #icon>
                 <Icon name="mdi:eye" size="16" />
@@ -250,66 +228,25 @@ const rerunCwlValidation = async () => {
         bordered
       >
         <div class="my-3">
-          <div
-            v-for="licenseRequest in licenseRequests.open"
-            :key="licenseRequest.identifier"
-          >
-            <n-card>
-              <n-flex align="center" justify="space-between">
-                <div>
-                  <h3>ID: {{ generateSeed(licenseRequest.identifier) }}</h3>
+          <n-card>
+            <n-flex align="center" justify="space-between">
+              <div>
+                <h3>
+                  ID:
+                  {{
+                    generateSeed(data?.licenseRequest?.identifier || "hello")
+                  }}
+                </h3>
+              </div>
 
-                  <p>
-                    {{
-                      $dayjs
-                        .unix(parseInt(licenseRequest.timestamp) / 1000)
-                        .format("MMMM DD, YYYY HH:mmA")
-                    }}
-                  </p>
-                </div>
-
-                <NuxtLink
-                  :to="`/add/license/${licenseRequest.identifier}`"
-                  target="__blank"
-                >
-                  <n-button type="primary"> View License </n-button>
-                </NuxtLink>
-              </n-flex>
-            </n-card>
-          </div>
-
-          <!-- <n-divider />
-
-          <h3>Closed License Requests</h3>
-
-          <n-alert
-            v-if="licenseRequests.closed.length === 0"
-            type="info"
-            class="my-5"
-          >
-            There are no closed license requests for this repository.
-          </n-alert>
-
-          <div
-            v-for="licenseRequest in licenseRequests.closed"
-            v-else
-            :key="licenseRequest.identifier"
-            :to="`/dashboard/${owner}/${repo}/license/${licenseRequest.identifier}`"
-          >
-            <n-card>
-              <n-flex align="center" justify="space-between">
-                <div>
-                  <h3>{{ licenseRequest.identifier }}</h3>
-
-                  <p>{{ licenseRequest.timestamp }}</p>
-                </div>
-
-                <NuxtLink :to="licenseRequest.pullRequest" target="__blank">
-                  <n-button type="primary">View Pull Request</n-button>
-                </NuxtLink>
-              </n-flex>
-            </n-card>
-          </div> -->
+              <NuxtLink
+                :to="`/add/license/${data?.licenseRequest?.identifier}`"
+                target="__blank"
+              >
+                <n-button type="primary"> View License </n-button>
+              </NuxtLink>
+            </n-flex>
+          </n-card>
         </div>
       </CardCollapsible>
 
@@ -323,15 +260,7 @@ const rerunCwlValidation = async () => {
         class="rounded-lg bg-white shadow-md"
         bordered
       >
-        <!-- <h2>Code Metadata</h2> -->
-
         <div>
-          <!-- <p>
-            The code metadata for the repository is shown here. This includes
-            the number of files, the number of lines of code, and the number of
-            commits.
-          </p> -->
-
           <n-alert v-if="!data?.codeMetadataRequest" type="info" class="my-5">
             There are no codemetadata requests for this repository yet.
           </n-alert>

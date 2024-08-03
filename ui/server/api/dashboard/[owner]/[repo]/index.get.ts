@@ -36,14 +36,9 @@ export default defineEventHandler(async (event) => {
   const licenseRequestsCollection = db.collection("licenseRequests");
 
   // Get all license requests for the repository sorted by timestamp
-  const allLicenseRequests = await licenseRequestsCollection
-    .find({
-      repositoryId,
-    })
-    .sort({
-      timestamp: -1,
-    })
-    .toArray();
+  const licenseRequest = await licenseRequestsCollection.findOne({
+    repositoryId,
+  });
 
   const codeMetadataCollection = db.collection("codeMetadata");
 
@@ -81,14 +76,16 @@ export default defineEventHandler(async (event) => {
           repo: cwlValidation.repo as string,
         }
       : null,
-    licenseRequests: allLicenseRequests.map((licenseRequest) => ({
-      identifier: licenseRequest.identifier as string,
-      licenseId: licenseRequest.licenseId as string,
-      open: licenseRequest.open as boolean,
-      owner: licenseRequest.owner as string,
-      pullRequest: (licenseRequest.pullRequestURL as string) || "",
-      repo: licenseRequest.repo as string,
-      timestamp: licenseRequest.updated_at as string,
-    })),
+    licenseRequest: licenseRequest
+      ? {
+          identifier: licenseRequest.identifier as string,
+          licenseId: licenseRequest.licenseId as string,
+          open: licenseRequest.open as boolean,
+          owner: licenseRequest.owner as string,
+          pullRequest: (licenseRequest.pullRequestURL as string) || "",
+          repo: licenseRequest.repo as string,
+          timestamp: licenseRequest.updated_at as string,
+        }
+      : null,
   };
 });
