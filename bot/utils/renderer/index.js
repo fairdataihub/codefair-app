@@ -271,7 +271,7 @@ export async function applyCWLTemplate(
     repositoryId: repository.id,
   });
 
-  if (subjects.cwl.length <= 0) {
+  if (subjects.cwl.files.length === 0) {
     if (!existingCWL) {
       // Entry does not exist in the db, create a new one
       const newDate = Date.now();
@@ -293,6 +293,10 @@ export async function applyCWLTemplate(
       );
     }
 
+    if (!subjects.cwl.contains_cwl) {
+      return baseTemplate;
+    }
+
     // no cwl file found text
     baseTemplate += `\n\n## CWL Validations ❌\n\nNo CWL files were found in your repository. When Codefair detects a CWL file in the main branch it will validate that file.\n\n`;
   } else {
@@ -300,7 +304,7 @@ export async function applyCWLTemplate(
     let validOverall = true;
     let tableContent = "";
     let failedCount = 0;
-    for (const file of subjects.cwl) {
+    for (const file of subjects.cwl.files) {
       const fileSplit = file.name.split(".");
       if (fileSplit.includes("cwl")) {
         const [isValidCWL, validationMessage] = await validateCWLFile(
@@ -360,7 +364,7 @@ export async function applyCWLTemplate(
     }
 
     const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
-    baseTemplate += `\n\n## CWL Validations ${validOverall ? "✔️" : "❌"}\n\nCWL files were found in the repository and ***${failedCount}/${subjects.cwl.length}*** are considered valid by the [cwltool validator](https://cwltool.readthedocs.io/en/latest/).\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Status |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file, click the "View CWL Report" button below.\n\n${cwlBadge}`;
+    baseTemplate += `\n\n## CWL Validations ${validOverall ? "✔️" : "❌"}\n\nCWL files were found in the repository and ***${failedCount}/${subjects.cwl.files.length}*** are considered valid by the [cwltool validator](https://cwltool.readthedocs.io/en/latest/).\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Status |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file, click the "View CWL Report" button below.\n\n${cwlBadge}`;
   }
 
   return baseTemplate;
