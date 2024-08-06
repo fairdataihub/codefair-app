@@ -55,9 +55,11 @@ export default async (app, { getRouter }) => {
     ["installation.created", "installation_repositories.added"],
     async (context) => {
       const owner = context.payload.installation.account.login;
+      const repositories =
+        context.payload.repositories || context.payload.repositories_added;
 
       // shows all repos you've installed the app on
-      for (const repository of context.payload.repositories) {
+      for (const repository of repositories) {
         const repoName = repository.name;
 
         // Check if the installation is already in the database
@@ -78,11 +80,23 @@ export default async (app, { getRouter }) => {
           repository.name,
         );
         const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
+        const cwlObject = {
+          contains_cwl: cwl.length > 0,
+          files: cwl,
+        };
+
+        const cwlExists = db.collection("cwlValidation").findOne({
+          repositoryId: repository.id,
+        });
+
+        if (cwlExists) {
+          cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+        }
 
         const subjects = {
           citation,
           codemeta,
-          cwl,
+          cwl: cwlObject,
           license,
         };
 
@@ -107,8 +121,10 @@ export default async (app, { getRouter }) => {
       const licenseCollection = db.collection("licenseRequests");
       const metadataCollection = db.collection("codeMetadata");
       const cwlCollection = db.collection("cwlValidation");
+      const repositories =
+        context.payload.repositories || context.payload.repositories_removed;
 
-      for (const repository of context.payload.repositories) {
+      for (const repository of repositories) {
         // Check if the installation is already in the database
         console.log(repository);
         const installation = await installationCollection.findOne({
@@ -237,10 +253,23 @@ export default async (app, { getRouter }) => {
       }
     }
 
+    const cwlObject = {
+      contains_cwl: cwl.length > 0,
+      files: cwl,
+    };
+
+    const cwlExists = db.collection("cwlValidation").findOne({
+      repositoryId: repository.id,
+    });
+
+    if (cwlExists) {
+      cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+    }
+
     const subjects = {
       citation,
       codemeta,
-      cwl,
+      cwl: cwlObject,
       license,
     };
 
@@ -254,53 +283,6 @@ export default async (app, { getRouter }) => {
 
     // Update the dashboard issue
     await createIssue(context, owner, repository, issueTitle, issueBody);
-  });
-
-  // When a comment is made on an issue
-  app.on("issue_comment.created", async (context) => {
-    const owner = context.payload.repository.owner.login;
-    const repoName = context.payload.repository.name;
-    const userComment = context.payload.comment.body;
-    const authorAssociation = context.payload.comment.author_association;
-
-    if (
-      context.payload.issue.title ===
-        `No license file found [${GITHUB_APP_NAME}]` &&
-      ["MEMBER", "OWNER"].includes(authorAssociation) &&
-      userComment.includes(GITHUB_APP_NAME)
-    ) {
-      // Check the comment to see if the user has replied with a license
-      const splitComment = userComment.split(" ");
-      const selection =
-        splitComment[splitComment.indexOf(`@${GITHUB_APP_NAME} license`) + 1];
-
-      // Create a new file with the license on the new branch and open pull request
-      await createLicense(context, owner, repoName, selection);
-    }
-
-    if (
-      context.payload.issue.title ===
-        `No citation file found [${GITHUB_APP_NAME}]` &&
-      ["MEMBER", "OWNER"].includes(authorAssociation) &&
-      userComment.includes(GITHUB_APP_NAME)
-    ) {
-      if (userComment.includes("Yes")) {
-        // Gather the information for the CITATION.cff file
-        await gatherCitationInfo(context, owner, repoName);
-      }
-    }
-
-    if (
-      context.payload.issue.title ===
-        `No codemeta.json file found [${GITHUB_APP_NAME}]` &&
-      ["MEMBER", "OWNER"].includes(authorAssociation) &&
-      userComment.includes(GITHUB_APP_NAME)
-    ) {
-      if (userComment.includes("Yes")) {
-        // Gather the information for the codemeta.json file
-        await gatherCodeMetaInfo(context, owner, repoName);
-      }
-    }
   });
 
   // When a pull request is opened
@@ -329,10 +311,23 @@ export default async (app, { getRouter }) => {
       const codemeta = await checkForCodeMeta(context, owner, repository.name);
       const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
 
+      const cwlObject = {
+        contains_cwl: cwl.length > 0,
+        files: cwl,
+      };
+
+      const cwlExists = db.collection("cwlValidation").findOne({
+        repositoryId: repository.id,
+      });
+
+      if (cwlExists) {
+        cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+      }
+
       const subjects = {
         citation,
         codemeta,
-        cwl,
+        cwl: cwlObject,
         license,
       };
       // Check if the pull request is for the LICENSE file
@@ -365,8 +360,21 @@ export default async (app, { getRouter }) => {
         issueBody.indexOf("## CWL Validations"),
       );
 
+      const cwlObject = {
+        contains_cwl: cwl.length > 0,
+        files: cwl,
+      };
+
+      const cwlExists = db.collection("cwlValidation").findOne({
+        repositoryId: repository.id,
+      });
+
+      if (cwlExists) {
+        cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+      }
+
       const subjects = {
-        cwl,
+        cwl: cwlObject,
       };
 
       // This will also update the database
@@ -389,28 +397,7 @@ export default async (app, { getRouter }) => {
   });
 
   // When an issue is deleted
-  app.on("issues.deleted", async (context) => {
-    const issueTitle = context.payload.issue.title;
-    const repository = context.payload.repository;
-
-    if (issueTitle === "FAIR Compliance Dashboard") {
-      // Modify installation collection
-      const installationCollection = db.collection("installation");
-
-      const installation = await installationCollection.findOne({
-        repositoryId: repository.id,
-      });
-
-      if (installation) {
-        await installationCollection.updateOne(
-          { repositoryId: repository.id },
-          { $set: { disabled: true } },
-        );
-      }
-    }
-  });
-
-  app.on("issues.closed", async (context) => {
+  app.on(["issues.deleted", "issues.closed"], async (context) => {
     const issueTitle = context.payload.issue.title;
     const repository = context.payload.repository;
 
@@ -429,15 +416,17 @@ export default async (app, { getRouter }) => {
         );
       }
 
-      // Update the body of the issue to reflect that the repository is disabled
-      const issueBody = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
+      if (context.payload.action === "closed") {
+        // Update the body of the issue to reflect that the repository is disabled
+        const issueBody = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
 
-      await context.octokit.issues.update({
-        body: issueBody,
-        issue_number: context.payload.issue.number,
-        owner: repository.owner.login,
-        repo: repository.name,
-      });
+        await context.octokit.issues.update({
+          body: issueBody,
+          issue_number: context.payload.issue.number,
+          owner: repository.owner.login,
+          repo: repository.name,
+        });
+      }
     }
   });
 
@@ -458,10 +447,23 @@ export default async (app, { getRouter }) => {
       const codemeta = await checkForCodeMeta(context, owner, repository.name);
       const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
 
+      const cwlObject = {
+        contains_cwl: cwl.length > 0,
+        files: cwl,
+      };
+
+      const cwlExists = db.collection("cwlValidation").findOne({
+        repositoryId: repository.id,
+      });
+
+      if (cwlExists) {
+        cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+      }
+
       const subjects = {
         citation,
         codemeta,
-        cwl,
+        cwl: cwlObject,
         license,
       };
 
@@ -477,4 +479,52 @@ export default async (app, { getRouter }) => {
       await createIssue(context, owner, repository, issueTitle, issueBody);
     }
   });
+
+  // When a comment is made on an issue
+  // TODO: Verify if this is still needed, currently does not run due to issue titles being changed
+  // app.on("issue_comment.created", async (context) => {
+  //   const owner = context.payload.repository.owner.login;
+  //   const repoName = context.payload.repository.name;
+  //   const userComment = context.payload.comment.body;
+  //   const authorAssociation = context.payload.comment.author_association;
+
+  //   if (
+  //     context.payload.issue.title ===
+  //       `No license file found [${GITHUB_APP_NAME}]` &&
+  //     ["MEMBER", "OWNER"].includes(authorAssociation) &&
+  //     userComment.includes(GITHUB_APP_NAME)
+  //   ) {
+  //     // Check the comment to see if the user has replied with a license
+  //     const splitComment = userComment.split(" ");
+  //     const selection =
+  //       splitComment[splitComment.indexOf(`@${GITHUB_APP_NAME} license`) + 1];
+
+  //     // Create a new file with the license on the new branch and open pull request
+  //     await createLicense(context, owner, repoName, selection);
+  //   }
+
+  //   if (
+  //     context.payload.issue.title ===
+  //       `No citation file found [${GITHUB_APP_NAME}]` &&
+  //     ["MEMBER", "OWNER"].includes(authorAssociation) &&
+  //     userComment.includes(GITHUB_APP_NAME)
+  //   ) {
+  //     if (userComment.includes("Yes")) {
+  //       // Gather the information for the CITATION.cff file
+  //       await gatherCitationInfo(context, owner, repoName);
+  //     }
+  //   }
+
+  //   if (
+  //     context.payload.issue.title ===
+  //       `No codemeta.json file found [${GITHUB_APP_NAME}]` &&
+  //     ["MEMBER", "OWNER"].includes(authorAssociation) &&
+  //     userComment.includes(GITHUB_APP_NAME)
+  //   ) {
+  //     if (userComment.includes("Yes")) {
+  //       // Gather the information for the codemeta.json file
+  //       await gatherCodeMetaInfo(context, owner, repoName);
+  //     }
+  //   }
+  // });
 };
