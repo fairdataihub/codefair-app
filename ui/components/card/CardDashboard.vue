@@ -36,7 +36,7 @@ const slots = useSlots();
         <slot v-else name="subheader"></slot>
       </div>
 
-      <div class="flex items-center justify-between gap-8 py-4">
+      <div class="flex items-center justify-between gap-8 pt-6">
         <slot name="content"></slot>
 
         <slot name="action"></slot>

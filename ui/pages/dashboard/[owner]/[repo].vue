@@ -127,9 +127,9 @@ const rerunCwlValidation = async () => {
           <NuxtLink :to="`/add/license/${data?.licenseRequest?.identifier}`">
             <n-button type="primary">
               <template #icon>
-                <Icon name="mdi:eye" size="16" />
+                <Icon name="akar-icons:edit" size="16" />
               </template>
-              View License
+              Edit License
             </n-button>
           </NuxtLink>
         </template>
@@ -159,9 +159,9 @@ const rerunCwlValidation = async () => {
           >
             <n-button type="primary">
               <template #icon>
-                <Icon name="mdi:eye" size="16" />
+                <Icon name="akar-icons:edit" size="16" />
               </template>
-              View Code Metadata
+              Edit Code Metadata
             </n-button>
           </NuxtLink>
         </template>
