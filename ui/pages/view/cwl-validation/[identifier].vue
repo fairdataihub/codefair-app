@@ -31,6 +31,29 @@ if (data.value) {
 
 <template>
   <main class="mx-auto max-w-screen-xl bg-white p-8">
+    <n-breadcrumb class="pb-5">
+      <n-breadcrumb-item :clickable="false">
+        <Icon name="ri:dashboard-fill" />
+
+        Dashboard
+      </n-breadcrumb-item>
+
+      <n-breadcrumb-item :href="`/dashboard/${data?.owner}`">
+        <Icon name="uil:github" />
+        {{ data?.owner }}
+      </n-breadcrumb-item>
+
+      <n-breadcrumb-item :href="`/dashboard/${data?.owner}/${data?.repo}`">
+        <Icon name="vscode-icons:folder-type-git" />
+        {{ data?.repo }}
+      </n-breadcrumb-item>
+
+      <n-breadcrumb-item>
+        <Icon name="cib:common-workflow-language" />
+        View CWL Validation
+      </n-breadcrumb-item>
+    </n-breadcrumb>
+
     <n-flex vertical size="large" class="pb-5">
       <div class="flex flex-row justify-between">
         <h1 class="text-2xl font-bold">

@@ -26,28 +26,6 @@ if (error.value) {
   }
 }
 
-const licenseRequests = computed(() => {
-  if (!data.value) {
-    return {
-      closed: [],
-      open: [],
-    };
-  }
-
-  const openLicenseRequests = data.value?.licenseRequests.filter(
-    (request) => request.open,
-  );
-
-  const closedLicenseRequests = data.value?.licenseRequests.filter(
-    (request) => !request.open,
-  );
-
-  return {
-    closed: closedLicenseRequests,
-    open: openLicenseRequests,
-  };
-});
-
 const generateSeed = (seed: string) => {
   return generate({
     join: "-",
@@ -133,6 +111,115 @@ const rerunCwlValidation = async () => {
     <div v-else>
       <n-divider />
 
+      <CardDashboard
+        title="License"
+        subheader="The license for the repository is shown here."
+      >
+        <template #icon>
+          <Icon name="tabler:license" size="40" />
+        </template>
+
+        <template #content>
+          <p>A License is required according to the FAIR-BioRS guidelines</p>
+        </template>
+
+        <template #action>
+          <NuxtLink :to="`/add/license/${data?.licenseRequest?.identifier}`">
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="akar-icons:edit" size="16" />
+              </template>
+              Edit License
+            </n-button>
+          </NuxtLink>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <CardDashboard
+        title="Code Metadata"
+        subheader="The code metadata for the repository is shown here."
+      >
+        <template #icon>
+          <Icon name="tabler:code" size="40" />
+        </template>
+
+        <template #content>
+          <p>
+            The code metadata for the repository is shown here. This includes
+            the number of files, the number of lines of code, and the number of
+            commits.
+          </p>
+        </template>
+
+        <template #action>
+          <NuxtLink
+            :to="`/add/code-metadata/${data?.codeMetadataRequest?.identifier}`"
+          >
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="akar-icons:edit" size="16" />
+              </template>
+              Edit Code Metadata
+            </n-button>
+          </NuxtLink>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <CardDashboard
+        title="CWL Validation"
+        subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them to create workflows."
+      >
+        <template #icon>
+          <Icon name="cib:common-workflow-language" size="40" />
+        </template>
+
+        <template #content>
+          <p>
+            Common Workflow Language (CWL) is an open standard for describing
+            how to run command line tools and connect them to create workflows.
+          </p>
+        </template>
+
+        <template #action>
+          <div class="flex space-x-3">
+            <n-tooltip trigger="hover" placement="bottom-start">
+              <template #trigger>
+                <n-button
+                  type="success"
+                  secondary
+                  :loading="cwlValidationRerunRequestLoading"
+                  @click="rerunCwlValidation"
+                >
+                  <template #icon>
+                    <Icon name="mynaui:redo" size="16" />
+                  </template>
+
+                  Rerun CWL Validation
+                </n-button>
+              </template>
+              This may take a few minutes to complete.
+            </n-tooltip>
+
+            <NuxtLink
+              :to="`/view/cwl-validation/${data?.cwlValidation?.identifier}`"
+            >
+              <n-button type="primary">
+                <template #icon>
+                  <Icon name="mdi:eye" size="16" />
+                </template>
+                View CWL Validation Results
+              </n-button>
+            </NuxtLink>
+          </div>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
       <CardCollapsible
         title="License"
         subheader="The license for the repository is shown here. You can review open
@@ -141,66 +228,25 @@ const rerunCwlValidation = async () => {
         bordered
       >
         <div class="my-3">
-          <div
-            v-for="licenseRequest in licenseRequests.open"
-            :key="licenseRequest.identifier"
-          >
-            <n-card>
-              <n-flex align="center" justify="space-between">
-                <div>
-                  <h3>ID: {{ generateSeed(licenseRequest.identifier) }}</h3>
+          <n-card>
+            <n-flex align="center" justify="space-between">
+              <div>
+                <h3>
+                  ID:
+                  {{
+                    generateSeed(data?.licenseRequest?.identifier || "hello")
+                  }}
+                </h3>
+              </div>
 
-                  <p>
-                    {{
-                      $dayjs
-                        .unix(parseInt(licenseRequest.timestamp) / 1000)
-                        .format("MMMM DD, YYYY HH:mmA")
-                    }}
-                  </p>
-                </div>
-
-                <NuxtLink
-                  :to="`/add/license/${licenseRequest.identifier}`"
-                  target="__blank"
-                >
-                  <n-button type="primary"> View License </n-button>
-                </NuxtLink>
-              </n-flex>
-            </n-card>
-          </div>
-
-          <!-- <n-divider />
-
-          <h3>Closed License Requests</h3>
-
-          <n-alert
-            v-if="licenseRequests.closed.length === 0"
-            type="info"
-            class="my-5"
-          >
-            There are no closed license requests for this repository.
-          </n-alert>
-
-          <div
-            v-for="licenseRequest in licenseRequests.closed"
-            v-else
-            :key="licenseRequest.identifier"
-            :to="`/dashboard/${owner}/${repo}/license/${licenseRequest.identifier}`"
-          >
-            <n-card>
-              <n-flex align="center" justify="space-between">
-                <div>
-                  <h3>{{ licenseRequest.identifier }}</h3>
-
-                  <p>{{ licenseRequest.timestamp }}</p>
-                </div>
-
-                <NuxtLink :to="licenseRequest.pullRequest" target="__blank">
-                  <n-button type="primary">View Pull Request</n-button>
-                </NuxtLink>
-              </n-flex>
-            </n-card>
-          </div> -->
+              <NuxtLink
+                :to="`/add/license/${data?.licenseRequest?.identifier}`"
+                target="__blank"
+              >
+                <n-button type="primary"> View License </n-button>
+              </NuxtLink>
+            </n-flex>
+          </n-card>
         </div>
       </CardCollapsible>
 
@@ -214,15 +260,7 @@ const rerunCwlValidation = async () => {
         class="rounded-lg bg-white shadow-md"
         bordered
       >
-        <!-- <h2>Code Metadata</h2> -->
-
         <div>
-          <!-- <p>
-            The code metadata for the repository is shown here. This includes
-            the number of files, the number of lines of code, and the number of
-            commits.
-          </p> -->
-
           <n-alert v-if="!data?.codeMetadataRequest" type="info" class="my-5">
             There are no codemetadata requests for this repository yet.
           </n-alert>
