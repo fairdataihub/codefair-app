@@ -51,186 +51,109 @@ export default async (app, { getRouter }) => {
   const issueTitle = `FAIR Compliance Dashboard`;
 
   // When the app is installed on an Org or Repository
-  app.on("installation.created", async (context) => {
-    const owner = context.payload.installation.account.login;
+  app.on(
+    ["installation.created", "installation_repositories.added"],
+    async (context) => {
+      const owner = context.payload.installation.account.login;
 
-    // shows all repos you've installed the app on
-    for (const repository of context.payload.repositories) {
-      const repoName = repository.name;
+      // shows all repos you've installed the app on
+      for (const repository of context.payload.repositories) {
+        const repoName = repository.name;
 
-      // Check if the installation is already in the database
-      const emptyRepo = await isRepoEmpty(context, owner, repoName);
+        // Check if the installation is already in the database
+        const emptyRepo = await isRepoEmpty(context, owner, repoName);
 
-      // Check if entry in installation and analytics collection
-      await verifyInstallationAnalytics(context, repository);
+        // Check if entry in installation and analytics collection
+        await verifyInstallationAnalytics(context, repository);
 
-      const license = await checkForLicense(context, owner, repoName);
-      const citation = await checkForCitation(context, owner, repository.name);
-      const codemeta = await checkForCodeMeta(context, owner, repository.name);
-      const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
+        const license = await checkForLicense(context, owner, repoName);
+        const citation = await checkForCitation(
+          context,
+          owner,
+          repository.name,
+        );
+        const codemeta = await checkForCodeMeta(
+          context,
+          owner,
+          repository.name,
+        );
+        const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
 
-      const subjects = {
-        citation,
-        codemeta,
-        cwl,
-        license,
-      };
+        const subjects = {
+          citation,
+          codemeta,
+          cwl,
+          license,
+        };
 
-      const issueBody = await renderIssues(
-        context,
-        owner,
-        repository,
-        emptyRepo,
-        subjects,
-      );
+        const issueBody = await renderIssues(
+          context,
+          owner,
+          repository,
+          emptyRepo,
+          subjects,
+        );
 
-      // Create an issue with the compliance issues
-      await createIssue(context, owner, repository, issueTitle, issueBody);
-    }
-  });
+        // Create an issue with the compliance issues
+        await createIssue(context, owner, repository, issueTitle, issueBody);
+      }
+    },
+  );
 
-  // When a new repository is added to the installation
-  app.on("installation_repositories.added", async (context) => {
-    // Event for when github app is alredy installed but a new repository is added
-    const owner = context.payload.installation.account.login;
+  app.on(
+    ["installation.deleted", "installation_repositories.removed"],
+    async (context) => {
+      const installationCollection = db.collection("installation");
+      const licenseCollection = db.collection("licenseRequests");
+      const metadataCollection = db.collection("codeMetadata");
+      const cwlCollection = db.collection("cwlValidation");
 
-    for (const repository of context.payload.repositories_added) {
-      // Loop through the added respotories
-      const repoName = repository.name;
-
-      const emptyRepo = await isRepoEmpty(context, owner, repoName);
-      console.log("Empty Repo: ", emptyRepo);
-
-      // Check the installation and analytics collections
-      await verifyInstallationAnalytics(context, repository);
-
-      const license = await checkForLicense(context, owner, repoName);
-      const citation = await checkForCitation(context, owner, repository.name);
-      const codemeta = await checkForCodeMeta(context, owner, repository.name);
-      const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
-
-      const subjects = {
-        citation,
-        codemeta,
-        cwl,
-        license,
-      };
-
-      const issueBody = await renderIssues(
-        context,
-        owner,
-        repository,
-        emptyRepo,
-        subjects,
-      );
-
-      // Create an issue with the compliance issues
-      await createIssue(context, owner, repository, issueTitle, issueBody);
-    }
-  });
-
-  app.on("installation.deleted", async (context) => {
-    const installationCollection = db.collection("installation");
-    const licenseCollection = db.collection("licenseRequests");
-    const metadataCollection = db.collection("codeMetadata");
-    const cwlCollection = db.collection("cwlValidation");
-
-    for (const repository of context.payload.repositories) {
-      // Check if the installation is already in the database
-      console.log(repository);
-      const installation = await installationCollection.findOne({
-        repositoryId: repository.id,
-      });
-
-      const license = await licenseCollection.findOne({
-        repositoryId: repository.id,
-      });
-
-      const metadata = await metadataCollection.findOne({
-        repositoryId: repository.id,
-      });
-
-      const cwl = await cwlCollection.findOne({
-        repositoryId: repository.id,
-      });
-
-      if (installation) {
-        // Remove from the database
-        await installationCollection.deleteOne({
+      for (const repository of context.payload.repositories) {
+        // Check if the installation is already in the database
+        console.log(repository);
+        const installation = await installationCollection.findOne({
           repositoryId: repository.id,
         });
-      }
 
-      if (license) {
-        await licenseCollection.deleteOne({
+        const license = await licenseCollection.findOne({
           repositoryId: repository.id,
         });
-      }
 
-      if (metadata) {
-        await metadataCollection.deleteOne({
+        const metadata = await metadataCollection.findOne({
           repositoryId: repository.id,
         });
-      }
 
-      if (cwl) {
-        await cwlCollection.deleteOne({
+        const cwl = await cwlCollection.findOne({
           repositoryId: repository.id,
         });
+
+        if (installation) {
+          // Remove from the database
+          await installationCollection.deleteOne({
+            repositoryId: repository.id,
+          });
+        }
+
+        if (license) {
+          await licenseCollection.deleteOne({
+            repositoryId: repository.id,
+          });
+        }
+
+        if (metadata) {
+          await metadataCollection.deleteOne({
+            repositoryId: repository.id,
+          });
+        }
+
+        if (cwl) {
+          await cwlCollection.deleteOne({
+            repositoryId: repository.id,
+          });
+        }
       }
-    }
-  });
-
-  app.on("installation_repositories.removed", async (context) => {
-    const installationCollection = db.collection("installation");
-    const licenseCollection = db.collection("licenseRequests");
-    const metadataCollection = db.collection("codeMetadata");
-    const cwlCollection = db.collection("cwlValidation");
-
-    for (const repository of context.payload.repositories_removed) {
-      console.log(repository);
-      const installation = await installationCollection.findOne({
-        repositoryId: repository.id,
-      });
-
-      const license = await licenseCollection.findOne({
-        repositoryId: repository.id,
-      });
-
-      const metadata = await metadataCollection.findOne({
-        repositoryId: repository.id,
-      });
-
-      const cwl = await cwlCollection.findOne({
-        repositoryId: repository.id,
-      });
-
-      if (installation) {
-        // Remove from the database
-        await installationCollection.deleteOne({
-          repositoryId: repository.id,
-        });
-      }
-
-      if (license) {
-        await licenseCollection.deleteOne({
-          repositoryId: repository.id,
-        });
-      }
-
-      if (metadata) {
-        await metadataCollection.deleteOne({
-          repositoryId: repository.id,
-        });
-      }
-
-      if (cwl) {
-        await cwlCollection.deleteOne({
-          repositoryId: repository.id,
-        });
-      }
-    }
-  });
+    },
+  );
 
   // When a push is made to a repository
   app.on("push", async (context) => {
