@@ -286,6 +286,16 @@ export async function applyCWLTemplate(
         { repositoryId: repository.id },
         { $set: { updated_at: Date.now() } },
       );
+
+      // TODO: Create a table of the cwl files that were validated
+      const tableContent = "";
+      for (const file of existingCWL.files) {
+        tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "❗" : "❌"} |\n`;
+      }
+
+      const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
+
+      baseTemplate += `\n\n## CWL Validations\n\nNo new CWL files were found in the repository but ***${existingCWL.files.length}/${existingCWL.files.length}*** that were validated already are considered valid by the [cwltool validator](https://cwltool.readthedocs.io/en/latest/).\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Status |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file, click the "View CWL Report" button below.\n\n${cwlBadge}`;
     }
 
     console.log(subjects);
@@ -360,6 +370,20 @@ export async function applyCWLTemplate(
         },
       );
       url = `${CODEFAIR_DOMAIN}/add/cwl/${existingCWL.identifier}`;
+
+      // TODO: Create a table of the cwl files that were validated
+      for (const file of existingCWL.files) {
+        tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "❗" : "❌"} |\n`;
+        subjects.cwl.files.push(file);
+
+        if (file.validation_status === "invalid") {
+          failedCount += 1;
+        }
+
+        if (file.validation_status === "invalid" && validOverall) {
+          validOverall = false;
+        }
+      }
     }
 
     const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;

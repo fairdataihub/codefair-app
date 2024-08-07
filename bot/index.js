@@ -208,6 +208,7 @@ export default async (app, { getRouter }) => {
     }
 
     const emptyRepo = await isRepoEmpty(context, owner, repository.name);
+    let fullCodefairRun = false;
 
     const installationCollection = db.collection("installation");
     const installation = await installationCollection.findOne({
@@ -232,15 +233,32 @@ export default async (app, { getRouter }) => {
 
         return;
       }
+
+      if (installation?.action === false && installation?.action_count > 4) {
+        installationCollection.updateOne(
+          { repositoryId: repository.id },
+          {
+            $set: {
+              action: false,
+              action_count: installation.action_count + 1,
+            },
+          },
+        );
+
+        fullCodefairRun = true;
+      }
     }
 
     // Grab the commits being pushed
     const { commits } = context.payload;
 
+    let cwl = [];
     let license = await checkForLicense(context, owner, repository.name);
     let citation = await checkForCitation(context, owner, repository.name);
     let codemeta = await checkForCodeMeta(context, owner, repository.name);
-    const cwl = [];
+    if (fullCodefairRun) {
+      cwl = await getCWLFiles(context, owner, repository.name);
+    }
 
     // Check if any of the commits added a LICENSE, CITATION, or codemeta file
     const gatheredCWLFiles = [];
@@ -418,6 +436,18 @@ export default async (app, { getRouter }) => {
           );
 
           return;
+        }
+
+        if (installation?.action_count > 4) {
+          installationCollection.updateOne(
+            { repositoryId: context.payload.repository.id },
+            {
+              $set: {
+                action: false,
+                action_count: installation.action_count + 1,
+              },
+            },
+          );
         }
       }
     }
