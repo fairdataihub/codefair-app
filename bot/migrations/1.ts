@@ -34,9 +34,9 @@ const migrationFunction = async (
       collection: "installation",
       document_id: installation._id,
       field: "installation_id",
-      value: installation.installationId,
       migration_id: migrationId,
       text: "Update the 'installationId' field to 'installation_id'",
+      value: installation.installationId,
     });
 
     // Update the 'installationId' field to 'installation_id'
@@ -74,9 +74,9 @@ const migrationFunction = async (
       collection: "installation",
       document_id: installation._id,
       field: "repository_id",
-      value: installation.repositoryId,
       migration_id: migrationId,
       text: "Update the 'repositoryId' field to 'repository_id'",
+      value: installation.repositoryId,
     });
 
     // Update the 'repositoryId' field to 'repository_id'
@@ -102,6 +102,10 @@ const migrationFunction = async (
 
   const codeMetadataCollection = database.collection("codeMetadata");
 
+  console.log(
+    "Replacing repositoryId with repository_id in the codeMetadata collection",
+  );
+
   // Get all the records where the 'repositoryId' field exists
   const codeMetadataRecordsWithRepositoryId = await codeMetadataCollection
     .find({
@@ -116,9 +120,9 @@ const migrationFunction = async (
       collection: "codeMetadata",
       document_id: codeMetadata._id,
       field: "repository_id",
-      value: codeMetadata.repositoryId,
       migration_id: migrationId,
       text: "Update the 'repositoryId' field to 'repository_id'",
+      value: codeMetadata.repositoryId,
     });
 
     // Update the 'repositoryId' field to 'repository_id'
@@ -144,6 +148,10 @@ const migrationFunction = async (
 
   const cwlValidationCollection = database.collection("cwlValidation");
 
+  console.log(
+    "Replacing repositoryId with repository_id in the cwlValidation collection",
+  );
+
   // Get all the records where the 'repositoryId' field exists
   const cwlValidationRecordsWithRepositoryId = await cwlValidationCollection
     .find({
@@ -158,9 +166,9 @@ const migrationFunction = async (
       collection: "cwlValidation",
       document_id: cwlValidation._id,
       field: "repository_id",
-      value: cwlValidation.repositoryId,
       migration_id: migrationId,
       text: "Update the 'repositoryId' field to 'repository_id'",
+      value: cwlValidation.repositoryId,
     });
 
     // Update the 'repositoryId' field to 'repository_id'
@@ -186,6 +194,10 @@ const migrationFunction = async (
 
   const licenseRequestsCollection = database.collection("licenseRequests");
 
+  console.log(
+    "Replacing repositoryId with repository_id in the licenseRequests collection",
+  );
+
   // Get all the records where the 'repositoryId' field exists
   const licenseRequestsRecordsWithRepositoryId = await licenseRequestsCollection
     .find({
@@ -200,9 +212,9 @@ const migrationFunction = async (
       collection: "licenseRequests",
       document_id: licenseRequest._id,
       field: "repository_id",
-      value: licenseRequest.repositoryId,
       migration_id: migrationId,
       text: "Update the 'repositoryId' field to 'repository_id'",
+      value: licenseRequest.repositoryId,
     });
 
     // Update the 'repositoryId' field to 'repository_id'
@@ -226,6 +238,10 @@ const migrationFunction = async (
     );
   });
 
+  console.log(
+    "Replacing licenseContent with license_content in the licenseRequests collection",
+  );
+
   // Get all the records where the 'licenseContent' field exists
   const licenseRequestsRecordsWithLicenseContent =
     await licenseRequestsCollection
@@ -242,9 +258,9 @@ const migrationFunction = async (
       collection: "licenseRequests",
       document_id: licenseRequest._id,
       field: "license_content",
-      value: licenseRequest.licenseContent,
       migration_id: migrationId,
       text: "Update the 'licenseContent' field to 'license_content'",
+      value: licenseRequest.licenseContent,
     });
 
     // Update the 'licenseContent' field to 'license_content'
@@ -268,6 +284,10 @@ const migrationFunction = async (
     );
   });
 
+  console.log(
+    "Replacing licenseId with license_id in the licenseRequests collection",
+  );
+
   // Get all the records where the 'licenseId' field exists
   const licenseRequestsRecordsWithLicenseId = await licenseRequestsCollection
     .find({
@@ -282,9 +302,9 @@ const migrationFunction = async (
       collection: "licenseRequests",
       document_id: licenseRequest._id,
       field: "license_id",
-      value: licenseRequest.licenseId,
       migration_id: migrationId,
       text: "Update the 'licenseId' field to 'license_id'",
+      value: licenseRequest.licenseId,
     });
 
     // Update the 'licenseId' field to 'license_id'
@@ -308,6 +328,10 @@ const migrationFunction = async (
     );
   });
 
+  console.log(
+    "Replacing pullRequestURL with pull_request_url in the licenseRequests collection",
+  );
+
   // Get all the records where the 'pullRequestURL' field exists
   const licenseRequestsRecordsWithPullRequestURL =
     await licenseRequestsCollection
@@ -323,9 +347,9 @@ const migrationFunction = async (
       collection: "licenseRequests",
       document_id: licenseRequest._id,
       field: "pull_request_url",
-      value: licenseRequest.pullRequestURL,
       migration_id: migrationId,
       text: "Update the 'pullRequestURL' field to 'pull_request_url'",
+      value: licenseRequest.pullRequestURL,
     });
 
     // Update the 'pullRequestURL' field to 'pull_request_url'
