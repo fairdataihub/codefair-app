@@ -259,7 +259,7 @@ export async function applyCWLTemplate(
   context,
 ) {
   const privateRepo = await isRepoPrivate(context, owner, repository.name);
-  if (privateRepo) {
+  if (privateRepo && subjects.cwl.contains_cwl) {
     baseTemplate += `\n\n## CWL Validations ❌\n\n> [!WARNING]\n> Your repository is private. Codefair will not be able to validate any CWL files for you. You can check the CWL file yourself using the [cwltool validator](https://cwltool.readthedocs.io/en/latest/)`;
     return baseTemplate;
   }
