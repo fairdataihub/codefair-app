@@ -83,9 +83,6 @@ export async function applyMetadataTemplate(
 
     // Convert the content to the structure we use for code metadata
     const metadata = convertMetadataForDB(codemetaContent);
-    console.log("metadata found");
-    console.log(metadata);
-    console.log("metadata found");
 
     // License, codemeta.json and CITATION.cff files were found
     const identifier = createId();
@@ -178,7 +175,6 @@ export async function applyLicenseTemplate(
         { $set: { updated_at: Date.now() } },
       );
       url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
-      console.log("Existing license request: " + url);
     }
     // No license file found text
     const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
@@ -190,7 +186,6 @@ export async function applyLicenseTemplate(
       repo: repository.name,
     });
 
-    console.log("license found!");
     let licenseId = licenseRequest.data.license.spdx_id;
     let licenseContent = Buffer.from(
       licenseRequest.data.content,
@@ -364,7 +359,7 @@ export async function applyCWLTemplate(
     }
 
     const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
-    baseTemplate += `\n\n## CWL Validations ${validOverall ? "✔️" : "❌"}\n\nCWL files were found in the repository and ***${failedCount}/${subjects.cwl.files.length}*** are considered valid by the [cwltool validator](https://cwltool.readthedocs.io/en/latest/).\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Status |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file, click the "View CWL Report" button below.\n\n${cwlBadge}`;
+    baseTemplate += `\n\n## CWL Validations ${validOverall ? "✔️" : "❌"}\n\nCWL files were found in the repository and ***${subjects.cwl.files.length - failedCount}/${subjects.cwl.files.length}*** are considered valid by the [cwltool validator](https://cwltool.readthedocs.io/en/latest/).\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Status |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file, click the "View CWL Report" button below.\n\n${cwlBadge}`;
   }
 
   return baseTemplate;
@@ -408,7 +403,6 @@ export async function renderIssues(
   );
 
   // If License PR is open, add the PR number to the dashboard
-  console.log(prInfo.title);
   if (prInfo.title === "feat: ✨ LICENSE file added") {
     baseTemplate += `\n\nA pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prInfo.link})`;
   }
@@ -461,7 +455,6 @@ export async function createIssue(context, owner, repository, title, body) {
     let noIssue = false;
     let issueNumber;
     for (let i = 0; i < issue.data.length; i++) {
-      console.log(issue.data[i].title);
       if (issue.data[i].title === title) {
         noIssue = true;
         issueNumber = issue.data[i].number;
@@ -482,7 +475,6 @@ export async function createIssue(context, owner, repository, title, body) {
       await applyGitHubIssueToDatabase(response.data.number, repository.id);
     } else {
       // Update the issue with the new body
-      console.log("++++++++++++++++");
       console.log("Updating existing issue: " + issueNumber);
       await context.octokit.issues.update({
         title,
