@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
 
   const state = generateState();
   const url = await github.createAuthorizationURL(state, {
-    scopes: ["repo", "read:user", "user:email"],
+    scopes: ["repo", "read:user", "user:email", "read:org"],
   });
 
   const formattedURL = query.redirect

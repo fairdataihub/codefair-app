@@ -12,15 +12,28 @@ const props = defineProps({
 const statusCode = props.error?.statusCode ?? 500;
 
 console.error(props.error);
+console.error(props.error.statusMessage);
 
 const showNotAuthorizedError = ref(false);
+const orgNotAuthorizedError = ref(false);
+const accountNotAuthorizedError = ref(false);
 const requestClosed = ref(false);
+
+const githubOAuthClientId = ref("");
 
 if (props.error) {
   const errorCode = props.error.statusMessage ?? "Something went wrong";
 
   if (statusCode === 403) {
     showNotAuthorizedError.value = true;
+
+    if (errorCode.startsWith("unauthorized-org-access")) {
+      orgNotAuthorizedError.value = true;
+
+      githubOAuthClientId.value = errorCode.split("|")[1];
+    } else if (errorCode === "unauthorized-account-access") {
+      accountNotAuthorizedError.value = true;
+    }
   } else if (statusCode === 400) {
     if (errorCode === "request-closed") {
       requestClosed.value = true;
@@ -61,7 +74,35 @@ if (props.error) {
             You are not authorized to view this page.
           </h1>
 
-          <p class="text-lg">
+          <n-alert
+            v-if="orgNotAuthorizedError"
+            type="error"
+            class="mx-auto mt-4 max-w-screen-md"
+            title="Unauthorized organization access"
+          >
+            We are unable to verify if you are a member of this GitHub
+            organization. You may need to grant our application access to your
+            GitHub organization. You can do this by visiting the
+            <NuxtLink
+              :href="`https://github.com/settings/connections/applications/${githubOAuthClientId}`"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="underline"
+              >GitHub settings</NuxtLink
+            >
+            page for your organization.
+          </n-alert>
+
+          <n-alert
+            v-else-if="accountNotAuthorizedError"
+            type="error"
+            title="Unauthorized account access"
+            class="mx-auto mt-4 max-w-screen-md"
+          >
+            You are not authorized to view this page.
+          </n-alert>
+
+          <p v-else class="text-lg">
             Please contact the owner of the repository to get access to this
             page.
           </p>
