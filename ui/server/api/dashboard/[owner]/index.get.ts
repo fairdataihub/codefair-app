@@ -51,9 +51,12 @@ export default defineEventHandler(async (event) => {
       );
 
       if (!isOrgMember.ok) {
+        const githubClientId = process.env.GITHUB_CLIENT_ID as string;
+        const statusMessage = `unauthorized-org-access|${githubClientId}`;
+
         throw createError({
           statusCode: 403,
-          statusMessage: "unauthorized-account-access",
+          statusMessage,
         });
       }
     } else {

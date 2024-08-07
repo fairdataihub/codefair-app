@@ -6,6 +6,8 @@ const loggedIn = computed(() => !!user.value);
 
 const hideLoginPages = ["/login", "/", "/fairsoftware", "/codefair"];
 
+const devMode = process.env.NODE_ENV === "development";
+
 const onHideLoginPages = computed(() => {
   return hideLoginPages.includes(route.path);
   // return false;
@@ -34,7 +36,7 @@ async function logout() {
   </n-flex>
 
   <div v-else>
-    <a v-if="!onHideLoginPages" href="/login/github">
+    <a v-if="!onHideLoginPages || devMode" href="/login/github">
       <n-button color="black">
         <template #icon>
           <Icon name="bi:github" />
