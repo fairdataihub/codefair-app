@@ -77,12 +77,12 @@ if (props.error) {
           <n-alert
             v-if="orgNotAuthorizedError"
             type="error"
-            class="mx-auto mt-4 max-w-screen-md"
+            class="mx-auto mt-4 max-w-screen-lg"
             title="Unauthorized organization access"
           >
             We are unable to verify if you are a member of this GitHub
             organization. You may need to grant our application access to your
-            GitHub organization. You can do this by visiting the
+            GitHub organization. You can do this by visiting your
             <NuxtLink
               :href="`https://github.com/settings/connections/applications/${githubOAuthClientId}`"
               target="_blank"
@@ -90,16 +90,16 @@ if (props.error) {
               class="underline"
               >GitHub settings</NuxtLink
             >
-            page for your organization.
+            page.
           </n-alert>
 
           <n-alert
             v-else-if="accountNotAuthorizedError"
             type="error"
             title="Unauthorized account access"
-            class="mx-auto mt-4 max-w-screen-md"
+            class="mx-auto mt-4 w-full max-w-screen-lg"
           >
-            You are not authorized to view this page.
+            You are not authorized to view the contents of this page.
           </n-alert>
 
           <p v-else class="text-lg">
