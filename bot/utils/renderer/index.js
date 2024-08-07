@@ -260,7 +260,7 @@ export async function applyCWLTemplate(
     return baseTemplate;
   }
 
-  let url = `${CODEFAIR_DOMAIN}/add/cwl/`;
+  let url = `${CODEFAIR_DOMAIN}/add/cwl-validation/`;
   const identifier = createId();
   const cwlCollection = dbInstance.getDb().collection("cwlValidation");
   const existingCWL = await cwlCollection.findOne({
@@ -344,7 +344,7 @@ export async function applyCWLTemplate(
         tableContent += `| ${file.path} | ${isValidCWL ? "❗" : "❌"} |\n`;
       }
     }
-    url = `${CODEFAIR_DOMAIN}/add/cwl/${identifier}`;
+    url = `${CODEFAIR_DOMAIN}/add/cwl-validation/${identifier}`;
     if (!existingCWL) {
       // Entry does not exist in the db, create a new one
       const newDate = Date.now();
@@ -372,7 +372,7 @@ export async function applyCWLTemplate(
           },
         },
       );
-      url = `${CODEFAIR_DOMAIN}/add/cwl/${existingCWL.identifier}`;
+      url = `${CODEFAIR_DOMAIN}/add/cwl-validation/${existingCWL.identifier}`;
 
       // TODO: Create a table of the cwl files that were validated
       for (const file of existingCWL.files) {
@@ -391,6 +391,25 @@ export async function applyCWLTemplate(
 
     const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
     baseTemplate += `\n\n## CWL Validations ${validOverall ? "✔️" : "❌"}\n\nCWL files were found in the repository and ***${subjects.cwl.files.length - failedCount}/${subjects.cwl.files.length}*** are considered valid by the [cwltool validator](https://cwltool.readthedocs.io/en/latest/).\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Status |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
+  }
+
+  if (subjects.cwl.removed_files.length > 0) {
+    // Remove the files from the database
+    const cwlCollection = dbInstance.getDb().collection("cwlValidation");
+    const existingCWL = await cwlCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (existingCWL) {
+      const newFiles = existingCWL.files.filter((file) => {
+        return !subjects.cwl.removed_files.includes(file.path);
+      });
+
+      await cwlCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { files: newFiles } },
+      );
+    }
   }
 
   return baseTemplate;

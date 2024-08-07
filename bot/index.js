@@ -105,6 +105,7 @@ export default async (app, { getRouter }) => {
         const cwlObject = {
           contains_cwl: cwl.length > 0,
           files: cwl,
+          removed_files: [],
         };
 
         // If existing cwl validation exists, update the contains_cwl value
@@ -265,9 +266,11 @@ export default async (app, { getRouter }) => {
 
     // Check if any of the commits added a LICENSE, CITATION, or codemeta file
     const gatheredCWLFiles = [];
+    const removedCWLFiles = [];
     if (commits.length > 0) {
       for (let i = 0; i < commits.length; i++) {
         if (commits[i]?.added?.length > 0) {
+          // Iterate through the added files
           for (let j = 0; j < commits[i]?.added.length; j++) {
             if (commits[i].added[j] === "LICENSE") {
               license = true;
@@ -288,12 +291,35 @@ export default async (app, { getRouter }) => {
             }
           }
         }
-        // TODO: This will only return the file name so request the file name and gather the file metadata
+        // Iterate through the modified files
         if (commits[i]?.modified?.length > 0) {
           for (let j = 0; j < commits[i]?.modified.length; j++) {
             const fileSplit = commits[i]?.modified[j].split(".");
             if (fileSplit.includes("cwl")) {
               gatheredCWLFiles.push(commits[i].modified[j]);
+              continue;
+            }
+          }
+        }
+
+        // Iterate through the remove files
+        if (commits[i]?.removed?.length > 0) {
+          for (let j = 0; j < commits[i]?.removed.length; j++) {
+            const fileSplit = commits[i]?.removed[j].split(".");
+            if (fileSplit.includes("cwl")) {
+              removedCWLFiles.push(commits[i].removed[j]);
+              continue;
+            }
+            if (commits[i]?.removed[j] === "LICENSE") {
+              license = false;
+              continue;
+            }
+            if (commits[i]?.removed[j] === "CITATION.cff") {
+              citation = false;
+              continue;
+            }
+            if (commits[i]?.removed[j] === "codemeta.json") {
+              codemeta = false;
               continue;
             }
           }
@@ -317,6 +343,7 @@ export default async (app, { getRouter }) => {
     const cwlObject = {
       contains_cwl: cwl.length > 0,
       files: cwl,
+      removed_files: removedCWLFiles,
     };
 
     const cwlExists = await db.collection("cwlValidation").findOne({
@@ -383,6 +410,7 @@ export default async (app, { getRouter }) => {
       const cwlObject = {
         contains_cwl: cwl.length > 0,
         files: cwl,
+        removed_files: [],
       };
 
       const cwlExists = db.collection("cwlValidation").findOne({
@@ -473,6 +501,7 @@ export default async (app, { getRouter }) => {
       const cwlObject = {
         contains_cwl: cwl.length > 0,
         files: cwl,
+        removed_files: [],
       };
 
       const cwlExists = db.collection("cwlValidation").findOne({
@@ -560,6 +589,7 @@ export default async (app, { getRouter }) => {
       const cwlObject = {
         contains_cwl: cwl.length > 0,
         files: cwl,
+        removed_files: [],
       };
 
       const cwlExists = db.collection("cwlValidation").findOne({
