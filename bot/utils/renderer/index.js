@@ -271,7 +271,7 @@ export async function applyCWLTemplate(
       // Entry does not exist in the db, create a new one
       const newDate = Date.now();
       await cwlCollection.insertOne({
-        contains_cwl_files: false,
+        contains_cwl_files: subjects.cwl.contains_cwl,
         created_at: newDate,
         files: [],
         identifier,
@@ -288,12 +288,16 @@ export async function applyCWLTemplate(
       );
     }
 
+    console.log(subjects);
+    console.log(subjects.cwl.contains_cwl);
     if (!subjects.cwl.contains_cwl) {
+      console.log("no cwl files in repo");
       return baseTemplate;
     }
 
     // no cwl file found text
-    baseTemplate += `\n\n## CWL Validations ❌\n\nNo CWL files were found in your repository. When Codefair detects a CWL file in the main branch it will validate that file.\n\n`;
+    console.log("repo has cwl files but no new ones to validate");
+    baseTemplate += `\n\n## CWL Validations\n\nNo new CWL files were found in your repository. When Codefair detects a new or modified CWL file in the main branch it will validate that file.\n\n`;
   } else {
     const cwlFiles = [];
     let validOverall = true;
@@ -332,7 +336,7 @@ export async function applyCWLTemplate(
       // Entry does not exist in the db, create a new one
       const newDate = Date.now();
       await cwlCollection.insertOne({
-        contains_cwl_files: true,
+        contains_cwl_files: subjects.cwl.contains_cwl,
         created_at: newDate,
         files: cwlFiles,
         identifier,
@@ -349,7 +353,7 @@ export async function applyCWLTemplate(
         {
           $set: {
             contains_cwl_files: true,
-            files: cwlFiles,
+            files: [...existingCWL.files, ...cwlFiles],
             overall_status: validOverall ? "valid" : "invalid",
             updated_at: Date.now(),
           },
@@ -503,7 +507,7 @@ export async function createIssue(context, owner, repository, title, body) {
   }
 }
 
-// Functions below are temporarily being unused (metadata section was combined. Seperate sections might come back though)
+// TODO: Functions below are temporarily being unused (metadata section was combined. Seperate sections might come back though)
 
 /**
  * * Applies the codemeta template to the base template
