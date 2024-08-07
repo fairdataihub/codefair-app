@@ -64,6 +64,7 @@ export default async (app, { getRouter }) => {
       // shows all repos you've installed the app on
       for (const repository of repositories) {
         repoCount++;
+        // TODO: Verify if we want to increase amount of actions needed by one every 5 repos
         // if (repoCount % 5 === 0) {
         //   actionCount--;
         // }
@@ -146,7 +147,6 @@ export default async (app, { getRouter }) => {
 
       for (const repository of repositories) {
         // Check if the installation is already in the database
-        console.log(repository);
         const installation = await installationCollection.findOne({
           repositoryId: repository.id,
         });
@@ -242,33 +242,37 @@ export default async (app, { getRouter }) => {
 
     // Check if any of the commits added a LICENSE, CITATION, or codemeta file
     const gatheredCWLFiles = [];
-    if (commits.length > 0 && commits?.added?.length > 0) {
+    if (commits.length > 0) {
       for (let i = 0; i < commits.length; i++) {
-        for (let j = 0; i < commits.added.length; j++) {
-          if (commits[i].added[j] === "LICENSE") {
-            license = true;
-            continue;
-          }
-          if (commits[i].added[j] === "CITATION.cff") {
-            citation = true;
-            continue;
-          }
-          if (commits[i].added[j] === "codemeta.json") {
-            codemeta = true;
-            continue;
-          }
-          const fileSplit = commits[i].added[j].split(".");
-          if (fileSplit.includes("cwl")) {
-            gatheredCWLFiles.push(commits[i].added[j]);
-            continue;
+        if (commits[i]?.added?.length > 0) {
+          for (let j = 0; j < commits[i]?.added.length; j++) {
+            if (commits[i].added[j] === "LICENSE") {
+              license = true;
+              continue;
+            }
+            if (commits[i].added[j] === "CITATION.cff") {
+              citation = true;
+              continue;
+            }
+            if (commits[i].added[j] === "codemeta.json") {
+              codemeta = true;
+              continue;
+            }
+            const fileSplit = commits[i].added[j].split(".");
+            if (fileSplit.includes("cwl")) {
+              gatheredCWLFiles.push(commits[i].added[j]);
+              continue;
+            }
           }
         }
         // TODO: This will only return the file name so request the file name and gather the file metadata
-        for (let j = 0; i < commits.modified.length; j++) {
-          const fileSplit = commits[i].modified[j].split(".");
-          if (fileSplit.includes("cwl")) {
-            gatheredCWLFiles.push(commits[i].modified[j]);
-            continue;
+        if (commits[i]?.modified?.length > 0) {
+          for (let j = 0; j < commits[i]?.modified.length; j++) {
+            const fileSplit = commits[i]?.modified[j].split(".");
+            if (fileSplit.includes("cwl")) {
+              gatheredCWLFiles.push(commits[i].modified[j]);
+              continue;
+            }
           }
         }
       }
@@ -283,7 +287,7 @@ export default async (app, { getRouter }) => {
           repo: repository.name,
         });
 
-        cwl.push(cwlFile);
+        cwl.push(cwlFile.data);
       }
     }
 
