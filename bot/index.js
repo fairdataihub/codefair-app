@@ -11,6 +11,7 @@ import {
   isRepoEmpty,
   verifyInstallationAnalytics,
   intializeDatabase,
+  verifyRepoName,
 } from "./utils/tools/index.js";
 import { checkForLicense } from "./utils/license/index.js";
 import { checkForCitation } from "./utils/citation/index.js";
@@ -23,7 +24,8 @@ checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
 // sourcery skip: use-object-destructuring
-const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
+// const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
+const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 
 /**
  * This is the main entrypoint to your Probot app
@@ -48,27 +50,46 @@ export default async (app, { getRouter }) => {
     res.status(200).send("Health check passed");
   });
 
-  const issueTitle = `FAIR Compliance Dashboard`;
-
   // When the app is installed on an Org or Repository
   app.on(
     ["installation.created", "installation_repositories.added"],
     async (context) => {
       const owner = context.payload.installation.account.login;
+      let applyActionLimit = false;
+      const actionCount = 0;
+      let repoCount = 0;
       const repositories =
         context.payload.repositories || context.payload.repositories_added;
 
       // shows all repos you've installed the app on
       for (const repository of repositories) {
-        const repoName = repository.name;
+        repoCount++;
+        // TODO: Verify if we want to increase amount of actions needed by one every 5 repos
+        // if (repoCount % 5 === 0) {
+        //   actionCount--;
+        // }
+
+        if (repoCount > 5) {
+          applyActionLimit = true;
+        }
 
         // Check if the installation is already in the database
-        const emptyRepo = await isRepoEmpty(context, owner, repoName);
+        const emptyRepo = await isRepoEmpty(context, owner, repository.name);
 
         // Check if entry in installation and analytics collection
-        await verifyInstallationAnalytics(context, repository);
+        await verifyInstallationAnalytics(
+          context,
+          repository,
+          applyActionLimit,
+          actionCount,
+        );
 
-        const license = await checkForLicense(context, owner, repoName);
+        if (repoCount > 5) {
+          // Do nothing after the first 5 repos, the action count will determine when to handle the rest
+          continue;
+        }
+
+        const license = await checkForLicense(context, owner, repository.name);
         const citation = await checkForCitation(
           context,
           owner,
@@ -109,7 +130,7 @@ export default async (app, { getRouter }) => {
         );
 
         // Create an issue with the compliance issues
-        await createIssue(context, owner, repository, issueTitle, issueBody);
+        await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
       }
     },
   );
@@ -126,7 +147,6 @@ export default async (app, { getRouter }) => {
 
       for (const repository of repositories) {
         // Check if the installation is already in the database
-        console.log(repository);
         const installation = await installationCollection.findOne({
           repositoryId: repository.id,
         });
@@ -175,7 +195,6 @@ export default async (app, { getRouter }) => {
   app.on("push", async (context) => {
     // Event for when a push is made to the repository (listens to all branches)
     const owner = context.payload.repository.owner.login;
-    const repoName = context.payload.repository.name;
     const repository = context.payload.repository;
 
     // If push is not going to the default branch don't do anything
@@ -187,7 +206,7 @@ export default async (app, { getRouter }) => {
       return;
     }
 
-    const emptyRepo = await isRepoEmpty(context, owner, repoName);
+    const emptyRepo = await isRepoEmpty(context, owner, repository.name);
 
     const installationCollection = db.collection("installation");
     const installation = await installationCollection.findOne({
@@ -196,45 +215,64 @@ export default async (app, { getRouter }) => {
 
     if (!installation) {
       return;
+    } else {
+      verifyRepoName(
+        installation.repo,
+        repository,
+        owner,
+        installationCollection,
+      );
+      if (installation?.action && installation?.action_count < 4) {
+        installationCollection.updateOne(
+          { repositoryId: repository.id },
+          { $set: { action_count: installation.action_count + 1 } },
+        );
+
+        return;
+      }
     }
 
     // Grab the commits being pushed
     const { commits } = context.payload;
 
-    let license = await checkForLicense(context, owner, repoName);
+    let license = await checkForLicense(context, owner, repository.name);
     let citation = await checkForCitation(context, owner, repository.name);
     let codemeta = await checkForCodeMeta(context, owner, repository.name);
     const cwl = [];
 
     // Check if any of the commits added a LICENSE, CITATION, or codemeta file
     const gatheredCWLFiles = [];
-    if (commits.length > 0 && commits?.added?.length > 0) {
+    if (commits.length > 0) {
       for (let i = 0; i < commits.length; i++) {
-        for (let j = 0; i < commits.added.length; j++) {
-          if (commits[i].added[j] === "LICENSE") {
-            license = true;
-            continue;
-          }
-          if (commits[i].added[j] === "CITATION.cff") {
-            citation = true;
-            continue;
-          }
-          if (commits[i].added[j] === "codemeta.json") {
-            codemeta = true;
-            continue;
-          }
-          const fileSplit = commits[i].added[j].split(".");
-          if (fileSplit.includes("cwl")) {
-            gatheredCWLFiles.push(commits[i].added[j]);
-            continue;
+        if (commits[i]?.added?.length > 0) {
+          for (let j = 0; j < commits[i]?.added.length; j++) {
+            if (commits[i].added[j] === "LICENSE") {
+              license = true;
+              continue;
+            }
+            if (commits[i].added[j] === "CITATION.cff") {
+              citation = true;
+              continue;
+            }
+            if (commits[i].added[j] === "codemeta.json") {
+              codemeta = true;
+              continue;
+            }
+            const fileSplit = commits[i].added[j].split(".");
+            if (fileSplit.includes("cwl")) {
+              gatheredCWLFiles.push(commits[i].added[j]);
+              continue;
+            }
           }
         }
         // TODO: This will only return the file name so request the file name and gather the file metadata
-        for (let j = 0; i < commits.modified.length; j++) {
-          const fileSplit = commits[i].modified[j].split(".");
-          if (fileSplit.includes("cwl")) {
-            gatheredCWLFiles.push(commits[i].modified[j]);
-            continue;
+        if (commits[i]?.modified?.length > 0) {
+          for (let j = 0; j < commits[i]?.modified.length; j++) {
+            const fileSplit = commits[i]?.modified[j].split(".");
+            if (fileSplit.includes("cwl")) {
+              gatheredCWLFiles.push(commits[i].modified[j]);
+              continue;
+            }
           }
         }
       }
@@ -246,10 +284,10 @@ export default async (app, { getRouter }) => {
         const cwlFile = await context.octokit.repos.getContent({
           owner,
           path: gatheredCWLFiles[i],
-          repo: repoName,
+          repo: repository.name,
         });
 
-        cwl.push(cwlFile);
+        cwl.push(cwlFile.data);
       }
     }
 
@@ -282,7 +320,7 @@ export default async (app, { getRouter }) => {
     );
 
     // Update the dashboard issue
-    await createIssue(context, owner, repository, issueTitle, issueBody);
+    await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
   });
 
   // When a pull request is opened
@@ -299,6 +337,14 @@ export default async (app, { getRouter }) => {
     const emptyRepo = await isRepoEmpty(context, owner, repository.name);
 
     await verifyInstallationAnalytics(context, repository);
+
+    const installationCollection = db.collection("installation");
+    const installation = await installationCollection.findOne({
+      repositoryId: repository.id,
+    });
+    if (installation?.action && installation?.action_count < 4) {
+      return;
+    }
 
     if (definedPRTitles.includes(prTitle)) {
       const prInfo = {
@@ -340,15 +386,44 @@ export default async (app, { getRouter }) => {
         subjects,
         prInfo,
       );
-      await createIssue(context, owner, repository, issueTitle, issueBody);
+      await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
     }
   });
 
   // When the issue has been edited
   app.on("issues.edited", async (context) => {
     const issueBody = context.payload.issue.body;
+    const issueTitle = context.payload.issue.title;
 
-    if (issueBody.includes("<!-- @codefair-bot rerun-cwl-validation -->")) {
+    if (issueTitle === ISSUE_TITLE) {
+      const installationCollection = db.collection("installation");
+      const installation = await installationCollection.findOne({
+        repositoryId: context.payload.repository.id,
+      });
+
+      if (installation) {
+        verifyRepoName(
+          installation.repo,
+          context.payload.repository,
+          context.payload.repository.owner.login,
+          installationCollection,
+        );
+
+        if (installation?.action && installation?.action_count < 4) {
+          installationCollection.updateOne(
+            { repositoryId: context.payload.repository.id },
+            { $set: { action_count: installation.action_count + 1 } },
+          );
+
+          return;
+        }
+      }
+    }
+
+    if (
+      issueBody.includes("<!-- @codefair-bot rerun-cwl-validation -->") &&
+      issueTitle === ISSUE_TITLE
+    ) {
       const owner = context.payload.repository.owner.login;
       const repository = context.payload.repository;
 
@@ -398,10 +473,10 @@ export default async (app, { getRouter }) => {
 
   // When an issue is deleted
   app.on(["issues.deleted", "issues.closed"], async (context) => {
-    const issueTitle = context.payload.issue.title;
     const repository = context.payload.repository;
+    const issueTitle = context.payload.issue.title;
 
-    if (issueTitle === "FAIR Compliance Dashboard") {
+    if (issueTitle === ISSUE_TITLE) {
       // Modify installation collection
       const installationCollection = db.collection("installation");
 
@@ -431,11 +506,11 @@ export default async (app, { getRouter }) => {
   });
 
   app.on("issues.reopened", async (context) => {
-    const issueTitle = context.payload.issue.title;
     const repository = context.payload.repository;
     const owner = context.payload.repository.owner.login;
+    const issueTitle = context.payload.issue.title;
 
-    if (issueTitle === "FAIR Compliance Dashboard") {
+    if (issueTitle === ISSUE_TITLE) {
       // Check if the installation is already in the database
       const emptyRepo = await isRepoEmpty(context, owner, repository.name);
 
@@ -476,7 +551,7 @@ export default async (app, { getRouter }) => {
       );
 
       // Create an issue with the compliance issues
-      await createIssue(context, owner, repository, issueTitle, issueBody);
+      await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
     }
   });
 

@@ -13,7 +13,7 @@ export async function intializeDatabase() {
   try {
     console.log("Connecting to database");
     await dbInstance.connect();
-    console.log("Connected to database");
+    console.log("Connected to database!");
     return true;
   } catch (error) {
     console.log("Error connecting to database");
@@ -32,7 +32,6 @@ export const createId = init({
 
 /**
  * * Verify that the required environment variables are set
- *
  * @param {string} varName - The name of the environment variable to check
  */
 export function checkEnvVariable(varName) {
@@ -44,7 +43,6 @@ export function checkEnvVariable(varName) {
 
 /**
  * * Get the default branch of the repository
- *
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
@@ -69,7 +67,6 @@ export async function getDefaultBranch(context, owner, repo) {
 
 /**
  * * Check if the issue already exists in the repository
- *
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
@@ -106,7 +103,6 @@ export async function verifyFirstIssue(context, owner, repo, title) {
 
 /**
  * * Close an open issue with the specified title
- *
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
@@ -139,7 +135,6 @@ export async function closeOpenIssue(context, owner, repo, title) {
 
 /**
  * * Gathers contributors of the repository and parses the user information
- *
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
@@ -208,7 +203,6 @@ export async function gatherRepoAuthors(context, owner, repo, fileType) {
 
 /**
  * * Gather the programming languages used in the repository
- *
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
@@ -233,7 +227,6 @@ export async function gatherLanguagesUsed(context, owner, repo) {
 
 /**
  * * Gather the DOI from the README of the repository
- *
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repoName - The name of the repository
@@ -309,11 +302,11 @@ export async function isRepoEmpty(context, owner, repo) {
 
     return repoContent.data.length === 0;
   } catch (error) {
-    console.log("Error checking if the repository is empty");
-    console.log(error);
     if (error.status === 404) {
       return true;
     }
+    console.log("Error checking if the repository is empty");
+    console.log(error);
   }
 }
 
@@ -321,8 +314,15 @@ export async function isRepoEmpty(context, owner, repo) {
  * * Verify the installation and analytics collections
  * @param {object} context - GitHub payload context
  * @param {object} repository - The repository object metadata
+ * @param {boolean} applyActionLimit - Whether to apply the action limit
+ * @param {number} actionCount - The number of actions performed
  */
-export async function verifyInstallationAnalytics(context, repository) {
+export async function verifyInstallationAnalytics(
+  context,
+  repository,
+  applyActionLimit = false,
+  actionCount = 0,
+) {
   const owner =
     context.payload?.installation?.account?.login ||
     context.payload?.repository?.owner?.login;
@@ -343,6 +343,8 @@ export async function verifyInstallationAnalytics(context, repository) {
   if (!installation) {
     // If the installation is not in the database, add it
     await installationCollection.insertOne({
+      action: applyActionLimit,
+      action_count: actionCount,
       installationId,
       owner,
       repo: repository.name,
@@ -350,6 +352,12 @@ export async function verifyInstallationAnalytics(context, repository) {
       timestamp: Date.now(),
     });
   } else {
+    if (installation?.action && installation.action_count < 4) {
+      installationCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { action_count: installation.action_count + 1 } },
+      );
+    }
     verifyRepoName(
       installation.repo,
       repository,
