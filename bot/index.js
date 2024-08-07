@@ -146,6 +146,7 @@ export default async (app, { getRouter }) => {
         context.payload.repositories || context.payload.repositories_removed;
 
       for (const repository of repositories) {
+        console.log("Repository removed from db:", repository.name);
         // Check if the installation is already in the database
         const installation = await installationCollection.findOne({
           repositoryId: repository.id,
@@ -222,6 +223,7 @@ export default async (app, { getRouter }) => {
         owner,
         installationCollection,
       );
+
       if (installation?.action && installation?.action_count < 4) {
         installationCollection.updateOne(
           { repositoryId: repository.id },
@@ -296,7 +298,7 @@ export default async (app, { getRouter }) => {
       files: cwl,
     };
 
-    const cwlExists = db.collection("cwlValidation").findOne({
+    const cwlExists = await db.collection("cwlValidation").findOne({
       repositoryId: repository.id,
     });
 
