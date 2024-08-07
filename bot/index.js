@@ -73,7 +73,7 @@ export default async (app, { getRouter }) => {
           applyActionLimit = true;
         }
 
-        // Check if the installation is already in the database
+        // Check if the repository is empty
         const emptyRepo = await isRepoEmpty(context, owner, repository.name);
 
         // Check if entry in installation and analytics collection
@@ -84,11 +84,12 @@ export default async (app, { getRouter }) => {
           actionCount,
         );
 
-        if (repoCount > 5) {
-          // Do nothing after the first 5 repos, the action count will determine when to handle the rest
+        if (applyActionLimit) {
+          // Do nothing but add repo to db, after the first 5 repos, the action count will determine when to handle the rest
           continue;
         }
 
+        // BEGIN CHECKING FOR COMPLIANCE
         const license = await checkForLicense(context, owner, repository.name);
         const citation = await checkForCitation(
           context,
@@ -100,12 +101,13 @@ export default async (app, { getRouter }) => {
           owner,
           repository.name,
         );
-        const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
+        const cwl = await getCWLFiles(context, owner, repository.name);
         const cwlObject = {
           contains_cwl: cwl.length > 0,
           files: cwl,
         };
 
+        // If existing cwl validation exists, update the contains_cwl value
         const cwlExists = db.collection("cwlValidation").findOne({
           repositoryId: repository.id,
         });
@@ -121,6 +123,7 @@ export default async (app, { getRouter }) => {
           license,
         };
 
+        // Create issue body template
         const issueBody = await renderIssues(
           context,
           owner,
@@ -129,7 +132,7 @@ export default async (app, { getRouter }) => {
           subjects,
         );
 
-        // Create an issue with the compliance issues
+        // Create an issue with the compliance issues body
         await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
       }
     },
