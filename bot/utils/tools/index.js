@@ -267,7 +267,6 @@ export async function verifyRepoName(
   owner,
   collection,
 ) {
-  console.log("Verifying repository name...");
   if (dbRepoName !== repository.name) {
     console.log(
       `Repository name for ${owner} has changed from ${dbRepoName} to ${repository.name}`,
@@ -356,6 +355,14 @@ export async function verifyInstallationAnalytics(
       installationCollection.updateOne(
         { repositoryId: repository.id },
         { $set: { action_count: installation.action_count + 1 } },
+      );
+    }
+
+    if (installation?.action && installation.action_count > 4) {
+      console.log("Action limit reached, no longer limiting actions");
+      installationCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { action: false } },
       );
     }
     verifyRepoName(
