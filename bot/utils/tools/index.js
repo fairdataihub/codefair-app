@@ -13,7 +13,7 @@ export async function intializeDatabase() {
   try {
     console.log("Connecting to database");
     await dbInstance.connect();
-    console.log("Connected to database");
+    console.log("Connected to database!");
     return true;
   } catch (error) {
     console.log("Error connecting to database");
@@ -352,7 +352,7 @@ export async function verifyInstallationAnalytics(
       timestamp: Date.now(),
     });
   } else {
-    if (installation?.action) {
+    if (installation?.action && installation.action_count < 4) {
       installationCollection.updateOne(
         { repositoryId: repository.id },
         { $set: { action_count: installation.action_count + 1 } },
