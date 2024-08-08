@@ -48,7 +48,7 @@ if (props.error) {
       title: "Something went wrong",
     });
 
-    throw new Error("Failed to fetch details from the database");
+    throw new Error("You may not have access to this page.");
   }
 }
 </script>
@@ -106,6 +106,18 @@ if (props.error) {
             Please contact the owner of the repository to get access to this
             page.
           </p>
+
+          <n-flex justify="center">
+            <p>
+              Please visit the
+              <NuxtLink
+                to="/faq"
+                class="text-purple-500 transition-all hover:text-purple-700 hover:underline"
+                >FAQ</NuxtLink
+              >
+              page for more information.
+            </p>
+          </n-flex>
         </n-flex>
 
         <n-flex v-else-if="requestClosed" vertical size="large">
@@ -120,10 +132,25 @@ if (props.error) {
         <n-flex v-else vertical size="large">
           <h1 class="text-5xl font-bold">Something went wrong</h1>
 
-          <p class="text-lg">
+          <p class="mx-auto w-full max-w-screen-lg text-lg">
             The page you are looking for might have been removed or is
-            temporarily unavailable.
+            inaccessible. <br />
+            If this is a private repository, you may not have access to this
+            page. Please check the URL and/or your permissions. If you think
+            this is a mistake, please contact the owner of the repository.
           </p>
+
+          <n-flex justify="center">
+            <p>
+              Please visit the
+              <NuxtLink
+                to="/faq"
+                class="text-purple-500 transition-all hover:text-purple-700 hover:underline"
+                >FAQ</NuxtLink
+              >
+              page for more information.
+            </p>
+          </n-flex>
         </n-flex>
       </n-flex>
     </main>
