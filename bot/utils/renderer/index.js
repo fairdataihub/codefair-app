@@ -12,6 +12,23 @@ const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
 /**
+ * * Removes the token from the URL in the validation message
+ * @param {String} inputString - The string to remove the token from
+ * @returns {String} - The string with the token removed
+ */
+function removeTokenFromUrlInString(inputString) {
+  // Regex to find the GitHub raw URL with an optional token
+  const urlRegex =
+    /https:\/\/raw\.githubusercontent\.com\/[^\s:]+(\?token=[^:\s]+)?/g;
+
+  // Replace each found URL in the string after removing the token
+  return inputString.replace(urlRegex, (url) => {
+    console.log(url);
+    return url.replace(/\?token=[^:]+/, "");
+  });
+}
+
+/**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
  *
  * @param {object} subjects - The subjects to check for
@@ -253,17 +270,6 @@ export async function applyCWLTemplate(
   owner,
   context,
 ) {
-  function removeTokenFromUrlInString(inputString) {
-    // Regex to find the GitHub raw URL with an optional token
-    const urlRegex =
-      /https:\/\/raw\.githubusercontent\.com\/[^\s:]+(\?token=[^:\s]+)?/g;
-
-    // Replace each found URL in the string after removing the token
-    return inputString.replace(urlRegex, (url) => {
-      console.log(url);
-      return url.replace(/\?token=[^:]+/, "");
-    });
-  }
   const privateRepo = await isRepoPrivate(context, owner, repository.name);
   // If the repository is private and contains CWL files, we cannot validate them
   // if (privateRepo && subjects.cwl.contains_cwl) {
