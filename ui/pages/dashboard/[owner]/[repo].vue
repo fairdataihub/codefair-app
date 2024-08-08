@@ -19,7 +19,7 @@ if (error.value) {
     push.error({
       title: "Something went wrong",
       message:
-        "Could not fetch the data for the dashboard. Please try again later.",
+        "Could not fetch the data for the dashboard. Please try again later. Make sure the bot has access to your account/organization.",
     });
 
     throw createError(error.value);
