@@ -1,3 +1,4 @@
+import { consola } from "consola";
 import {
   gatherLanguagesUsed,
   gatherRepoAuthors,
@@ -179,7 +180,7 @@ export function convertMetadataForDB(codemetaContent) {
  * @returns {object} - An object containing the metadata for the repository
  */
 export async function gatherMetadata(context, owner, repo) {
-  console.log("Gathering metadata...");
+  consola.start("Gathering metadata...");
 
   // Get the metadata of the repo
   const repoData = await context.octokit.repos.get({
@@ -206,6 +207,9 @@ export async function gatherMetadata(context, owner, repo) {
   if (repoData.data.homepage != null) {
     url = repoData.data.homepage;
   }
+
+  consola.success("Metadata gathered!");
+
   const codeMeta = {
     name: repoData.data.name,
     applicationCategory: null,

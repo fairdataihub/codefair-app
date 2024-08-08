@@ -1,6 +1,7 @@
 /**
  * * This file contains the functions to interact with the CWL files in the repository
  */
+import { consola } from "consola";
 
 /**
  * * This function gets the CWL files in the repository
@@ -11,7 +12,7 @@
  */
 export function getCWLFiles(context, owner, repoName) {
   return new Promise((resolve, reject) => {
-    console.log("Checking for CWL files in the repository");
+    consola.info("Checking for CWL files in the repository...");
 
     const cwlFiles = [];
 
@@ -38,15 +39,20 @@ export function getCWLFiles(context, owner, repoName) {
           resolve(cwlFiles);
           return;
         }
-        console.log("Error finding CWL files throughout the repository");
-        console.log(error);
+        consola.error(
+          "Error finding CWL files throughout the repository:",
+          error,
+        );
         reject(error);
       }
     };
 
     // Call the async function and handle its promise
     searchDirectory("")
-      .then(() => resolve(cwlFiles))
+      .then(() => {
+        consola.success("CWL files found in the repository!");
+        resolve(cwlFiles);
+      })
       .catch(reject);
   });
 }
@@ -74,7 +80,6 @@ export async function validateCWLFile(downloadUrl) {
       return [true, data.output];
     }
   } catch (e) {
-    console.log("Error validating CWL file");
-    console.log(e);
+    consola.error("Error validating CWL file:", e);
   }
 }

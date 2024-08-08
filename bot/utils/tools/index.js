@@ -1,6 +1,7 @@
 /**
  * @fileoverview Utility functions for the bot
  */
+import { consola } from "consola";
 import { init } from "@paralleldrive/cuid2";
 import human from "humanparser";
 import dbInstance from "../../db.js";
@@ -11,13 +12,12 @@ import dbInstance from "../../db.js";
  */
 export async function intializeDatabase() {
   try {
-    console.log("Connecting to database");
+    consola.start("Connecting to database...");
     await dbInstance.connect();
-    console.log("Connected to database!");
+    consola.success("Connected to database!");
     return true;
   } catch (error) {
-    console.log("Error connecting to database");
-    console.log(error);
+    consola.error("Error connecting to database:", error);
   }
 }
 
@@ -36,7 +36,7 @@ export const createId = init({
  */
 export function checkEnvVariable(varName) {
   if (!process.env[varName]) {
-    console.error(`Please set the ${varName} environment variable`);
+    consola.error(`Please set the ${varName} environment variable`);
     process.exit(1);
   }
 }
@@ -60,8 +60,7 @@ export async function getDefaultBranch(context, owner, repo) {
 
     return defaultBranch;
   } catch (error) {
-    console.log("Error getting the default branch");
-    console.log(error);
+    consola.error("Error getting the default branch:", error);
   }
 }
 
@@ -268,7 +267,7 @@ export async function verifyRepoName(
   collection,
 ) {
   if (dbRepoName !== repository.name) {
-    console.log(
+    consola.info(
       `Repository name for ${owner} has changed from ${dbRepoName} to ${repository.name}`,
     );
 
@@ -304,8 +303,7 @@ export async function isRepoEmpty(context, owner, repo) {
     if (error.status === 404) {
       return true;
     }
-    console.log("Error checking if the repository is empty");
-    console.log(error);
+    consola.info("Error checking if the repository is empty:", error);
   }
 }
 
@@ -359,7 +357,7 @@ export async function verifyInstallationAnalytics(
     }
 
     if (installation?.action && installation.action_count > 4) {
-      console.log("Action limit reached, no longer limiting actions");
+      consola.info("Action limit reached, no longer limiting actions");
       installationCollection.updateOne(
         { repositoryId: repository.id },
         { $set: { action: false } },
@@ -402,8 +400,7 @@ export async function isRepoPrivate(context, owner, repoName) {
 
     return repoDetails.data.private;
   } catch (error) {
-    console.log("Error verifying if the repository is private");
-    console.log(error);
+    consola.error("Error verifying if the repository is private:", error);
   }
 }
 
@@ -415,7 +412,6 @@ export async function isRepoPrivate(context, owner, repoName) {
 export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
   const collection = dbInstance.getDb().collection("installation");
 
-  console.log("Applying issue number to database");
   await collection.updateOne(
     { repositoryId: repoId },
     {
@@ -425,4 +421,5 @@ export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
       },
     },
   );
+  consola.info("Issue number appended to database");
 }

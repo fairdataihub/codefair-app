@@ -1,5 +1,6 @@
 // import { MongoClient } from "mongodb";
 import * as express from "express";
+import { consola } from "consola";
 import {
   renderIssues,
   createIssue,
@@ -150,7 +151,6 @@ export default async (app, { getRouter }) => {
         context.payload.repositories || context.payload.repositories_removed;
 
       for (const repository of repositories) {
-        console.log("Repository removed from db:", repository.name);
         // Check if the installation is already in the database
         const installation = await installationCollection.findOne({
           repositoryId: repository.id,
@@ -192,6 +192,8 @@ export default async (app, { getRouter }) => {
             repositoryId: repository.id,
           });
         }
+
+        consola.info("Repository uninstalled:", repository.name);
       }
     },
   );
@@ -207,7 +209,7 @@ export default async (app, { getRouter }) => {
       context.payload.ref !==
       `refs/heads/${context.payload.repository.default_branch}`
     ) {
-      console.log("Not pushing to default branch");
+      consola.warn("Not pushing to default branch");
       return;
     }
 
@@ -487,6 +489,7 @@ export default async (app, { getRouter }) => {
       issueBody.includes("<!-- @codefair-bot rerun-cwl-validation -->") &&
       issueTitle === ISSUE_TITLE
     ) {
+      consola.start("Rerunning CWL Validation...");
       const owner = context.payload.repository.owner.login;
       const repository = context.payload.repository;
 
@@ -532,6 +535,8 @@ export default async (app, { getRouter }) => {
         owner,
         repo: repository.name,
       });
+
+      consola.success("CWL Validation rerun successfully!");
     }
   });
 

@@ -1,4 +1,5 @@
 import url from "url";
+import { consola } from "consola";
 import {
   applyGitHubIssueToDatabase,
   createId,
@@ -46,7 +47,6 @@ export async function applyMetadataTemplate(
   context,
 ) {
   if ((!subjects.codemeta || !subjects.citation) && subjects.license) {
-    // console.log(owner, repository);
     // License was found but no codemeta.json or CITATION.cff exists
     const identifier = createId();
 
@@ -309,8 +309,8 @@ export async function applyCWLTemplate(
     }
 
     if (!subjects.cwl.contains_cwl) {
-      console.log("no cwl files in repo");
       // NO CWL files found in the repository, return the base template without appending anything
+      consola.info("No CWL files in repo, not applying CWL template");
       return baseTemplate;
     }
 
@@ -341,7 +341,7 @@ export async function applyCWLTemplate(
         }
 
         if (privateRepo) {
-          console.log("Private repo, removing token from validation message");
+          consola.info("Private repo, removing token from validation message");
           validationMessageForPrivate =
             removeTokenFromUrlInString(validationMessage);
         }
@@ -455,7 +455,7 @@ export async function renderIssues(
   prInfo = { title: "", link: "" },
 ) {
   if (emptyRepo) {
-    console.log("emtpy repo and returning base");
+    consola.warn("Applying empty repo template");
     return `# Check the FAIRness of your software\n\nThis issue is your repository's dashboard for all things FAIR. Keep it open as making and keeping software FAIR is a continuous process that evolves along with the software. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n> [!WARNING]\n> Currently your repository is empty and will not be checked until content is detected within your repository.\n\n## LICENSE\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). Codefair will check for a license file after you add content to your repository.\n\n![License](https://img.shields.io/badge/License_Not_Checked-fbbf24)\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemetada.json metadata files are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). Codefair will check for these files after a license file is detected.\n\n![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
   }
 
@@ -508,7 +508,6 @@ export async function renderIssues(
  */
 export async function createIssue(context, owner, repository, title, body) {
   // If issue has been created, create one
-  console.log("Gathering open issues");
   const issue = await context.octokit.issues.listForRepo({
     title,
     creator: `${GITHUB_APP_NAME}[bot]`,
@@ -530,7 +529,7 @@ export async function createIssue(context, owner, repository, title, body) {
     }
 
     if (!noIssue) {
-      console.log("Creating an issue since no open issue was found");
+      consola.info("Creating an issue since no open issue was found");
       // Issue has not been created so we create one
       const response = await context.octokit.issues.create({
         title,
@@ -542,7 +541,7 @@ export async function createIssue(context, owner, repository, title, body) {
       await applyGitHubIssueToDatabase(response.data.number, repository.id);
     } else {
       // Update the issue with the new body
-      console.log("Updating existing issue: " + issueNumber);
+      consola.info("Updating existing issue: " + issueNumber);
       await context.octokit.issues.update({
         title,
         body,
@@ -564,7 +563,7 @@ export async function createIssue(context, owner, repository, title, body) {
       repo: repository.name,
     });
 
-    console.log(response.data.number);
+    consola.info("Creating an issue since none exist");
 
     await applyGitHubIssueToDatabase(response.data.number, repository.id);
   }
@@ -597,7 +596,6 @@ export async function applyCodemetaTemplate(
     let url = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
 
     const codemetaCollection = db.collection("codeMetadata");
-    // console.log(repository);
     const existingCodemeta = await codemetaCollection.findOne({
       repositoryId: repository.id,
     });
@@ -685,7 +683,6 @@ export async function applyCitationTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
     const citationCollection = db.collection("citationRequests");
-    // console.log(repository);
     const existingCitation = await citationCollection.findOne({
       repositoryId: repository.id,
     });

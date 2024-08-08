@@ -3,6 +3,7 @@
  */
 
 import { MongoClient } from "mongodb";
+import { consola } from "consola";
 
 const migrationFunction = async (
   dbUri: string,
@@ -20,7 +21,7 @@ const migrationFunction = async (
 
   const installationCollection = database.collection("installation");
 
-  console.log(
+  consola.start(
     "Replacing 'installationId' with 'installation_id' in the 'installation' collection",
   );
 
@@ -63,6 +64,10 @@ const migrationFunction = async (
       },
     );
   });
+
+  consola.success(
+    "Replaced 'installationId' with 'installation_id' in the 'installation' collection",
+  );
 };
 
 export default migrationFunction;
