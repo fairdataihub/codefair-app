@@ -15,7 +15,7 @@ export function getCWLFiles(context, owner, repoName) {
 
     const cwlFiles = [];
 
-    async function searchDirectory(path) {
+    const searchDirectory = async function (path) {
       try {
         const repoContent = await context.octokit.repos.getContent({
           owner,
@@ -42,7 +42,7 @@ export function getCWLFiles(context, owner, repoName) {
         console.log(error);
         reject(error);
       }
-    }
+    };
 
     // Call the async function and handle its promise
     searchDirectory("")
