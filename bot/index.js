@@ -535,7 +535,7 @@ export default async (app, { getRouter }) => {
     }
   });
 
-  // When an issue is deleted
+  // When an issue is deleted or closed
   app.on(["issues.deleted", "issues.closed"], async (context) => {
     const repository = context.payload.repository;
     const issueTitle = context.payload.issue.title;
@@ -569,6 +569,7 @@ export default async (app, { getRouter }) => {
     }
   });
 
+  // When an issue is reopened
   app.on("issues.reopened", async (context) => {
     const repository = context.payload.repository;
     const owner = context.payload.repository.owner.login;
