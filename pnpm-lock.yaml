@@ -87,6 +87,9 @@ importers:
       arctic:
         specifier: ^1.6.2
         version: 1.9.1
+      consola:
+        specifier: ^3.2.3
+        version: 3.2.3
       dayjs:
         specifier: ^1.11.11
         version: 1.11.11

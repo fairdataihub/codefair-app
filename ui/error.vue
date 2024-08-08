@@ -19,7 +19,7 @@ const orgNotAuthorizedError = ref(false);
 const accountNotAuthorizedError = ref(false);
 const requestClosed = ref(false);
 
-const githubOAuthClientId = ref("");
+const githubOAuthOrgUrl = ref("");
 
 if (props.error) {
   const errorCode = props.error.statusMessage ?? "Something went wrong";
@@ -30,7 +30,7 @@ if (props.error) {
     if (errorCode.startsWith("unauthorized-org-access")) {
       orgNotAuthorizedError.value = true;
 
-      githubOAuthClientId.value = errorCode.split("|")[1];
+      githubOAuthOrgUrl.value = errorCode.split("|")[1];
     } else if (errorCode === "unauthorized-account-access") {
       accountNotAuthorizedError.value = true;
     }
@@ -81,14 +81,14 @@ if (props.error) {
             title="Unauthorized organization access"
           >
             We are unable to verify if you are a member of this GitHub
-            organization. You may need to grant our application access to your
-            GitHub organization. You can do this by visiting your
+            organization. You may need to grant read access to your GitHub
+            organization. You can do this by visiting your
             <NuxtLink
-              :href="`https://github.com/settings/connections/applications/${githubOAuthClientId}`"
+              :href="githubOAuthOrgUrl"
               target="_blank"
               rel="noopener noreferrer"
               class="underline"
-              >GitHub settings</NuxtLink
+              >Organization's GitHub settings</NuxtLink
             >
             page.
           </n-alert>
@@ -135,12 +135,11 @@ if (props.error) {
           <p class="mx-auto w-full max-w-screen-lg text-lg">
             The page you are looking for might have been removed or is
             inaccessible. <br />
-            If this is a private repository, you may not have access to this
-            page. Please check the URL and/or your permissions. If you think
-            this is a mistake, please contact the owner of the repository.
+            If you think this is a mistake, please contact the owner of the
+            repository.
           </p>
 
-          <n-flex justify="center">
+          <n-flex justify="center hidden">
             <p>
               Please visit the
               <NuxtLink

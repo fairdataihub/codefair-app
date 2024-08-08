@@ -4,6 +4,8 @@ import { MongoClient } from "mongodb";
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 
+  const { GITHUB_OAUTH_APP_ID } = useRuntimeConfig(event);
+
   const { owner } = event.context.params as {
     owner: string;
   };
@@ -51,8 +53,7 @@ export default defineEventHandler(async (event) => {
       );
 
       if (!isOrgMember.ok) {
-        const githubClientId = process.env.GITHUB_CLIENT_ID as string;
-        const statusMessage = `unauthorized-org-access|${githubClientId}`;
+        const statusMessage = `unauthorized-org-access|https://github.com/orgs/${owner}/policies/applications/${GITHUB_OAUTH_APP_ID}`;
 
         throw createError({
           statusCode: 403,

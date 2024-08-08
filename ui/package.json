@@ -19,6 +19,7 @@
   "dependencies": {
     "@lucia-auth/adapter-mongodb": "^1.0.3",
     "arctic": "^1.6.2",
+    "consola": "^3.2.3",
     "dayjs": "^1.11.11",
     "humanparser": "^2.7.0",
     "js-yaml": "^4.1.0",

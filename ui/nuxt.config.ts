@@ -75,6 +75,13 @@ export default defineNuxtConfig({
     position: "bottom-right",
   },
 
+  runtimeConfig: {
+    GITHUB_OAUTH_APP_ID: process.env.GITHUB_OAUTH_APP_ID,
+    public: {
+      GITHUB_OAUTH_APP_ID: process.env.GITHUB_OAUTH_APP_ID,
+    },
+  },
+
   vite: {
     server: {
       hmr: {
