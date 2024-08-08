@@ -43,7 +43,6 @@ const repoWritePermissions = async (
       const statusJSON = await permissions.json();
       const statusJSONMessage = statusJSON.message || "";
 
-      consola.error(statusJSONMessage, typeof statusJSONMessage);
       if (
         statusJSONMessage.search("has enabled OAuth App access restrictions")
       ) {
