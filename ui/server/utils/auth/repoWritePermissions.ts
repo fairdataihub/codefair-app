@@ -1,4 +1,5 @@
 import type { User } from "lucia";
+import { consola } from "consola/basic";
 
 const repoWritePermissions = async (
   event: any,
@@ -6,6 +7,8 @@ const repoWritePermissions = async (
   repo: string,
 ) => {
   const user = event.context.user as User;
+
+  const { GITHUB_OAUTH_APP_ID } = useRuntimeConfig(event);
 
   if (!owner || !repo) {
     throw createError({
@@ -25,12 +28,6 @@ const repoWritePermissions = async (
   );
 
   if (!permissions.ok) {
-    console.error(
-      permissions.status,
-      permissions.statusText,
-      await permissions.text(),
-    );
-
     if (permissions.status === 404) {
       throw createError({
         statusCode: 404,
@@ -39,6 +36,24 @@ const repoWritePermissions = async (
     }
 
     if (permissions.status === 403) {
+      consola.error(
+        `User ${user.username} does not have access to the repository ${owner}/${repo}`,
+      );
+
+      const statusJSON = await permissions.json();
+      const statusJSONMessage = statusJSON.message || "";
+
+      if (
+        statusJSONMessage.search("has enabled OAuth App access restrictions")
+      ) {
+        const statusMessage = `unauthorized-org-access|https://github.com/orgs/${owner}/policies/applications/${GITHUB_OAUTH_APP_ID}`;
+
+        throw createError({
+          statusCode: 403,
+          statusMessage,
+        });
+      }
+
       throw createError({
         statusCode: 403,
         statusMessage: "forbidden-repo-access",
