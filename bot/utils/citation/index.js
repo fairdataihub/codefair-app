@@ -14,7 +14,6 @@ export async function checkForCitation(context, owner, repo) {
   }
 }
 
-
 // TODO: Verify if this is still needed
 export async function gatherCitationInfo(context, owner, repo) {
   // Verify there is no PR open already for the CITATION.cff file
@@ -86,9 +85,7 @@ export async function gatherCitationInfo(context, owner, repo) {
   // Get the keywords of the repo
   let keywords = [];
   if (repoData.data.topics != null && repoData.data.topics.length > 0) {
-    // console.log(repoData.data.topics);
     keywords = repoData.data.topics;
-    // console.log(keywords);
   }
 
   // Begin creating json for CITATION.cff file

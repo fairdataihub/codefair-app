@@ -4,8 +4,8 @@
 
 /**
  * * Check if a license is found in the repository
- * 
- * @param {object} context - The GitHub context object 
+ *
+ * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
  * @returns {boolean} - Returns true if a license is found in the repository, false otherwise
@@ -27,12 +27,11 @@ export async function checkForLicense(context, owner, repo) {
   }
 }
 
-
 /**
  * * Create a new license file in the repository
- * 
- * @param {object1} context - The GitHub context object 
- * @param {string} owner - The owner of the repository 
+ *
+ * @param {object1} context - The GitHub context object
+ * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
  * @param {string} license - The license identifier
  */

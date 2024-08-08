@@ -23,7 +23,6 @@ function removeTokenFromUrlInString(inputString) {
 
   // Replace each found URL in the string after removing the token
   return inputString.replace(urlRegex, (url) => {
-    console.log(url);
     return url.replace(/\?token=[^:]+/, "");
   });
 }
@@ -271,12 +270,6 @@ export async function applyCWLTemplate(
   context,
 ) {
   const privateRepo = await isRepoPrivate(context, owner, repository.name);
-  // If the repository is private and contains CWL files, we cannot validate them
-  // if (privateRepo && subjects.cwl.contains_cwl) {
-  //   baseTemplate += `\n\n## CWL Validations ❌\n\n> [!WARNING]\n> Your repository is private. Codefair will not be able to validate any CWL files for you. You can check the CWL file yourself using the [cwltool validator](https://cwltool.readthedocs.io/en/latest/)`;
-  //   return baseTemplate;
-  // }
-
   let url = `${CODEFAIR_DOMAIN}/view/cwl-validation/`;
   const identifier = createId();
   const cwlCollection = dbInstance.getDb().collection("cwlValidation");
@@ -315,8 +308,6 @@ export async function applyCWLTemplate(
       }
     }
 
-    console.log(subjects);
-    console.log(subjects.cwl.contains_cwl);
     if (!subjects.cwl.contains_cwl) {
       console.log("no cwl files in repo");
       // NO CWL files found in the repository, return the base template without appending anything
@@ -325,7 +316,6 @@ export async function applyCWLTemplate(
 
     // No new CWL files were found in the repository but some were validated already
     const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
-    console.log("repo has cwl files but no new ones to validate");
     baseTemplate += `\n\n## CWL Validations\n\nNo new CWL files were found in the repository but ***${existingCWL.files.length}/${existingCWL.files.length}*** that were validated already are considered valid by the [cwltool validator](https://cwltool.readthedocs.io/en/latest/).\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Status |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
   } else {
     const cwlFiles = [];
@@ -336,9 +326,11 @@ export async function applyCWLTemplate(
     for (const file of subjects.cwl.files) {
       const fileSplit = file.name.split(".");
       if (fileSplit.includes("cwl")) {
-        let [isValidCWL, validationMessage] = await validateCWLFile(
+        const [isValidCWL, validationMessage] = await validateCWLFile(
           file.download_url,
         );
+
+        let validationMessageForPrivate = validationMessage;
 
         if (!isValidCWL && validOverall) {
           validOverall = false;
@@ -348,10 +340,10 @@ export async function applyCWLTemplate(
           failedCount += 1;
         }
 
-        if (isRepoPrivate) {
+        if (privateRepo) {
           console.log("Private repo, removing token from validation message");
-          validationMessage = removeTokenFromUrlInString(validationMessage);
-          console.log(validationMessage);
+          validationMessageForPrivate =
+            removeTokenFromUrlInString(validationMessage);
         }
 
         const newDate = Date.now();
@@ -360,7 +352,9 @@ export async function applyCWLTemplate(
           last_modified: newDate,
           last_validated: newDate,
           path: file.path,
-          validation_message: validationMessage,
+          validation_message: privateRepo
+            ? validationMessageForPrivate
+            : validationMessage,
           validation_status: isValidCWL ? "valid" : "invalid",
         });
 
