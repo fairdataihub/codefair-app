@@ -9,44 +9,46 @@
  * @param {String} repoName - Repository name
  * @returns {Array} - Array of CWL files in the repository
  */
-export async function getCWLFiles(context, owner, repoName) {
-  const cwlFiles = [];
-  console.log("Checking for CWL files in the repository");
+export function getCWLFiles(context, owner, repoName) {
+  return new Promise((resolve, reject) => {
+    console.log("Checking for CWL files in the repository");
 
-  async function searchDirectory(path) {
-    try {
-      const repoContent = await context.octokit.repos.getContent({
-        owner,
-        path,
-        repo: repoName,
-      });
+    const cwlFiles = [];
 
-      for (const file of repoContent.data) {
-        const fileSplit = file.name.split(".");
-        if (file.type === "file" && fileSplit.includes("cwl")) {
-          cwlFiles.push(file);
+    async function searchDirectory(path) {
+      try {
+        const repoContent = await context.octokit.repos.getContent({
+          owner,
+          path,
+          repo: repoName,
+        });
+
+        for (const file of repoContent.data) {
+          const fileSplit = file.name.split(".");
+          if (file.type === "file" && fileSplit.includes("cwl")) {
+            cwlFiles.push(file);
+          }
+          if (file.type === "dir") {
+            await searchDirectory(file.path);
+          }
         }
-        if (file.type === "dir") {
-          await searchDirectory(file.path);
+      } catch (error) {
+        if (error.status === 404) {
+          // Repository is empty
+          resolve(cwlFiles);
+          return;
         }
-      }
-    } catch (error) {
-      console.log("Error finding CWL files throughout the repository");
-      console.log(error);
-      if (error.status === 404) {
-        // Repository is empty
-        return cwlFiles;
+        console.log("Error finding CWL files throughout the repository");
+        console.log(error);
+        reject(error);
       }
     }
-  }
 
-  try {
-    await searchDirectory("");
-    return cwlFiles;
-  } catch (error) {
-    console.log("Error checking for CWL file");
-    console.log(error);
-  }
+    // Call the async function and handle its promise
+    searchDirectory("")
+      .then(() => resolve(cwlFiles))
+      .catch(reject);
+  });
 }
 
 export async function validateCWLFile(downloadUrl) {
