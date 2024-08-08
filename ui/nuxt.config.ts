@@ -77,9 +77,6 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     GITHUB_OAUTH_APP_ID: process.env.GITHUB_OAUTH_APP_ID,
-    public: {
-      GITHUB_OAUTH_APP_ID: process.env.GITHUB_OAUTH_APP_ID,
-    },
   },
 
   vite: {
