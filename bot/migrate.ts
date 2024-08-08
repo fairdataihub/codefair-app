@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 import fs from "fs";
+import { consola } from "consola";
 import { nanoid } from "nanoid";
 
 if (process.env.NODE_ENV !== "production") {
@@ -37,7 +38,7 @@ const devDatabase = client.db(devDbName);
 // FOR DEV ONLY
 // Clone the original database
 // Get the list of collections in the original database
-console.log("Cloning the original database");
+consola.start("Cloning the original database...");
 
 const collections = await database.listCollections().toArray();
 
@@ -62,7 +63,7 @@ for (const collection of collections) {
   }
 }
 
-console.log("Database cloned");
+consola.success("Database cloned!");
 
 // Get the list of files in the migrations folder
 const files = fs.readdirSync("./migrations");
@@ -82,7 +83,7 @@ for (const file of files) {
   });
 
   if (migration) {
-    console.log(`Migration ${migrationId} has already been applied`);
+    consola.warn(`Migration ${migrationId} has already been applied`);
     continue;
   }
 
@@ -91,17 +92,17 @@ for (const file of files) {
     `./migrations/${migrationId}`
   );
 
-  console.log(`Applying migration ${migrationId}`);
+  consola.start(`Applying migration ${migrationId}`);
 
   try {
     // Run the migration
     await migrationFunction(uri, devDbName, migrationId);
   } catch (error) {
-    console.error(`Error applying migration ${migrationId}: ${error.message}`);
+    consola.error(`Error applying migration ${migrationId}: ${error.message}`);
     throw error;
   }
 
-  console.log(`Migration ${migrationId} has been applied`);
+  consola.success(`Migration ${migrationId} has been applied!`);
 
   // Insert the migration into the migrations collection
   // await migrationsCollection.insertOne({

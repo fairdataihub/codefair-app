@@ -1,6 +1,7 @@
 /**
  * @fileoverview This file contains utility functions for the license bot
  */
+import { consola } from "consola";
 
 /**
  * * Check if a license is found in the repository
@@ -11,17 +12,17 @@
  * @returns {boolean} - Returns true if a license is found in the repository, false otherwise
  */
 export async function checkForLicense(context, owner, repo) {
-  console.log("checking for license");
+  consola.info("Checking for license...");
   try {
     await context.octokit.rest.licenses.getForRepo({
       owner,
       repo,
     });
 
-    console.log("license found!");
+    consola.success("License found in the repository!");
     return true;
   } catch (error) {
-    console.log("no license found");
+    consola.warn("No license found in the repository");
     // Errors when no License is found in the repo
     return false;
   }
@@ -93,14 +94,12 @@ export async function createLicense(context, owner, repo, license) {
         });
         defaultBranchName = defaultBranch.data.name;
       } catch (error) {
-        console.log("Error getting default branch");
-        console.log(error);
+        consola.error("Error getting default branch:", error);
         return;
       }
 
       // Create a new branch base off the default branch
-      // console.log(default_branch);
-      console.log("Creating branch");
+      consola.info("Creating branch...");
       await context.octokit.git.createRef({
         owner,
         ref: `refs/heads/${branch}`,
@@ -109,7 +108,7 @@ export async function createLicense(context, owner, repo, license) {
       });
 
       // Create a new file
-      console.log("Creating file");
+      consola.info("Creating file...");
       await context.octokit.repos.createOrUpdateFileContents({
         branch,
         content: Buffer.from(responseData.licenseText).toString("base64"),
@@ -120,7 +119,7 @@ export async function createLicense(context, owner, repo, license) {
       });
 
       // Create a PR from that branch with the commit of our added file
-      console.log("Creating PR");
+      consola.info("Creating PR...");
       await context.octokit.pulls.create({
         title: "feat: ✨ LICENSE file added",
         base: defaultBranchName,
@@ -132,7 +131,7 @@ export async function createLicense(context, owner, repo, license) {
       });
 
       // Comment on issue to notify user that license has been added
-      console.log("Commenting on issue");
+      consola.info("Commenting on issue...");
       await context.octokit.issues.createComment({
         body: `A LICENSE file with ${license} license terms has been added to a new branch and a pull request is awaiting approval. I will close this issue automatically once the pull request is approved.`,
         issue_number: context.payload.issue.number,
@@ -140,12 +139,10 @@ export async function createLicense(context, owner, repo, license) {
         repo,
       });
     } catch (error) {
-      console.log("Error fetching license file");
-      console.log(error);
+      consola.error("Error fetching license file:", error);
     }
   } else {
     // License not found, comment on issue to notify user
-    console.log("License not found");
     await context.octokit.issues.createComment({
       body: `The license identifier “${license}” was not found in the SPDX License List. Please reply with a valid license identifier.`,
       issue_number: context.payload.issue.number,
