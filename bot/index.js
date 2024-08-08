@@ -103,16 +103,17 @@ export default async (app, { getRouter }) => {
         );
         const cwl = await getCWLFiles(context, owner, repository.name);
         const cwlObject = {
-          contains_cwl: cwl.length > 0,
+          contains_cwl: cwl.length > 0 || false,
           files: cwl,
+          removed_files: [],
         };
 
         // If existing cwl validation exists, update the contains_cwl value
-        const cwlExists = db.collection("cwlValidation").findOne({
+        const cwlExists = await db.collection("cwlValidation").findOne({
           repositoryId: repository.id,
         });
 
-        if (cwlExists) {
+        if (cwlExists?.contains_cwl_files) {
           cwlObject.contains_cwl = cwlExists.contains_cwl_files;
         }
 
@@ -237,7 +238,7 @@ export default async (app, { getRouter }) => {
         return;
       }
 
-      if (installation?.action === false && installation?.action_count > 4) {
+      if (installation?.action && installation?.action_count >= 4) {
         installationCollection.updateOne(
           { repositoryId: repository.id },
           {
@@ -265,9 +266,11 @@ export default async (app, { getRouter }) => {
 
     // Check if any of the commits added a LICENSE, CITATION, or codemeta file
     const gatheredCWLFiles = [];
+    const removedCWLFiles = [];
     if (commits.length > 0) {
       for (let i = 0; i < commits.length; i++) {
         if (commits[i]?.added?.length > 0) {
+          // Iterate through the added files
           for (let j = 0; j < commits[i]?.added.length; j++) {
             if (commits[i].added[j] === "LICENSE") {
               license = true;
@@ -288,12 +291,35 @@ export default async (app, { getRouter }) => {
             }
           }
         }
-        // TODO: This will only return the file name so request the file name and gather the file metadata
+        // Iterate through the modified files
         if (commits[i]?.modified?.length > 0) {
           for (let j = 0; j < commits[i]?.modified.length; j++) {
             const fileSplit = commits[i]?.modified[j].split(".");
             if (fileSplit.includes("cwl")) {
               gatheredCWLFiles.push(commits[i].modified[j]);
+              continue;
+            }
+          }
+        }
+
+        // Iterate through the remove files
+        if (commits[i]?.removed?.length > 0) {
+          for (let j = 0; j < commits[i]?.removed.length; j++) {
+            const fileSplit = commits[i]?.removed[j].split(".");
+            if (fileSplit.includes("cwl")) {
+              removedCWLFiles.push(commits[i].removed[j]);
+              continue;
+            }
+            if (commits[i]?.removed[j] === "LICENSE") {
+              license = false;
+              continue;
+            }
+            if (commits[i]?.removed[j] === "CITATION.cff") {
+              citation = false;
+              continue;
+            }
+            if (commits[i]?.removed[j] === "codemeta.json") {
+              codemeta = false;
               continue;
             }
           }
@@ -315,8 +341,9 @@ export default async (app, { getRouter }) => {
     }
 
     const cwlObject = {
-      contains_cwl: cwl.length > 0,
+      contains_cwl: cwl.length > 0 || false,
       files: cwl,
+      removed_files: removedCWLFiles,
     };
 
     const cwlExists = await db.collection("cwlValidation").findOne({
@@ -381,11 +408,12 @@ export default async (app, { getRouter }) => {
       const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
 
       const cwlObject = {
-        contains_cwl: cwl.length > 0,
+        contains_cwl: cwl.length > 0 || false,
         files: cwl,
+        removed_files: [],
       };
 
-      const cwlExists = db.collection("cwlValidation").findOne({
+      const cwlExists = await db.collection("cwlValidation").findOne({
         repositoryId: repository.id,
       });
 
@@ -471,11 +499,12 @@ export default async (app, { getRouter }) => {
       );
 
       const cwlObject = {
-        contains_cwl: cwl.length > 0,
+        contains_cwl: cwl.length > 0 || false,
         files: cwl,
+        removed_files: [],
       };
 
-      const cwlExists = db.collection("cwlValidation").findOne({
+      const cwlExists = await db.collection("cwlValidation").findOne({
         repositoryId: repository.id,
       });
 
@@ -506,7 +535,7 @@ export default async (app, { getRouter }) => {
     }
   });
 
-  // When an issue is deleted
+  // When an issue is deleted or closed
   app.on(["issues.deleted", "issues.closed"], async (context) => {
     const repository = context.payload.repository;
     const issueTitle = context.payload.issue.title;
@@ -540,6 +569,7 @@ export default async (app, { getRouter }) => {
     }
   });
 
+  // When an issue is reopened
   app.on("issues.reopened", async (context) => {
     const repository = context.payload.repository;
     const owner = context.payload.repository.owner.login;
@@ -558,11 +588,12 @@ export default async (app, { getRouter }) => {
       const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
 
       const cwlObject = {
-        contains_cwl: cwl.length > 0,
+        contains_cwl: cwl.length > 0 || false,
         files: cwl,
+        removed_files: [],
       };
 
-      const cwlExists = db.collection("cwlValidation").findOne({
+      const cwlExists = await db.collection("cwlValidation").findOne({
         repositoryId: repository.id,
       });
 

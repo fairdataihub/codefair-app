@@ -12,6 +12,23 @@ const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
 /**
+ * * Removes the token from the URL in the validation message
+ * @param {String} inputString - The string to remove the token from
+ * @returns {String} - The string with the token removed
+ */
+function removeTokenFromUrlInString(inputString) {
+  // Regex to find the GitHub raw URL with an optional token
+  const urlRegex =
+    /https:\/\/raw\.githubusercontent\.com\/[^\s:]+(\?token=[^:\s]+)?/g;
+
+  // Replace each found URL in the string after removing the token
+  return inputString.replace(urlRegex, (url) => {
+    console.log(url);
+    return url.replace(/\?token=[^:]+/, "");
+  });
+}
+
+/**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
  *
  * @param {object} subjects - The subjects to check for
@@ -255,12 +272,12 @@ export async function applyCWLTemplate(
 ) {
   const privateRepo = await isRepoPrivate(context, owner, repository.name);
   // If the repository is private and contains CWL files, we cannot validate them
-  if (privateRepo && subjects.cwl.contains_cwl) {
-    baseTemplate += `\n\n## CWL Validations ❌\n\n> [!WARNING]\n> Your repository is private. Codefair will not be able to validate any CWL files for you. You can check the CWL file yourself using the [cwltool validator](https://cwltool.readthedocs.io/en/latest/)`;
-    return baseTemplate;
-  }
+  // if (privateRepo && subjects.cwl.contains_cwl) {
+  //   baseTemplate += `\n\n## CWL Validations ❌\n\n> [!WARNING]\n> Your repository is private. Codefair will not be able to validate any CWL files for you. You can check the CWL file yourself using the [cwltool validator](https://cwltool.readthedocs.io/en/latest/)`;
+  //   return baseTemplate;
+  // }
 
-  let url = `${CODEFAIR_DOMAIN}/add/cwl/`;
+  let url = `${CODEFAIR_DOMAIN}/view/cwl-validation/`;
   const identifier = createId();
   const cwlCollection = dbInstance.getDb().collection("cwlValidation");
   const existingCWL = await cwlCollection.findOne({
@@ -294,7 +311,7 @@ export async function applyCWLTemplate(
 
       // TODO: Create a table of the cwl files that were validated
       for (const file of existingCWL.files) {
-        tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "❗" : "❌"} |\n`;
+        tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "✔️" : "❌"} |\n`;
       }
     }
 
@@ -319,7 +336,7 @@ export async function applyCWLTemplate(
     for (const file of subjects.cwl.files) {
       const fileSplit = file.name.split(".");
       if (fileSplit.includes("cwl")) {
-        const [isValidCWL, validationMessage] = await validateCWLFile(
+        let [isValidCWL, validationMessage] = await validateCWLFile(
           file.download_url,
         );
 
@@ -329,6 +346,12 @@ export async function applyCWLTemplate(
 
         if (!isValidCWL) {
           failedCount += 1;
+        }
+
+        if (isRepoPrivate) {
+          console.log("Private repo, removing token from validation message");
+          validationMessage = removeTokenFromUrlInString(validationMessage);
+          console.log(validationMessage);
         }
 
         const newDate = Date.now();
@@ -341,10 +364,10 @@ export async function applyCWLTemplate(
           validation_status: isValidCWL ? "valid" : "invalid",
         });
 
-        tableContent += `| ${file.path} | ${isValidCWL ? "❗" : "❌"} |\n`;
+        tableContent += `| ${file.path} | ${isValidCWL ? "✔️" : "❌"} |\n`;
       }
     }
-    url = `${CODEFAIR_DOMAIN}/add/cwl/${identifier}`;
+    url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${identifier}`;
     if (!existingCWL) {
       // Entry does not exist in the db, create a new one
       const newDate = Date.now();
@@ -372,11 +395,11 @@ export async function applyCWLTemplate(
           },
         },
       );
-      url = `${CODEFAIR_DOMAIN}/add/cwl/${existingCWL.identifier}`;
+      url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${existingCWL.identifier}`;
 
       // TODO: Create a table of the cwl files that were validated
       for (const file of existingCWL.files) {
-        tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "❗" : "❌"} |\n`;
+        tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "✔️" : "❌"} |\n`;
         subjects.cwl.files.push(file);
 
         if (file.validation_status === "invalid") {
@@ -390,7 +413,26 @@ export async function applyCWLTemplate(
     }
 
     const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
-    baseTemplate += `\n\n## CWL Validations ${validOverall ? "✔️" : "❌"}\n\nCWL files were found in the repository and ***${subjects.cwl.files.length - failedCount}/${subjects.cwl.files.length}*** are considered valid by the [cwltool validator](https://cwltool.readthedocs.io/en/latest/).\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Status |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
+    baseTemplate += `\n\n## CWL Validations ${validOverall ? "✔️" : "❗"}\n\nCWL files were found in the repository and ***${subjects.cwl.files.length - failedCount}/${subjects.cwl.files.length}*** are considered valid by the [cwltool validator](https://cwltool.readthedocs.io/en/latest/).\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Status |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
+  }
+
+  if (subjects.cwl.removed_files.length > 0) {
+    // Remove the files from the database
+    const cwlCollection = dbInstance.getDb().collection("cwlValidation");
+    const existingCWL = await cwlCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (existingCWL) {
+      const newFiles = existingCWL.files.filter((file) => {
+        return !subjects.cwl.removed_files.includes(file.path);
+      });
+
+      await cwlCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { files: newFiles } },
+      );
+    }
   }
 
   return baseTemplate;
