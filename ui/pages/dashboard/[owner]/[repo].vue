@@ -178,14 +178,22 @@ const rerunCwlValidation = async () => {
         </template>
 
         <template #content>
-          <p>
+          <n-alert
+            v-if="!data?.cwlValidation || !data.cwlValidation.containsCWL"
+            type="info"
+            class="my-5"
+          >
+            There are no CWL files in this repository.
+          </n-alert>
+
+          <p v-else>
             Common Workflow Language (CWL) is an open standard for describing
             how to run command line tools and connect them to create workflows.
           </p>
         </template>
 
         <template #action>
-          <div class="flex space-x-3">
+          <div v-if="data?.cwlValidation?.containsCWL" class="flex space-x-3">
             <n-tooltip trigger="hover" placement="bottom-start">
               <template #trigger>
                 <n-button
@@ -219,167 +227,6 @@ const rerunCwlValidation = async () => {
       </CardDashboard>
 
       <n-divider />
-
-      <CardCollapsible
-        title="License"
-        subheader="The license for the repository is shown here. You can review open
-          license requests and view closed license requests."
-        class="rounded-lg bg-white shadow-md"
-        bordered
-      >
-        <div class="my-3">
-          <n-card>
-            <n-flex align="center" justify="space-between">
-              <div>
-                <h3>
-                  ID:
-                  {{
-                    generateSeed(data?.licenseRequest?.identifier || "hello")
-                  }}
-                </h3>
-              </div>
-
-              <NuxtLink
-                :to="`/add/license/${data?.licenseRequest?.identifier}`"
-                target="__blank"
-              >
-                <n-button type="primary"> View License </n-button>
-              </NuxtLink>
-            </n-flex>
-          </n-card>
-        </div>
-      </CardCollapsible>
-
-      <n-divider />
-
-      <CardCollapsible
-        title="Code Metadata"
-        subheader="The code metadata for the repository is shown here. This includes
-            the number of files, the number of lines of code, and the number of
-            commits."
-        class="rounded-lg bg-white shadow-md"
-        bordered
-      >
-        <div>
-          <n-alert v-if="!data?.codeMetadataRequest" type="info" class="my-5">
-            There are no codemetadata requests for this repository yet.
-          </n-alert>
-
-          <n-card v-else class="my-3">
-            <n-flex align="center" justify="space-between">
-              <div>
-                <h3>
-                  ID: {{ generateSeed(data?.codeMetadataRequest.identifier) }}
-                </h3>
-
-                <p>
-                  {{
-                    $dayjs
-                      .unix(
-                        parseInt(data?.codeMetadataRequest.timestamp) / 1000,
-                      )
-                      .format("MMMM DD, YYYY HH:mmA")
-                  }}
-                </p>
-              </div>
-
-              <NuxtLink
-                :to="`/add/code-metadata/${data?.codeMetadataRequest.identifier}`"
-              >
-                <n-button type="primary"> View Code Metadata </n-button>
-              </NuxtLink>
-            </n-flex>
-          </n-card>
-        </div>
-      </CardCollapsible>
-
-      <n-divider />
-
-      <CardCollapsible
-        title="CWL Validation"
-        subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them to create workflows."
-        class="rounded-lg bg-white shadow-md"
-        bordered
-      >
-        <div>
-          <n-alert
-            v-if="!data?.cwlValidation || !data.cwlValidation.containsCWL"
-            type="info"
-            class="my-5"
-          >
-            There are no CWL files in this repository.
-          </n-alert>
-
-          <n-card v-else class="my-3">
-            <n-flex align="center" justify="space-between">
-              <h3>ID: {{ generateSeed(data?.cwlValidation.identifier) }}</h3>
-
-              <n-flex align="center" justify="end">
-                <n-tooltip trigger="hover" placement="bottom-start">
-                  <template #trigger>
-                    <n-button
-                      type="success"
-                      secondary
-                      :loading="cwlValidationRerunRequestLoading"
-                      @click="rerunCwlValidation"
-                    >
-                      <template #icon>
-                        <Icon name="mynaui:redo" size="16" />
-                      </template>
-
-                      Rerun CWL Validation
-                    </n-button>
-                  </template>
-                  This may take a few minutes to complete.
-                </n-tooltip>
-
-                <NuxtLink
-                  :to="`/view/cwl-validation/${data?.cwlValidation.identifier}`"
-                >
-                  <n-button type="primary">
-                    View CWL Validation Results
-                  </n-button>
-                </NuxtLink>
-              </n-flex>
-            </n-flex>
-          </n-card>
-        </div>
-      </CardCollapsible>
-
-      <n-divider />
-
-      <!-- <CardCollapsible
-        title="Zenodo - Coming Soon"
-        subheader="The Zenodo integration for the repository is coming soon. You will be
-            able to archive each version of your repository on Zenodo."
-        class="rounded-lg bg-white shadow-md"
-        bordered
-        :collapse="true"
-      >
-        <div>
-          <n-card class="my-3">
-            <n-flex align="center" justify="space-between">
-              <div>
-                <h3>ID: {{ generateSeed("test") }}</h3>
-
-                <p>
-                  {{
-                    $dayjs
-                      .unix(Date.now() / 1000)
-                      .format("MMMM DD, YYYY HH:mmA")
-                  }}
-                </p>
-              </div>
-
-              <NuxtLink>
-                <n-button disabled class="bg-gray-300">
-                  View Code Metadata
-                </n-button>
-              </NuxtLink>
-            </n-flex>
-          </n-card>
-        </div>
-      </CardCollapsible> -->
     </div>
 
     <!-- <n-collapse class="mt-8">
