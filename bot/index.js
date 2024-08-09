@@ -24,9 +24,8 @@ checkEnvVariable("MONGODB_DB_NAME");
 checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
-// sourcery skip: use-object-destructuring
-// const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
+const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
 
 /**
  * This is the main entrypoint to your Probot app
@@ -55,22 +54,19 @@ export default async (app, { getRouter }) => {
   app.on(
     ["installation.created", "installation_repositories.added"],
     async (context) => {
-      const owner = context.payload.installation.account.login;
-      let applyActionLimit = false;
-      const actionCount = 0;
-      let repoCount = 0;
       const repositories =
         context.payload.repositories || context.payload.repositories_added;
+      const owner = context.payload.installation.account.login;
+      const actionCount = 0;
+      let applyActionLimit = false;
+      let repoCount = 0;
 
       // shows all repos you've installed the app on
       for (const repository of repositories) {
         repoCount++;
-        // TODO: Verify if we want to increase amount of actions needed by one every 5 repos
-        // if (repoCount % 5 === 0) {
-        //   actionCount--;
-        // }
 
         if (repoCount > 5) {
+          consola.info(`Applying action limit to ${repository.name}`);
           applyActionLimit = true;
         }
 
@@ -241,6 +237,7 @@ export default async (app, { getRouter }) => {
       }
 
       if (installation?.action && installation?.action_count >= 4) {
+        consola.info("Removing action limit for", repository.name);
         installationCollection.updateOne(
           { repositoryId: repository.id },
           {
@@ -395,7 +392,28 @@ export default async (app, { getRouter }) => {
       repositoryId: repository.id,
     });
     if (installation?.action && installation?.action_count < 4) {
+      installationCollection.updateOne(
+        { repositoryId: repository.id },
+        {
+          $set: {
+            action_count: installation.action_count + 1,
+          },
+        },
+      );
       return;
+    }
+
+    if (installation?.action && installation?.action_count >= 4) {
+      consola.info("Removing action limit for", repository.name);
+      installationCollection.updateOne(
+        { repositoryId: repository.id },
+        {
+          $set: {
+            action: false,
+            action_count: installation.action_count + 1,
+          },
+        },
+      );
     }
 
     if (definedPRTitles.includes(prTitle)) {
@@ -562,10 +580,8 @@ export default async (app, { getRouter }) => {
 
       if (context.payload.action === "closed") {
         // Update the body of the issue to reflect that the repository is disabled
-        const issueBody = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
-
         await context.octokit.issues.update({
-          body: issueBody,
+          body: CLOSED_ISSUE_BODY,
           issue_number: context.payload.issue.number,
           owner: repository.owner.login,
           repo: repository.name,

@@ -363,7 +363,7 @@ export async function applyCWLTemplate(
     }
     url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${identifier}`;
     if (!existingCWL) {
-      // Entry does not exist in the db, create a new one
+      // Entry does not exist in the db, create a new one (no old files exist, first time seeing cwl files)
       const newDate = Date.now();
       await cwlCollection.insertOne({
         contains_cwl_files: subjects.cwl.contains_cwl,
@@ -377,13 +377,14 @@ export async function applyCWLTemplate(
         updated_at: newDate,
       });
     } else {
-      // Get the identifier of the existing cwl request
+      // An entry exists in the db, thus possible old files exist (merge both lists)
+      const newFiles = [...existingCWL.files, ...cwlFiles];
       await cwlCollection.updateOne(
         { repositoryId: repository.id },
         {
           $set: {
-            contains_cwl_files: true,
-            files: [...existingCWL.files, ...cwlFiles], // Join the existing files with the new ones
+            contains_cwl_files: newFiles.length > 0 ? true : false,
+            files: newFiles,
             overall_status: validOverall ? "valid" : "invalid",
             updated_at: Date.now(),
           },
