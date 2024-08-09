@@ -165,27 +165,6 @@ export default async (app, { getRouter }) => {
         });
 
         if (installation) {
-          // Close the issue that was opened for the repository, if one exists
-          if (installation?.issue_number) {
-            consola.start("Closing issue for repository uninstallation...");
-            await context.octokit.issues.update({
-              body: CLOSED_ISSUE_BODY,
-              issue_number: context.payload.issue.number,
-              owner: repository.owner.login,
-              repo: repository.name,
-            });
-
-            // Close the issue
-            await context.octokit.issues.update({
-              state: "closed",
-              issue_number: installation.issueNumber,
-              owner: repository.owner.login,
-              repo: repository.name,
-            });
-
-            consola.success("Issue closed successfully!");
-          }
-
           // Remove from the database
           await installationCollection.deleteOne({
             repositoryId: repository.id,
