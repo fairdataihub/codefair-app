@@ -451,6 +451,73 @@ export default defineEventHandler(async (event) => {
     },
   );
 
+  // Update the analytics data for the repository
+  const analytics = db.collection("analytics");
+
+  // Get the existing analytics data for the repository
+  const existingAnalytics = await analytics.findOne({
+    repositoryId: codeMetadataRequest.repositoryId,
+  });
+
+  // Check if the codemeta analytics data exists
+  if (existingAnalytics?.codeMetadata?.codemeta?.updateCodemeta) {
+    await analytics.updateOne(
+      {
+        repositoryId: codeMetadataRequest.repositoryId,
+      },
+      {
+        $inc: {
+          "codeMetadata.codemeta.updateCodemeta": 1,
+        },
+      },
+    );
+  } else {
+    await analytics.updateOne(
+      {
+        repositoryId: codeMetadataRequest.repositoryId,
+      },
+      {
+        $set: {
+          "codeMetadata.codemeta": {
+            updateCodemeta: 1,
+          },
+        },
+      },
+      {
+        upsert: true,
+      },
+    );
+  }
+
+  if (existingAnalytics?.codeMetadata?.citationCFF?.updateCitationCFF) {
+    await analytics.updateOne(
+      {
+        repositoryId: codeMetadataRequest.repositoryId,
+      },
+      {
+        $inc: {
+          "codeMetadata.citationCFF.updateCitationCFF": 1,
+        },
+      },
+    );
+  } else {
+    await analytics.updateOne(
+      {
+        repositoryId: codeMetadataRequest.repositoryId,
+      },
+      {
+        $set: {
+          "codeMetadata.citationCFF": {
+            updateCitationCFF: 1,
+          },
+        },
+      },
+      {
+        upsert: true,
+      },
+    );
+  }
+
   return {
     message: "Code metadata request updated successfully",
     prUrl: pullRequestData.html_url,

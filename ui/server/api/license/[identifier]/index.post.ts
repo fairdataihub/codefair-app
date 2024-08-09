@@ -201,27 +201,43 @@ export default defineEventHandler(async (event) => {
     },
   );
 
-  /**
-   * ? Should we close the license request here? Or should we wait for the PR to be merged?
-   */
+  // Update the analytics data for the repository
+  const analytics = db.collection("analytics");
 
-  // const closeLicenseRequest = await collection.updateOne(
-  //   {
-  //     identifier,
-  //   },
-  //   {
-  //     $set: {
-  //       open: false,
-  //     },
-  //   },
-  // );
+  // Get the existing analytics data for the repository
+  const existingAnalytics = await analytics.findOne({
+    repositoryId: licenseRequest.repositoryId,
+  });
 
-  // if (!closeLicenseRequest) {
-  //   throw createError({
-  //     statusCode: 500,
-  //     statusMessage: "license-request-not-closed",
-  //   });
-  // }
+  // Check if the license analytics data exists
+  if (existingAnalytics?.license?.createLicense) {
+    await analytics.updateOne(
+      {
+        repositoryId: licenseRequest.repositoryId,
+      },
+      {
+        $inc: {
+          "license.createLicense": 1,
+        },
+      },
+    );
+  } else {
+    await analytics.updateOne(
+      {
+        repositoryId: licenseRequest.repositoryId,
+      },
+      {
+        $set: {
+          license: {
+            createLicense: 1,
+          },
+        },
+      },
+      {
+        upsert: true,
+      },
+    );
+  }
 
   return {
     prUrl: pullRequestData.html_url,

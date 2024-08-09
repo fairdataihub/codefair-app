@@ -118,6 +118,44 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Update the analytics data for the repository
+  const analytics = db.collection("analytics");
+
+  // Get the existing analytics data for the repository
+  const existingAnalytics = await analytics.findOne({
+    repositoryId: cwlValidationRequest.repositoryId,
+  });
+
+  // Check if the codemeta analytics data exists
+  if (existingAnalytics?.cwlValidation?.rerunCwlValidation) {
+    await analytics.updateOne(
+      {
+        repositoryId: cwlValidationRequest.repositoryId,
+      },
+      {
+        $inc: {
+          "cwlValidation.rerunCwlValidation": 1,
+        },
+      },
+    );
+  } else {
+    await analytics.updateOne(
+      {
+        repositoryId: cwlValidationRequest.repositoryId,
+      },
+      {
+        $set: {
+          cwlValidation: {
+            rerunCwlValidation: 1,
+          },
+        },
+      },
+      {
+        upsert: true,
+      },
+    );
+  }
+
   return {
     message: "Request for re-run of CWL validation submitted",
   };
