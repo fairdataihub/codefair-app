@@ -404,7 +404,6 @@ export async function applyCWLTemplate(
       );
       url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${existingCWL.identifier}`;
 
-      // TODO: Create a table of the cwl files that were validated
       for (const file of newFiles.files) {
         tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "✔️" : "❌"} |\n`;
         subjects.cwl.files.push(file);
