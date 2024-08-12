@@ -57,7 +57,7 @@ export default async (app, { getRouter }) => {
       const repositories =
         context.payload.repositories || context.payload.repositories_added;
       const owner = context.payload.installation.account.login;
-      const actionCount = 0;
+      let actionCount = 0;
       let applyActionLimit = false;
       let repoCount = 0;
 
@@ -68,6 +68,7 @@ export default async (app, { getRouter }) => {
         if (repoCount > 5) {
           consola.info(`Applying action limit to ${repository.name}`);
           applyActionLimit = true;
+          actionCount = 5;
         }
 
         // Check if the repository is empty
@@ -99,6 +100,11 @@ export default async (app, { getRouter }) => {
           repository.name,
         );
         const cwl = await getCWLFiles(context, owner, repository.name);
+        if (cwl.length > 0) {
+          consola.success("CWL files found in the repository");
+        } else {
+          consola.info("No CWL files found in the repository");
+        }
         const cwlObject = {
           contains_cwl: cwl.length > 0 || false,
           files: cwl,
@@ -227,23 +233,26 @@ export default async (app, { getRouter }) => {
         installationCollection,
       );
 
-      if (installation?.action && installation?.action_count < 4) {
+      if (installation?.action && installation?.action_count > 0) {
+        consola.info("Action limit count down:", installation.action_count);
         installationCollection.updateOne(
           { repositoryId: repository.id },
-          { $set: { action_count: installation.action_count + 1 } },
+          { $set: { action_count: installation.action_count - 1 } },
         );
+
+        consola.info("SHOULD NOT RUN", installation.action_count);
 
         return;
       }
 
-      if (installation?.action && installation?.action_count >= 4) {
-        consola.info("Removing action limit for", repository.name);
+      if (installation?.action && installation?.action_count === 0) {
+        consola.warn("Removing action limit for", repository.name);
         installationCollection.updateOne(
           { repositoryId: repository.id },
           {
             $set: {
               action: false,
-              action_count: installation.action_count + 1,
+              action_count: 0,
             },
           },
         );
@@ -261,6 +270,12 @@ export default async (app, { getRouter }) => {
     let codemeta = await checkForCodeMeta(context, owner, repository.name);
     if (fullCodefairRun) {
       cwl = await getCWLFiles(context, owner, repository.name);
+    }
+
+    if (cwl.length > 0) {
+      consola.success("CWL files found in the repository");
+    } else {
+      consola.info("No CWL files found in the repository");
     }
 
     // Check if any of the commits added a LICENSE, CITATION, or codemeta file
@@ -391,26 +406,26 @@ export default async (app, { getRouter }) => {
     const installation = await installationCollection.findOne({
       repositoryId: repository.id,
     });
-    if (installation?.action && installation?.action_count < 4) {
+    if (installation?.action && installation?.action_count > 0) {
       installationCollection.updateOne(
         { repositoryId: repository.id },
         {
           $set: {
-            action_count: installation.action_count + 1,
+            action_count: installation.action_count - 1,
           },
         },
       );
       return;
     }
 
-    if (installation?.action && installation?.action_count >= 4) {
+    if (installation?.action && installation?.action_count === 0) {
       consola.info("Removing action limit for", repository.name);
       installationCollection.updateOne(
         { repositoryId: repository.id },
         {
           $set: {
             action: false,
-            action_count: installation.action_count + 1,
+            action_count: 0,
           },
         },
       );
@@ -480,22 +495,22 @@ export default async (app, { getRouter }) => {
           installationCollection,
         );
 
-        if (installation?.action && installation?.action_count < 4) {
+        if (installation?.action && installation?.action_count > 0) {
           installationCollection.updateOne(
             { repositoryId: context.payload.repository.id },
-            { $set: { action_count: installation.action_count + 1 } },
+            { $set: { action_count: installation.action_count - 1 } },
           );
 
           return;
         }
 
-        if (installation?.action_count > 4) {
+        if (installation?.action_count === 0) {
           installationCollection.updateOne(
             { repositoryId: context.payload.repository.id },
             {
               $set: {
                 action: false,
-                action_count: installation.action_count + 1,
+                action_count: 0,
               },
             },
           );
@@ -512,6 +527,11 @@ export default async (app, { getRouter }) => {
       const repository = context.payload.repository;
 
       const cwl = await getCWLFiles(context, owner, repository.name);
+      if (cwl.length > 0) {
+        consola.success("CWL files found in the repository");
+      } else {
+        consola.info("No CWL files found in the repository");
+      }
 
       // Remove the section from the issue body starting from ## CWL Validations
       const slicedBody = issueBody.substring(
@@ -608,6 +628,11 @@ export default async (app, { getRouter }) => {
       const codemeta = await checkForCodeMeta(context, owner, repository.name);
       const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
 
+      if (cwl.length > 0) {
+        consola.success("CWL files found in the repository");
+      } else {
+        consola.info("No CWL files found in the repository");
+      }
       const cwlObject = {
         contains_cwl: cwl.length > 0 || false,
         files: cwl,

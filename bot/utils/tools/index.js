@@ -217,7 +217,7 @@ export async function gatherLanguagesUsed(context, owner, repo) {
 
   // Parse the data for languages used
   let languagesUsed = [];
-  if (Object.keys(languages.data).length !== 0) {
+  if (Object.keys(languages.data).length > 0) {
     languagesUsed = Object.keys(languages.data);
   }
 
@@ -318,7 +318,7 @@ export async function verifyInstallationAnalytics(
   context,
   repository,
   applyActionLimit = false,
-  actionCount = 0,
+  actionCount = 5,
 ) {
   const owner =
     context.payload?.installation?.account?.login ||
@@ -349,18 +349,18 @@ export async function verifyInstallationAnalytics(
       timestamp: Date.now(),
     });
   } else {
-    if (installation?.action && installation.action_count < 4) {
+    if (installation?.action && installation.action_count > 0) {
       installationCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { action_count: installation.action_count + 1 } },
+        { $set: { action_count: installation.action_count - 1 } },
       );
     }
 
-    if (installation?.action && installation.action_count > 4) {
+    if (installation?.action && installation.action_count === 0) {
       consola.info("Action limit reached, no longer limiting actions");
       installationCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { action: false } },
+        { $set: { action: false, action_count: 0 } },
       );
     }
     verifyRepoName(

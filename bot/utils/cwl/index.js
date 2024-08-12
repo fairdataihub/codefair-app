@@ -50,7 +50,6 @@ export function getCWLFiles(context, owner, repoName) {
     // Call the async function and handle its promise
     searchDirectory("")
       .then(() => {
-        consola.success("CWL files found in the repository!");
         resolve(cwlFiles);
       })
       .catch(reject);
