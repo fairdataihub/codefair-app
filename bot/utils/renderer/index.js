@@ -405,7 +405,7 @@ export async function applyCWLTemplate(
       url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${existingCWL.identifier}`;
 
       // TODO: Create a table of the cwl files that were validated
-      for (const file of existingCWL.files) {
+      for (const file of newFiles.files) {
         tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "✔️" : "❌"} |\n`;
         subjects.cwl.files.push(file);
 
@@ -445,6 +445,34 @@ export async function applyCWLTemplate(
           },
         },
       );
+
+      const response = await cwlCollection.findOne({
+        repositoryId: repository.id,
+      });
+
+      const overallStatus = response.overall_status;
+
+      const validationString = "\n\n## CWL Validations";
+      const validEmoji = "✔️";
+      const invalidEmoji = "❗";
+
+      const validationIndex = baseTemplate.indexOf(validationString);
+      if (validationIndex !== -1) {
+        const emojiIndex = validationIndex + validationString.length;
+        if (overallStatus === "valid") {
+          baseTemplate =
+            baseTemplate.substring(0, emojiIndex) +
+            validEmoji +
+            baseTemplate.substring(emojiIndex + 1);
+        } else if (overallStatus === "invalid") {
+          baseTemplate =
+            baseTemplate.substring(0, emojiIndex) +
+            invalidEmoji +
+            baseTemplate.substring(emojiIndex + 1);
+        }
+
+        consola.info("Removed CWL files from the database");
+      }
     }
   }
 
