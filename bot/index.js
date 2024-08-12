@@ -100,11 +100,7 @@ export default async (app, { getRouter }) => {
           repository.name,
         );
         const cwl = await getCWLFiles(context, owner, repository.name);
-        if (cwl.length > 0) {
-          consola.success("CWL files found in the repository");
-        } else {
-          consola.info("No CWL files found in the repository");
-        }
+
         const cwlObject = {
           contains_cwl: cwl.length > 0 || false,
           files: cwl,
@@ -126,6 +122,10 @@ export default async (app, { getRouter }) => {
           cwl: cwlObject,
           license,
         };
+
+        if (cwl.length > 0) {
+          consola.success("CWL files found in the repository");
+        }
 
         // Create issue body template
         const issueBody = await renderIssues(
@@ -272,12 +272,6 @@ export default async (app, { getRouter }) => {
       cwl = await getCWLFiles(context, owner, repository.name);
     }
 
-    if (cwl.length > 0) {
-      consola.success("CWL files found in the repository");
-    } else {
-      consola.info("No CWL files found in the repository");
-    }
-
     // Check if any of the commits added a LICENSE, CITATION, or codemeta file
     const gatheredCWLFiles = [];
     const removedCWLFiles = [];
@@ -352,6 +346,10 @@ export default async (app, { getRouter }) => {
 
         cwl.push(cwlFile.data);
       }
+    }
+
+    if (cwl.length > 0) {
+      consola.success("CWL files found in the repository");
     }
 
     const cwlObject = {
@@ -456,6 +454,10 @@ export default async (app, { getRouter }) => {
         cwlObject.contains_cwl = cwlExists.contains_cwl_files;
       }
 
+      if (cwl.length > 0) {
+        consola.success("CWL files found in the repository");
+      }
+
       const subjects = {
         citation,
         codemeta,
@@ -529,8 +531,6 @@ export default async (app, { getRouter }) => {
       const cwl = await getCWLFiles(context, owner, repository.name);
       if (cwl.length > 0) {
         consola.success("CWL files found in the repository");
-      } else {
-        consola.info("No CWL files found in the repository");
       }
 
       // Remove the section from the issue body starting from ## CWL Validations
@@ -630,9 +630,8 @@ export default async (app, { getRouter }) => {
 
       if (cwl.length > 0) {
         consola.success("CWL files found in the repository");
-      } else {
-        consola.info("No CWL files found in the repository");
       }
+
       const cwlObject = {
         contains_cwl: cwl.length > 0 || false,
         files: cwl,
