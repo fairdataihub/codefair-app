@@ -293,6 +293,7 @@ export async function applyCWLTemplate(
         owner,
         repo: repository.name,
         repositoryId: repository.id,
+        updated_at: newDate,
       });
     } else {
       // CWL files were found in the repository but no new ones to validate were found
@@ -333,6 +334,7 @@ export async function applyCWLTemplate(
         let validationMessageForPrivate = validationMessage;
 
         if (!isValidCWL && validOverall) {
+          // Sets to false as soon as one file is invalid
           validOverall = false;
         }
 
@@ -357,6 +359,16 @@ export async function applyCWLTemplate(
             : validationMessage,
           validation_status: isValidCWL ? "valid" : "invalid",
         });
+
+        // Apply the validation file count to the analytics collection on the db
+        const analyticsCollection = dbInstance.getDb().collection("analytics");
+        await analyticsCollection.updateOne(
+          { repositoryId: repository.id },
+          {
+            $inc: { "cwlValidation.validatedFileCount": 1 },
+          },
+          { upsert: true },
+        );
 
         tableContent += `| ${file.path} | ${isValidCWL ? "✔️" : "❌"} |\n`;
       }
@@ -383,7 +395,7 @@ export async function applyCWLTemplate(
         { repositoryId: repository.id },
         {
           $set: {
-            contains_cwl_files: newFiles.length > 0 ? true : false,
+            contains_cwl_files: newFiles.length > 0,
             files: newFiles,
             overall_status: validOverall ? "valid" : "invalid",
             updated_at: Date.now(),
@@ -425,7 +437,13 @@ export async function applyCWLTemplate(
 
       await cwlCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { files: newFiles } },
+        {
+          $set: {
+            contains_cwl_files: newFiles.length > 0,
+            files: newFiles,
+            updated_at: Date.now(),
+          },
+        },
       );
     }
   }
