@@ -105,6 +105,8 @@ export default defineEventHandler(async (event) => {
       repo: cwlValidationRequest.repo,
     });
   } catch (error: any) {
+    console.error("Failed to update issue body", error);
+
     if (error.message === "Validation already requested") {
       throw createError({
         statusCode: 400,

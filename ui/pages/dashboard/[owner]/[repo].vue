@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { generate } from "random-words";
 const route = useRoute();
 
 const { owner, repo } = route.params as { owner: string; repo: string };
@@ -25,15 +24,6 @@ if (error.value) {
     throw createError(error.value);
   }
 }
-
-const generateSeed = (seed: string) => {
-  return generate({
-    join: "-",
-    max: 3,
-    min: 3,
-    seed,
-  });
-};
 
 const rerunCwlValidation = async () => {
   cwlValidationRerunRequestLoading.value = true;
