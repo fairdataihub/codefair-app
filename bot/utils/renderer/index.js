@@ -306,6 +306,7 @@ export async function applyCWLTemplate(
   if (subjects.cwl.files.length === 0) {
     let overallStatus = "";
     let tableContent = "";
+    let failedCount = 0;
     if (!existingCWL) {
       // Entry does not exist in the db, create a new one
       // No CWL files found in the repository
@@ -321,6 +322,7 @@ export async function applyCWLTemplate(
         repositoryId: repository.id,
         updated_at: newDate,
       });
+      // No CWL files found in the repository, return the base template without appending anything
     } else {
       // CWL files were found in the repository but no new ones to validate were found
       // Get the identifier of the existing cwl request
@@ -332,11 +334,14 @@ export async function applyCWLTemplate(
       overallStatus = existingCWL.overall_status;
 
       for (const file of existingCWL.files) {
+        if (file.validation_status === "invalid") {
+          failedCount += 1;
+        }
         tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "✔️" : "❌"} |\n`;
       }
     }
 
-    if (!subjects.cwl.contains_cwl) {
+    if (!subjects.cwl.contains_cwl || !existingCWL?.files.length > 0) {
       // NO CWL files found in the repository, return the base template without appending anything
       consola.info("No CWL files in repo, not applying CWL template");
       return baseTemplate;
@@ -346,7 +351,7 @@ export async function applyCWLTemplate(
 
     // No new CWL files were found in the repository but some were validated already
     const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
-    baseTemplate += `${overallSection}\n\n### CWL Validations ${validOverall ? "✔️" : "❗"}\n\nCodefair has detected that you are following the Common Workflow Language (CWL) standard to describe your command line tool. Codefair ran the [cwltool validator](https://cwltool.readthedocs.io/en/latest/) and ${validOverall ? `all ***${subjects.cwl.files.length}*** CWL file(s) in your repository are valid.` : `***${failedCount}/${subjects.cwl.files.length}*** CWL file(s) in your repository are not valid.`}\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Validation result |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
+    baseTemplate += `${overallSection}\n\n### CWL Validations ${validOverall ? "✔️" : "❗"}\n\nCodefair has detected that you are following the Common Workflow Language (CWL) standard to describe your command line tool. Codefair ran the [cwltool validator](https://cwltool.readthedocs.io/en/latest/) and ${validOverall ? `all ***${existingCWL.files.length}*** CWL file(s) in your repository are valid.` : `***${failedCount}/${existingCWL.files.length}*** CWL file(s) in your repository are not valid.`}\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Validation result |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
   } else {
     const cwlFiles = [];
     let validOverall = true;
