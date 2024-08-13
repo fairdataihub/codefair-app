@@ -278,6 +278,7 @@ export async function applyCWLTemplate(
   });
   const overallSection = `\n\n## Language Specific Standards\n\nTo make your software FAIR is it important to follow language specific standards and best practices, as recommended in the [FAIR-BioRS guidelines](https://fair-biors.org/). Codefair will check below that your code complies with applicable standards,`;
 
+  // Delete file entries from db if they were removed from the repository
   if (subjects.cwl.removed_files.length > 0) {
     // Remove the files from the database
     const existingCWL = await cwlCollection.findOne({
@@ -302,181 +303,148 @@ export async function applyCWLTemplate(
     }
   }
 
-  // If no CWL files are found in the list of files
-  if (subjects.cwl.files.length === 0) {
-    let overallStatus = "";
-    let tableContent = "";
-    let failedCount = 0;
-    if (!existingCWL) {
-      // Entry does not exist in the db, create a new one
-      // No CWL files found in the repository
-      const newDate = Date.now();
-      await cwlCollection.insertOne({
-        contains_cwl_files: subjects.cwl.contains_cwl,
-        created_at: newDate,
-        files: [],
-        identifier,
-        overall_status: overallStatus,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
-      });
-      // No CWL files found in the repository, return the base template without appending anything
-    } else {
-      // CWL files were found in the repository but no new ones to validate were found
-      // Get the identifier of the existing cwl request
-      await cwlCollection.updateOne(
-        { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
+  // New/Modified CWL files were found
+  consola.start("Validating new/modified CWL files for", repository.name);
+  const cwlFiles = [];
+  let validOverall = true;
+  let tableContent = "";
+  let failedCount = 0;
+
+  // Validate each CWL file from list
+  consola.info("Amount of files to validate:", subjects.cwl.files.length);
+  for (const file of subjects.cwl.files) {
+    consola.info(`Validating file: ${file}`);
+    const fileSplit = file.name.split(".");
+    if (fileSplit.includes("cwl")) {
+      const [isValidCWL, validationMessage] = await validateCWLFile(
+        file.download_url,
       );
+      consola.info(`File: ${file.path} is ${isValidCWL ? "valid" : "invalid"}`);
 
-      overallStatus = existingCWL.overall_status;
+      let validationMessageForPrivate = validationMessage;
 
-      for (const file of existingCWL.files) {
-        if (file.validation_status === "invalid") {
-          failedCount += 1;
-        }
-        tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "✔️" : "❌"} |\n`;
+      if (!isValidCWL && validOverall) {
+        // Sets to false as soon as one file is invalid
+        validOverall = false;
       }
-    }
 
-    if (!subjects.cwl.contains_cwl || !existingCWL?.files.length > 0) {
-      // NO CWL files found in the repository, return the base template without appending anything
-      consola.info("No CWL files in repo, not applying CWL template");
-      return baseTemplate;
-    }
-
-    const validOverall = overallStatus === "valid";
-
-    // No new CWL files were found in the repository but some were validated already
-    const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
-    baseTemplate += `${overallSection}\n\n### CWL Validations ${validOverall ? "✔️" : "❗"}\n\nCodefair has detected that you are following the Common Workflow Language (CWL) standard to describe your command line tool. Codefair ran the [cwltool validator](https://cwltool.readthedocs.io/en/latest/) and ${validOverall ? `all ***${existingCWL.files.length}*** CWL file(s) in your repository are valid.` : `***${failedCount}/${existingCWL.files.length}*** CWL file(s) in your repository are not valid.`}\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Validation result |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
-  } else {
-    const cwlFiles = [];
-    let validOverall = true;
-    let tableContent = "";
-    let failedCount = 0;
-    // Iterate through the list of files initially gathered
-    consola.start("Validating new CWL files for", repository.name);
-    for (const file of subjects.cwl.files) {
-      const fileSplit = file.name.split(".");
-      if (fileSplit.includes("cwl")) {
-        const [isValidCWL, validationMessage] = await validateCWLFile(
-          file.download_url,
-        );
-        consola.info(
-          `File: ${file.path} is ${isValidCWL ? "valid" : "invalid"}`,
-        );
-
-        let validationMessageForPrivate = validationMessage;
-
-        if (!isValidCWL && validOverall) {
-          // Sets to false as soon as one file is invalid
-          validOverall = false;
-        }
-
-        if (!isValidCWL) {
-          failedCount += 1;
-        }
-
-        if (privateRepo) {
-          consola.warn("Private repo, removing token from validation message");
-          validationMessageForPrivate =
-            removeTokenFromUrlInString(validationMessage);
-        }
-
-        const newDate = Date.now();
-        cwlFiles.push({
-          href: file.html_url,
-          last_modified: newDate,
-          last_validated: newDate,
-          path: file.path,
-          validation_message: privateRepo
-            ? validationMessageForPrivate
-            : validationMessage,
-          validation_status: isValidCWL ? "valid" : "invalid",
-        });
-
-        // Apply the validation file count to the analytics collection on the db
-        const analyticsCollection = dbInstance.getDb().collection("analytics");
-        await analyticsCollection.updateOne(
-          { repositoryId: repository.id },
-          {
-            $inc: { "cwlValidation.validatedFileCount": 1 },
-          },
-          { upsert: true },
-        );
-
-        tableContent += `| ${file.path} | ${isValidCWL ? "✔️" : "❌"} |\n`;
+      if (!isValidCWL) {
+        failedCount += 1;
       }
-    }
-    url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${identifier}`;
-    if (!existingCWL) {
-      // Entry does not exist in the db, create a new one (no old files exist, first time seeing cwl files)
+
+      if (privateRepo) {
+        consola.warn("Private repo, removing token from validation message");
+        validationMessageForPrivate =
+          removeTokenFromUrlInString(validationMessage);
+      }
+
       const newDate = Date.now();
-      await cwlCollection.insertOne({
-        contains_cwl_files: subjects.cwl.contains_cwl,
-        created_at: newDate,
-        files: cwlFiles,
-        identifier,
-        overall_status: validOverall ? "valid" : "invalid",
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
-      });
-    } else {
-      // An entry exists in the db, thus possible old files exist (merge both lists)
-      const fileMap = new Map();
-
-      // Add existing files to the map
-      existingCWL.files.forEach((file) => {
-        fileMap.set(file.path, file);
+      cwlFiles.push({
+        href: file.html_url,
+        last_modified: newDate,
+        last_validated: newDate,
+        path: file.path,
+        validation_message: privateRepo
+          ? validationMessageForPrivate
+          : validationMessage,
+        validation_status: isValidCWL ? "valid" : "invalid",
       });
 
-      // Add new files to the map, replacing any existing entries with the same path
-      cwlFiles.forEach((file) => {
-        fileMap.set(file.path, file);
-      });
-
-      // Convert the map back to an array
-      const newFiles = Array.from(fileMap.values());
-
-      await cwlCollection.updateOne(
+      // Apply the validation file count to the analytics collection on the db
+      const analyticsCollection = dbInstance.getDb().collection("analytics");
+      await analyticsCollection.updateOne(
         { repositoryId: repository.id },
         {
-          $set: {
-            contains_cwl_files: newFiles.length > 0,
-            files: [...newFiles],
-            overall_status: validOverall ? "valid" : "invalid",
-            updated_at: Date.now(),
-          },
+          $inc: { "cwlValidation.validatedFileCount": 1 },
         },
+        { upsert: true },
       );
-      url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${existingCWL.identifier}`;
 
+      tableContent += `| ${file.path} | ${isValidCWL ? "✔️" : "❌"} |\n`;
+    }
+  }
+
+  url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${identifier}`;
+  if (!existingCWL) {
+    // Entry does not exist in the db, create a new one (no old files exist, first time seeing cwl files)
+    const newDate = Date.now();
+    await cwlCollection.insertOne({
+      contains_cwl_files: subjects.cwl.contains_cwl,
+      created_at: newDate,
+      files: cwlFiles,
+      identifier,
+      overall_status: validOverall ? "valid" : "invalid",
+      owner,
+      repo: repository.name,
+      repositoryId: repository.id,
+      updated_at: newDate,
+    });
+
+    if (!cwlFiles.length > 0) {
+      consola.warn(
+        "No CWL files found in the repository, skipping CWL section",
+      );
+      return baseTemplate;
+    }
+  } else {
+    // An entry exists in the db, thus possible old files exist (merge both lists)
+    const fileMap = new Map();
+    url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${existingCWL.identifier}`;
+    validOverall = existingCWL.overall_status === "valid";
+
+    // Add existing files to the map
+    existingCWL.files.forEach((file) => {
+      if (file.validation_status === "invalid" && validOverall) {
+        validOverall = false;
+      }
+      fileMap.set(file.path, file);
+    });
+
+    // Add new files to the map, replacing any existing entries with the same path
+    cwlFiles.forEach((file) => {
+      if (file.validation_status === "invalid" && validOverall) {
+        validOverall = false;
+      }
+      fileMap.set(file.path, file);
+    });
+
+    // Convert the map back to an array
+    const newFiles = Array.from(fileMap.values());
+
+    await cwlCollection.updateOne(
+      { repositoryId: repository.id },
+      {
+        $set: {
+          contains_cwl_files: newFiles.length > 0,
+          files: [...newFiles],
+          overall_status: validOverall ? "valid" : "invalid",
+          updated_at: Date.now(),
+        },
+      },
+    );
+
+    if (!newFiles.length > 0) {
+      consola.warn(
+        "No CWL files found in the repository, skipping CWL section",
+      );
+      return baseTemplate;
+    } else {
+      // Recreate the table content to include the new and old cwl files
       tableContent = "";
       failedCount = 0;
-      for (const file of newFiles) {
-        tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "✔️" : "❌"} |\n`;
-        subjects.cwl.files.push(file);
-
+      newFiles.forEach((file) => {
         if (file.validation_status === "invalid") {
           failedCount += 1;
         }
-
-        if (file.validation_status === "invalid" && validOverall) {
-          validOverall = false;
-        }
-      }
-
-      subjects.cwl.files = newFiles;
+        tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "✔️" : "❌"} |\n`;
+      });
     }
 
-    const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
-    baseTemplate += `${overallSection}\n\n### CWL Validations ${validOverall ? "✔️" : "❗"}\n\nCodefair has detected that you are following the Common Workflow Language (CWL) standard to describe your command line tool. Codefair ran the [cwltool validator](https://cwltool.readthedocs.io/en/latest/) and ${validOverall ? `all ***${subjects.cwl.files.length}*** CWL file(s) in your repository are valid.` : `***${failedCount}/${subjects.cwl.files.length}*** CWL file(s) in your repository are not valid.`}\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Validation result |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
+    subjects.cwl.files = newFiles; // okay to replace at this stage, used to just get the length of the files in db now
   }
+
+  const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
+  baseTemplate += `${overallSection}\n\n### CWL Validations ${validOverall ? "✔️" : "❗"}\n\nCodefair has detected that you are following the Common Workflow Language (CWL) standard to describe your command line tool. Codefair ran the [cwltool validator](https://cwltool.readthedocs.io/en/latest/) and ${validOverall ? `all ***${subjects.cwl.files.length}*** CWL file(s) in your repository are valid.` : `***${failedCount}/${subjects.cwl.files.length}*** CWL file(s) in your repository are not valid.`}\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Validation result |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
 
   return baseTemplate;
 }
