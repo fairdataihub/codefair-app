@@ -1,5 +1,4 @@
 import type { User } from "lucia";
-import { consola } from "consola/basic";
 
 const repoWritePermissions = async (
   event: any,
@@ -36,7 +35,7 @@ const repoWritePermissions = async (
     }
 
     if (permissions.status === 403) {
-      consola.error(
+      console.error(
         `User ${user.username} does not have access to the repository ${owner}/${repo}`,
       );
 
