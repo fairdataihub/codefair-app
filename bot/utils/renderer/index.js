@@ -29,6 +29,56 @@ function removeTokenFromUrlInString(inputString) {
 }
 
 /**
+ * * Removes the token from the URL in the validation message
+ * @param {String} inputString - The string to remove the token from
+ * @returns {String} - The string with the token removed
+ */
+function removeTimestampFromUrlInString(inputString) {
+  // Regex to find the GitHub raw URL with an optional token
+  const urlRegex =
+    /https:\/\/raw\.githubusercontent\.com\/[^\s:]+(\?token=[^:\s]+)?/g;
+
+  // Replace each found URL in the string after removing the token
+  return inputString.replace(urlRegex, (url) => {
+    return url.replace(/\?timestamp=[^:]+/, "");
+  });
+}
+
+/**
+ * * Replaces the raw GitHub URL in the string with another URL
+ * @param {String} inputString - The string to process
+ * @param {String} newUrl - The new URL to replace the raw GitHub URL with
+ * @returns {String} - The string with the raw GitHub URL replaced
+ */
+function replaceRawGithubUrl(inputString, oldUrl, newUrl) {
+  console.log("Old URL:", oldUrl);
+  console.log("New URL:", newUrl);
+
+  // Regex to find the oldUrl with optional line numbers in the format :line:column
+  const urlRegex = new RegExp(
+    `(${oldUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})(:\\d+:\\d+)?`,
+    "g",
+  );
+
+  let firstLineNumber = null;
+  let secondLineNumber = null;
+
+  // Replace each found URL in the string with newUrl
+  const modifiedString = inputString.replace(urlRegex, (match, p1, p2) => {
+    if (p2) {
+      const lineNumbers = p2.split(":");
+      if (!firstLineNumber) {
+        firstLineNumber = lineNumbers[1];
+        secondLineNumber = lineNumbers[2];
+      }
+    }
+    return p2 ? `${newUrl}${p2}` : newUrl;
+  });
+
+  return [modifiedString, firstLineNumber, secondLineNumber];
+}
+
+/**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
  *
  * @param {object} subjects - The subjects to check for
@@ -270,13 +320,10 @@ export async function applyCWLTemplate(
   context,
 ) {
   const privateRepo = await isRepoPrivate(context, owner, repository.name);
-  let url = `${CODEFAIR_DOMAIN}/view/cwl-validation/`;
-  const identifier = createId();
   const cwlCollection = dbInstance.getDb().collection("cwlValidation");
-  const existingCWL = await cwlCollection.findOne({
-    repositoryId: repository.id,
-  });
+  const identifier = createId();
   const overallSection = `\n\n## Language Specific Standards\n\nTo make your software FAIR is it important to follow language specific standards and best practices, as recommended in the [FAIR-BioRS guidelines](https://fair-biors.org/). Codefair will check below that your code complies with applicable standards,`;
+  let url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${identifier}`;
 
   // Delete file entries from db if they were removed from the repository
   if (subjects.cwl.removed_files.length > 0) {
@@ -290,13 +337,17 @@ export async function applyCWLTemplate(
         return !subjects.cwl.removed_files.includes(file.path);
       });
 
+      consola.info("Removed files:", subjects.cwl.removed_files);
+      consola.info("New files:", newFiles);
+
+      const newDate = Date.now();
       await cwlCollection.updateOne(
         { repositoryId: repository.id },
         {
           $set: {
             contains_cwl_files: newFiles.length > 0,
             files: newFiles,
-            updated_at: Date.now(),
+            updated_at: newDate,
           },
         },
       );
@@ -309,20 +360,28 @@ export async function applyCWLTemplate(
   let validOverall = true;
   let tableContent = "";
   let failedCount = 0;
+  const existingCWL = await cwlCollection.findOne({
+    repositoryId: repository.id,
+  });
 
   // Validate each CWL file from list
   consola.info("Amount of files to validate:", subjects.cwl.files.length);
   for (const file of subjects.cwl.files) {
-    consola.info(`Validating file: ${file}`);
     const fileSplit = file.name.split(".");
+    let modifiedValidationMessage = "";
+    let lineNumber1 = null;
+    let lineNumber2 = null;
+
     if (fileSplit.includes("cwl")) {
-      const [isValidCWL, validationMessage] = await validateCWLFile(
-        file.download_url,
-      );
+      const downloadUrl =
+        file?.commitId && !privateRepo
+          ? file.download_url.replace("/main/", `/${file.commitId}/`)
+          : file.download_url;
+
+      const [isValidCWL, validationMessage] =
+        await validateCWLFile(downloadUrl);
+
       consola.info(`File: ${file.path} is ${isValidCWL ? "valid" : "invalid"}`);
-
-      let validationMessageForPrivate = validationMessage;
-
       if (!isValidCWL && validOverall) {
         // Sets to false as soon as one file is invalid
         validOverall = false;
@@ -332,11 +391,16 @@ export async function applyCWLTemplate(
         failedCount += 1;
       }
 
-      if (privateRepo) {
-        consola.warn("Private repo, removing token from validation message");
-        validationMessageForPrivate =
-          removeTokenFromUrlInString(validationMessage);
+      [modifiedValidationMessage, lineNumber1, lineNumber2] =
+        replaceRawGithubUrl(validationMessage, downloadUrl, file.html_url);
+
+      if (lineNumber1) {
+        file.html_url += `#L${lineNumber1}`;
+        if (lineNumber2) {
+          file.html_url += `-L${lineNumber2}`;
+        }
       }
+      consola.warn(file.html_url);
 
       const newDate = Date.now();
       cwlFiles.push({
@@ -344,9 +408,7 @@ export async function applyCWLTemplate(
         last_modified: newDate,
         last_validated: newDate,
         path: file.path,
-        validation_message: privateRepo
-          ? validationMessageForPrivate
-          : validationMessage,
+        validation_message: modifiedValidationMessage,
         validation_status: isValidCWL ? "valid" : "invalid",
       });
 
@@ -364,7 +426,6 @@ export async function applyCWLTemplate(
     }
   }
 
-  url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${identifier}`;
   if (!existingCWL) {
     // Entry does not exist in the db, create a new one (no old files exist, first time seeing cwl files)
     const newDate = Date.now();
@@ -390,26 +451,26 @@ export async function applyCWLTemplate(
     // An entry exists in the db, thus possible old files exist (merge both lists)
     const fileMap = new Map();
     url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${existingCWL.identifier}`;
-    validOverall = existingCWL.overall_status === "valid";
+    validOverall = true;
 
     // Add existing files to the map
     existingCWL.files.forEach((file) => {
-      if (file.validation_status === "invalid" && validOverall) {
-        validOverall = false;
-      }
       fileMap.set(file.path, file);
     });
-
     // Add new files to the map, replacing any existing entries with the same path
     cwlFiles.forEach((file) => {
-      if (file.validation_status === "invalid" && validOverall) {
-        validOverall = false;
-      }
       fileMap.set(file.path, file);
     });
 
     // Convert the map back to an array
     const newFiles = Array.from(fileMap.values());
+
+    for (const file of newFiles) {
+      if (file.overall_status === "invalid") {
+        validOverall = false;
+        break;
+      }
+    }
 
     await cwlCollection.updateOne(
       { repositoryId: repository.id },
@@ -436,6 +497,11 @@ export async function applyCWLTemplate(
         if (file.validation_status === "invalid") {
           failedCount += 1;
         }
+
+        if (file.validation_status === "invalid" && validOverall) {
+          validOverall = false;
+        }
+
         tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "✔️" : "❌"} |\n`;
       });
     }

@@ -234,13 +234,16 @@ export default async (app, { getRouter }) => {
       );
 
       if (installation?.action && installation?.action_count > 0) {
-        consola.info("Action limit count down:", installation.action_count);
+        consola.warn(
+          "Action limit count down:",
+          installation.action_count,
+          "for",
+          repository.name,
+        );
         installationCollection.updateOne(
           { repositoryId: repository.id },
           { $set: { action_count: installation.action_count - 1 } },
         );
-
-        consola.info("SHOULD NOT RUN", installation.action_count);
 
         return;
       }
@@ -275,6 +278,7 @@ export default async (app, { getRouter }) => {
     // Check if any of the commits added a LICENSE, CITATION, or codemeta file
     const gatheredCWLFiles = [];
     const removedCWLFiles = [];
+    const commitIds = [];
     if (commits.length > 0) {
       for (let i = 0; i < commits.length; i++) {
         if (commits[i]?.added?.length > 0) {
@@ -294,6 +298,7 @@ export default async (app, { getRouter }) => {
             }
             const fileSplit = commits[i].added[j].split(".");
             if (fileSplit.includes("cwl")) {
+              commitIds.push(commits[i].id);
               gatheredCWLFiles.push(commits[i].added[j]);
               continue;
             }
@@ -304,6 +309,7 @@ export default async (app, { getRouter }) => {
           for (let j = 0; j < commits[i]?.modified.length; j++) {
             const fileSplit = commits[i]?.modified[j].split(".");
             if (fileSplit.includes("cwl")) {
+              commitIds.push(commits[i].id);
               gatheredCWLFiles.push(commits[i].modified[j]);
               continue;
             }
@@ -344,6 +350,12 @@ export default async (app, { getRouter }) => {
           repo: repository.name,
         });
 
+        // print the file content from base64
+        const content = Buffer.from(cwlFile.data.content, "base64").toString(
+          "utf-8",
+        );
+        consola.warn("CWL File Content:", content);
+        cwlFile.data.commitId = commitIds[i];
         cwl.push(cwlFile.data);
       }
     }
@@ -365,6 +377,7 @@ export default async (app, { getRouter }) => {
     if (cwlExists) {
       cwlObject.contains_cwl = cwlExists.contains_cwl_files;
     }
+    consola.warn("CWL Object:", cwlObject);
 
     const subjects = {
       citation,
