@@ -353,11 +353,15 @@ export async function applyCWLTemplate(
     let tableContent = "";
     let failedCount = 0;
     // Iterate through the list of files initially gathered
+    consola.start("Validating new CWL files for", repository.name);
     for (const file of subjects.cwl.files) {
       const fileSplit = file.name.split(".");
       if (fileSplit.includes("cwl")) {
         const [isValidCWL, validationMessage] = await validateCWLFile(
           file.download_url,
+        );
+        consola.info(
+          `File: ${file.path} is ${isValidCWL ? "valid" : "invalid"}`,
         );
 
         let validationMessageForPrivate = validationMessage;
@@ -372,7 +376,7 @@ export async function applyCWLTemplate(
         }
 
         if (privateRepo) {
-          consola.info("Private repo, removing token from validation message");
+          consola.warn("Private repo, removing token from validation message");
           validationMessageForPrivate =
             removeTokenFromUrlInString(validationMessage);
         }
@@ -419,21 +423,27 @@ export async function applyCWLTemplate(
       });
     } else {
       // An entry exists in the db, thus possible old files exist (merge both lists)
-      const newFiles = [
-        ...existingCWL.files,
-        ...cwlFiles.filter(
-          (file) =>
-            !existingCWL.files.some(
-              (existingFile) => existingFile.path === file.path,
-            ),
-        ),
-      ];
+      const fileMap = new Map();
+
+      // Add existing files to the map
+      existingCWL.files.forEach((file) => {
+        fileMap.set(file.path, file);
+      });
+
+      // Add new files to the map, replacing any existing entries with the same path
+      cwlFiles.forEach((file) => {
+        fileMap.set(file.path, file);
+      });
+
+      // Convert the map back to an array
+      const newFiles = Array.from(fileMap.values());
+
       await cwlCollection.updateOne(
         { repositoryId: repository.id },
         {
           $set: {
             contains_cwl_files: newFiles.length > 0,
-            files: newFiles,
+            files: [...newFiles],
             overall_status: validOverall ? "valid" : "invalid",
             updated_at: Date.now(),
           },
