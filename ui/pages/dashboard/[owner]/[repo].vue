@@ -159,6 +159,8 @@ const rerunCwlValidation = async () => {
 
       <n-divider />
 
+      <h2 class="pb-6">Language Specific Standards</h2>
+
       <CardDashboard
         title="CWL Validation"
         subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them to create workflows."
@@ -171,7 +173,7 @@ const rerunCwlValidation = async () => {
           <n-alert
             v-if="!data?.cwlValidation || !data.cwlValidation.containsCWL"
             type="info"
-            class="my-5"
+            class="w-full"
           >
             There are no CWL files in this repository.
           </n-alert>
