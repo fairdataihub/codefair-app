@@ -109,6 +109,9 @@ export async function applyMetadataTemplate(
       const newDate = Date.now();
       const gatheredMetadata = await gatherMetadata(context, owner, repository);
       await metadataCollection.insertOne({
+        contains_citation: subjects.citation,
+        contains_codemeta: subjects.codemeta,
+        contains_metadata: subjects.codemeta && subjects.citation,
         created_at: newDate,
         identifier,
         metadata: gatheredMetadata,
@@ -122,7 +125,14 @@ export async function applyMetadataTemplate(
       // Get the identifier of the existing metadata request
       await metadataCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
+        {
+          $set: {
+            contains_citation: subjects.citation,
+            contains_codemeta: subjects.codemeta,
+            contains_metadata: subjects.codemeta && subjects.citation,
+            updated_at: Date.now(),
+          },
+        },
       );
 
       url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
@@ -162,6 +172,9 @@ export async function applyMetadataTemplate(
       const newDate = Date.now();
       // const gatheredMetadata = await gatherMetadata(context, owner, repository);
       await metadataCollection.insertOne({
+        contains_citation: subjects.citation,
+        contains_codemeta: subjects.codemeta,
+        contains_metadata: subjects.codemeta && subjects.citation,
         created_at: newDate,
         identifier,
         metadata,
@@ -175,7 +188,15 @@ export async function applyMetadataTemplate(
       // Get the identifier of the existing metadata request
       await metadataCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { metadata, updated_at: Date.now() } },
+        {
+          $set: {
+            contains_citation: subjects.citation,
+            contains_codemeta: subjects.codemeta,
+            contains_metadata: subjects.codemeta && subjects.citation,
+            metadata,
+            updated_at: Date.now(),
+          },
+        },
       );
 
       url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
@@ -222,6 +243,7 @@ export async function applyLicenseTemplate(
       // Entry does not exist in db, create a new one
       const newDate = Date.now();
       await licenseCollection.insertOne({
+        contains_license_file: false,
         created_at: newDate,
         identifier,
         open: true,
@@ -235,7 +257,7 @@ export async function applyLicenseTemplate(
       // Update the database
       await licenseCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
+        { $set: { contains_license_file: true, updated_at: Date.now() } },
       );
       url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     }
@@ -274,6 +296,7 @@ export async function applyLicenseTemplate(
       // Entry does not exist in db, create a new one
       const newDate = Date.now();
       await licenseCollection.insertOne({
+        contains_license_file: true,
         created_at: newDate,
         identifier,
         licenseContent,
@@ -289,7 +312,14 @@ export async function applyLicenseTemplate(
       // Update the database
       await licenseCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { licenseContent, licenseId, updated_at: Date.now() } },
+        {
+          $set: {
+            contains_license_file: false,
+            licenseContent,
+            licenseId,
+            updated_at: Date.now(),
+          },
+        },
       );
       url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     }
