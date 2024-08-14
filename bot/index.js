@@ -295,7 +295,10 @@ export default async (app, { getRouter }) => {
             const fileSplit = commits[i].added[j].split(".");
             if (fileSplit.includes("cwl")) {
               commitIds.push(commits[i].id);
-              gatheredCWLFiles.push(commits[i].added[j]);
+              gatheredCWLFiles.push({
+                commitId: commits[i].id,
+                filePath: commits[i].added[j],
+              });
               continue;
             }
           }
@@ -306,7 +309,10 @@ export default async (app, { getRouter }) => {
             const fileSplit = commits[i]?.modified[j].split(".");
             if (fileSplit.includes("cwl")) {
               commitIds.push(commits[i].id);
-              gatheredCWLFiles.push(commits[i].modified[j]);
+              gatheredCWLFiles.push({
+                commitId: commits[i].id,
+                filePath: commits[i].modified[j],
+              });
               continue;
             }
           }
@@ -339,14 +345,14 @@ export default async (app, { getRouter }) => {
 
     if (gatheredCWLFiles.length > 0) {
       // Begin requesting the file metadata for each file name
-      for (let i = 0; i < gatheredCWLFiles.length; i++) {
+      for (const file of gatheredCWLFiles) {
         const cwlFile = await context.octokit.repos.getContent({
           owner,
-          path: gatheredCWLFiles[i],
+          path: file.filePath,
           repo: repository.name,
         });
 
-        cwlFile.data.commitId = commitIds[i];
+        cwlFile.data.commitId = file.commitId;
         cwl.push(cwlFile.data);
       }
     }
@@ -361,6 +367,7 @@ export default async (app, { getRouter }) => {
       repositoryId: repository.id,
     });
 
+    // Does the repository already contain CWL files
     if (cwlExists) {
       cwlObject.contains_cwl = cwlExists.contains_cwl_files;
     }

@@ -51,9 +51,6 @@ function removeTimestampFromUrlInString(inputString) {
  * @returns {String} - The string with the raw GitHub URL replaced
  */
 function replaceRawGithubUrl(inputString, oldUrl, newUrl) {
-  console.log("Old URL:", oldUrl);
-  console.log("New URL:", newUrl);
-
   // Regex to find the oldUrl with optional line numbers in the format :line:column
   const urlRegex = new RegExp(
     `(${oldUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})(:\\d+:\\d+)?`,
@@ -349,8 +346,6 @@ export async function applyCWLTemplate(
         },
       );
     }
-  } else {
-    consola.warn("No new/modified CWL files were removed from the repository");
   }
 
   // New/Modified CWL files were found
@@ -363,25 +358,32 @@ export async function applyCWLTemplate(
     repositoryId: repository.id,
   });
 
+  if (subjects.cwl.files.length > 0) {
+    consola.start(
+      `CWL files found in repository, ${repository.name}, validating them...`,
+    );
+  } else {
+    consola.warn(
+      `No new/modified CWL files found in the repository, ${repository.name}`,
+    );
+  }
+
   // Validate each CWL file from list
   for (const file of subjects.cwl.files) {
     const fileSplit = file.name.split(".");
-    let modifiedValidationMessage = "";
-    let lineNumber1 = null;
-    let lineNumber2 = null;
 
     if (fileSplit.includes("cwl")) {
       const downloadUrl =
         file?.commitId && !privateRepo
           ? file.download_url.replace("/main/", `/${file.commitId}/`)
-          : file.download_url;
+          : file.download_url; // Replace the branch with the commit id if commit id is available and the repo is public
 
       const [isValidCWL, validationMessage] =
         await validateCWLFile(downloadUrl);
 
       consola.info(`File: ${file.path} is ${isValidCWL ? "valid" : "invalid"}`);
       if (!isValidCWL && validOverall) {
-        // Sets to false as soon as one file is invalid
+        // Overall status of CWL validations is invalid
         validOverall = false;
       }
 
@@ -389,9 +391,10 @@ export async function applyCWLTemplate(
         failedCount += 1;
       }
 
-      [modifiedValidationMessage, lineNumber1, lineNumber2] =
+      const [modifiedValidationMessage, lineNumber1, lineNumber2] =
         replaceRawGithubUrl(validationMessage, downloadUrl, file.html_url);
 
+      // Add the line numbers to the URL if they exist
       if (lineNumber1) {
         file.html_url += `#L${lineNumber1}`;
         if (lineNumber2) {
@@ -399,6 +402,7 @@ export async function applyCWLTemplate(
         }
       }
 
+      // Create a new object for the file entry to be added to the db
       const newDate = Date.now();
       cwlFiles.push({
         href: file.html_url,
@@ -419,12 +423,13 @@ export async function applyCWLTemplate(
         { upsert: true },
       );
 
+      // Add the file to the table content of the issue dashboard
       tableContent += `| ${file.path} | ${isValidCWL ? "✔️" : "❌"} |\n`;
     }
   }
 
+  // Entry does not exist in the db, create a new one (no old files exist, first time seeing cwl files)
   if (!existingCWL) {
-    // Entry does not exist in the db, create a new one (no old files exist, first time seeing cwl files)
     const newDate = Date.now();
     await cwlCollection.insertOne({
       contains_cwl_files: subjects.cwl.contains_cwl,
@@ -440,15 +445,15 @@ export async function applyCWLTemplate(
 
     if (!cwlFiles.length > 0) {
       consola.warn(
-        "No CWL files found in the repository, skipping CWL section",
+        `No CWL files found in the repository, ${repository.name}, skipping CWL section`,
       );
       return baseTemplate;
     }
   } else {
     // An entry exists in the db, thus possible old files exist (merge both lists)
-    const fileMap = new Map();
     url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${existingCWL.identifier}`;
     validOverall = true;
+    const fileMap = new Map();
 
     // Add existing files to the map
     existingCWL.files.forEach((file) => {
@@ -462,6 +467,7 @@ export async function applyCWLTemplate(
     // Convert the map back to an array
     const newFiles = Array.from(fileMap.values());
 
+    // Check if the overall status is still valid
     for (const file of newFiles) {
       if (file.overall_status === "invalid") {
         validOverall = false;
@@ -482,12 +488,18 @@ export async function applyCWLTemplate(
     );
 
     if (!newFiles.length > 0) {
+      // All CWL files were removed from the repository
       consola.warn(
-        "No CWL files found in the repository, skipping CWL section",
+        "All CWL files were removed from:",
+        existingCWL.repo,
+        "skipping CWL section",
       );
       return baseTemplate;
     } else {
       // Recreate the table content to include the new and old cwl files
+      consola.info(
+        "Recreating the table content for the CWL section to include new and old files",
+      );
       tableContent = "";
       failedCount = 0;
       newFiles.forEach((file) => {
@@ -503,12 +515,13 @@ export async function applyCWLTemplate(
       });
     }
 
-    subjects.cwl.files = newFiles; // okay to replace at this stage, used to just get the length of the files in db now
+    subjects.cwl.files = newFiles; // okay to replace at this stage, used to just get the length of the new and old files for the dashboard
   }
 
   const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
   baseTemplate += `${overallSection}\n\n### CWL Validations ${validOverall ? "✔️" : "❗"}\n\nCodefair has detected that you are following the Common Workflow Language (CWL) standard to describe your command line tool. Codefair ran the [cwltool validator](https://cwltool.readthedocs.io/en/latest/) and ${validOverall ? `all ***${subjects.cwl.files.length}*** CWL file(s) in your repository are valid.` : `***${failedCount}/${subjects.cwl.files.length}*** CWL file(s) in your repository are not valid.`}\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Validation result |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
 
+  consola.success("CWL template section applied");
   return baseTemplate;
 }
 
