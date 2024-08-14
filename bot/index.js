@@ -1,11 +1,7 @@
 // import { MongoClient } from "mongodb";
 import * as express from "express";
 import { consola } from "consola";
-import {
-  renderIssues,
-  createIssue,
-  applyCWLTemplate,
-} from "./utils/renderer/index.js";
+import { renderIssues, createIssue } from "./utils/renderer/index.js";
 import dbInstance from "./db.js";
 import {
   checkEnvVariable,
@@ -17,7 +13,7 @@ import {
 import { checkForLicense } from "./utils/license/index.js";
 import { checkForCitation } from "./utils/citation/index.js";
 import { checkForCodeMeta } from "./utils/codemeta/index.js";
-import { getCWLFiles } from "./utils/cwl/index.js";
+import { getCWLFiles, applyCWLTemplate } from "./utils/cwl/index.js";
 
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
