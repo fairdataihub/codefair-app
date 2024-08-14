@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
 
   const user = event.context.user as User;
 
-  const ownerIsOrganization = false;
+  let ownerIsOrganization = false;
 
   if (user.username !== owner) {
     // Get the owner profile
@@ -39,11 +39,9 @@ export default defineEventHandler(async (event) => {
     const ownerProfileJson = await ownerProfile.json();
 
     // Check if the owner is an organization
-    const ownerIsOrganization = ownerProfileJson.type === "Organization";
+    ownerIsOrganization = ownerProfileJson.type === "Organization";
 
     if (ownerIsOrganization) {
-      ownerIsOrganization = true;
-
       // Check organization membership for a user
       // https://docs.github.com/en/rest/orgs/members?apiVersion=2022-11-28#check-organization-membership-for-a-user
 
