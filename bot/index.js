@@ -1,11 +1,7 @@
 // import { MongoClient } from "mongodb";
 import * as express from "express";
 import { consola } from "consola";
-import {
-  renderIssues,
-  createIssue,
-  applyCWLTemplate,
-} from "./utils/renderer/index.js";
+import { renderIssues, createIssue } from "./utils/renderer/index.js";
 import dbInstance from "./db.js";
 import {
   checkEnvVariable,
@@ -17,7 +13,7 @@ import {
 import { checkForLicense } from "./utils/license/index.js";
 import { checkForCitation } from "./utils/citation/index.js";
 import { checkForCodeMeta } from "./utils/codemeta/index.js";
-import { getCWLFiles } from "./utils/cwl/index.js";
+import { getCWLFiles, applyCWLTemplate } from "./utils/cwl/index.js";
 
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");
@@ -123,10 +119,6 @@ export default async (app, { getRouter }) => {
           license,
         };
 
-        if (cwl.length > 0) {
-          consola.success("CWL files found in the repository");
-        }
-
         // Create issue body template
         const issueBody = await renderIssues(
           context,
@@ -211,7 +203,7 @@ export default async (app, { getRouter }) => {
       context.payload.ref !==
       `refs/heads/${context.payload.repository.default_branch}`
     ) {
-      consola.warn("Not pushing to default branch");
+      consola.warn("Not pushing to default branch, ignoring...");
       return;
     }
 
@@ -234,13 +226,16 @@ export default async (app, { getRouter }) => {
       );
 
       if (installation?.action && installation?.action_count > 0) {
-        consola.info("Action limit count down:", installation.action_count);
+        consola.warn(
+          "Action limit count down:",
+          installation.action_count,
+          "for",
+          repository.name,
+        );
         installationCollection.updateOne(
           { repositoryId: repository.id },
           { $set: { action_count: installation.action_count - 1 } },
         );
-
-        consola.info("SHOULD NOT RUN", installation.action_count);
 
         return;
       }
@@ -275,6 +270,7 @@ export default async (app, { getRouter }) => {
     // Check if any of the commits added a LICENSE, CITATION, or codemeta file
     const gatheredCWLFiles = [];
     const removedCWLFiles = [];
+    const commitIds = [];
     if (commits.length > 0) {
       for (let i = 0; i < commits.length; i++) {
         if (commits[i]?.added?.length > 0) {
@@ -294,7 +290,11 @@ export default async (app, { getRouter }) => {
             }
             const fileSplit = commits[i].added[j].split(".");
             if (fileSplit.includes("cwl")) {
-              gatheredCWLFiles.push(commits[i].added[j]);
+              commitIds.push(commits[i].id);
+              gatheredCWLFiles.push({
+                commitId: commits[i].id,
+                filePath: commits[i].added[j],
+              });
               continue;
             }
           }
@@ -304,7 +304,11 @@ export default async (app, { getRouter }) => {
           for (let j = 0; j < commits[i]?.modified.length; j++) {
             const fileSplit = commits[i]?.modified[j].split(".");
             if (fileSplit.includes("cwl")) {
-              gatheredCWLFiles.push(commits[i].modified[j]);
+              commitIds.push(commits[i].id);
+              gatheredCWLFiles.push({
+                commitId: commits[i].id,
+                filePath: commits[i].modified[j],
+              });
               continue;
             }
           }
@@ -337,19 +341,16 @@ export default async (app, { getRouter }) => {
 
     if (gatheredCWLFiles.length > 0) {
       // Begin requesting the file metadata for each file name
-      for (let i = 0; i < gatheredCWLFiles.length; i++) {
+      for (const file of gatheredCWLFiles) {
         const cwlFile = await context.octokit.repos.getContent({
           owner,
-          path: gatheredCWLFiles[i],
+          path: file.filePath,
           repo: repository.name,
         });
 
+        cwlFile.data.commitId = file.commitId;
         cwl.push(cwlFile.data);
       }
-    }
-
-    if (cwl.length > 0) {
-      consola.success("CWL files found in the repository");
     }
 
     const cwlObject = {
@@ -362,6 +363,7 @@ export default async (app, { getRouter }) => {
       repositoryId: repository.id,
     });
 
+    // Does the repository already contain CWL files
     if (cwlExists) {
       cwlObject.contains_cwl = cwlExists.contains_cwl_files;
     }
@@ -454,10 +456,6 @@ export default async (app, { getRouter }) => {
         cwlObject.contains_cwl = cwlExists.contains_cwl_files;
       }
 
-      if (cwl.length > 0) {
-        consola.success("CWL files found in the repository");
-      }
-
       const subjects = {
         citation,
         codemeta,
@@ -529,9 +527,6 @@ export default async (app, { getRouter }) => {
       const repository = context.payload.repository;
 
       const cwl = await getCWLFiles(context, owner, repository.name);
-      if (cwl.length > 0) {
-        consola.success("CWL files found in the repository");
-      }
 
       // Remove the section from the issue body starting from ## CWL Validations
       const slicedBody = issueBody.substring(
@@ -627,10 +622,6 @@ export default async (app, { getRouter }) => {
       const citation = await checkForCitation(context, owner, repository.name);
       const codemeta = await checkForCodeMeta(context, owner, repository.name);
       const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
-
-      if (cwl.length > 0) {
-        consola.success("CWL files found in the repository");
-      }
 
       const cwlObject = {
         contains_cwl: cwl.length > 0 || false,

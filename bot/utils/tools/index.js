@@ -423,3 +423,34 @@ export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
   );
   consola.info("Issue number appended to database");
 }
+
+/**
+ * * Replaces the raw GitHub URL in the string with another URL
+ * @param {String} inputString - The string to process
+ * @param {String} newUrl - The new URL to replace the raw GitHub URL with
+ * @returns {String} - The string with the raw GitHub URL replaced
+ */
+export function replaceRawGithubUrl(inputString, oldUrl, newUrl) {
+  // Regex to find the oldUrl with optional line numbers in the format :line:column
+  const urlRegex = new RegExp(
+    `(${oldUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})(:\\d+:\\d+)?`,
+    "g",
+  );
+
+  let firstLineNumber = null;
+  let secondLineNumber = null;
+
+  // Replace each found URL in the string with newUrl
+  const modifiedString = inputString.replace(urlRegex, (match, p1, p2) => {
+    if (p2) {
+      const lineNumbers = p2.split(":");
+      if (!firstLineNumber) {
+        firstLineNumber = lineNumbers[1];
+        secondLineNumber = lineNumbers[2];
+      }
+    }
+    return p2 ? `${newUrl}${p2}` : newUrl;
+  });
+
+  return [modifiedString, firstLineNumber, secondLineNumber];
+}

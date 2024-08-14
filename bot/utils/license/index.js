@@ -2,6 +2,10 @@
  * @fileoverview This file contains utility functions for the license bot
  */
 import { consola } from "consola";
+import dbInstance from "../../db.js";
+import { createId } from "../tools/index.js";
+
+const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
 /**
  * * Check if a license is found in the repository
@@ -150,4 +154,120 @@ export async function createLicense(context, owner, repo, license) {
       repo,
     });
   }
+}
+
+/**
+ * * Applies the license template to the base template
+ *
+ * @param {object} subjects - The subjects to check for
+ * @param {string} baseTemplate - The base template to add to
+ * @param {object} repository - The GitHub repository information
+ * @param {string} owner - The owner of the repository
+ *
+ * @returns {string} - The updated base template
+ */
+export async function applyLicenseTemplate(
+  subjects,
+  baseTemplate,
+  repository,
+  owner,
+  context,
+) {
+  if (!subjects.license) {
+    const identifier = createId();
+    let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
+    const licenseCollection = dbInstance.getDb().collection("licenseRequests");
+    const existingLicense = await licenseCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (!existingLicense) {
+      // Entry does not exist in db, create a new one
+      const newDate = Date.now();
+      await licenseCollection.insertOne({
+        contains_license_file: false,
+        created_at: newDate,
+        identifier,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing license request
+      // Update the database
+      await licenseCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { contains_license_file: false, updated_at: Date.now() } },
+      );
+      url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
+    }
+    // No license file found text
+    const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
+    baseTemplate += `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
+  } else {
+    // Get the license identifier
+    const licenseRequest = await context.octokit.rest.licenses.getForRepo({
+      owner,
+      repo: repository.name,
+    });
+
+    let licenseId = licenseRequest.data.license.spdx_id;
+    let licenseContent = Buffer.from(
+      licenseRequest.data.content,
+      "base64",
+    ).toString("utf-8");
+    if (
+      licenseRequest.data.license.spdx_id === "no-license" ||
+      licenseRequest.data.license.spdx_id === "NOASSERTION"
+    ) {
+      licenseId = null;
+      licenseContent = null;
+    }
+
+    // License file found text
+    const identifier = createId();
+    let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
+    const licenseCollection = dbInstance.getDb().collection("licenseRequests");
+    const existingLicense = await licenseCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (!existingLicense) {
+      // Entry does not exist in db, create a new one
+      const newDate = Date.now();
+      await licenseCollection.insertOne({
+        contains_license_file: true,
+        created_at: newDate,
+        identifier,
+        licenseContent,
+        licenseId,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing license request
+      // Update the database
+      await licenseCollection.updateOne(
+        { repositoryId: repository.id },
+        {
+          $set: {
+            contains_license_file: true,
+            licenseContent,
+            licenseId,
+            updated_at: Date.now(),
+          },
+        },
+      );
+      url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
+    }
+    const licenseBadge = `[![License](https://img.shields.io/badge/Edit_License-0ea5e9.svg)](${url})`;
+    baseTemplate += `## LICENSE ✔️\n\nA LICENSE file is found at the root level of the repository.\n\n${licenseBadge}`;
+  }
+
+  return baseTemplate;
 }
