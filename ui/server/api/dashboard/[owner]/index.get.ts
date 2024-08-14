@@ -19,6 +19,8 @@ export default defineEventHandler(async (event) => {
 
   const user = event.context.user as User;
 
+  const ownerIsOrganization = false;
+
   if (user.username !== owner) {
     // Get the owner profile
     const ownerProfile = await fetch(`https://api.github.com/users/${owner}`, {
@@ -40,6 +42,8 @@ export default defineEventHandler(async (event) => {
     const ownerIsOrganization = ownerProfileJson.type === "Organization";
 
     if (ownerIsOrganization) {
+      ownerIsOrganization = true;
+
       // Check organization membership for a user
       // https://docs.github.com/en/rest/orgs/members?apiVersion=2022-11-28#check-organization-membership-for-a-user
 
@@ -83,6 +87,8 @@ export default defineEventHandler(async (event) => {
     .toArray();
 
   return installations.map((installation) => ({
+    installationId: installation.installationId as number,
+    ownerIsOrganization,
     repo: installation.repo as string,
     repositoryId: installation.repositoryId as number,
   }));

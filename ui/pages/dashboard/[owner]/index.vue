@@ -45,11 +45,6 @@ if (error.value) {
     <n-flex vertical>
       <h1>Apps being managed by Codefair</h1>
 
-      <p>
-        Codefair is managing the following apps on your GitHub account. You can
-        manage the settings for each app by clicking on the app name.
-      </p>
-
       <n-divider />
 
       <n-flex vertical>
@@ -60,43 +55,50 @@ if (error.value) {
         >
           <n-flex align="center">
             <div class="flex-1">
-              <span class="text-lg font-medium">
-                {{ repo.repo }}
-              </span>
+              <n-flex align="center">
+                <n-avatar
+                  size="small"
+                  :src="`https://api.dicebear.com/9.x/identicon/svg?seed=${repo.repositoryId}&backgroundColor=ffffff&bacgroundType=gradientLinear`"
+                />
+
+                <span class="text-lg font-medium">
+                  {{ repo.repo }}
+                </span>
+              </n-flex>
             </div>
 
             <n-flex>
-              <NuxtLink :to="`/dashboard/${owner}/${repo.repo}`">
-                <n-button>
-                  <template #icon>
-                    <Icon name="ri:settings-4-fill" />
-                  </template>
-
-                  Manage
-                </n-button>
-              </NuxtLink>
-
               <NuxtLink
                 :href="`https://github.com/${owner}/${repo.repo}`"
                 target="_blank"
               >
-                <n-button>
+                <n-button secondary type="info">
                   <template #icon>
                     <Icon name="ri:github-fill" />
                   </template>
                   View on GitHub
                 </n-button>
-              </NuxtLink></n-flex
-            >
+              </NuxtLink>
+
+              <NuxtLink :to="`/dashboard/${owner}/${repo.repo}`">
+                <n-button type="primary">
+                  <template #icon>
+                    <Icon name="ri:settings-4-fill" />
+                  </template>
+
+                  Manage FAIR Compliance
+                </n-button>
+              </NuxtLink>
+            </n-flex>
           </n-flex>
         </n-card>
       </n-flex>
     </n-flex>
 
-    <!-- <n-collapse class="mt-8">
+    <n-collapse class="mt-8">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
       </n-collapse-item>
-    </n-collapse> -->
+    </n-collapse>
   </main>
 </template>

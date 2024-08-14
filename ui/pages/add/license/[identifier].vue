@@ -254,7 +254,7 @@ const navigateToPR = () => {
           <NuxtLink
             to="https://fair-biors.org/docs/guidelines"
             target="_blank"
-            class="text-sm text-blue-400 underline transition-all hover:text-blue-500"
+            class="text-blue-400 underline transition-all hover:text-blue-500"
           >
             FAIR-BioRS Guidelines</NuxtLink
           >. It is important to choose your license early since it will affect
