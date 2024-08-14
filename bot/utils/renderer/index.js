@@ -337,9 +337,6 @@ export async function applyCWLTemplate(
         return !subjects.cwl.removed_files.includes(file.path);
       });
 
-      consola.info("Removed files:", subjects.cwl.removed_files);
-      consola.info("New files:", newFiles);
-
       const newDate = Date.now();
       await cwlCollection.updateOne(
         { repositoryId: repository.id },
@@ -352,6 +349,8 @@ export async function applyCWLTemplate(
         },
       );
     }
+  } else {
+    consola.warn("No new/modified CWL files were removed from the repository");
   }
 
   // New/Modified CWL files were found
@@ -365,7 +364,6 @@ export async function applyCWLTemplate(
   });
 
   // Validate each CWL file from list
-  consola.info("Amount of files to validate:", subjects.cwl.files.length);
   for (const file of subjects.cwl.files) {
     const fileSplit = file.name.split(".");
     let modifiedValidationMessage = "";
@@ -400,7 +398,6 @@ export async function applyCWLTemplate(
           file.html_url += `-L${lineNumber2}`;
         }
       }
-      consola.warn(file.html_url);
 
       const newDate = Date.now();
       cwlFiles.push({

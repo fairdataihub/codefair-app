@@ -123,10 +123,6 @@ export default async (app, { getRouter }) => {
           license,
         };
 
-        if (cwl.length > 0) {
-          consola.success("CWL files found in the repository");
-        }
-
         // Create issue body template
         const issueBody = await renderIssues(
           context,
@@ -211,7 +207,7 @@ export default async (app, { getRouter }) => {
       context.payload.ref !==
       `refs/heads/${context.payload.repository.default_branch}`
     ) {
-      consola.warn("Not pushing to default branch");
+      consola.warn("Not pushing to default branch, ignoring...");
       return;
     }
 
@@ -350,18 +346,9 @@ export default async (app, { getRouter }) => {
           repo: repository.name,
         });
 
-        // print the file content from base64
-        const content = Buffer.from(cwlFile.data.content, "base64").toString(
-          "utf-8",
-        );
-        consola.warn("CWL File Content:", content);
         cwlFile.data.commitId = commitIds[i];
         cwl.push(cwlFile.data);
       }
-    }
-
-    if (cwl.length > 0) {
-      consola.success("CWL files found in the repository");
     }
 
     const cwlObject = {
@@ -377,7 +364,6 @@ export default async (app, { getRouter }) => {
     if (cwlExists) {
       cwlObject.contains_cwl = cwlExists.contains_cwl_files;
     }
-    consola.warn("CWL Object:", cwlObject);
 
     const subjects = {
       citation,
@@ -467,10 +453,6 @@ export default async (app, { getRouter }) => {
         cwlObject.contains_cwl = cwlExists.contains_cwl_files;
       }
 
-      if (cwl.length > 0) {
-        consola.success("CWL files found in the repository");
-      }
-
       const subjects = {
         citation,
         codemeta,
@@ -542,9 +524,6 @@ export default async (app, { getRouter }) => {
       const repository = context.payload.repository;
 
       const cwl = await getCWLFiles(context, owner, repository.name);
-      if (cwl.length > 0) {
-        consola.success("CWL files found in the repository");
-      }
 
       // Remove the section from the issue body starting from ## CWL Validations
       const slicedBody = issueBody.substring(
@@ -640,10 +619,6 @@ export default async (app, { getRouter }) => {
       const citation = await checkForCitation(context, owner, repository.name);
       const codemeta = await checkForCodeMeta(context, owner, repository.name);
       const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
-
-      if (cwl.length > 0) {
-        consola.success("CWL files found in the repository");
-      }
 
       const cwlObject = {
         contains_cwl: cwl.length > 0 || false,

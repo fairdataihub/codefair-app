@@ -69,16 +69,16 @@ export async function validateCWLFile(downloadUrl) {
     });
     if (!response.ok && response.status === 400) {
       const error = await response.json();
-      consola.warn("Error validating CWL file:", error);
+      consola.warn("Validation error", error);
       return [false, error.error];
     }
     if (!response.ok && response.status === 500) {
-      consola.info("Error validating CWL file");
+      consola.error("Error validating CWL file", response);
       return [false, "Error validating CWL file"];
     }
     if (response.ok) {
       const data = await response.json();
-      consola.warn("CWL file validated successfully:", data);
+      consola.success("Validation success", data);
       return [true, data.output];
     }
   } catch (e) {
