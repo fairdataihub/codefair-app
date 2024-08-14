@@ -185,7 +185,7 @@ export async function applyLicenseTemplate(
       // Entry does not exist in db, create a new one
       const newDate = Date.now();
       await licenseCollection.insertOne({
-        contains_license_file: false,
+        contains_license: false,
         created_at: newDate,
         identifier,
         open: true,
@@ -199,7 +199,7 @@ export async function applyLicenseTemplate(
       // Update the database
       await licenseCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { contains_license_file: false, updated_at: Date.now() } },
+        { $set: { contains_license: false, updated_at: Date.now() } },
       );
       url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     }
@@ -238,7 +238,7 @@ export async function applyLicenseTemplate(
       // Entry does not exist in db, create a new one
       const newDate = Date.now();
       await licenseCollection.insertOne({
-        contains_license_file: true,
+        contains_license: true,
         created_at: newDate,
         identifier,
         licenseContent,
@@ -256,7 +256,7 @@ export async function applyLicenseTemplate(
         { repositoryId: repository.id },
         {
           $set: {
-            contains_license_file: true,
+            contains_license: true,
             licenseContent,
             licenseId,
             updated_at: Date.now(),
