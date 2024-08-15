@@ -480,6 +480,8 @@ export default async (app, { getRouter }) => {
   app.on("issues.edited", async (context) => {
     const issueBody = context.payload.issue.body;
     const issueTitle = context.payload.issue.title;
+    const { repository } = context.payload;
+    const owner = context.payload.repository.owner.login;
 
     if (issueTitle === ISSUE_TITLE) {
       const installationCollection = db.collection("installation");
@@ -523,8 +525,6 @@ export default async (app, { getRouter }) => {
       issueTitle === ISSUE_TITLE
     ) {
       consola.start("Rerunning CWL Validation...");
-      const owner = context.payload.repository.owner.login;
-      const repository = context.payload.repository;
 
       const cwl = await getCWLFiles(context, owner, repository.name);
 
@@ -571,11 +571,55 @@ export default async (app, { getRouter }) => {
 
       consola.success("CWL Validation rerun successfully!");
     }
+
+    if (
+      issueBody.includes("<!-- @codefair-bot rerun-full-repo-validation -->") &&
+      issueTitle === ISSUE_TITLE
+    ) {
+      consola.start("Rerunning full repository validation...");
+
+      const license = await checkForLicense(context, owner, repository.name);
+      const citation = await checkForCitation(context, owner, repository.name);
+      const codemeta = await checkForCodeMeta(context, owner, repository.name);
+      const cwl = await getCWLFiles(context, owner, repository.name);
+
+      const cwlObject = {
+        contains_cwl: cwl.length > 0 || false,
+        files: cwl,
+        removed_files: [],
+      };
+
+      // If existing cwl validation exists, update the contains_cwl value
+      const cwlExists = await db.collection("cwlValidation").findOne({
+        repositoryId: repository.id,
+      });
+
+      if (cwlExists?.contains_cwl_files) {
+        cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+      }
+
+      const subjects = {
+        citation,
+        codemeta,
+        cwl: cwlObject,
+        license,
+      };
+
+      const issueBody = await renderIssues(
+        context,
+        owner,
+        repository,
+        false,
+        subjects,
+      );
+
+      await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+    }
   });
 
   // When an issue is deleted or closed
   app.on(["issues.deleted", "issues.closed"], async (context) => {
-    const repository = context.payload.repository;
+    const { repository } = context.payload;
     const issueTitle = context.payload.issue.title;
 
     if (issueTitle === ISSUE_TITLE) {
@@ -607,7 +651,7 @@ export default async (app, { getRouter }) => {
 
   // When an issue is reopened
   app.on("issues.reopened", async (context) => {
-    const repository = context.payload.repository;
+    const { repository } = context.payload;
     const owner = context.payload.repository.owner.login;
     const issueTitle = context.payload.issue.title;
 

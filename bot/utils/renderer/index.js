@@ -1,5 +1,9 @@
 import { consola } from "consola";
-import { applyGitHubIssueToDatabase, createId } from "../tools/index.js";
+import {
+  applyGitHubIssueToDatabase,
+  createId,
+  applyLastModifiedTemplate,
+} from "../tools/index.js";
 import { applyCWLTemplate } from "../cwl/index.js";
 import { applyMetadataTemplate } from "../metadata/index.js";
 import { applyLicenseTemplate } from "../license/index.js";
@@ -71,6 +75,8 @@ export async function renderIssues(
     owner,
     context,
   );
+
+  baseTemplate = applyLastModifiedTemplate(baseTemplate);
 
   return baseTemplate;
 }
