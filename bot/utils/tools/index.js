@@ -398,6 +398,9 @@ export async function isRepoPrivate(context, owner, repoName) {
       repo: repoName,
     });
 
+    consola.info(
+      `Repository ${repoName} is private: ${repoDetails.data.private}`,
+    );
     return repoDetails.data.private;
   } catch (error) {
     consola.error("Error verifying if the repository is private:", error);
@@ -421,7 +424,6 @@ export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
       },
     },
   );
-  consola.info("Issue number appended to database");
 }
 
 /**
