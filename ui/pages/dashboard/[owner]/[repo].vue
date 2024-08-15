@@ -84,12 +84,12 @@ const rerunCwlValidation = async () => {
     </n-breadcrumb>
 
     <n-flex vertical>
-      <h1>FAIR-BioRS Compliance Dashboard</h1>
+      <h1>FAIR Compliance Dashboard</h1>
 
       <p>
-        This dashboard shows the compliance of the repository with the
-        FAIR-BioRS principles. Any actions that you need to take on the
-        repository will be shown here.
+        This dashboard shows the compliance of the repository with the FAIR
+        principles. Any actions that you need to take on the repository will be
+        shown here.
       </p>
     </n-flex>
 

@@ -28,12 +28,12 @@ export default defineEventHandler(async (event) => {
   await repoWritePermissions(event, licenseRequest.owner, licenseRequest.repo);
 
   // Check if the license request is still open
-  if (!licenseRequest.open) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "request-closed",
-    });
-  }
+  // if (!licenseRequest.open) {
+  //   throw createError({
+  //     statusCode: 400,
+  //     statusMessage: "request-closed",
+  //   });
+  // }
 
   const response: LicenseRequestGetResponse = {
     licenseId: licenseRequest.licenseId,

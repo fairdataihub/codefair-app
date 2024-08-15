@@ -84,8 +84,58 @@ export default defineEventHandler(async (event) => {
     })
     .toArray();
 
+  // For the first 10 repositories, get the latest commit details
+  for (let index = 0; index < Math.min(installations.length, 10); index++) {
+    const installation = installations[index];
+
+    const repo = installation.repo as string;
+
+    const commits = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/commits`,
+      {
+        headers: {
+          Authorization: `Bearer ${user.access_token}`,
+        },
+      },
+    );
+
+    let latestCommitSha = "";
+    let latestCommitMessage = "";
+    let latestCommitUrl = "";
+    let latestCommitDate = "";
+
+    if (commits.ok) {
+      const commitsJson = await commits.json();
+
+      if (commitsJson.length > 0) {
+        latestCommitSha = commitsJson[0].sha || "";
+        latestCommitMessage = commitsJson[0].commit.message || "";
+        latestCommitUrl = commitsJson[0].html_url || "";
+        latestCommitDate = commitsJson[0].commit.author.date || "";
+      }
+    } else {
+      console.error(
+        `Failed to fetch commits for the repository ${repo} for the owner ${owner}`,
+      );
+
+      console.error(await commits.text());
+    }
+
+    installations[index] = {
+      ...installation,
+      latestCommitDate,
+      latestCommitMessage,
+      latestCommitSha,
+      latestCommitUrl,
+    };
+  }
+
   return installations.map((installation) => ({
     installationId: installation.installationId as number,
+    latestCommitDate: installation.latestCommitDate as string,
+    latestCommitMessage: installation.latestCommitMessage as string,
+    latestCommitSha: installation.latestCommitSha as string,
+    latestCommitUrl: installation.latestCommitUrl as string,
     ownerIsOrganization,
     repo: installation.repo as string,
     repositoryId: installation.repositoryId as number,

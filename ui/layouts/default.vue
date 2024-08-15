@@ -1,8 +1,18 @@
 <script setup lang="ts">
 const user = useUser();
+const route = useRoute();
 
 const devMode = process.env.NODE_ENV === "development";
 const showMobileMenu = ref(false);
+
+const ownerState = useState("owner", () => route.params.owner);
+const repoState = useState("repo", () => route.params.repo);
+const featureState = useState("feature", () => "");
+
+watchEffect(() => {
+  if (route.params.owner) ownerState.value = route.params.owner;
+  if (route.params.repo) repoState.value = route.params.repo;
+});
 
 const toggleMobileMenu = () => {
   showMobileMenu.value = !showMobileMenu.value;
@@ -179,6 +189,42 @@ const toggleMobileMenu = () => {
     </div> -->
 
     <div class="relative z-10 grow">
+      <div class="mx-auto max-w-screen-xl px-8">
+        <n-breadcrumb class="pb-5">
+          <n-breadcrumb-item>
+            <Icon name="ri:dashboard-fill" />
+
+            Dashboard
+          </n-breadcrumb-item>
+
+          <n-breadcrumb-item
+            v-if="ownerState"
+            :href="`/dashboard/${ownerState}`"
+          >
+            <Icon name="uil:github" />
+            {{ ownerState }}
+          </n-breadcrumb-item>
+
+          <n-breadcrumb-item
+            v-if="repoState"
+            :href="`/dashboard/${ownerState}/${repoState}`"
+          >
+            <Icon name="vscode-icons:folder-type-git" />
+            {{ repoState }}
+          </n-breadcrumb-item>
+
+          fs {{ featureState }}
+
+          <n-breadcrumb-item
+            v-if="featureState === 'edit-license'"
+            :clickable="false"
+          >
+            <Icon name="tabler:license" />
+            Edit License
+          </n-breadcrumb-item>
+        </n-breadcrumb>
+      </div>
+
       <slot />
     </div>
 

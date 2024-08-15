@@ -25,6 +25,12 @@ definePageMeta({
   middleware: ["protected"],
 });
 
+// convert to pinia store
+const featureState = useState("feature", () => "");
+const owner = useState("feature", () => "");
+
+featureState.value = "edit-license";
+
 const licenseOptions = licensesJSON.map((option) => ({
   label: option.name,
   value: option.licenseId,
