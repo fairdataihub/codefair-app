@@ -1,17 +1,21 @@
 <script setup lang="ts">
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+
 const user = useUser();
 const route = useRoute();
+
+const breadcrumbsStore = useBreadcrumbsStore();
 
 const devMode = process.env.NODE_ENV === "development";
 const showMobileMenu = ref(false);
 
-const ownerState = useState("owner", () => route.params.owner);
-const repoState = useState("repo", () => route.params.repo);
-const featureState = useState("feature", () => "");
-
 watchEffect(() => {
-  if (route.params.owner) ownerState.value = route.params.owner;
-  if (route.params.repo) repoState.value = route.params.repo;
+  if (route.params.owner) {
+    breadcrumbsStore.setOwner(route.params.owner as string);
+  }
+  if (route.params.repo) {
+    breadcrumbsStore.setRepo(route.params.repo as string);
+  }
 });
 
 const toggleMobileMenu = () => {
@@ -68,12 +72,13 @@ const toggleMobileMenu = () => {
           </NuxtLink>
 
           <n-badge v-if="devMode" value="beta" type="warning">
-            <NuxtLink
-              :to="`/dashboard/${user?.username}`"
+            <!-- Using a here to request a page reload -->
+            <a
+              :href="`/dashboard/${user?.username}`"
               class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               <span class=""> Dashboard </span>
-            </NuxtLink>
+            </a>
           </n-badge>
 
           <div>
@@ -190,39 +195,46 @@ const toggleMobileMenu = () => {
 
     <div class="relative z-10 grow">
       <div class="mx-auto max-w-screen-xl px-8">
-        <n-breadcrumb class="pb-5">
-          <n-breadcrumb-item>
-            <Icon name="ri:dashboard-fill" />
+        <ClientOnly>
+          <template #fallback>
+            <div class="h-[25px] w-full"></div>
+          </template>
 
-            Dashboard
-          </n-breadcrumb-item>
-
-          <n-breadcrumb-item
-            v-if="ownerState"
-            :href="`/dashboard/${ownerState}`"
+          <n-breadcrumb
+            v-if="breadcrumbsStore.shouldShowBreadcrumbs"
+            class="pb-5"
           >
-            <Icon name="uil:github" />
-            {{ ownerState }}
-          </n-breadcrumb-item>
+            <n-breadcrumb-item>
+              <Icon name="ri:dashboard-fill" />
 
-          <n-breadcrumb-item
-            v-if="repoState"
-            :href="`/dashboard/${ownerState}/${repoState}`"
-          >
-            <Icon name="vscode-icons:folder-type-git" />
-            {{ repoState }}
-          </n-breadcrumb-item>
+              Dashboard
+            </n-breadcrumb-item>
 
-          fs {{ featureState }}
+            <n-breadcrumb-item
+              v-if="breadcrumbsStore.owner"
+              :href="`/dashboard/${breadcrumbsStore.owner}`"
+            >
+              <Icon name="uil:github" />
+              {{ breadcrumbsStore.owner }}
+            </n-breadcrumb-item>
 
-          <n-breadcrumb-item
-            v-if="featureState === 'edit-license'"
-            :clickable="false"
-          >
-            <Icon name="tabler:license" />
-            Edit License
-          </n-breadcrumb-item>
-        </n-breadcrumb>
+            <n-breadcrumb-item
+              v-if="breadcrumbsStore.repo"
+              :href="`/dashboard/${breadcrumbsStore.owner}/${breadcrumbsStore.repo}`"
+            >
+              <Icon name="vscode-icons:folder-type-git" />
+              {{ breadcrumbsStore.repo }}
+            </n-breadcrumb-item>
+
+            <n-breadcrumb-item
+              v-if="breadcrumbsStore.feature.id"
+              :clickable="false"
+            >
+              <Icon :name="breadcrumbsStore.feature.icon" />
+              {{ breadcrumbsStore.feature.name }}
+            </n-breadcrumb-item>
+          </n-breadcrumb>
+        </ClientOnly>
       </div>
 
       <slot />

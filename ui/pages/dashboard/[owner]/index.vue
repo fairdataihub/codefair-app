@@ -1,5 +1,16 @@
 <script setup lang="ts">
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+
 const route = useRoute();
+
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.showBreadcrumbs();
+breadcrumbsStore.setFeature({
+  id: "",
+  name: "",
+  icon: "",
+});
 
 const { owner } = route.params as { owner: string };
 
@@ -29,19 +40,6 @@ if (error.value) {
 
 <template>
   <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
-    <n-breadcrumb class="pb-5">
-      <n-breadcrumb-item :clickable="false">
-        <Icon name="ri:dashboard-fill" />
-
-        Dashboard
-      </n-breadcrumb-item>
-
-      <n-breadcrumb-item :clickable="false">
-        <Icon name="uil:github" />
-        {{ owner }}
-      </n-breadcrumb-item>
-    </n-breadcrumb>
-
     <n-flex vertical>
       <h1>Apps being managed by Codefair</h1>
 

@@ -1,5 +1,16 @@
 <script setup lang="ts">
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+
 const route = useRoute();
+
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.showBreadcrumbs();
+breadcrumbsStore.setFeature({
+  id: "",
+  name: "",
+  icon: "",
+});
 
 const { owner, repo } = route.params as { owner: string; repo: string };
 
@@ -65,24 +76,6 @@ const rerunCwlValidation = async () => {
 
 <template>
   <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
-    <n-breadcrumb class="pb-5">
-      <n-breadcrumb-item :clickable="false">
-        <Icon name="ri:dashboard-fill" />
-
-        Dashboard
-      </n-breadcrumb-item>
-
-      <n-breadcrumb-item :clickable="false" :href="`/dashboard/${owner}`">
-        <Icon name="uil:github" />
-        {{ owner }}
-      </n-breadcrumb-item>
-
-      <n-breadcrumb-item>
-        <Icon name="vscode-icons:folder-type-git" />
-        {{ repo }}
-      </n-breadcrumb-item>
-    </n-breadcrumb>
-
     <n-flex vertical>
       <h1>FAIR Compliance Dashboard</h1>
 
@@ -221,10 +214,10 @@ const rerunCwlValidation = async () => {
       <n-divider />
     </div>
 
-    <!-- <n-collapse class="mt-8">
+    <n-collapse class="mt-8">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
       </n-collapse-item>
-    </n-collapse> -->
+    </n-collapse>
   </main>
 </template>

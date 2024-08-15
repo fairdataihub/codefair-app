@@ -1,4 +1,10 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.hideBreadcrumbs();
+</script>
 
 <template>
   <main>
@@ -71,6 +77,7 @@
             >
               What is Codefair?
             </h2>
+
             <p class="font-onest text-lg text-slate-800">
               Codefair is a free and open source GitHub app that acts as your
               personal assistant when it comes to making your research software

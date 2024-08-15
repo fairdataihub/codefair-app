@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import type { FormInst, FormRules, FormItemRule } from "naive-ui";
 import codeMetadataJSON from "@/assets/data/codeMetadata.json";
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 definePageMeta({
   middleware: ["protected"],
 });
 
 const route = useRoute();
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.showBreadcrumbs();
 
 const formRef = ref<FormInst | null>(null);
 const formValue = ref<CodeMetadataRequest>({
@@ -136,6 +140,12 @@ const { identifier } = route.params as { identifier: string };
 
 const { data, error } = await useFetch(`/api/codeMetadata/${identifier}`, {
   headers: useRequestHeaders(["cookie"]),
+});
+
+breadcrumbsStore.setFeature({
+  id: "edit-code-metadata",
+  name: "Edit Code Metadata",
+  icon: "tabler:code",
 });
 
 if (error.value) {
