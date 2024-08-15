@@ -1,44 +1,11 @@
-import url from "url";
 import { consola } from "consola";
 import { applyGitHubIssueToDatabase, createId } from "../tools/index.js";
 import { applyCWLTemplate } from "../cwl/index.js";
 import { applyMetadataTemplate } from "../metadata/index.js";
 import { applyLicenseTemplate } from "../license/index.js";
 
-const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
+const { GITHUB_APP_NAME } = process.env;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
-
-/**
- * * Removes the token from the URL in the validation message
- * @param {String} inputString - The string to remove the token from
- * @returns {String} - The string with the token removed
- */
-function removeTokenFromUrlInString(inputString) {
-  // Regex to find the GitHub raw URL with an optional token
-  const urlRegex =
-    /https:\/\/raw\.githubusercontent\.com\/[^\s:]+(\?token=[^:\s]+)?/g;
-
-  // Replace each found URL in the string after removing the token
-  return inputString.replace(urlRegex, (url) => {
-    return url.replace(/\?token=[^:]+/, "");
-  });
-}
-
-/**
- * * Removes the token from the URL in the validation message
- * @param {String} inputString - The string to remove the token from
- * @returns {String} - The string with the token removed
- */
-function removeTimestampFromUrlInString(inputString) {
-  // Regex to find the GitHub raw URL with an optional token
-  const urlRegex =
-    /https:\/\/raw\.githubusercontent\.com\/[^\s:]+(\?token=[^:\s]+)?/g;
-
-  // Replace each found URL in the string after removing the token
-  return inputString.replace(urlRegex, (url) => {
-    return url.replace(/\?timestamp=[^:]+/, "");
-  });
-}
 
 /**
  * * Renders the body of the dashboard issue message
@@ -204,7 +171,7 @@ export async function applyCodemetaTemplate(
     // License was found but no codemeta.json exists
     const identifier = createId();
 
-    let url = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
+    let badgeURL = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
 
     const codemetaCollection = db.collection("codeMetadata");
     const existingCodemeta = await codemetaCollection.findOne({
@@ -229,10 +196,10 @@ export async function applyCodemetaTemplate(
         { repositoryId: repository.id },
         { $set: { updated_at: Date.now() } },
       );
-      url = `${CODEFAIR_DOMAIN}/add/codemeta/${existingCodemeta.identifier}`;
+      badgeURL = `${CODEFAIR_DOMAIN}/add/codemeta/${existingCodemeta.identifier}`;
     }
 
-    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Add_Codemeta-dc2626.svg)](${url})`;
+    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Add_Codemeta-dc2626.svg)](${badgeURL})`;
     baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file was not found in the repository. To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org).\n\n${codemetaBadge}`;
   } else if (subjects.codemeta && subjects.license) {
     // License was found and codemetata.json also exists
@@ -257,9 +224,9 @@ export async function applyCodemetaTemplate(
         { repositoryId: repository.id },
         { $set: { updated_at: Date.now() } },
       );
-      url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
+      badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     }
-    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Edit_Codemeta-dc2626.svg)](${url})`;
+    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Edit_Codemeta-dc2626.svg)](${badgeURL})`;
     baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file found in the repository.\n\n${codemetaBadge}`;
   } else {
     // codemeta and license does not exist
@@ -292,7 +259,7 @@ export async function applyCitationTemplate(
     // License was found but no citation file was found
     const identifier = createId();
 
-    let url = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
+    let badgeURL = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
     const citationCollection = db.collection("citationRequests");
     const existingCitation = await citationCollection.findOne({
       repositoryId: repository.id,
@@ -316,10 +283,10 @@ export async function applyCitationTemplate(
         { repositoryId: repository.id },
         { $set: { updated_at: Date.now() } },
       );
-      url = `${CODEFAIR_DOMAIN}/add/citation/${existingCitation.identifier}`;
+      badgeURL = `${CODEFAIR_DOMAIN}/add/citation/${existingCitation.identifier}`;
     }
 
-    const citationBadge = `[![Citation](https://img.shields.io/badge/Add_Citation-dc2626.svg)](${url})`;
+    const citationBadge = `[![Citation](https://img.shields.io/badge/Add_Citation-dc2626.svg)](${badgeURL})`;
     baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file was not found in the repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.\n\n${citationBadge}`;
   } else if (subjects.citation && subjects.license) {
     // Citation file was found and license was found
