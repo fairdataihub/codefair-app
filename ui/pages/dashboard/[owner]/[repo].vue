@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+import { Icon } from "#components";
 
 const route = useRoute();
 
@@ -14,8 +15,34 @@ breadcrumbsStore.setFeature({
 
 const { owner, repo } = route.params as { owner: string; repo: string };
 
+const devMode = process.env.NODE_ENV === "development";
+
 const botNotInstalled = ref(false);
 const cwlValidationRerunRequestLoading = ref(false);
+
+const renderIcon = (icon: string) => {
+  return () => {
+    return h(Icon, { name: icon });
+  };
+};
+
+const settingsOptions = [
+  {
+    icon: renderIcon("mdi:github"),
+    key: "view-repo",
+    label: "View Repository",
+  },
+  {
+    icon: renderIcon("mynaui:redo"),
+    key: "rerun-codefair-on-repo",
+    label: "Rerun all Codefair checks",
+  },
+  {
+    icon: renderIcon("mdi:cog"),
+    key: "view-codefair-settings",
+    label: "View Codefair Settings",
+  },
+];
 
 const { data, error } = await useFetch(`/api/dashboard/${owner}/${repo}`, {
   headers: useRequestHeaders(["cookie"]),
@@ -72,17 +99,88 @@ const rerunCwlValidation = async () => {
       cwlValidationRerunRequestLoading.value = false;
     });
 };
+
+const rerunCodefairChecks = async () => {
+  push.info({
+    title: "Submitting request",
+    message:
+      "Please wait while we submit a request to rerun the codefair checks on this repository.",
+  });
+
+  await $fetch(`/api/dashboard/${owner}/${repo}/rerun`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "POST",
+  })
+    .then(() => {
+      push.success({
+        title: "Success",
+        message:
+          "A request to rerun the codefair checks has been submitted succesfully. Please wait a few minutes for this process to take place.",
+      });
+    })
+    .catch((error) => {
+      if (error.statusMessage === "Validation already requested") {
+        push.error({
+          title: "Error",
+          message:
+            "A request to rerun the codefair checks has already been submitted. Please wait a few minutes for this process to take place.",
+        });
+      } else {
+        push.error({
+          title: "Error",
+          message:
+            "Failed to submit the request to rerun the codefair checks. Please try again later.",
+        });
+      }
+    });
+};
+
+const handleSettingsSelect = (key: any) => {
+  if (key === "view-repo") {
+    navigateTo(`https://github.com/${owner}/${repo}`, {
+      open: {
+        target: "_blank",
+      },
+    });
+  } else if (key === "rerun-codefair-on-repo") {
+    rerunCodefairChecks();
+  } else if (key === "view-codefair-settings") {
+    navigateTo(
+      `https://github.com/settings/installations/${data.value?.installationId}`,
+      {
+        open: {
+          target: "_blank",
+        },
+      },
+    );
+  }
+};
 </script>
 
 <template>
   <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
     <n-flex vertical>
-      <h1>FAIR Compliance Dashboard</h1>
+      <n-flex justify="space-between" align="start">
+        <h1>FAIR Compliance Dashboard</h1>
+
+        <n-dropdown
+          :options="settingsOptions"
+          placement="bottom-end"
+          :show-arrow="true"
+          @select="handleSettingsSelect"
+        >
+          <n-button type="info" secondary size="large">
+            <template #icon>
+              <Icon name="ic:round-settings" size="16" />
+            </template>
+            Settings</n-button
+          >
+        </n-dropdown>
+      </n-flex>
 
       <p>
         This dashboard shows the compliance of the repository with the FAIR
-        principles. Any actions that you need to take on the repository will be
-        shown here.
+        principles.
       </p>
     </n-flex>
 
@@ -129,7 +227,16 @@ const rerunCwlValidation = async () => {
         </template>
 
         <template #content>
-          <p>
+          <n-alert
+            v-if="!data?.licenseRequest?.containsLicense"
+            type="info"
+            class="w-full"
+          >
+            There is no license in this repository. A license needs to be added
+            to this repository before the code metadata can be validated.
+          </n-alert>
+
+          <p v-else>
             The code metadata for the repository is shown here. This includes
             the number of files, the number of lines of code, and the number of
             commits.
@@ -138,6 +245,7 @@ const rerunCwlValidation = async () => {
 
         <template #action>
           <NuxtLink
+            v-if="data?.licenseRequest?.containsLicense"
             :to="`/add/code-metadata/${data?.codeMetadataRequest?.identifier}`"
           >
             <n-button type="primary">
@@ -201,9 +309,7 @@ const rerunCwlValidation = async () => {
               :to="`/view/cwl-validation/${data?.cwlValidation?.identifier}`"
             >
               <n-button type="primary">
-                <template #icon>
-                  <Icon name="mdi:eye" size="16" />
-                </template>
+                <template #icon> <Icon name="mdi:eye" size="16" /> </template>""
                 View CWL Validation Results
               </n-button>
             </NuxtLink>
@@ -214,7 +320,7 @@ const rerunCwlValidation = async () => {
       <n-divider />
     </div>
 
-    <n-collapse class="mt-8">
+    <n-collapse v-if="devMode" class="mt-8">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
       </n-collapse-item>

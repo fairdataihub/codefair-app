@@ -202,7 +202,7 @@ const toggleMobileMenu = () => {
 
           <n-breadcrumb
             v-if="breadcrumbsStore.shouldShowBreadcrumbs"
-            class="pb-5"
+            class="pb-3"
           >
             <n-breadcrumb-item>
               <Icon name="ri:dashboard-fill" />

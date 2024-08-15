@@ -76,8 +76,11 @@ export default defineEventHandler(async (event) => {
           repo: cwlValidation.repo as string,
         }
       : null,
+    installationId: installation.installationId as number,
     licenseRequest: licenseRequest
       ? {
+          containsLicense:
+            (licenseRequest.contains_license as boolean) || false,
           identifier: licenseRequest.identifier as string,
           licenseId: licenseRequest.licenseId as string,
           open: licenseRequest.open as boolean,
