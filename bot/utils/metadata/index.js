@@ -275,6 +275,8 @@ export async function applyMetadataTemplate(
   if ((!subjects.codemeta || !subjects.citation) && subjects.license) {
     // License was found but no codemeta.json or CITATION.cff exists
     const identifier = createId();
+    let validCitation = false;
+    let validCodemeta = false;
 
     let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
@@ -283,11 +285,44 @@ export async function applyMetadataTemplate(
       repositoryId: repository.id,
     });
 
+    if (subjects.codemeta) {
+      try {
+        const codemetaFile = await context.octokit.repos.getContent({
+          owner,
+          path: "codemeta.json",
+          repo: repository.name,
+        });
+
+        JSON.parse(Buffer.from(codemetaFile.data.content, "base64").toString());
+
+        validCodemeta = true;
+      } catch (error) {
+        consola.error("Error getting codemeta.json file", error);
+      }
+    }
+
+    if (subjects.citation) {
+      try {
+        const citationFile = await context.octokit.repos.getContent({
+          owner,
+          path: "CITATION.cff",
+          repo: repository.name,
+        });
+
+        yaml.load(Buffer.from(citationFile.data.content, "base64").toString());
+        validCitation = true;
+      } catch (error) {
+        consola.error("Error getting CITATION.cff file", error);
+      }
+    }
+
     if (!existingMetadata) {
       // Entry does not exist in db, create a new one
       const newDate = Date.now();
       const gatheredMetadata = await gatherMetadata(context, owner, repository);
       await metadataCollection.insertOne({
+        citation_status: validCitation ? "valid" : "invalid",
+        codemeta_status: validCodemeta ? "valid" : "invalid",
         contains_citation: subjects.citation,
         contains_codemeta: subjects.codemeta,
         contains_metadata: subjects.codemeta && subjects.citation,
@@ -306,6 +341,8 @@ export async function applyMetadataTemplate(
         { repositoryId: repository.id },
         {
           $set: {
+            citation_status: validCitation ? "valid" : "invalid",
+            codemeta_status: validCodemeta ? "valid" : "invalid",
             contains_citation: subjects.citation,
             contains_codemeta: subjects.codemeta,
             contains_metadata: subjects.codemeta && subjects.citation,
