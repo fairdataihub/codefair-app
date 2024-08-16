@@ -322,11 +322,35 @@ export async function applyMetadataTemplate(
 
   if (subjects.codemeta && subjects.citation && subjects.license) {
     // Download the codemeta.json file from the repo
-    const codemetaFile = await context.octokit.repos.getContent({
-      owner,
-      path: "codemeta.json",
-      repo: repository.name,
-    });
+    let validCodemeta = false;
+    let validCitation = false;
+
+    try {
+      const codemetaFile = await context.octokit.repos.getContent({
+        owner,
+        path: "codemeta.json",
+        repo: repository.name,
+      });
+
+      JSON.parse(Buffer.from(codemetaFile.data.content, "base64").toString());
+
+      validCodemeta = true;
+    } catch (error) {
+      consola.error("Error getting codemeta.json file", error);
+    }
+
+    try {
+      const citationFile = await context.octokit.repos.getContent({
+        owner,
+        path: "CITATION.cff",
+        repo: repository.name,
+      });
+
+      yaml.load(Buffer.from(citationFile.data.content, "base64").toString());
+      validCitation = true;
+    } catch (error) {
+      consola.error("Error getting CITATION.cff file", error);
+    }
 
     // Convert the content to a json object
     const codemetaContent = JSON.parse(
@@ -351,6 +375,8 @@ export async function applyMetadataTemplate(
       const newDate = Date.now();
       // const gatheredMetadata = await gatherMetadata(context, owner, repository);
       await metadataCollection.insertOne({
+        citation_status: validCitation ? "valid" : "invalid",
+        codemeta_status: validCodemeta ? "valid" : "invalid",
         contains_citation: subjects.citation,
         contains_codemeta: subjects.codemeta,
         contains_metadata: subjects.codemeta && subjects.citation,
@@ -369,6 +395,8 @@ export async function applyMetadataTemplate(
         { repositoryId: repository.id },
         {
           $set: {
+            citation_status: validCitation ? "valid" : "invalid",
+            codemeta_status: validCodemeta ? "valid" : "invalid",
             contains_citation: subjects.citation,
             contains_codemeta: subjects.codemeta,
             contains_metadata: subjects.codemeta && subjects.citation,

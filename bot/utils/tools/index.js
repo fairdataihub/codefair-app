@@ -5,6 +5,12 @@ import { consola } from "consola";
 import { init } from "@paralleldrive/cuid2";
 import human from "humanparser";
 import dbInstance from "../../db.js";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone.js";
+import utc from "dayjs/plugin/utc.js";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 /**
  * * Initialize the database connection
@@ -398,6 +404,9 @@ export async function isRepoPrivate(context, owner, repoName) {
       repo: repoName,
     });
 
+    consola.info(
+      `Repository ${repoName} is private: ${repoDetails.data.private}`,
+    );
     return repoDetails.data.private;
   } catch (error) {
     consola.error("Error verifying if the repository is private:", error);
@@ -421,7 +430,6 @@ export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
       },
     },
   );
-  consola.info("Issue number appended to database");
 }
 
 /**
@@ -453,4 +461,16 @@ export function replaceRawGithubUrl(inputString, oldUrl, newUrl) {
   });
 
   return [modifiedString, firstLineNumber, secondLineNumber];
+}
+
+export function applyLastModifiedTemplate(baseTemplate) {
+  const lastModified = dayjs()
+    .tz("America/Los_Angeles")
+    .format("MMM D YYYY, HH:mm:ss");
+
+  consola.info(
+    `GitHub Issue updated at: ${lastModified} (timezone: America/Los_Angeles)`,
+  );
+
+  return `${baseTemplate}\n\n<sub><span style="color: grey;">Last updated ${lastModified} (timezone: America/Los_Angeles)</span></sub>`;
 }
