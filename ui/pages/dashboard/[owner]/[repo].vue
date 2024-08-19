@@ -145,14 +145,27 @@ const handleSettingsSelect = (key: any) => {
   } else if (key === "rerun-codefair-on-repo") {
     rerunCodefairChecks();
   } else if (key === "view-codefair-settings") {
-    navigateTo(
-      `https://github.com/settings/installations/${data.value?.installationId}`,
-      {
-        open: {
-          target: "_blank",
+    console.log(data.value?.isOrganization);
+    if (data.value?.isOrganization) {
+      // https://github.com/organizations/minecraft-plush/settings/installations/53955153
+      navigateTo(
+        `https://github.com/organizations/${owner}/settings/installations/${data.value?.installationId}`,
+        {
+          open: {
+            target: "_blank",
+          },
         },
-      },
-    );
+      );
+    } else {
+      navigateTo(
+        `https://github.com/settings/installations/${data.value?.installationId}`,
+        {
+          open: {
+            target: "_blank",
+          },
+        },
+      );
+    }
   }
 };
 </script>

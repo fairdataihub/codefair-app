@@ -77,6 +77,7 @@ export default defineEventHandler(async (event) => {
         }
       : null,
     installationId: installation.installationId as number,
+    isOrganization: installation.ownerIsOrganization as boolean,
     licenseRequest: licenseRequest
       ? {
           containsLicense:
