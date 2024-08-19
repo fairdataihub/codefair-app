@@ -325,6 +325,7 @@ export async function verifyInstallationAnalytics(
   repository,
   applyActionLimit = false,
   actionCount = 5,
+  latestCommitInfo,
 ) {
   const owner =
     context.payload?.installation?.account?.login ||
@@ -353,12 +354,24 @@ export async function verifyInstallationAnalytics(
       repo: repository.name,
       repositoryId: repository.id,
       timestamp: Date.now(),
+      latestCommitDate: latestCommitInfo.latestCommitDate,
+      latestCommitMessage: latestCommitInfo.latestCommitMessage,
+      latestCommitUrl: latestCommitInfo.latestCommitUrl,
+      latestCommitSha: latestCommitInfo.latestCommitSha,
     });
   } else {
     if (installation?.action && installation.action_count > 0) {
       installationCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { action_count: installation.action_count - 1 } },
+        {
+          $set: {
+            action_count: installation.action_count - 1,
+            latestCommitDate: latestCommitInfo.latestCommitDate,
+            latestCommitMessage: latestCommitInfo.latestCommitMessage,
+            latestCommitUrl: latestCommitInfo.latestCommitUrl,
+            latestCommitSha: latestCommitInfo.latestCommitSha,
+          },
+        },
       );
     }
 
@@ -366,7 +379,16 @@ export async function verifyInstallationAnalytics(
       consola.info("Action limit reached, no longer limiting actions");
       installationCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { action: false, action_count: 0 } },
+        {
+          $set: {
+            action: false,
+            action_count: 0,
+            latestCommitDate: latestCommitInfo.latestCommitDate,
+            latestCommitMessage: latestCommitInfo.latestCommitMessage,
+            latestCommitUrl: latestCommitInfo.latestCommitUrl,
+            latestCommitSha: latestCommitInfo.latestCommitSha,
+          },
+        },
       );
     }
     verifyRepoName(
