@@ -84,51 +84,68 @@ export default defineEventHandler(async (event) => {
     })
     .toArray();
 
-  // For the first 10 repositories, get the latest commit details
-  for (let index = 0; index < Math.min(installations.length, 10); index++) {
-    const installation = installations[index];
+  // // For the first 10 repositories, get the latest commit details
+  // for (let index = 0; index < Math.min(installations.length, 10); index++) {
+  //   let latestCommitSha = "";
+  //   let latestCommitMessage = "";
+  //   let latestCommitUrl = "";
+  //   let latestCommitDate = "";
+  //   const installation = installations[index];
 
-    const repo = installation.repo as string;
+  //   const repo = installation.repo as string;
 
-    const commits = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}/commits`,
-      {
-        headers: {
-          Authorization: `Bearer ${user.access_token}`,
-        },
+  //   try {
+  //     const commitResponse = await fetch(
+  //       `https://api.github.com/repos/${owner}/${repo}/commits`,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${user.access_token}`,
+  //         },
+  //       },
+  //     );
+
+  //     if (commitResponse.ok) {
+  //       const commits = await commitResponse.json();
+
+  //       if (Array.isArray(commits) && commits.length > 0) {
+  //         latestCommitSha = commits[0]?.sha || "";
+  //         latestCommitMessage = commits[0]?.commit?.message || "";
+  //         latestCommitUrl = commits[0]?.html_url || "";
+  //         latestCommitDate = commits[0]?.commit?.author?.date || "";
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error(
+  //       `Failed to fetch commits for the repository ${repo} for the owner ${owner}`,
+  //     );
+
+  //     console.error(error);
+  //     console.log("error)");
+  //   }
+
+  //   console.log("UHHHHHH");
+
+  //   installations[index] = {
+  //     ...installation,
+  //     latestCommitDate,
+  //     latestCommitMessage,
+  //     latestCommitSha,
+  //     latestCommitUrl,
+  //   };
+  // }
+
+  // Update the db to include ownerIsOrganization
+  await installationCollection.updateMany(
+    {
+      owner,
+      ownerIsOrganization: { $exists: false },
+    },
+    {
+      $set: {
+        ownerIsOrganization,
       },
-    );
-
-    let latestCommitSha = "";
-    let latestCommitMessage = "";
-    let latestCommitUrl = "";
-    let latestCommitDate = "";
-
-    if (commits.ok) {
-      const commitsJson = await commits.json();
-
-      if (commitsJson.length > 0) {
-        latestCommitSha = commitsJson[0].sha || "";
-        latestCommitMessage = commitsJson[0].commit.message || "";
-        latestCommitUrl = commitsJson[0].html_url || "";
-        latestCommitDate = commitsJson[0].commit.author.date || "";
-      }
-    } else {
-      console.error(
-        `Failed to fetch commits for the repository ${repo} for the owner ${owner}`,
-      );
-
-      console.error(await commits.text());
-    }
-
-    installations[index] = {
-      ...installation,
-      latestCommitDate,
-      latestCommitMessage,
-      latestCommitSha,
-      latestCommitUrl,
-    };
-  }
+    },
+  );
 
   return installations.map((installation) => ({
     installationId: installation.installationId as number,

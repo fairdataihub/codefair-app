@@ -82,20 +82,20 @@ if (error.value) {
             <div class="flex-1">
               <div class="flex flex-col gap-1">
                 <NuxtLink
-                  :to="repo.latestCommitUrl"
+                  :to="repo?.latestCommitUrl"
                   target="_blank"
                   class="w-[350px] truncate text-left text-base font-medium transition-all hover:text-blue-500 hover:underline"
                 >
-                  {{ repo.latestCommitMessage }}
+                  {{ repo?.latestCommitMessage }}
                 </NuxtLink>
 
                 <NuxtLink
-                  :to="repo.latestCommitUrl"
+                  :to="repo?.latestCommitUrl"
                   target="_blank"
                   class="flex w-[350px] items-center gap-1 truncate text-left text-sm text-gray-500 transition-all hover:text-blue-500 hover:underline"
                 >
                   <Icon name="ri:git-commit-line" size="17" />
-                  {{ repo.latestCommitSha.substring(0, 7) }}
+                  {{ repo.latestCommitSha?.substring(0, 7) }}
                 </NuxtLink>
               </div>
             </div>
