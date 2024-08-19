@@ -3,7 +3,11 @@ import {
   gatherLanguagesUsed,
   gatherRepoAuthors,
   getDOI,
+  createId,
 } from "../tools/index.js";
+import dbInstance from "../../db.js";
+
+const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
 /**
  * * Converts the date to a Unix timestamp
@@ -248,4 +252,208 @@ export async function gatherMetadata(context, owner, repo) {
   };
 
   return codeMeta;
+}
+
+/**
+ * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
+ *
+ * @param {object} subjects - The subjects to check for
+ * @param {string} baseTemplate - The base template to add to
+ * @param {object} repository - The GitHub repository information
+ * @param {string} owner - The owner of the repository
+ * @param {object} context - The GitHub context object
+ *
+ * @returns {string} - The updated base template
+ */
+export async function applyMetadataTemplate(
+  subjects,
+  baseTemplate,
+  repository,
+  owner,
+  context,
+) {
+  if ((!subjects.codemeta || !subjects.citation) && subjects.license) {
+    // License was found but no codemeta.json or CITATION.cff exists
+    const identifier = createId();
+    let validCitation = false;
+    let validCodemeta = false;
+
+    let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
+
+    const metadataCollection = dbInstance.getDb().collection("codeMetadata");
+    const existingMetadata = await metadataCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (subjects.codemeta) {
+      try {
+        const codemetaFile = await context.octokit.repos.getContent({
+          owner,
+          path: "codemeta.json",
+          repo: repository.name,
+        });
+
+        JSON.parse(Buffer.from(codemetaFile.data.content, "base64").toString());
+
+        validCodemeta = true;
+      } catch (error) {
+        consola.error("Error getting codemeta.json file", error);
+      }
+    }
+
+    if (subjects.citation) {
+      try {
+        const citationFile = await context.octokit.repos.getContent({
+          owner,
+          path: "CITATION.cff",
+          repo: repository.name,
+        });
+
+        yaml.load(Buffer.from(citationFile.data.content, "base64").toString());
+        validCitation = true;
+      } catch (error) {
+        consola.error("Error getting CITATION.cff file", error);
+      }
+    }
+
+    if (!existingMetadata) {
+      // Entry does not exist in db, create a new one
+      const newDate = Date.now();
+      const gatheredMetadata = await gatherMetadata(context, owner, repository);
+      await metadataCollection.insertOne({
+        citation_status: validCitation ? "valid" : "invalid",
+        codemeta_status: validCodemeta ? "valid" : "invalid",
+        contains_citation: subjects.citation,
+        contains_codemeta: subjects.codemeta,
+        contains_metadata: subjects.codemeta && subjects.citation,
+        created_at: newDate,
+        identifier,
+        metadata: gatheredMetadata,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing metadata request
+      await metadataCollection.updateOne(
+        { repositoryId: repository.id },
+        {
+          $set: {
+            citation_status: validCitation ? "valid" : "invalid",
+            codemeta_status: validCodemeta ? "valid" : "invalid",
+            contains_citation: subjects.citation,
+            contains_codemeta: subjects.codemeta,
+            contains_metadata: subjects.codemeta && subjects.citation,
+            updated_at: Date.now(),
+          },
+        },
+      );
+
+      url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
+    }
+    const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
+    baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemetada.json are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
+  }
+
+  if (subjects.codemeta && subjects.citation && subjects.license) {
+    // Download the codemeta.json file from the repo
+    let validCodemeta = false;
+    let validCitation = false;
+
+    try {
+      const codemetaFile = await context.octokit.repos.getContent({
+        owner,
+        path: "codemeta.json",
+        repo: repository.name,
+      });
+
+      JSON.parse(Buffer.from(codemetaFile.data.content, "base64").toString());
+
+      validCodemeta = true;
+    } catch (error) {
+      consola.error("Error getting codemeta.json file", error);
+    }
+
+    try {
+      const citationFile = await context.octokit.repos.getContent({
+        owner,
+        path: "CITATION.cff",
+        repo: repository.name,
+      });
+
+      yaml.load(Buffer.from(citationFile.data.content, "base64").toString());
+      validCitation = true;
+    } catch (error) {
+      consola.error("Error getting CITATION.cff file", error);
+    }
+
+    // Convert the content to a json object
+    const codemetaContent = JSON.parse(
+      Buffer.from(codemetaFile.data.content, "base64").toString(),
+    );
+
+    // Convert the content to the structure we use for code metadata
+    const metadata = convertMetadataForDB(codemetaContent);
+
+    // License, codemeta.json and CITATION.cff files were found
+    const identifier = createId();
+
+    let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
+
+    const metadataCollection = dbInstance.getDb().collection("codeMetadata");
+    const existingMetadata = await metadataCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (!existingMetadata) {
+      // Entry does not exist in db, create a new one
+      const newDate = Date.now();
+      // const gatheredMetadata = await gatherMetadata(context, owner, repository);
+      await metadataCollection.insertOne({
+        citation_status: validCitation ? "valid" : "invalid",
+        codemeta_status: validCodemeta ? "valid" : "invalid",
+        contains_citation: subjects.citation,
+        contains_codemeta: subjects.codemeta,
+        contains_metadata: subjects.codemeta && subjects.citation,
+        created_at: newDate,
+        identifier,
+        metadata,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing metadata request
+      await metadataCollection.updateOne(
+        { repositoryId: repository.id },
+        {
+          $set: {
+            citation_status: validCitation ? "valid" : "invalid",
+            codemeta_status: validCodemeta ? "valid" : "invalid",
+            contains_citation: subjects.citation,
+            contains_codemeta: subjects.codemeta,
+            contains_metadata: subjects.codemeta && subjects.citation,
+            metadata,
+            updated_at: Date.now(),
+          },
+        },
+      );
+
+      url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
+    }
+    const metadataBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-0ea5e9.svg)](${url}?)`;
+    baseTemplate += `\n\n## Metadata ✔️\n\nA CITATION.cff and a codemeta.json file are found in the repository. They may need to be updated over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
+  }
+
+  if (!subjects.license) {
+    // License was not found
+    const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
+    baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemetada.json metadata files are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). Codefair will check for these files after a license file is detected.\n\n${metadataBadge}`;
+  }
+
+  return baseTemplate;
 }

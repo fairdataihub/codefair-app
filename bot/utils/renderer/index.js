@@ -1,480 +1,15 @@
-import url from "url";
 import { consola } from "consola";
 import {
   applyGitHubIssueToDatabase,
   createId,
-  isRepoPrivate,
+  applyLastModifiedTemplate,
 } from "../tools/index.js";
-import { validateCWLFile } from "../cwl/index.js";
-import { gatherMetadata, convertMetadataForDB } from "../metadata/index.js";
-import dbInstance from "../../db.js";
+import { applyCWLTemplate } from "../cwl/index.js";
+import { applyMetadataTemplate } from "../metadata/index.js";
+import { applyLicenseTemplate } from "../license/index.js";
 
-const GITHUB_APP_NAME = process.env.GITHUB_APP_NAME;
+const { GITHUB_APP_NAME } = process.env;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
-
-/**
- * * Removes the token from the URL in the validation message
- * @param {String} inputString - The string to remove the token from
- * @returns {String} - The string with the token removed
- */
-function removeTokenFromUrlInString(inputString) {
-  // Regex to find the GitHub raw URL with an optional token
-  const urlRegex =
-    /https:\/\/raw\.githubusercontent\.com\/[^\s:]+(\?token=[^:\s]+)?/g;
-
-  // Replace each found URL in the string after removing the token
-  return inputString.replace(urlRegex, (url) => {
-    return url.replace(/\?token=[^:]+/, "");
-  });
-}
-
-/**
- * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
- *
- * @param {object} subjects - The subjects to check for
- * @param {string} baseTemplate - The base template to add to
- * @param {object} repository - The GitHub repository information
- * @param {string} owner - The owner of the repository
- * @param {object} context - The GitHub context object
- *
- * @returns {string} - The updated base template
- */
-export async function applyMetadataTemplate(
-  subjects,
-  baseTemplate,
-  repository,
-  owner,
-  context,
-) {
-  if ((!subjects.codemeta || !subjects.citation) && subjects.license) {
-    // License was found but no codemeta.json or CITATION.cff exists
-    const identifier = createId();
-
-    let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
-
-    const metadataCollection = dbInstance.getDb().collection("codeMetadata");
-    const existingMetadata = await metadataCollection.findOne({
-      repositoryId: repository.id,
-    });
-
-    if (!existingMetadata) {
-      // Entry does not exist in db, create a new one
-      const newDate = Date.now();
-      const gatheredMetadata = await gatherMetadata(context, owner, repository);
-      await metadataCollection.insertOne({
-        created_at: newDate,
-        identifier,
-        metadata: gatheredMetadata,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
-      });
-    } else {
-      // Get the identifier of the existing metadata request
-      await metadataCollection.updateOne(
-        { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
-      );
-
-      url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
-    }
-    const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
-    baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemetada.json are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
-  }
-
-  if (subjects.codemeta && subjects.citation && subjects.license) {
-    // Download the codemeta.json file from the repo
-    const codemetaFile = await context.octokit.repos.getContent({
-      owner,
-      path: "codemeta.json",
-      repo: repository.name,
-    });
-
-    // Convert the content to a json object
-    const codemetaContent = JSON.parse(
-      Buffer.from(codemetaFile.data.content, "base64").toString(),
-    );
-
-    // Convert the content to the structure we use for code metadata
-    const metadata = convertMetadataForDB(codemetaContent);
-
-    // License, codemeta.json and CITATION.cff files were found
-    const identifier = createId();
-
-    let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
-
-    const metadataCollection = dbInstance.getDb().collection("codeMetadata");
-    const existingMetadata = await metadataCollection.findOne({
-      repositoryId: repository.id,
-    });
-
-    if (!existingMetadata) {
-      // Entry does not exist in db, create a new one
-      const newDate = Date.now();
-      // const gatheredMetadata = await gatherMetadata(context, owner, repository);
-      await metadataCollection.insertOne({
-        created_at: newDate,
-        identifier,
-        metadata,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
-      });
-    } else {
-      // Get the identifier of the existing metadata request
-      await metadataCollection.updateOne(
-        { repositoryId: repository.id },
-        { $set: { metadata, updated_at: Date.now() } },
-      );
-
-      url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
-    }
-    const metadataBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-0ea5e9.svg)](${url}?)`;
-    baseTemplate += `\n\n## Metadata ✔️\n\nA CITATION.cff and a codemeta.json file are found in the repository. They may need to be updated over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
-  }
-
-  if (!subjects.license) {
-    // License was not found
-    const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemetada.json metadata files are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). Codefair will check for these files after a license file is detected.\n\n${metadataBadge}`;
-  }
-
-  return baseTemplate;
-}
-
-/**
- * * Applies the license template to the base template
- *
- * @param {object} subjects - The subjects to check for
- * @param {string} baseTemplate - The base template to add to
- * @param {object} repository - The GitHub repository information
- * @param {string} owner - The owner of the repository
- *
- * @returns {string} - The updated base template
- */
-export async function applyLicenseTemplate(
-  subjects,
-  baseTemplate,
-  repository,
-  owner,
-  context,
-) {
-  if (!subjects.license) {
-    const identifier = createId();
-    let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
-    const licenseCollection = dbInstance.getDb().collection("licenseRequests");
-    const existingLicense = await licenseCollection.findOne({
-      repositoryId: repository.id,
-    });
-
-    if (!existingLicense) {
-      // Entry does not exist in db, create a new one
-      const newDate = Date.now();
-      await licenseCollection.insertOne({
-        created_at: newDate,
-        identifier,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
-      });
-    } else {
-      // Get the identifier of the existing license request
-      // Update the database
-      await licenseCollection.updateOne(
-        { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
-      );
-      url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
-    }
-    // No license file found text
-    const licenseBadge = `[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${url})`;
-    baseTemplate += `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
-  } else {
-    // Get the license identifier
-    const licenseRequest = await context.octokit.rest.licenses.getForRepo({
-      owner,
-      repo: repository.name,
-    });
-
-    let licenseId = licenseRequest.data.license.spdx_id;
-    let licenseContent = Buffer.from(
-      licenseRequest.data.content,
-      "base64",
-    ).toString("utf-8");
-    if (
-      licenseRequest.data.license.spdx_id === "no-license" ||
-      licenseRequest.data.license.spdx_id === "NOASSERTION"
-    ) {
-      licenseId = null;
-      licenseContent = null;
-    }
-
-    // License file found text
-    const identifier = createId();
-    let url = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
-    const licenseCollection = dbInstance.getDb().collection("licenseRequests");
-    const existingLicense = await licenseCollection.findOne({
-      repositoryId: repository.id,
-    });
-
-    if (!existingLicense) {
-      // Entry does not exist in db, create a new one
-      const newDate = Date.now();
-      await licenseCollection.insertOne({
-        created_at: newDate,
-        identifier,
-        licenseContent,
-        licenseId,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
-      });
-    } else {
-      // Get the identifier of the existing license request
-      // Update the database
-      await licenseCollection.updateOne(
-        { repositoryId: repository.id },
-        { $set: { licenseContent, licenseId, updated_at: Date.now() } },
-      );
-      url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
-    }
-    const licenseBadge = `[![License](https://img.shields.io/badge/Edit_License-0ea5e9.svg)](${url})`;
-    baseTemplate += `## LICENSE ✔️\n\nA LICENSE file is found at the root level of the repository.\n\n${licenseBadge}`;
-  }
-
-  return baseTemplate;
-}
-
-/**
- *
- * @param {Object} subjects - The subjects to check for
- * @param {String} baseTemplate - The base template to add to
- * @param {Object} repository - Repository object
- * @param {String} owner - Repository owner
- * @param {Object} context - GitHub context object
- * @returns
- */
-export async function applyCWLTemplate(
-  subjects,
-  baseTemplate,
-  repository,
-  owner,
-  context,
-) {
-  const privateRepo = await isRepoPrivate(context, owner, repository.name);
-  let url = `${CODEFAIR_DOMAIN}/view/cwl-validation/`;
-  const identifier = createId();
-  const cwlCollection = dbInstance.getDb().collection("cwlValidation");
-  const existingCWL = await cwlCollection.findOne({
-    repositoryId: repository.id,
-  });
-  const overallSection = `\n\n## Language Specific Standards\n\nTo make your software FAIR is it important to follow language specific standards and best practices, as recommended in the [FAIR-BioRS guidelines](https://fair-biors.org/). Codefair will check below that your code complies with applicable standards,`;
-
-  if (subjects.cwl.removed_files.length > 0) {
-    // Remove the files from the database
-    const existingCWL = await cwlCollection.findOne({
-      repositoryId: repository.id,
-    });
-
-    if (existingCWL) {
-      const newFiles = existingCWL.files.filter((file) => {
-        return !subjects.cwl.removed_files.includes(file.path);
-      });
-
-      await cwlCollection.updateOne(
-        { repositoryId: repository.id },
-        {
-          $set: {
-            contains_cwl_files: newFiles.length > 0,
-            files: newFiles,
-            updated_at: Date.now(),
-          },
-        },
-      );
-    }
-  }
-
-  // If no CWL files are found in the list of files
-  if (subjects.cwl.files.length === 0) {
-    let overallStatus = "";
-    let tableContent = "";
-    if (!existingCWL) {
-      // Entry does not exist in the db, create a new one
-      // No CWL files found in the repository
-      const newDate = Date.now();
-      await cwlCollection.insertOne({
-        contains_cwl_files: subjects.cwl.contains_cwl,
-        created_at: newDate,
-        files: [],
-        identifier,
-        overall_status: overallStatus,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
-      });
-    } else {
-      // CWL files were found in the repository but no new ones to validate were found
-      // Get the identifier of the existing cwl request
-      await cwlCollection.updateOne(
-        { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
-      );
-
-      overallStatus = existingCWL.overall_status;
-
-      for (const file of existingCWL.files) {
-        tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "✔️" : "❌"} |\n`;
-      }
-    }
-
-    if (!subjects.cwl.contains_cwl) {
-      // NO CWL files found in the repository, return the base template without appending anything
-      consola.info("No CWL files in repo, not applying CWL template");
-      return baseTemplate;
-    }
-
-    const validOverall = overallStatus === "valid";
-
-    // No new CWL files were found in the repository but some were validated already
-    const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
-    baseTemplate += `${overallSection}\n\n### CWL Validations ${validOverall ? "✔️" : "❗"}\n\nCodefair has detected that you are following the Common Workflow Language (CWL) standard to describe your command line tool. Codefair ran the [cwltool validator](https://cwltool.readthedocs.io/en/latest/) and ${validOverall ? `all ***${subjects.cwl.files.length}*** CWL file(s) in your repository are valid.` : `***${failedCount}/${subjects.cwl.files.length}*** CWL file(s) in your repository are not valid.`}\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Validation result |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
-  } else {
-    const cwlFiles = [];
-    let validOverall = true;
-    let tableContent = "";
-    let failedCount = 0;
-    // Iterate through the list of files initially gathered
-    consola.start("Validating new CWL files for", repository.name);
-    for (const file of subjects.cwl.files) {
-      const fileSplit = file.name.split(".");
-      if (fileSplit.includes("cwl")) {
-        const [isValidCWL, validationMessage] = await validateCWLFile(
-          file.download_url,
-        );
-        consola.info(
-          `File: ${file.path} is ${isValidCWL ? "valid" : "invalid"}`,
-        );
-
-        let validationMessageForPrivate = validationMessage;
-
-        if (!isValidCWL && validOverall) {
-          // Sets to false as soon as one file is invalid
-          validOverall = false;
-        }
-
-        if (!isValidCWL) {
-          failedCount += 1;
-        }
-
-        if (privateRepo) {
-          consola.warn("Private repo, removing token from validation message");
-          validationMessageForPrivate =
-            removeTokenFromUrlInString(validationMessage);
-        }
-
-        const newDate = Date.now();
-        cwlFiles.push({
-          href: file.html_url,
-          last_modified: newDate,
-          last_validated: newDate,
-          path: file.path,
-          validation_message: privateRepo
-            ? validationMessageForPrivate
-            : validationMessage,
-          validation_status: isValidCWL ? "valid" : "invalid",
-        });
-
-        // Apply the validation file count to the analytics collection on the db
-        const analyticsCollection = dbInstance.getDb().collection("analytics");
-        await analyticsCollection.updateOne(
-          { repositoryId: repository.id },
-          {
-            $inc: { "cwlValidation.validatedFileCount": 1 },
-          },
-          { upsert: true },
-        );
-
-        tableContent += `| ${file.path} | ${isValidCWL ? "✔️" : "❌"} |\n`;
-      }
-    }
-    url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${identifier}`;
-    if (!existingCWL) {
-      // Entry does not exist in the db, create a new one (no old files exist, first time seeing cwl files)
-      const newDate = Date.now();
-      await cwlCollection.insertOne({
-        contains_cwl_files: subjects.cwl.contains_cwl,
-        created_at: newDate,
-        files: cwlFiles,
-        identifier,
-        overall_status: validOverall ? "valid" : "invalid",
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
-      });
-    } else {
-      // An entry exists in the db, thus possible old files exist (merge both lists)
-      const fileMap = new Map();
-
-      // Add existing files to the map
-      existingCWL.files.forEach((file) => {
-        fileMap.set(file.path, file);
-      });
-
-      // Add new files to the map, replacing any existing entries with the same path
-      cwlFiles.forEach((file) => {
-        fileMap.set(file.path, file);
-      });
-
-      // Convert the map back to an array
-      const newFiles = Array.from(fileMap.values());
-
-      await cwlCollection.updateOne(
-        { repositoryId: repository.id },
-        {
-          $set: {
-            contains_cwl_files: newFiles.length > 0,
-            files: [...newFiles],
-            overall_status: validOverall ? "valid" : "invalid",
-            updated_at: Date.now(),
-          },
-        },
-      );
-      url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${existingCWL.identifier}`;
-
-      tableContent = "";
-      failedCount = 0;
-      for (const file of newFiles) {
-        tableContent += `| ${file.path} | ${file.validation_status === "valid" ? "✔️" : "❌"} |\n`;
-        subjects.cwl.files.push(file);
-
-        if (file.validation_status === "invalid") {
-          failedCount += 1;
-        }
-
-        if (file.validation_status === "invalid" && validOverall) {
-          validOverall = false;
-        }
-      }
-
-      subjects.cwl.files = newFiles;
-    }
-
-    const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
-    baseTemplate += `${overallSection}\n\n### CWL Validations ${validOverall ? "✔️" : "❗"}\n\nCodefair has detected that you are following the Common Workflow Language (CWL) standard to describe your command line tool. Codefair ran the [cwltool validator](https://cwltool.readthedocs.io/en/latest/) and ${validOverall ? `all ***${subjects.cwl.files.length}*** CWL file(s) in your repository are valid.` : `***${failedCount}/${subjects.cwl.files.length}*** CWL file(s) in your repository are not valid.`}\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Validation result |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
-  }
-
-  return baseTemplate;
-}
 
 /**
  * * Renders the body of the dashboard issue message
@@ -499,7 +34,10 @@ export async function renderIssues(
   prInfo = { title: "", link: "" },
 ) {
   if (emptyRepo) {
-    consola.warn("Applying empty repo template");
+    consola.success(
+      "Applying empty repo template for repository:",
+      repository.name,
+    );
     return `# Check the FAIRness of your software\n\nThis issue is your repository's dashboard for all things FAIR. Keep it open as making and keeping software FAIR is a continuous process that evolves along with the software. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n> [!WARNING]\n> Currently your repository is empty and will not be checked until content is detected within your repository.\n\n## LICENSE\n\nTo make your software reusable a license file is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org). Codefair will check for a license file after you add content to your repository.\n\n![License](https://img.shields.io/badge/License_Not_Checked-fbbf24)\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemetada.json metadata files are expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org/docs/guidelines). Codefair will check for these files after a license file is detected.\n\n![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
   }
 
@@ -537,6 +75,8 @@ export async function renderIssues(
     owner,
     context,
   );
+
+  baseTemplate = applyLastModifiedTemplate(baseTemplate);
 
   return baseTemplate;
 }
@@ -637,7 +177,7 @@ export async function applyCodemetaTemplate(
     // License was found but no codemeta.json exists
     const identifier = createId();
 
-    let url = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
+    let badgeURL = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
 
     const codemetaCollection = db.collection("codeMetadata");
     const existingCodemeta = await codemetaCollection.findOne({
@@ -662,10 +202,10 @@ export async function applyCodemetaTemplate(
         { repositoryId: repository.id },
         { $set: { updated_at: Date.now() } },
       );
-      url = `${CODEFAIR_DOMAIN}/add/codemeta/${existingCodemeta.identifier}`;
+      badgeURL = `${CODEFAIR_DOMAIN}/add/codemeta/${existingCodemeta.identifier}`;
     }
 
-    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Add_Codemeta-dc2626.svg)](${url})`;
+    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Add_Codemeta-dc2626.svg)](${badgeURL})`;
     baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file was not found in the repository. To make your software reusable a codemetada.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org).\n\n${codemetaBadge}`;
   } else if (subjects.codemeta && subjects.license) {
     // License was found and codemetata.json also exists
@@ -690,9 +230,9 @@ export async function applyCodemetaTemplate(
         { repositoryId: repository.id },
         { $set: { updated_at: Date.now() } },
       );
-      url = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
+      badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     }
-    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Edit_Codemeta-dc2626.svg)](${url})`;
+    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Edit_Codemeta-dc2626.svg)](${badgeURL})`;
     baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file found in the repository.\n\n${codemetaBadge}`;
   } else {
     // codemeta and license does not exist
@@ -725,7 +265,7 @@ export async function applyCitationTemplate(
     // License was found but no citation file was found
     const identifier = createId();
 
-    let url = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
+    let badgeURL = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
     const citationCollection = db.collection("citationRequests");
     const existingCitation = await citationCollection.findOne({
       repositoryId: repository.id,
@@ -749,10 +289,10 @@ export async function applyCitationTemplate(
         { repositoryId: repository.id },
         { $set: { updated_at: Date.now() } },
       );
-      url = `${CODEFAIR_DOMAIN}/add/citation/${existingCitation.identifier}`;
+      badgeURL = `${CODEFAIR_DOMAIN}/add/citation/${existingCitation.identifier}`;
     }
 
-    const citationBadge = `[![Citation](https://img.shields.io/badge/Add_Citation-dc2626.svg)](${url})`;
+    const citationBadge = `[![Citation](https://img.shields.io/badge/Add_Citation-dc2626.svg)](${badgeURL})`;
     baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file was not found in the repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.\n\n${citationBadge}`;
   } else if (subjects.citation && subjects.license) {
     // Citation file was found and license was found
