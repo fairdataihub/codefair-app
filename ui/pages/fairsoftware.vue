@@ -161,7 +161,9 @@
             To fill this gap, we established the FAIR Biomedical Research
             Software (FAIR-BioRS) guideline, which are clear, actionable, and
             step-by-step guidelines for making biomedical research software
-            FAIR.
+            FAIR. Although they were developed with biomedical research software
+            in mind, most elements of the guidelines are applicable to all
+            software irrespective of their research discipline.
           </p>
         </div>
 
