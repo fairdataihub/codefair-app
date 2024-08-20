@@ -62,7 +62,7 @@ Codefair is your personal assistant when it comes to making your research softwa
 
 ### Documentation
 
-See our [dedicated webpage](https://docs.codefair.io/docs/installation.html) for the full documentation, including details about each features and how to use them.
+See our [dedicated webpage](https://docs.codefair.io/docs/installation.html) for full details on what permissions are used and the features Codefair provides.
 
 ## Run the GitHub app locally
 
