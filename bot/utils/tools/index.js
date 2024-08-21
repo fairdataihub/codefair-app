@@ -294,14 +294,14 @@ export async function verifyRepoName(
  * * Check if the repository is empty
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
- * @param {string} repo - The name of the repository
+ * @param {string} repoName - The name of the repository
  * @returns {bool} - Returns true if the repository is empty, false otherwise
  */
-export async function isRepoEmpty(context, owner, repo) {
+export async function isRepoEmpty(context, owner, repoName) {
   try {
     const repoContent = await context.octokit.repos.getContent({
       owner,
-      repo,
+      repo: repoName,
     });
 
     return repoContent.data.length === 0;
@@ -309,7 +309,7 @@ export async function isRepoEmpty(context, owner, repo) {
     if (error.status === 404) {
       return true;
     }
-    consola.info("Error checking if the repository is empty:", error);
+    consola.error("Error checking if the repository is empty:", error);
   }
 }
 
