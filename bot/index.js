@@ -75,8 +75,8 @@ export default async (app, { getRouter }) => {
           // Gather the latest commit to main info
           const latestCommit = await context.octokit.repos.getCommit({
             owner,
-            repo: repository.name,
             ref: "main",
+            repo: repository.name,
           });
 
           latestCommitInfo.latestCommitSha = latestCommit.data.sha || "";
@@ -265,8 +265,8 @@ export default async (app, { getRouter }) => {
               action_count: installation.action_count - 1,
               latestCommitDate: latestCommitInfo.latestCommitDate,
               latestCommitMessage: latestCommitInfo.latestCommitMessage,
-              latestCommitUrl: latestCommitInfo.latestCommitUrl,
               latestCommitSha: latestCommitInfo.latestCommitSha,
+              latestCommitUrl: latestCommitInfo.latestCommitUrl,
             },
           },
         );
@@ -284,8 +284,8 @@ export default async (app, { getRouter }) => {
               action_count: 0,
               latestCommitDate: latestCommitInfo.latestCommitDate,
               latestCommitMessage: latestCommitInfo.latestCommitMessage,
-              latestCommitUrl: latestCommitInfo.latestCommitUrl,
               latestCommitSha: latestCommitInfo.latestCommitSha,
+              latestCommitUrl: latestCommitInfo.latestCommitUrl,
             },
           },
         );
@@ -584,6 +584,15 @@ export default async (app, { getRouter }) => {
 
       if (cwlExists) {
         cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+
+        if (cwlExists.files.length > 0) {
+          consola.info("CWL Validation rerun:", cwlObject);
+          // Remove the files that are not in cwlObject
+          cwlObject.removed_files = cwlExists.files.filter((file) => {
+            consola.info(file);
+            return !cwlObject.files.path.includes(file.path);
+          });
+        }
       }
 
       const subjects = {
@@ -634,6 +643,15 @@ export default async (app, { getRouter }) => {
 
       if (cwlExists?.contains_cwl_files) {
         cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+
+        if (cwlExists.files.length > 0) {
+          consola.info("CWL Validation rerun:", cwlObject);
+          // Remove the files that are not in cwlObject
+          cwlObject.removed_files = cwlExists.files.filter((file) => {
+            consola.info(file);
+            return !cwlObject.files.includes(file.path);
+          });
+        }
       }
 
       const subjects = {
