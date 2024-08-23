@@ -211,7 +211,7 @@ export async function applyCodemetaTemplate(
     }
 
     const codemetaBadge = `[![Citation](https://img.shields.io/badge/Add_Codemeta-dc2626.svg)](${badgeURL})`;
-    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file was not found in the repository. To make your software reusable a codemeta.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org).\n\n${codemetaBadge}`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file was not found in the repository. To make your software reusable a codemetada.json is expected at the root level of your repository.\n\n${codemetaBadge}`;
   } else if (subjects.codemeta && subjects.license) {
     // License was found and codemetata.json also exists
     // Then add codemeta section mentioning it will be checked after license is added
@@ -242,7 +242,7 @@ export async function applyCodemetaTemplate(
   } else {
     // codemeta and license does not exist
     const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/Codemeta_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file will be checked after a license file is added. To make your software reusable a codemeta.json is expected at the root level of your repository, as recommended in the [FAIR-BioRS Guidelines](https://fair-biors.org).\n\n${codemetaBadge}`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file will be checked after a license file is added. To make your software reusable a codemetada.json is expected at the root level of your repository.\n\n${codemetaBadge}`;
   }
 
   return baseTemplate;

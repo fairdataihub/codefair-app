@@ -289,9 +289,19 @@ breadcrumbsStore.hideBreadcrumbs();
             <NuxtLink
               to="https://github.com/fairdataihub/codefair-app/issues"
               target="_blank"
+              class="align-center flex w-3/5 justify-center self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+            >
+              <span class="ml-4">Open a GitHub issue</span>
+
+              <Icon name="fa:github" size="25" />
+            </NuxtLink>
+
+            <NuxtLink
+              to="https://docs.codefair.io/"
+              target="_blank"
               class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
             >
-              Open a GitHub issue ->
+              Read the Documentation ->
             </NuxtLink>
           </div>
         </div>

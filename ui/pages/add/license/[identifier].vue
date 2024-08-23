@@ -241,14 +241,7 @@ const navigateToPR = () => {
             class="text-blue-500 underline transition-all hover:text-blue-600"
             >https://choosealicense.com</NuxtLink
           >. To make your software reusable a license file is expected at the
-          root level of your repository, as recommended in the
-          <NuxtLink
-            to="https://fair-biors.org/docs/guidelines"
-            target="_blank"
-            class="text-blue-400 underline transition-all hover:text-blue-500"
-          >
-            FAIR-BioRS Guidelines</NuxtLink
-          >. It is important to choose your license early since it will affect
+          root level of your repository. It is important to choose your license early since it will affect
           your software's dependencies.
         </p>
       </div>

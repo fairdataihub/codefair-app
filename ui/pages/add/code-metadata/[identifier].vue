@@ -376,17 +376,11 @@ const navigateToPR = () => {
         <div class="border-b border-dashed py-2">
           <p class="text-base">
             To make your software FAIR, a CITATION.cff and codemeta.json file
-            are expected at the root level of your repository, as recommended in
-            the
-            <NuxtLink
-              to="https://fair-biors.org/docs/guidelines"
-              target="_blank"
-              class="text-blue-400 underline transition-all hover:text-blue-500"
-              >FAIR-BioRS Guidelines</NuxtLink
-            >. They help people discover your software and provide information
-            about your software to them. Provide metadata about your software
-            below and codefair will submit a pull request with a CITATION.cff
-            and codemeta.json file for you.
+            are expected at the root level of your repository. They help people
+            discover your software and provide information about your software
+            to them. Provide metadata about your software below and codefair
+            will submit a pull request with a CITATION.cff and codemeta.json
+            file for you.
           </p>
         </div>
       </n-flex>
