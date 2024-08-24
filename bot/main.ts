@@ -1,5 +1,5 @@
 import { Server, Probot } from "probot";
-import app from "./index.js";
+import app from "./index.ts";
 // import "dotenv/config";
 
 async function startServer() {

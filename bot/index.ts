@@ -1,6 +1,6 @@
 // import { MongoClient } from "mongodb";
-import * as express,  from "express";
-import  { Router } from "express";
+import * as express from "express";
+import { Router } from "express";
 import { consola } from "consola";
 import { Probot } from "probot";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
@@ -29,7 +29,10 @@ const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If yo
 //  * This is the main entrypoint to your Probot app
 //  * @param {import('probot').Probot} app
 //  */
-export default async (app: Probot, { getRouter }: { getRouter: () => Router }) => {
+export default async (
+  app: Probot,
+  { getRouter }: { getRouter: () => Router },
+) => {
   // Connect to the MongoDB database
   await intializeDatabase();
 
