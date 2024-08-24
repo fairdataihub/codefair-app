@@ -50,6 +50,7 @@ export default defineNuxtConfig({
     "@bg-dev/nuxt-naiveui",
     "notivue/nuxt",
     "@nuxtjs/color-mode",
+    "@pinia/nuxt",
     "dayjs-nuxt",
     [
       "@nuxtjs/google-fonts",

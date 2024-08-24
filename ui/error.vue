@@ -108,7 +108,7 @@ if (props.error) {
           </p>
 
           <n-flex justify="center">
-            <p>
+            <p class="text-center">
               Please visit the
               <NuxtLink
                 to="/faq"
@@ -139,7 +139,7 @@ if (props.error) {
             repository.
           </p>
 
-          <n-flex justify="center hidden">
+          <n-flex justify="center">
             <p>
               Please visit the
               <NuxtLink

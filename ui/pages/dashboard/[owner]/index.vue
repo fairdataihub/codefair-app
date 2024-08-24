@@ -1,5 +1,16 @@
 <script setup lang="ts">
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+
 const route = useRoute();
+
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.showBreadcrumbs();
+breadcrumbsStore.setFeature({
+  id: "",
+  name: "",
+  icon: "",
+});
 
 const { owner } = route.params as { owner: string };
 
@@ -29,26 +40,8 @@ if (error.value) {
 
 <template>
   <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
-    <n-breadcrumb class="pb-5">
-      <n-breadcrumb-item :clickable="false">
-        <Icon name="ri:dashboard-fill" />
-
-        Dashboard
-      </n-breadcrumb-item>
-
-      <n-breadcrumb-item :clickable="false">
-        <Icon name="uil:github" />
-        {{ owner }}
-      </n-breadcrumb-item>
-    </n-breadcrumb>
-
     <n-flex vertical>
       <h1>Apps being managed by Codefair</h1>
-
-      <p>
-        Codefair is managing the following apps on your GitHub account. You can
-        manage the settings for each app by clicking on the app name.
-      </p>
 
       <n-divider />
 
@@ -58,42 +51,92 @@ if (error.value) {
           :key="repo.repositoryId"
           class="mt-2 rounded-lg shadow-md"
         >
-          <n-flex align="center">
-            <div class="flex-1">
-              <span class="text-lg font-medium">
-                {{ repo.repo }}
-              </span>
+          <n-flex align="center" justify="space-beteween">
+            <n-flex align="start">
+              <n-avatar
+                size="small"
+                :src="`https://api.dicebear.com/9.x/identicon/svg?seed=${repo.repositoryId}&backgroundColor=ffffff&bacgroundType=gradientLinear`"
+                class="mt-2"
+              />
+
+              <div class="flex flex-col">
+                <NuxtLink
+                  :to="`/dashboard/${owner}/${repo.repo}`"
+                  target="_blank"
+                  class="w-max transition-all hover:text-blue-500 hover:underline"
+                >
+                  <span class="text-lg font-medium">
+                    {{ repo.repo }}
+                  </span>
+                </NuxtLink>
+
+                <NuxtLink
+                  :to="`https://github.com/${owner}/${repo.repo}`"
+                  target="_blank"
+                  class="w-max truncate text-left text-xs text-gray-500 transition-all hover:text-blue-500 hover:underline"
+                >
+                  <Icon name="ri:external-link-line" size="13" />
+                  {{ owner }}/{{ repo.repo }}
+                </NuxtLink>
+              </div>
+            </n-flex>
+
+            <div>
+              <n-divider vertical />
             </div>
 
-            <n-flex>
-              <NuxtLink :to="`/dashboard/${owner}/${repo.repo}`">
-                <n-button>
-                  <template #icon>
-                    <Icon name="ri:settings-4-fill" />
-                  </template>
+            <div class="flex-1">
+              <div class="flex flex-col gap-1">
+                <NuxtLink
+                  :to="repo?.latestCommitUrl"
+                  target="_blank"
+                  class="w-[350px] truncate text-left text-base font-medium transition-all hover:text-blue-500 hover:underline"
+                >
+                  {{ repo?.latestCommitMessage }}
+                </NuxtLink>
 
-                  Manage
-                </n-button>
-              </NuxtLink>
+                <NuxtLink
+                  v-if="repo?.latestCommitSha"
+                  :to="repo?.latestCommitUrl"
+                  target="_blank"
+                  class="flex w-[350px] items-center gap-1 truncate text-left text-sm text-gray-500 transition-all hover:text-blue-500 hover:underline"
+                >
+                  <Icon name="ri:git-commit-line" size="17" />
+                  {{ repo.latestCommitSha?.substring(0, 7) }}
+                </NuxtLink>
+              </div>
+            </div>
 
+            <n-flex align="center">
               <NuxtLink
-                :href="`https://github.com/${owner}/${repo.repo}`"
+                :to="`https://github.com/${owner}/${repo.repo}`"
                 target="_blank"
+                class="hidden"
               >
-                <n-button>
+                <n-button secondary type="info">
                   <template #icon>
                     <Icon name="ri:github-fill" />
                   </template>
                   View on GitHub
                 </n-button>
-              </NuxtLink></n-flex
-            >
+              </NuxtLink>
+
+              <NuxtLink :to="`/dashboard/${owner}/${repo.repo}`">
+                <n-button type="primary">
+                  <template #icon>
+                    <Icon name="ri:settings-4-fill" />
+                  </template>
+
+                  Manage FAIR Compliance
+                </n-button>
+              </NuxtLink>
+            </n-flex>
           </n-flex>
         </n-card>
       </n-flex>
     </n-flex>
 
-    <!-- <n-collapse class="mt-8">
+    <!-- <n-collapse class="mt-8" default-expanded-names="data">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
       </n-collapse-item>

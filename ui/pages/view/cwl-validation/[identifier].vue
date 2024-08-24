@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+
 definePageMeta({
   middleware: ["protected"],
 });
 
 const route = useRoute();
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.showBreadcrumbs();
 
 const { identifier } = route.params as { identifier: string };
 
@@ -11,6 +16,12 @@ const githubRepo = ref<string | null>(null);
 
 const { data, error } = await useFetch(`/api/cwlValidation/${identifier}`, {
   headers: useRequestHeaders(["cookie"]),
+});
+
+breadcrumbsStore.setFeature({
+  id: "view-cwl-validation",
+  name: "View CWL Validation",
+  icon: "cib:common-workflow-language",
 });
 
 if (error.value) {
@@ -26,34 +37,14 @@ if (error.value) {
 
 if (data.value) {
   githubRepo.value = `${data.value.owner}/${data.value.repo}`;
+
+  breadcrumbsStore.setOwner(data.value.owner);
+  breadcrumbsStore.setRepo(data.value.repo);
 }
 </script>
 
 <template>
   <main class="mx-auto max-w-screen-xl bg-white p-8">
-    <n-breadcrumb class="pb-5">
-      <n-breadcrumb-item :clickable="false">
-        <Icon name="ri:dashboard-fill" />
-
-        Dashboard
-      </n-breadcrumb-item>
-
-      <n-breadcrumb-item :href="`/dashboard/${data?.owner}`">
-        <Icon name="uil:github" />
-        {{ data?.owner }}
-      </n-breadcrumb-item>
-
-      <n-breadcrumb-item :href="`/dashboard/${data?.owner}/${data?.repo}`">
-        <Icon name="vscode-icons:folder-type-git" />
-        {{ data?.repo }}
-      </n-breadcrumb-item>
-
-      <n-breadcrumb-item>
-        <Icon name="cib:common-workflow-language" />
-        View CWL Validation
-      </n-breadcrumb-item>
-    </n-breadcrumb>
-
     <n-flex vertical size="large" class="pb-5">
       <div class="flex flex-row justify-between">
         <h1 class="text-2xl font-bold">

@@ -1,4 +1,5 @@
 import { consola } from "consola";
+import yaml from "js-yaml";
 import {
   gatherLanguagesUsed,
   gatherRepoAuthors,

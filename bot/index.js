@@ -70,12 +70,30 @@ export default async (app, { getRouter }) => {
         // Check if the repository is empty
         const emptyRepo = await isRepoEmpty(context, owner, repository.name);
 
+        const latestCommitInfo = {};
+        if (!emptyRepo) {
+          // Gather the latest commit to main info
+          const latestCommit = await context.octokit.repos.getCommit({
+            owner,
+            ref: "main",
+            repo: repository.name,
+          });
+
+          latestCommitInfo.latestCommitSha = latestCommit.data.sha || "";
+          latestCommitInfo.latestCommitMessage =
+            latestCommit.data.commit.message || "";
+          latestCommitInfo.latestCommitUrl = latestCommit.data.html_url || "";
+          latestCommitInfo.latestCommitDate =
+            latestCommit.data.commit.committer.date || "";
+        }
+
         // Check if entry in installation and analytics collection
         await verifyInstallationAnalytics(
           context,
           repository,
           applyActionLimit,
           actionCount,
+          latestCommitInfo,
         );
 
         if (applyActionLimit) {
@@ -196,7 +214,7 @@ export default async (app, { getRouter }) => {
   app.on("push", async (context) => {
     // Event for when a push is made to the repository (listens to all branches)
     const owner = context.payload.repository.owner.login;
-    const repository = context.payload.repository;
+    const { repository } = context.payload;
 
     // If push is not going to the default branch don't do anything
     if (
@@ -208,6 +226,14 @@ export default async (app, { getRouter }) => {
     }
 
     const emptyRepo = await isRepoEmpty(context, owner, repository.name);
+
+    const latestCommitInfo = {
+      latestCommitDate: context.payload.head_commit.timestamp,
+      latestCommitMessage: context.payload.head_commit.message,
+      latestCommitSha: context.payload.head_commit.id,
+      latestCommitUrl: context.payload.head_commit.url,
+    };
+
     let fullCodefairRun = false;
 
     const installationCollection = db.collection("installation");
@@ -234,13 +260,21 @@ export default async (app, { getRouter }) => {
         );
         installationCollection.updateOne(
           { repositoryId: repository.id },
-          { $set: { action_count: installation.action_count - 1 } },
+          {
+            $set: {
+              action_count: installation.action_count - 1,
+              latestCommitDate: latestCommitInfo.latestCommitDate,
+              latestCommitMessage: latestCommitInfo.latestCommitMessage,
+              latestCommitSha: latestCommitInfo.latestCommitSha,
+              latestCommitUrl: latestCommitInfo.latestCommitUrl,
+            },
+          },
         );
 
         return;
       }
 
-      if (installation?.action && installation?.action_count === 0) {
+      if (installation?.action_count === 0) {
         consola.warn("Removing action limit for", repository.name);
         installationCollection.updateOne(
           { repositoryId: repository.id },
@@ -248,6 +282,10 @@ export default async (app, { getRouter }) => {
             $set: {
               action: false,
               action_count: 0,
+              latestCommitDate: latestCommitInfo.latestCommitDate,
+              latestCommitMessage: latestCommitInfo.latestCommitMessage,
+              latestCommitSha: latestCommitInfo.latestCommitSha,
+              latestCommitUrl: latestCommitInfo.latestCommitUrl,
             },
           },
         );
@@ -418,7 +456,7 @@ export default async (app, { getRouter }) => {
       return;
     }
 
-    if (installation?.action && installation?.action_count === 0) {
+    if (installation?.action_count === 0) {
       consola.info("Removing action limit for", repository.name);
       installationCollection.updateOne(
         { repositoryId: repository.id },
@@ -546,6 +584,15 @@ export default async (app, { getRouter }) => {
 
       if (cwlExists) {
         cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+
+        if (cwlExists.files.length > 0) {
+          consola.info("CWL Validation rerun:", cwlObject);
+          // Remove the files that are not in cwlObject
+          cwlObject.removed_files = cwlExists.files.filter((file) => {
+            consola.info(file);
+            return !cwlObject.files.path.includes(file.path);
+          });
+        }
       }
 
       const subjects = {
@@ -596,6 +643,15 @@ export default async (app, { getRouter }) => {
 
       if (cwlExists?.contains_cwl_files) {
         cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+
+        if (cwlExists.files.length > 0) {
+          consola.info("CWL Validation rerun:", cwlObject);
+          // Remove the files that are not in cwlObject
+          cwlObject.removed_files = cwlExists.files.filter((file) => {
+            consola.info(file);
+            return !cwlObject.files.includes(file.path);
+          });
+        }
       }
 
       const subjects = {

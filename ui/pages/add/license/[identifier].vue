@@ -3,6 +3,7 @@ import sanitizeHtml from "sanitize-html";
 import { MdEditor, config } from "md-editor-v3";
 import licensesJSON from "@/assets/data/licenses.json";
 import TargetBlankExtension from "@/utils/TargetBlankExtension";
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 config({
   editorConfig: {
@@ -24,6 +25,10 @@ config({
 definePageMeta({
   middleware: ["protected"],
 });
+
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.showBreadcrumbs();
 
 const licenseOptions = licensesJSON.map((option) => ({
   label: option.name,
@@ -50,6 +55,12 @@ const { data, error } = await useFetch(`/api/license/${identifier}`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
+breadcrumbsStore.setFeature({
+  id: "edit-license",
+  icon: "tabler:license",
+  name: "Edit License",
+});
+
 if (error.value) {
   push.error({
     title: "Failed to fetch license details",
@@ -69,6 +80,9 @@ if (data.value) {
   if (licenseContent.value) {
     displayLicenseEditor.value = true;
   }
+
+  breadcrumbsStore.setOwner(data.value.owner);
+  breadcrumbsStore.setRepo(data.value.repo);
 }
 
 const sanitize = (html: string) => sanitizeHtml(html);
@@ -194,29 +208,6 @@ const navigateToPR = () => {
 
 <template>
   <main class="mx-auto max-w-screen-xl bg-white p-8">
-    <n-breadcrumb class="pb-5">
-      <n-breadcrumb-item :clickable="false">
-        <Icon name="ri:dashboard-fill" />
-
-        Dashboard
-      </n-breadcrumb-item>
-
-      <n-breadcrumb-item :href="`/dashboard/${data?.owner}`">
-        <Icon name="uil:github" />
-        {{ data?.owner }}
-      </n-breadcrumb-item>
-
-      <n-breadcrumb-item :href="`/dashboard/${data?.owner}/${data?.repo}`">
-        <Icon name="vscode-icons:folder-type-git" />
-        {{ data?.repo }}
-      </n-breadcrumb-item>
-
-      <n-breadcrumb-item>
-        <Icon name="tabler:license" />
-        Edit License
-      </n-breadcrumb-item>
-    </n-breadcrumb>
-
     <n-flex vertical size="large" class="pb-5">
       <div class="flex flex-row justify-between">
         <h1 class="text-2xl font-bold">

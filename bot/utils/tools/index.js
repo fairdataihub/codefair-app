@@ -294,14 +294,14 @@ export async function verifyRepoName(
  * * Check if the repository is empty
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
- * @param {string} repo - The name of the repository
+ * @param {string} repoName - The name of the repository
  * @returns {bool} - Returns true if the repository is empty, false otherwise
  */
-export async function isRepoEmpty(context, owner, repo) {
+export async function isRepoEmpty(context, owner, repoName) {
   try {
     const repoContent = await context.octokit.repos.getContent({
       owner,
-      repo,
+      repo: repoName,
     });
 
     return repoContent.data.length === 0;
@@ -309,7 +309,7 @@ export async function isRepoEmpty(context, owner, repo) {
     if (error.status === 404) {
       return true;
     }
-    consola.info("Error checking if the repository is empty:", error);
+    consola.error("Error checking if the repository is empty:", error);
   }
 }
 
@@ -325,6 +325,7 @@ export async function verifyInstallationAnalytics(
   repository,
   applyActionLimit = false,
   actionCount = 5,
+  latestCommitInfo,
 ) {
   const owner =
     context.payload?.installation?.account?.login ||
@@ -353,12 +354,24 @@ export async function verifyInstallationAnalytics(
       repo: repository.name,
       repositoryId: repository.id,
       timestamp: Date.now(),
+      latestCommitDate: latestCommitInfo.latestCommitDate,
+      latestCommitMessage: latestCommitInfo.latestCommitMessage,
+      latestCommitUrl: latestCommitInfo.latestCommitUrl,
+      latestCommitSha: latestCommitInfo.latestCommitSha,
     });
   } else {
     if (installation?.action && installation.action_count > 0) {
       installationCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { action_count: installation.action_count - 1 } },
+        {
+          $set: {
+            action_count: installation.action_count - 1,
+            latestCommitDate: latestCommitInfo.latestCommitDate,
+            latestCommitMessage: latestCommitInfo.latestCommitMessage,
+            latestCommitUrl: latestCommitInfo.latestCommitUrl,
+            latestCommitSha: latestCommitInfo.latestCommitSha,
+          },
+        },
       );
     }
 
@@ -366,7 +379,16 @@ export async function verifyInstallationAnalytics(
       consola.info("Action limit reached, no longer limiting actions");
       installationCollection.updateOne(
         { repositoryId: repository.id },
-        { $set: { action: false, action_count: 0 } },
+        {
+          $set: {
+            action: false,
+            action_count: 0,
+            latestCommitDate: latestCommitInfo.latestCommitDate,
+            latestCommitMessage: latestCommitInfo.latestCommitMessage,
+            latestCommitUrl: latestCommitInfo.latestCommitUrl,
+            latestCommitSha: latestCommitInfo.latestCommitSha,
+          },
+        },
       );
     }
     verifyRepoName(

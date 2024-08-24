@@ -1,4 +1,10 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.hideBreadcrumbs();
+</script>
 
 <template>
   <main>
@@ -75,12 +81,16 @@
             <p class="font-onest text-lg text-slate-800">
               Codefair is a free and open source GitHub app that acts as your
               personal assistant when it comes to making your research software
-              reusable and especially complying with the Findable, Accessible,
-              Interoperable, Reusable (FAIR) Principles for Research Software
-              (FAIR4RS Principles). Whether you are developing artificial
-              intelligence (AI)/machine learning (ML) models with Python, data
-              visualization tools with Jupyter notebook, or data analysis code
-              with R, Codefair is here to assist you.
+              reusable and especially complying with the
+              <NuxtLink
+                to="https://www.nature.com/articles/s41597-022-01710-x"
+                class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+                >Findable, Accessible, Interoperable, Reusable (FAIR) Principles
+                for Research Software (FAIR4RS Principles)</NuxtLink
+              >. Whether you are developing artificial intelligence (AI)/machine
+              learning (ML) models with Python, data visualization tools with
+              Jupyter notebook, or data analysis code with R, Codefair is here
+              to assist you.
             </p>
           </div>
 
@@ -172,8 +182,12 @@
               through the Codefair website. Through intuitive interfaces and
               automated pull requests, Codefair will allow you to make sure that
               your software follows best coding practices, provides metadata in
-              standard format, includes a license file, is archived on Zenodo,
-              and much more to align with the FAIR4RS principles.
+              standard format, includes a license file, is archived on
+              <NuxtLink
+                to="https://zenodo.org/"
+                class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+                >Zenodo</NuxtLink
+              >, and much more to align with the FAIR4RS principles.
             </p>
           </div>
 
