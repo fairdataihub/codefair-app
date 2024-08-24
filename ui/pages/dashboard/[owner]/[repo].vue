@@ -240,14 +240,14 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #action>
-          <NuxtLink :to="`/add/license/${data?.licenseRequest?.identifier}`">
+          <a :href="`/add/license/${data?.licenseRequest?.identifier}`">
             <n-button type="primary">
               <template #icon>
                 <Icon name="akar-icons:edit" size="16" />
               </template>
               Edit License
             </n-button>
-          </NuxtLink>
+          </a>
         </template>
       </CardDashboard>
 
@@ -330,9 +330,9 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #action>
-          <NuxtLink
+          <a
             v-if="data?.licenseRequest?.containsLicense"
-            :to="`/add/code-metadata/${data?.codeMetadataRequest?.identifier}`"
+            :href="`/add/code-metadata/${data?.codeMetadataRequest?.identifier}`"
           >
             <n-button type="primary">
               <template #icon>
@@ -340,7 +340,7 @@ const handleSettingsSelect = (key: any) => {
               </template>
               Edit Code Metadata
             </n-button>
-          </NuxtLink>
+          </a>
         </template>
       </CardDashboard>
 
