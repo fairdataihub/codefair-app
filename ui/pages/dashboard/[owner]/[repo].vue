@@ -30,7 +30,7 @@ const settingsOptions = [
   {
     icon: renderIcon("mdi:github"),
     key: "view-repo",
-    label: "View Repository",
+    label: "View repository",
   },
   {
     icon: renderIcon("mynaui:redo"),
@@ -40,7 +40,7 @@ const settingsOptions = [
   {
     icon: renderIcon("mdi:cog"),
     key: "view-codefair-settings",
-    label: "View Codefair Settings",
+    label: "View Codefair settings",
   },
 ];
 
@@ -145,9 +145,7 @@ const handleSettingsSelect = (key: any) => {
   } else if (key === "rerun-codefair-on-repo") {
     rerunCodefairChecks();
   } else if (key === "view-codefair-settings") {
-    console.log(data.value?.isOrganization);
     if (data.value?.isOrganization) {
-      // https://github.com/organizations/minecraft-plush/settings/installations/53955153
       navigateTo(
         `https://github.com/organizations/${owner}/settings/installations/${data.value?.installationId}`,
         {
@@ -213,6 +211,30 @@ const handleSettingsSelect = (key: any) => {
           <Icon name="tabler:license" size="40" />
         </template>
 
+        <template #header-extra>
+          <div v-if="data?.licenseRequest?.containsLicense">
+            <n-tag
+              v-if="data?.licenseRequest?.licenseStatus === 'valid'"
+              type="success"
+            >
+              <template #icon>
+                <Icon name="icon-park-solid:check-one" size="16" />
+              </template>
+              Contains a valid license
+            </n-tag>
+
+            <n-tag
+              v-else-if="data?.licenseRequest?.licenseStatus === 'invalid'"
+              type="error"
+            >
+              <template #icon>
+                <Icon name="icon-park-solid:close-one" size="16" />
+              </template>
+              Does not contain a valid license
+            </n-tag>
+          </div>
+        </template>
+
         <template #content>
           <p>A License is required according to the FAIR-BioRS guidelines</p>
         </template>
@@ -237,6 +259,57 @@ const handleSettingsSelect = (key: any) => {
       >
         <template #icon>
           <Icon name="tabler:code" size="40" />
+        </template>
+
+        <template #header-extra>
+          <div
+            v-if="
+              data?.licenseRequest?.containsLicense &&
+              data?.codeMetadataRequest?.containsMetadata
+            "
+          >
+            <n-tag
+              v-if="data?.codeMetadataRequest?.containsCitation"
+              :type="
+                data?.codeMetadataRequest?.citationStatus === 'valid'
+                  ? 'success'
+                  : 'error'
+              "
+            >
+              <template #icon>
+                <Icon
+                  :name="
+                    data?.codeMetadataRequest?.citationStatus === 'valid'
+                      ? 'icon-park-solid:check-one'
+                      : 'icon-park-solid:close-one'
+                  "
+                  size="16"
+                />
+              </template>
+              citation.CFF
+            </n-tag>
+
+            <n-tag
+              v-if="data?.codeMetadataRequest?.codemetaStatus"
+              :type="
+                data?.codeMetadataRequest?.codemetaStatus === 'valid'
+                  ? 'success'
+                  : 'error'
+              "
+            >
+              <template #icon>
+                <Icon
+                  :name="
+                    data?.codeMetadataRequest?.codemetaStatus === 'valid'
+                      ? 'icon-park-solid:check-one'
+                      : 'icon-park-solid:close-one'
+                  "
+                  size="16"
+                />
+              </template>
+              codemeta.json
+            </n-tag>
+          </div>
         </template>
 
         <template #content>

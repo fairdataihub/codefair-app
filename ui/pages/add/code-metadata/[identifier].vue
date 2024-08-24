@@ -161,6 +161,9 @@ if (error.value) {
 
 if (data.value) {
   formValue.value = data.value.metadata;
+
+  breadcrumbsStore.setOwner(data.value.owner);
+  breadcrumbsStore.setRepo(data.value.repo);
 }
 
 const applicationCategoryOptions =
@@ -329,29 +332,6 @@ const navigateToPR = () => {
 <template>
   <main>
     <div class="mx-auto mb-4 max-w-screen-xl rounded bg-white p-8 shadow-md">
-      <n-breadcrumb class="pb-5">
-        <n-breadcrumb-item :clickable="false">
-          <Icon name="ri:dashboard-fill" />
-
-          Dashboard
-        </n-breadcrumb-item>
-
-        <n-breadcrumb-item :href="`/dashboard/${data?.owner}`">
-          <Icon name="uil:github" />
-          {{ data?.owner }}
-        </n-breadcrumb-item>
-
-        <n-breadcrumb-item :href="`/dashboard/${data?.owner}/${data?.repo}`">
-          <Icon name="vscode-icons:folder-type-git" />
-          {{ data?.repo }}
-        </n-breadcrumb-item>
-
-        <n-breadcrumb-item>
-          <Icon name="tabler:code" />
-          Edit Code Metadata
-        </n-breadcrumb-item>
-      </n-breadcrumb>
-
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">
           <h1 class="text-2xl font-bold">

@@ -52,10 +52,11 @@ if (error.value) {
           class="mt-2 rounded-lg shadow-md"
         >
           <n-flex align="center" justify="space-beteween">
-            <n-flex align="center">
+            <n-flex align="start">
               <n-avatar
                 size="small"
                 :src="`https://api.dicebear.com/9.x/identicon/svg?seed=${repo.repositoryId}&backgroundColor=ffffff&bacgroundType=gradientLinear`"
+                class="mt-2"
               />
 
               <div class="flex flex-col">
@@ -74,10 +75,15 @@ if (error.value) {
                   target="_blank"
                   class="w-max truncate text-left text-xs text-gray-500 transition-all hover:text-blue-500 hover:underline"
                 >
+                  <Icon name="ri:external-link-line" size="13" />
                   {{ owner }}/{{ repo.repo }}
                 </NuxtLink>
               </div>
             </n-flex>
+
+            <div>
+              <n-divider vertical />
+            </div>
 
             <div class="flex-1">
               <div class="flex flex-col gap-1">
@@ -90,6 +96,7 @@ if (error.value) {
                 </NuxtLink>
 
                 <NuxtLink
+                  v-if="repo?.latestCommitSha"
                   :to="repo?.latestCommitUrl"
                   target="_blank"
                   class="flex w-[350px] items-center gap-1 truncate text-left text-sm text-gray-500 transition-all hover:text-blue-500 hover:underline"
@@ -129,10 +136,10 @@ if (error.value) {
       </n-flex>
     </n-flex>
 
-    <n-collapse class="mt-8" default-expanded-names="data">
+    <!-- <n-collapse class="mt-8" default-expanded-names="data">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
       </n-collapse-item>
-    </n-collapse>
+    </n-collapse> -->
   </main>
 </template>

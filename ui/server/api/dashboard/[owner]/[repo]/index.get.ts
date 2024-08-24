@@ -59,6 +59,13 @@ export default defineEventHandler(async (event) => {
   return {
     codeMetadataRequest: codeMetadataRequest
       ? {
+          citationStatus:
+            (codeMetadataRequest.citation_status as string) || "invalid",
+          codemetaStatus:
+            (codeMetadataRequest.codemeta_status as string) || "invalid",
+          containsCitation: codeMetadataRequest.contains_citation as boolean,
+          containsCodemeta: codeMetadataRequest.contains_codemeta as boolean,
+          containsMetadata: codeMetadataRequest.contains_metadata as boolean,
           identifier: codeMetadataRequest.identifier as string,
           open: codeMetadataRequest.open as boolean,
           owner: codeMetadataRequest.owner as string,
@@ -84,6 +91,7 @@ export default defineEventHandler(async (event) => {
             (licenseRequest.contains_license as boolean) || false,
           identifier: licenseRequest.identifier as string,
           licenseId: licenseRequest.licenseId as string,
+          licenseStatus: (licenseRequest.license_status as string) || "invalid",
           open: licenseRequest.open as boolean,
           owner: licenseRequest.owner as string,
           pullRequest: (licenseRequest.pullRequestURL as string) || "",
