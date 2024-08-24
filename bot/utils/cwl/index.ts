@@ -18,13 +18,13 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  * @param {String} repoName - Repository name
  * @returns {Array} - Array of CWL files in the repository
  */
-export function getCWLFiles(context, owner, repoName) {
+export function getCWLFiles(context: any, owner: string, repoName: string) {
   return new Promise((resolve, reject) => {
     consola.info("Checking for CWL files in the repository...");
 
-    const cwlFiles = [];
+    const cwlFiles: string[] = [];
 
-    const searchDirectory = async function (path) {
+    const searchDirectory = async function (path: string) {
       try {
         const repoContent = await context.octokit.repos.getContent({
           owner,
@@ -41,7 +41,7 @@ export function getCWLFiles(context, owner, repoName) {
             await searchDirectory(file.path);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         if (error.status === 404) {
           // Repository is empty
           resolve(cwlFiles);
@@ -64,7 +64,7 @@ export function getCWLFiles(context, owner, repoName) {
   });
 }
 
-export async function validateCWLFile(downloadUrl) {
+export async function validateCWLFile(downloadUrl: string) {
   try {
     const response = await fetch("https://cwl.saso.one/validate", {
       body: JSON.stringify({

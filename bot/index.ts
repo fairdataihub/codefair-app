@@ -1,6 +1,8 @@
 // import { MongoClient } from "mongodb";
-import * as express from "express";
+import * as express,  from "express";
+import  { Router } from "express";
 import { consola } from "consola";
+import { Probot } from "probot";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
 import dbInstance from "./db.js";
 import {
@@ -23,22 +25,23 @@ checkEnvVariable("CODEFAIR_APP_DOMAIN");
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
 
-/**
- * This is the main entrypoint to your Probot app
- * @param {import('probot').Probot} app
- */
-export default async (app, { getRouter }) => {
+// /**
+//  * This is the main entrypoint to your Probot app
+//  * @param {import('probot').Probot} app
+//  */
+export default async (app: Probot, { getRouter }: { getRouter: () => Router }) => {
   // Connect to the MongoDB database
   await intializeDatabase();
 
-  const db = dbInstance.getDb();
+  const db = dbInstance.getDb()!;
   const ping = db.collection("ping");
 
   await ping.insertOne({
     timestamp: Date.now(),
   });
 
-  const router = getRouter("/");
+  // const router = getRouter("/");
+  const router = getRouter();
 
   router.use(express.static("public"));
 
@@ -70,7 +73,12 @@ export default async (app, { getRouter }) => {
         // Check if the repository is empty
         const emptyRepo = await isRepoEmpty(context, owner, repository.name);
 
-        const latestCommitInfo = {};
+        const latestCommitInfo = {
+          latestCommitDate: "",
+          latestCommitMessage: "",
+          latestCommitSha: "",
+          latestCommitUrl: "",
+        };
         if (!emptyRepo) {
           // Gather the latest commit to main info
           const latestCommit = await context.octokit.repos.getCommit({
@@ -84,7 +92,7 @@ export default async (app, { getRouter }) => {
             latestCommit.data.commit.message || "";
           latestCommitInfo.latestCommitUrl = latestCommit.data.html_url || "";
           latestCommitInfo.latestCommitDate =
-            latestCommit.data.commit.committer.date || "";
+            latestCommit.data.commit.committer?.date || "";
         }
 
         // Check if entry in installation and analytics collection
