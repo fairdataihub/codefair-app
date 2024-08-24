@@ -363,8 +363,11 @@ export async function applyMetadataTemplate(
     let validCodemeta = false;
     let validCitation = false;
 
+    let codemetaFile = null;
+    let citationFile = null;
+
     try {
-      const codemetaFile = await context.octokit.repos.getContent({
+      codemetaFile = await context.octokit.repos.getContent({
         owner,
         path: "codemeta.json",
         repo: repository.name,
@@ -378,7 +381,7 @@ export async function applyMetadataTemplate(
     }
 
     try {
-      const citationFile = await context.octokit.repos.getContent({
+      citationFile = await context.octokit.repos.getContent({
         owner,
         path: "CITATION.cff",
         repo: repository.name,

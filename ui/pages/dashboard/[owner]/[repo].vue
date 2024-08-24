@@ -262,7 +262,7 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #header-extra>
-          <div
+          <n-flex
             v-if="
               data?.licenseRequest?.containsLicense &&
               data?.codeMetadataRequest?.containsMetadata
@@ -309,7 +309,7 @@ const handleSettingsSelect = (key: any) => {
               </template>
               codemeta.json
             </n-tag>
-          </div>
+          </n-flex>
         </template>
 
         <template #content>
@@ -376,8 +376,7 @@ const handleSettingsSelect = (key: any) => {
             <n-tooltip trigger="hover" placement="bottom-start">
               <template #trigger>
                 <n-button
-                  type="success"
-                  secondary
+                  type="warning"
                   :loading="cwlValidationRerunRequestLoading"
                   @click="rerunCwlValidation"
                 >
@@ -395,7 +394,7 @@ const handleSettingsSelect = (key: any) => {
               :to="`/view/cwl-validation/${data?.cwlValidation?.identifier}`"
             >
               <n-button type="primary">
-                <template #icon> <Icon name="mdi:eye" size="16" /> </template>""
+                <template #icon> <Icon name="mdi:eye" size="16" /> </template>
                 View CWL Validation Results
               </n-button>
             </NuxtLink>
