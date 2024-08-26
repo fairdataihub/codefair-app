@@ -1,0 +1,37 @@
+title: Codefair
+authors:
+  - given-names: Dorian
+    family-names: Portillo
+    email: dportillo@calmi2.org
+    affiliation: FAIR Data Innovations Hub, California Medical Innovations Institute
+  - given-names: Sanjay
+    family-names: Soundarajan
+    email: ssoundarajan@calmi2.org
+    affiliation: FAIR Data Innovations Hub, California Medical Innovations Institute
+  - given-names: Bhavesh
+    family-names: Patel
+    email: bpatel@calmi2.org
+    affiliation: FAIR Data Innovations Hub, California Medical Innovations Institute
+cff-version: 1.2.0
+message: If you use this software, please cite it using the metadata from this file.
+type: software
+identifiers:
+  - type: doi
+    value: https://doi.org/10.5281/zenodo.13376617
+abstract: "Codefair is a free and open source GitHub app that acts as your
+  personal assistant when it comes to making your research software reusable and
+  especially complying with the Findable, Accessible, Interoperable, Reusable
+  (FAIR) Principles for Research Software (FAIR4RS Principles). Whether you are
+  developing artificial intelligence (AI)/machine learning (ML) models with
+  Python, data visualization tools with Jupyter notebook, or data analysis code
+  with R, Codefair is here to assist you. "
+keywords:
+  - best-practices
+  - fair
+  - research
+  - reusable
+  - software
+license: MIT
+repository-code: https://github.com/fairdataihub/codefair-app
+version: 1.0.0
+date-released: 2024-08-26
