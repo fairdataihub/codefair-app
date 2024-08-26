@@ -1,0 +1,72 @@
+{
+  "name": "Codefair",
+  "@context": "https://w3id.org/codemeta/3.0",
+  "applicationCategory": "Content management software",
+  "author": [
+    {
+      "affiliation": {
+        "name": "FAIR Data Innovations Hub, California Medical Innovations Institute",
+        "type": "Organization"
+      },
+      "email": "dportillo@calmi2.org",
+      "familyName": "Portillo",
+      "id": "_:author_1",
+      "givenName": "Dorian",
+      "type": "Person"
+    },
+    {
+      "affiliation": {
+        "name": "FAIR Data Innovations Hub, California Medical Innovations Institute",
+        "type": "Organization"
+      },
+      "email": "ssoundarajan@calmi2.org",
+      "familyName": "Soundarajan",
+      "id": "_:author_2",
+      "givenName": "Sanjay",
+      "type": "Person"
+    },
+    {
+      "affiliation": {
+        "name": "FAIR Data Innovations Hub, California Medical Innovations Institute",
+        "type": "Organization"
+      },
+      "email": "bpatel@calmi2.org",
+      "familyName": "Patel",
+      "id": "_:author_3",
+      "givenName": "Bhavesh",
+      "type": "Person"
+    }
+  ],
+  "codeRepository": "https://github.com/fairdataihub/codefair-app",
+  "dateCreated": "2024-03-27",
+  "dateModified": "2024-08-26",
+  "datePublished": "2024-08-26",
+  "description": "Codefair is a free and open source GitHub app that acts as your personal assistant when it comes to making your research software reusable and especially complying with the Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software (FAIR4RS Principles). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, Codefair is here to assist you. ",
+  "developmentStatus": "active",
+  "downloadUrl": "https://github.com/marketplace/codefair-app",
+  "identifier": "https://doi.org/10.5281/zenodo.13376617",
+  "issueTracker": "https://github.com/fairdataihub/codefair-app/issues",
+  "keywords": [
+    "best-practices",
+    "fair",
+    "research",
+    "reusable",
+    "software"
+  ],
+  "license": "https://spdx.org/licenses/MIT",
+  "operatingSystem": [],
+  "programmingLanguage": [
+    "Vue",
+    "JavaScript",
+    "HTML",
+    "TypeScript",
+    "CSS",
+    "Dockerfile"
+  ],
+  "relatedLink": [],
+  "runtimePlatform": [],
+  "schema:releaseNotes": "First release",
+  "softwareRequirements": [],
+  "version": "1.0.0",
+  "type": "SoftwareSourceCode"
+}
