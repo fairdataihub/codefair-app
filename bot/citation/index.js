@@ -1,4 +1,4 @@
-import { gatherRepoAuthors } from "../tools/index.js";
+import { gatherRepoAuthors } from "../utils/tools/index.js";
 
 export async function checkForCitation(context, owner, repo) {
   try {

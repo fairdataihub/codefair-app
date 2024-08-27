@@ -10,10 +10,10 @@ import {
   intializeDatabase,
   verifyRepoName,
 } from "./utils/tools/index.js";
-import { checkForLicense } from "./utils/license/index.js";
-import { checkForCitation } from "./utils/citation/index.js";
-import { checkForCodeMeta } from "./utils/codemeta/index.js";
-import { getCWLFiles, applyCWLTemplate } from "./utils/cwl/index.js";
+import { checkForLicense } from "./license/index.js";
+import { checkForCitation } from "./citation/index.js";
+import { checkForCodeMeta } from "./codemeta/index.js";
+import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
 
 checkEnvVariable("MONGODB_URI");
 checkEnvVariable("MONGODB_DB_NAME");

@@ -45,15 +45,21 @@ const filteredRepos = computed(() => {
 <template>
   <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
     <n-flex vertical>
-      <h1>Apps being managed by Codefair</h1>
+      <div class="flex flex-row justify-between">
+        <h1>Apps being managed by Codefair</h1>
+
+        <NuxtLink
+          to="https://docs.codefair.io/docs/ui-dashboard.html"
+          target="_blank"
+          class="text-blue-400 underline transition-all hover:text-blue-500"
+          >Need help?</NuxtLink
+        >
+      </div>
 
       <p class="text-base">
         Some repositories may not appear here if they have not had any actions
-        performed on their main branch yet. Additionally, when Codefair is
-        installed to a large number of repositories at once, an action queue is
-        applied to prevent overwhelming the user or organization. Once a couple
-        of actions have been processed, the repositories will appear in the
-        list.
+        performed on their main branch yet. Once a couple of actions have been
+        processed, the repositories will appear in the list.
       </p>
 
       <n-divider />

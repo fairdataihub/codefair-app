@@ -2,8 +2,8 @@
  * @fileoverview This file contains utility functions for the license bot
  */
 import { consola } from "consola";
-import dbInstance from "../../db.js";
-import { createId } from "../tools/index.js";
+import dbInstance from "../db.js";
+import { createId } from "../utils/tools/index.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
