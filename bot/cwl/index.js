@@ -6,8 +6,8 @@ import {
   isRepoPrivate,
   createId,
   replaceRawGithubUrl,
-} from "../tools/index.js";
-import dbInstance from "../../db.js";
+} from "../utils/tools/index.js";
+import dbInstance from "../db.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
