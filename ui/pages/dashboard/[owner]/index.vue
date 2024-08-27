@@ -36,6 +36,10 @@ if (error.value) {
     throw createError(error.value);
   }
 }
+
+const filteredRepos = computed(() => {
+  return data.value ? data.value.filter((repo) => repo.action_count === 0) : [];
+});
 </script>
 
 <template>
@@ -43,11 +47,20 @@ if (error.value) {
     <n-flex vertical>
       <h1>Apps being managed by Codefair</h1>
 
+      <p class="text-base">
+        Some repositories may not appear here if they have not had any actions
+        performed on their main branch yet. Additionally, when Codefair is
+        installed to a large number of repositories at once, an action queue is
+        applied to prevent overwhelming the user or organization. Once a couple
+        of actions have been processed, the repositories will appear in the
+        list.
+      </p>
+
       <n-divider />
 
       <n-flex vertical>
         <n-card
-          v-for="repo in data"
+          v-for="repo in filteredRepos"
           :key="repo.repositoryId"
           class="mt-2 rounded-lg shadow-md"
         >
