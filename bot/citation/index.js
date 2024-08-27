@@ -1,4 +1,4 @@
-import { gatherRepoAuthors } from "../tools/index.js";
+import { gatherRepoAuthors } from "../utils/tools/index.js";
 
 export async function checkForCitation(context, owner, repo) {
   try {
@@ -13,7 +13,6 @@ export async function checkForCitation(context, owner, repo) {
     return false;
   }
 }
-
 
 // TODO: Verify if this is still needed
 export async function gatherCitationInfo(context, owner, repo) {
@@ -86,9 +85,7 @@ export async function gatherCitationInfo(context, owner, repo) {
   // Get the keywords of the repo
   let keywords = [];
   if (repoData.data.topics != null && repoData.data.topics.length > 0) {
-    // console.log(repoData.data.topics);
     keywords = repoData.data.topics;
-    // console.log(keywords);
   }
 
   // Begin creating json for CITATION.cff file

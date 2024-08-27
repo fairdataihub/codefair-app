@@ -1,5 +1,10 @@
 <script setup lang="ts">
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+
 const user = useUser();
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.hideBreadcrumbs();
 
 watchEffect(() => {
   if (user.value) {

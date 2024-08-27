@@ -1,4 +1,10 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.hideBreadcrumbs();
+</script>
 
 <template>
   <section>
@@ -161,7 +167,9 @@
             To fill this gap, we established the FAIR Biomedical Research
             Software (FAIR-BioRS) guideline, which are clear, actionable, and
             step-by-step guidelines for making biomedical research software
-            FAIR.
+            FAIR. Although they were developed with biomedical research software
+            in mind, most elements of the guidelines are applicable to all
+            software irrespective of their research discipline.
           </p>
         </div>
 
@@ -192,7 +200,7 @@
           class="flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start"
         >
           <a
-            href="https://doi.org/10.1038/s41597-022-01710-x"
+            href="/codefair"
             class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
             >Learn more about Codefair -></a
           >

@@ -65,41 +65,12 @@ Codefair is your personal assistant when it comes to making your research softwa
 > While Codefair is free, installing it via the GitHub Marketplace may still require a credit card to be associated with your (or your organization’s) GitHub account. To circumvent this requirement, you can alternatively install Codefair directly from the [app page](https://github.com/apps/codefair-app).
 
 ### Documentation
-See the our [dedicated webpage](https://docs.codefair.io) for the full documentation, including details about each features and how to use them.
+
+See our [dedicated webpage](https://docs.codefair.io/docs/installation.html) for full details on what permissions are used and the features Codefair provides.
 
 ## Run the GitHub app locally
 
-### Setup
-
-This repository uses a pnpm workspace to handle both the bot and the frontend UI. You will need to install pnpm globally to run the app locally. You will also need to be on Node.js version 20 or higher.
-
-```bash
-npm install -g pnpm
-```
-
-To start both the bot and the frontend UI, run the following command at the root of the repository:
-
-```bash
-pnpm dev
-```
-
-This will start the bot and the frontend UI in development mode. The bot will be available at `http://localhost:3001` and the frontend UI will be available at `http://localhost:3000`.
-
-The .env files for each package are located in the respective package directories. You will need to create a `.env` file in the `bot` and `ui` directories. Use the .env.example files in each directory as a template.
-
-To run the bot only, run the following command at the root of the repository:
-
-```bash
-cd bot
-pnpm dev
-```
-
-To run the frontend UI only, run the following command at the root of the repository:
-
-```bash
-cd ui
-pnpm dev
-```
+For detailed instructions on setting up running the application locally, please refer to our [documentation site](https://docs.codefair.io/dev/running-locally.html).
 
 ## How Codefair is developed
 

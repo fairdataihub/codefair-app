@@ -1,4 +1,4 @@
-import { gatherRepoAuthors } from "../tools/index.js";
+import { gatherRepoAuthors } from "../utils/tools/index.js";
 
 export async function checkForCodeMeta(context, owner, repo) {
   try {
@@ -23,8 +23,6 @@ export async function gatherCodeMetaInfo(context, owner, repo) {
   });
 
   // Get the languages used in the repo
-  console.log(repoData.data);
-
   const languagesUsed = await gatherLanguagesUsed(context, owner, repo);
   const authors = await gatherRepoAuthors(context, owner, repo, "codemeta");
   const codeRepository = repoData.data.html_url;

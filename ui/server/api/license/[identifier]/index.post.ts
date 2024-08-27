@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   if (!body) {
     throw createError({
       statusCode: 400,
-      message: "Missing required fields",
+      statusMessage: "Missing required fields",
     });
   }
 
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
 
   if (!parsedBody.success) {
     throw createError({
-      message: "The provided parameters are invalid",
+      statusMessage: "The provided parameters are invalid",
       statusCode: 400,
     });
   }
@@ -48,7 +48,7 @@ export default defineEventHandler(async (event) => {
   if (!licenseRequest) {
     throw createError({
       statusCode: 404,
-      message: "License request not found",
+      statusMessage: "License request not found",
     });
   }
 
@@ -59,7 +59,7 @@ export default defineEventHandler(async (event) => {
   if (!installationId) {
     throw createError({
       statusCode: 404,
-      message: "Installation not found",
+      statusMessage: "Installation not found",
     });
   }
 
@@ -69,7 +69,7 @@ export default defineEventHandler(async (event) => {
   if (!licenseRequest.open) {
     throw createError({
       statusCode: 400,
-      message: "License request is not open",
+      statusMessage: "License request is not open",
     });
   }
 
@@ -167,10 +167,6 @@ export default defineEventHandler(async (event) => {
   });
 
   // Create a pull request for the new branch with the license content
-
-  /**
-   * todo: figure out how to resolve the issue number
-   */
   const { data: pullRequestData } = await octokit.request(
     "POST /repos/{owner}/{repo}/pulls",
     {
@@ -179,7 +175,11 @@ export default defineEventHandler(async (event) => {
       title: "feat: ✨ LICENSE file added",
       head: newBranchName,
       base: defaultBranch,
-      // body: `Resolves #${context.payload.issue.number}`,
+      body: `This pull request ${
+        existingLicenseSHA
+          ? "updates the existing LICENSE file"
+          : `adds the LICENSE file with the ${licenseId} license terms`
+      }. Please review the changes and merge the pull request if everything looks good.`,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
@@ -201,27 +201,43 @@ export default defineEventHandler(async (event) => {
     },
   );
 
-  /**
-   * ? Should we close the license request here? Or should we wait for the PR to be merged?
-   */
+  // Update the analytics data for the repository
+  const analytics = db.collection("analytics");
 
-  // const closeLicenseRequest = await collection.updateOne(
-  //   {
-  //     identifier,
-  //   },
-  //   {
-  //     $set: {
-  //       open: false,
-  //     },
-  //   },
-  // );
+  // Get the existing analytics data for the repository
+  const existingAnalytics = await analytics.findOne({
+    repositoryId: licenseRequest.repositoryId,
+  });
 
-  // if (!closeLicenseRequest) {
-  //   throw createError({
-  //     statusCode: 500,
-  //     statusMessage: "license-request-not-closed",
-  //   });
-  // }
+  // Check if the license analytics data exists
+  if (existingAnalytics?.license?.createLicense) {
+    await analytics.updateOne(
+      {
+        repositoryId: licenseRequest.repositoryId,
+      },
+      {
+        $inc: {
+          "license.createLicense": 1,
+        },
+      },
+    );
+  } else {
+    await analytics.updateOne(
+      {
+        repositoryId: licenseRequest.repositoryId,
+      },
+      {
+        $set: {
+          license: {
+            createLicense: 1,
+          },
+        },
+      },
+      {
+        upsert: true,
+      },
+    );
+  }
 
   return {
     prUrl: pullRequestData.html_url,

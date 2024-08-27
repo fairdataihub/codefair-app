@@ -1,11 +1,11 @@
-const nock = require("nock");
-// Requiring our app implementation
-const myProbotApp = require("..");
-const { Probot, ProbotOctokit } = require("probot");
-// Requiring our fixtures
-const installationCreatedPayload = require("./fixtures/installation.created");
 const fs = require("fs");
 const path = require("path");
+const nock = require("nock");
+// Requiring our app implementation
+const { Probot, ProbotOctokit } = require("probot");
+const myProbotApp = require("..");
+// Requiring our fixtures
+const installationCreatedPayload = require("./fixtures/installation.created");
 
 // Mocking out our use of random numbers
 const mockMath = Object.create(global.Math);
@@ -24,12 +24,12 @@ describe("My Probot app", () => {
     nock.disableNetConnect();
     probot = new Probot({
       appId: 123,
-      privateKey,
       // disable request throttling and retries for testing
       Octokit: ProbotOctokit.defaults({
         retry: { enabled: false },
         throttle: { enabled: false },
       }),
+      privateKey,
     });
     // Load our app into probot
     probot.load(myProbotApp);
@@ -39,11 +39,11 @@ describe("My Probot app", () => {
     const mock = nock("https://api.github.com")
       .post("/app/installations/2/access_tokens")
       .reply(200, {
-        token: "test",
         permissions: {
           contents: "write",
           pull_requests: "write",
         },
+        token: "test",
       })
 
       .get("/repos/hiimbex/testing-things/git/ref/heads%2Fmaster")
@@ -59,17 +59,17 @@ describe("My Probot app", () => {
         "/repos/hiimbex/testing-things/contents/path%2Fto%2Fyour%2Ffile.md",
         {
           branch: "new-branch-9999",
-          message: "adds config file",
           content: "TXkgbmV3IGZpbGUgaXMgYXdlc29tZSE=",
+          message: "adds config file",
         },
       )
       .reply(200)
 
       .post("/repos/hiimbex/testing-things/pulls", {
         title: "Adding my file!",
-        head: "new-branch-9999",
         base: "master",
         body: "Adds my new file!",
+        head: "new-branch-9999",
         maintainer_can_modify: true,
       })
       .reply(200);

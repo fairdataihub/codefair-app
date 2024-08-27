@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   if (!license) {
     throw createError({
       statusCode: 404,
-      message: "License not found",
+      statusMessage: "License not found",
     });
   }
 

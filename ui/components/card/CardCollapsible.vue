@@ -9,7 +9,6 @@ const props = defineProps({
     type: Boolean,
   },
   collapse: {
-    default: false,
     type: Boolean,
   },
   subheader: {
@@ -30,8 +29,12 @@ const hasAction = computed(() => {
   return !!slots.action;
 });
 
+const isCollapsed = computed(() => {
+  return contentCollapsed.value;
+});
+
 onBeforeMount(() => {
-  contentCollapsed.value = props.collapse;
+  contentCollapsed.value = props.collapse || false;
 });
 
 const toggleCollapse = () => {
@@ -71,21 +74,15 @@ const toggleCollapse = () => {
           type="info"
           @click="toggleCollapse"
         >
-          <!-- <Icon
-            v-if="contentCollapsed"
-            name="fluent:arrow-maximize-vertical-24-filled"
-          /> -->
           <Icon
-            name="icon-park-outline:up"
+            name="icon-park-outline:down"
             size="25"
             class="transition-all hover:text-indigo-500"
             :class="{
-              'text-gray-600': !contentCollapsed,
-              'rotate-180 text-gray-400': contentCollapsed,
+              'rotate-180 text-gray-600': !isCollapsed,
+              'rotate-0 text-gray-400': isCollapsed,
             }"
           />
-
-          <!-- <Icon v-else name="fluent:arrow-minimize-vertical-24-filled" /> -->
         </n-button>
       </div>
     </div>

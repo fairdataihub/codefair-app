@@ -1,4 +1,10 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.hideBreadcrumbs();
+</script>
 
 <template>
   <section>
@@ -63,6 +69,7 @@
             >
               How does Codefair work?
             </h2>
+
             <p class="font-onest text-lg text-slate-800">
               Simply install Codefair from the GitHub marketplace on your
               software's GitHub repository. By communicating with you through
@@ -115,7 +122,7 @@
 
     <div class="bg-[#e7ddfa4f]">
       <div class="mx-auto flex max-w-screen-xl justify-start px-4 md:px-8">
-        <div class="my-8 h-auto max-w-screen-xl flex flex-col py-8">
+        <div class="my-8 flex h-auto max-w-screen-xl flex-col py-8">
           <h2
             class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
           >
