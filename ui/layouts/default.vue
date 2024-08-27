@@ -71,7 +71,7 @@ const toggleMobileMenu = () => {
             GitHub
           </NuxtLink>
 
-          <n-badge v-if="devMode" value="beta" type="warning">
+          <n-badge v-if="user?.username" value="beta" type="warning">
             <!-- Using a here to request a page reload -->
             <a
               :href="`/dashboard/${user?.username}`"
