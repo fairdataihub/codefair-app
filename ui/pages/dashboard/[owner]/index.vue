@@ -70,12 +70,12 @@ const filteredRepos = computed(() => {
           :key="repo.repositoryId"
           class="mt-2 rounded-lg shadow-md"
         >
-          <n-flex align="center" justify="space-beteween">
-            <n-flex align="start">
+          <div class="grid grid-cols-[20%_1px_auto_200px] items-center gap-4">
+            <div id="repo-avatar-and-name" class="flex">
               <n-avatar
                 size="small"
                 :src="`https://api.dicebear.com/9.x/identicon/svg?seed=${repo.repositoryId}&backgroundColor=ffffff&bacgroundType=gradientLinear`"
-                class="mt-2"
+                class="mr-4 mt-2"
               />
 
               <div class="flex flex-col">
@@ -98,18 +98,16 @@ const filteredRepos = computed(() => {
                   {{ owner }}/{{ repo.repo }}
                 </NuxtLink>
               </div>
-            </n-flex>
-
-            <div>
-              <n-divider vertical />
             </div>
 
-            <div class="flex-1">
+            <div class="h-full w-px bg-gray-300"></div>
+
+            <div id="repo-commits" class="truncate pr-8">
               <div class="flex flex-col gap-1">
                 <NuxtLink
                   :to="repo?.latestCommitUrl"
                   target="_blank"
-                  class="w-[350px] truncate text-left text-base font-medium transition-all hover:text-blue-500 hover:underline"
+                  class="truncate text-left text-base font-medium transition-all hover:text-blue-500 hover:underline"
                 >
                   {{ repo?.latestCommitMessage }}
                 </NuxtLink>
@@ -118,7 +116,7 @@ const filteredRepos = computed(() => {
                   v-if="repo?.latestCommitSha"
                   :to="repo?.latestCommitUrl"
                   target="_blank"
-                  class="flex w-[350px] items-center gap-1 truncate text-left text-sm text-gray-500 transition-all hover:text-blue-500 hover:underline"
+                  class="flex items-center gap-1 truncate text-left text-sm text-gray-500 transition-all hover:text-blue-500 hover:underline"
                 >
                   <Icon name="ri:git-commit-line" size="17" />
                   {{ repo.latestCommitSha?.substring(0, 7) }}
@@ -126,31 +124,17 @@ const filteredRepos = computed(() => {
               </div>
             </div>
 
-            <n-flex align="center">
-              <NuxtLink
-                :to="`https://github.com/${owner}/${repo.repo}`"
-                target="_blank"
-                class="hidden"
-              >
-                <n-button secondary type="info">
-                  <template #icon>
-                    <Icon name="ri:github-fill" />
-                  </template>
-                  View on GitHub
-                </n-button>
-              </NuxtLink>
-
+            <div class="flex justify-end">
               <NuxtLink :to="`/dashboard/${owner}/${repo.repo}`">
                 <n-button type="primary">
                   <template #icon>
                     <Icon name="ri:settings-4-fill" />
                   </template>
-
                   Manage FAIR Compliance
                 </n-button>
               </NuxtLink>
-            </n-flex>
-          </n-flex>
+            </div>
+          </div>
         </n-card>
       </n-flex>
     </n-flex>
