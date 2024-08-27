@@ -32,9 +32,10 @@ Your coding assistant to make research software reusable without breaking a swea
   <a href="https://github.com/fairdataihub/codefair-app/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/fairdataihub/codefair-app.svg?style=flat-square" alt="license" />
   </a>
-  <a href="https://fairdataihub.org/fairshare">
-    <img src="https://raw.githubusercontent.com/fairdataihub/FAIRshare/main/badge.svg" alt="Curated with FAIRshare" />
+  <a href="https://doi.org/10.5281/zenodo.13376617">
+    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.13376617.svg" alt="Zenodo DOI" />
   </a>
+
 </p>
 
 </div>
@@ -126,15 +127,8 @@ This work is licensed under
 If you are using this package or reusing the source code from this repository for any purpose, please cite:
 
 ```text
-    Coming soon...
+   Portillo, D., Soundarajan, S., & Patel, B., (2024). Codefair App. Zenodo. 10.5281/zenodo.13376617
 ```
-
-## Acknowledgements
-
-```text
-    Coming soon...
-```
-
 <br />
 
 ---
