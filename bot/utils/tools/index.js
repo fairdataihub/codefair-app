@@ -4,10 +4,10 @@
 import { consola } from "consola";
 import { init } from "@paralleldrive/cuid2";
 import human from "humanparser";
-import dbInstance from "../../db.js";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone.js";
 import utc from "dayjs/plugin/utc.js";
+import dbInstance from "../../db.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -350,14 +350,14 @@ export async function verifyInstallationAnalytics(
       action: applyActionLimit,
       action_count: actionCount,
       installationId,
+      latestCommitDate: latestCommitInfo.latestCommitDate,
+      latestCommitMessage: latestCommitInfo.latestCommitMessage,
+      latestCommitSha: latestCommitInfo.latestCommitSha,
+      latestCommitUrl: latestCommitInfo.latestCommitUrl,
       owner,
       repo: repository.name,
       repositoryId: repository.id,
       timestamp: Date.now(),
-      latestCommitDate: latestCommitInfo.latestCommitDate,
-      latestCommitMessage: latestCommitInfo.latestCommitMessage,
-      latestCommitUrl: latestCommitInfo.latestCommitUrl,
-      latestCommitSha: latestCommitInfo.latestCommitSha,
     });
   } else {
     if (installation?.action && installation.action_count > 0) {
@@ -368,8 +368,8 @@ export async function verifyInstallationAnalytics(
             action_count: installation.action_count - 1,
             latestCommitDate: latestCommitInfo.latestCommitDate,
             latestCommitMessage: latestCommitInfo.latestCommitMessage,
-            latestCommitUrl: latestCommitInfo.latestCommitUrl,
             latestCommitSha: latestCommitInfo.latestCommitSha,
+            latestCommitUrl: latestCommitInfo.latestCommitUrl,
           },
         },
       );
@@ -385,8 +385,8 @@ export async function verifyInstallationAnalytics(
             action_count: 0,
             latestCommitDate: latestCommitInfo.latestCommitDate,
             latestCommitMessage: latestCommitInfo.latestCommitMessage,
-            latestCommitUrl: latestCommitInfo.latestCommitUrl,
             latestCommitSha: latestCommitInfo.latestCommitSha,
+            latestCommitUrl: latestCommitInfo.latestCommitUrl,
           },
         },
       );
