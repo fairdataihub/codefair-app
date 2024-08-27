@@ -72,10 +72,17 @@ export default async (app, { getRouter }) => {
 
         const latestCommitInfo = {};
         if (!emptyRepo) {
+          // Get the name of the main branch
+          const defaultBranch = await context.octokit.repos.get({
+            owner,
+            repo: repository.name,
+          });
+
+          const mainBranch = defaultBranch.data.default_branch;
           // Gather the latest commit to main info
           const latestCommit = await context.octokit.repos.getCommit({
             owner,
-            ref: "main",
+            ref: mainBranch,
             repo: repository.name,
           });
 
