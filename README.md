@@ -35,6 +35,9 @@ Your coding assistant to make research software reusable without breaking a swea
   <a href="https://doi.org/10.5281/zenodo.13376617">
     <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.13376617.svg" alt="Zenodo DOI" />
   </a>
+  <a href="https://archive.softwareheritage.org/browse/origin/https://github.com/fairdataihub/codefair-app/">
+    <img src="https://archive.softwareheritage.org/badge/origin/https://github.com/fairdataihub/codefair-app/" alt="Software Heritage archive" />
+  </a>
 
 </p>
 
