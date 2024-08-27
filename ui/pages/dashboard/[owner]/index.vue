@@ -100,14 +100,14 @@ const filteredRepos = computed(() => {
               </div>
             </div>
 
-            <div class="h-full w-px bg-gray-300"></div>
+            <n-divider vertical />
 
-            <div id="repo-commits" class="truncate pr-8">
-              <div class="flex flex-col gap-1">
+            <div id="repo-commits" class="truncate pl-4 pr-8">
+              <div class="flex flex-col gap-0">
                 <NuxtLink
                   :to="repo?.latestCommitUrl"
                   target="_blank"
-                  class="truncate text-left text-base font-medium transition-all hover:text-blue-500 hover:underline"
+                  class="truncate text-left text-base font-medium text-slate-500 transition-all hover:text-blue-500 hover:underline"
                 >
                   {{ repo?.latestCommitMessage }}
                 </NuxtLink>
@@ -116,7 +116,7 @@ const filteredRepos = computed(() => {
                   v-if="repo?.latestCommitSha"
                   :to="repo?.latestCommitUrl"
                   target="_blank"
-                  class="flex items-center gap-1 truncate text-left text-sm text-gray-500 transition-all hover:text-blue-500 hover:underline"
+                  class="flex items-center gap-1 truncate text-left text-sm text-gray-400 transition-all hover:text-blue-500 hover:underline"
                 >
                   <Icon name="ri:git-commit-line" size="17" />
                   {{ repo.latestCommitSha?.substring(0, 7) }}
