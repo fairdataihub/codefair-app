@@ -593,11 +593,10 @@ export default async (app, { getRouter }) => {
         cwlObject.contains_cwl = cwlExists.contains_cwl_files;
 
         if (cwlExists.files.length > 0) {
-          consola.info("CWL Validation rerun:", cwlObject);
           // Remove the files that are not in cwlObject
+          const cwlFilePaths = cwlObject.files.map((file) => file.path);
           cwlObject.removed_files = cwlExists.files.filter((file) => {
-            consola.info(file);
-            return !cwlObject.files.path.includes(file.path);
+            return !cwlFilePaths.includes(file.path);
           });
         }
       }
@@ -652,11 +651,10 @@ export default async (app, { getRouter }) => {
         cwlObject.contains_cwl = cwlExists.contains_cwl_files;
 
         if (cwlExists.files.length > 0) {
-          consola.info("CWL Validation rerun:", cwlObject);
           // Remove the files that are not in cwlObject
+          const cwlFilePaths = cwlObject.files.map((file) => file.path);
           cwlObject.removed_files = cwlExists.files.filter((file) => {
-            consola.info(file);
-            return !cwlObject.files.includes(file.path);
+            return !cwlFilePaths.includes(file.path);
           });
         }
       }
