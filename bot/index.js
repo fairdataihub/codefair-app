@@ -129,6 +129,7 @@ export default async (app, { getRouter }) => {
         };
 
         // If existing cwl validation exists, update the contains_cwl value
+        // If existing cwl validation exists, update the contains_cwl value
         const cwlExists = await db.collection("cwlValidation").findOne({
           repositoryId: repository.id,
         });
@@ -155,9 +156,8 @@ export default async (app, { getRouter }) => {
 
         // Create an issue with the compliance issues body
         await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
-      }
-    },
-  );
+    }
+  });
 
   app.on(
     ["installation.deleted", "installation_repositories.removed"],

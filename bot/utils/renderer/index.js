@@ -18,8 +18,6 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  * @param {string} owner - The owner of the repository
  * @param {object} repository  - The repository metadata
  * @param {object} prInfo  - The PR information
- * @param {string} prTitle - The title of the PR
- * @param {string} prNumber - The number of the PR
  * @param {string} prLink - The link to the PR
  * @param {array} commits - The commits that were pushed
  *
