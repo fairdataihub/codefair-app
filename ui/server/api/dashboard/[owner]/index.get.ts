@@ -84,68 +84,91 @@ export default defineEventHandler(async (event) => {
     })
     .toArray();
 
-  // // For the first 10 repositories, get the latest commit details
-  // for (let index = 0; index < Math.min(installations.length, 10); index++) {
-  //   let latestCommitSha = "";
-  //   let latestCommitMessage = "";
-  //   let latestCommitUrl = "";
-  //   let latestCommitDate = "";
-  //   const installation = installations[index];
+  // For the first 10 repositories, get the latest commit details
+  for (let index = 0; index < installations.length; index++) {
+    let latestCommitSha = "";
+    let latestCommitMessage = "";
+    let latestCommitUrl = "";
+    let latestCommitDate = "";
+    const installation = installations[index];
 
-  //   const repo = installation.repo as string;
-
-  //   try {
-  //     const commitResponse = await fetch(
-  //       `https://api.github.com/repos/${owner}/${repo}/commits`,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${user.access_token}`,
-  //         },
-  //       },
-  //     );
-
-  //     if (commitResponse.ok) {
-  //       const commits = await commitResponse.json();
-
-  //       if (Array.isArray(commits) && commits.length > 0) {
-  //         latestCommitSha = commits[0]?.sha || "";
-  //         latestCommitMessage = commits[0]?.commit?.message || "";
-  //         latestCommitUrl = commits[0]?.html_url || "";
-  //         latestCommitDate = commits[0]?.commit?.author?.date || "";
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error(
-  //       `Failed to fetch commits for the repository ${repo} for the owner ${owner}`,
-  //     );
-
-  //     console.error(error);
-  //     console.log("error)");
-  //   }
-
-  //   console.log("UHHHHHH");
-
-  //   installations[index] = {
-  //     ...installation,
-  //     latestCommitDate,
-  //     latestCommitMessage,
-  //     latestCommitSha,
-  //     latestCommitUrl,
-  //   };
-  // }
-
-  // Update the db to include ownerIsOrganization
-  await installationCollection.updateMany(
-    {
-      owner,
-      ownerIsOrganization: { $exists: false },
-    },
-    {
-      $set: {
-        ownerIsOrganization,
+    // Update the db to include ownerIsOrganization
+    await installationCollection.updateMany(
+      {
+        owner,
+        ownerIsOrganization: { $exists: false },
       },
-    },
-  );
+      {
+        $set: {
+          ownerIsOrganization,
+        },
+      },
+    );
+
+    // if entry does not commit details fetch them
+    if (
+      installation.latestCommitSha &&
+      installation.latestCommitMessage &&
+      installation.latestCommitUrl &&
+      installation.latestCommitDate
+    ) {
+      continue;
+    }
+
+    const repo = installation.repo as string;
+
+    try {
+      const commitResponse = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/commits`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.access_token}`,
+          },
+        },
+      );
+
+      if (commitResponse.ok) {
+        const commits = await commitResponse.json();
+
+        if (Array.isArray(commits) && commits.length > 0) {
+          latestCommitSha = commits[0]?.sha || "";
+          latestCommitMessage = commits[0]?.commit?.message || "";
+          latestCommitUrl = commits[0]?.html_url || "";
+          latestCommitDate = commits[0]?.commit?.author?.date || "";
+        }
+      }
+    } catch (error) {
+      console.error(
+        `Failed to fetch commits for the repository ${repo} for the owner ${owner}`,
+      );
+
+      console.error(error);
+    }
+
+    installations[index] = {
+      ...installation,
+      latestCommitDate,
+      latestCommitMessage,
+      latestCommitSha,
+      latestCommitUrl,
+    };
+
+    // Update the db with the latest commit details
+    await installationCollection.updateOne(
+      {
+        owner,
+        repo,
+      },
+      {
+        $set: {
+          latestCommitDate,
+          latestCommitMessage,
+          latestCommitSha,
+          latestCommitUrl,
+        },
+      },
+    );
+  }
 
   return installations.map((installation) => ({
     action_count: installation.action_count as number,
