@@ -156,8 +156,9 @@ export default async (app, { getRouter }) => {
 
         // Create an issue with the compliance issues body
         await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
-    }
-  });
+      }
+    },
+  );
 
   app.on(
     ["installation.deleted", "installation_repositories.removed"],
@@ -717,11 +718,41 @@ export default async (app, { getRouter }) => {
     const issueTitle = context.payload.issue.title;
 
     if (issueTitle === ISSUE_TITLE) {
-      // Check if the installation is already in the database
+      // Check if the repository is empty
       const emptyRepo = await isRepoEmpty(context, owner, repository.name);
 
+      const latestCommitInfo = {};
+      if (!emptyRepo) {
+        // Get the name of the main branch
+        const defaultBranch = await context.octokit.repos.get({
+          owner,
+          repo: repository.name,
+        });
+
+        const mainBranch = defaultBranch.data.default_branch;
+        // Gather the latest commit to main info
+        const latestCommit = await context.octokit.repos.getCommit({
+          owner,
+          ref: mainBranch,
+          repo: repository.name,
+        });
+
+        latestCommitInfo.latestCommitSha = latestCommit.data.sha || "";
+        latestCommitInfo.latestCommitMessage =
+          latestCommit.data.commit.message || "";
+        latestCommitInfo.latestCommitUrl = latestCommit.data.html_url || "";
+        latestCommitInfo.latestCommitDate =
+          latestCommit.data.commit.committer.date || "";
+      }
+
       // Check if entry in installation and analytics collection
-      await verifyInstallationAnalytics(context, repository);
+      await verifyInstallationAnalytics(
+        context,
+        repository,
+        false,
+        0,
+        latestCommitInfo,
+      );
 
       const license = await checkForLicense(context, owner, repository.name);
       const citation = await checkForCitation(context, owner, repository.name);
