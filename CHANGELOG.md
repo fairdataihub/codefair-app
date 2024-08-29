@@ -7,8 +7,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## v1.0.0 - 2024-08-26
 
-### Identifier
-https://doi.org/10.5281/zenodo.13376617
-
 ### Added
 - First release with license file and metadata files generating features
