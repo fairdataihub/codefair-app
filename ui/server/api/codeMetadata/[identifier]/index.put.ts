@@ -78,8 +78,8 @@ export default defineEventHandler(async (event) => {
 
   if (!body) {
     throw createError({
-      message: "Missing required fields",
       statusCode: 400,
+      statusMessage: "Missing required fields",
     });
   }
 
@@ -90,8 +90,8 @@ export default defineEventHandler(async (event) => {
 
     throw createError({
       data: parsedBody.error.errors,
-      message: "The provided parameters are invalid",
       statusCode: 400,
+      statusMessage: "The provided parameters are invalid",
     });
   }
 
@@ -112,8 +112,8 @@ export default defineEventHandler(async (event) => {
 
   if (!codeMetadataRequest) {
     throw createError({
-      message: "Code metadata request not found",
       statusCode: 404,
+      statusMessage: "Code metadata request not found",
     });
   }
 
@@ -135,8 +135,8 @@ export default defineEventHandler(async (event) => {
 
   if (!updatedRecord) {
     throw createError({
-      message: "code-metadata-request-update-failed",
       statusCode: 500,
+      statusMessage: "code-metadata-request-update-failed",
     });
   }
 

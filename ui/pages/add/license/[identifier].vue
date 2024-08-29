@@ -3,6 +3,7 @@ import sanitizeHtml from "sanitize-html";
 import { MdEditor, config } from "md-editor-v3";
 import licensesJSON from "@/assets/data/licenses.json";
 import TargetBlankExtension from "@/utils/TargetBlankExtension";
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 config({
   editorConfig: {
@@ -24,6 +25,10 @@ config({
 definePageMeta({
   middleware: ["protected"],
 });
+
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.showBreadcrumbs();
 
 const licenseOptions = licensesJSON.map((option) => ({
   label: option.name,
@@ -50,6 +55,12 @@ const { data, error } = await useFetch(`/api/license/${identifier}`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
+breadcrumbsStore.setFeature({
+  id: "edit-license",
+  icon: "tabler:license",
+  name: "Edit License",
+});
+
 if (error.value) {
   push.error({
     title: "Failed to fetch license details",
@@ -65,11 +76,13 @@ if (data.value) {
   githubRepo.value = `${data.value.owner}/${data.value.repo}`;
   licenseId.value = data.value.licenseId ?? null;
   licenseContent.value = data.value.licenseContent ?? "";
-  githubRepo.value = `${data.value.owner}/${data.value.repo}`;
 
   if (licenseContent.value) {
     displayLicenseEditor.value = true;
   }
+
+  breadcrumbsStore.setOwner(data.value.owner);
+  breadcrumbsStore.setRepo(data.value.repo);
 }
 
 const sanitize = (html: string) => sanitizeHtml(html);
@@ -228,14 +241,7 @@ const navigateToPR = () => {
             class="text-blue-500 underline transition-all hover:text-blue-600"
             >https://choosealicense.com</NuxtLink
           >. To make your software reusable a license file is expected at the
-          root level of your repository, as recommended in the
-          <NuxtLink
-            to="https://fair-biors.org/docs/guidelines"
-            target="_blank"
-            class="text-sm text-blue-400 underline transition-all hover:text-blue-500"
-          >
-            FAIR-BioRS Guidelines</NuxtLink
-          >. It is important to choose your license early since it will affect
+          root level of your repository. It is important to choose your license early since it will affect
           your software's dependencies.
         </p>
       </div>

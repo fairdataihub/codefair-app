@@ -1,8 +1,14 @@
 <script setup lang="ts">
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+
 definePageMeta({
   middleware: ["protected"],
 });
+
 const user = useUser();
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.hideBreadcrumbs();
 </script>
 
 <template>

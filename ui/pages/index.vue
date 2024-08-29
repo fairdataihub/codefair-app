@@ -1,4 +1,10 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+
+const breadcrumbsStore = useBreadcrumbsStore();
+
+breadcrumbsStore.hideBreadcrumbs();
+</script>
 
 <template>
   <main>
@@ -71,15 +77,20 @@
             >
               What is Codefair?
             </h2>
+
             <p class="font-onest text-lg text-slate-800">
               Codefair is a free and open source GitHub app that acts as your
               personal assistant when it comes to making your research software
-              reusable and especially complying with the Findable, Accessible,
-              Interoperable, Reusable (FAIR) Principles for Research Software
-              (FAIR4RS Principles). Whether you are developing artificial
-              intelligence (AI)/machine learning (ML) models with Python, data
-              visualization tools with Jupyter notebook, or data analysis code
-              with R, Codefair is here to assist you.
+              reusable and especially complying with the
+              <NuxtLink
+                to="https://www.nature.com/articles/s41597-022-01710-x"
+                class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+                >Findable, Accessible, Interoperable, Reusable (FAIR) Principles
+                for Research Software (FAIR4RS Principles)</NuxtLink
+              >. Whether you are developing artificial intelligence (AI)/machine
+              learning (ML) models with Python, data visualization tools with
+              Jupyter notebook, or data analysis code with R, Codefair is here
+              to assist you.
             </p>
           </div>
 
@@ -171,8 +182,12 @@
               through the Codefair website. Through intuitive interfaces and
               automated pull requests, Codefair will allow you to make sure that
               your software follows best coding practices, provides metadata in
-              standard format, includes a license file, is archived on Zenodo,
-              and much more to align with the FAIR4RS principles.
+              standard format, includes a license file, is archived on
+              <NuxtLink
+                to="https://zenodo.org/"
+                class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+                >Zenodo</NuxtLink
+              >, and much more to align with the FAIR4RS principles.
             </p>
           </div>
 
@@ -274,9 +289,19 @@
             <NuxtLink
               to="https://github.com/fairdataihub/codefair-app/issues"
               target="_blank"
+              class="align-center flex w-3/5 justify-center self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+            >
+              <span class="ml-4">Open a GitHub issue</span>
+
+              <Icon name="fa:github" size="25" />
+            </NuxtLink>
+
+            <NuxtLink
+              to="https://docs.codefair.io/"
+              target="_blank"
               class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
             >
-              Open a GitHub issue ->
+              Read the Documentation ->
             </NuxtLink>
           </div>
         </div>

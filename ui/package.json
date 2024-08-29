@@ -1,6 +1,6 @@
 {
   "name": "codefair",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@lucia-auth/adapter-mongodb": "^1.0.3",
+    "@pinia/nuxt": "^0.5.3",
     "arctic": "^1.6.2",
     "dayjs": "^1.11.11",
     "humanparser": "^2.7.0",
@@ -30,6 +31,7 @@
     "nuxt": "3.11.1",
     "nuxt-mongoose": "^1.0.5",
     "octokit": "^4.0.2",
+    "pinia": "^2.2.2",
     "random-words": "^2.0.1",
     "sanitize-html": "^2.13.0",
     "vue": "^3.4.21",

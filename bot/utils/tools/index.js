@@ -1,8 +1,31 @@
 /**
  * @fileoverview Utility functions for the bot
  */
+import { consola } from "consola";
 import { init } from "@paralleldrive/cuid2";
 import human from "humanparser";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone.js";
+import utc from "dayjs/plugin/utc.js";
+import dbInstance from "../../db.js";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+/**
+ * * Initialize the database connection
+ * @returns {Promise<boolean>} - Returns true if the database is connected, false otherwise
+ */
+export async function intializeDatabase() {
+  try {
+    consola.start("Connecting to database...");
+    await dbInstance.connect();
+    consola.success("Connected to database!");
+    return true;
+  } catch (error) {
+    consola.error("Error connecting to database:", error);
+  }
+}
 
 /**
  * * Create a unique identifier for database entries
@@ -15,19 +38,17 @@ export const createId = init({
 
 /**
  * * Verify that the required environment variables are set
- *
  * @param {string} varName - The name of the environment variable to check
  */
 export function checkEnvVariable(varName) {
   if (!process.env[varName]) {
-    console.error(`Please set the ${varName} environment variable`);
+    consola.error(`Please set the ${varName} environment variable`);
     process.exit(1);
   }
 }
 
 /**
  * * Get the default branch of the repository
- *
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
@@ -45,14 +66,12 @@ export async function getDefaultBranch(context, owner, repo) {
 
     return defaultBranch;
   } catch (error) {
-    console.log("Error getting the default branch");
-    console.log(error);
+    consola.error("Error getting the default branch:", error);
   }
 }
 
 /**
  * * Check if the issue already exists in the repository
- *
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
@@ -89,7 +108,6 @@ export async function verifyFirstIssue(context, owner, repo, title) {
 
 /**
  * * Close an open issue with the specified title
- *
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
@@ -122,7 +140,6 @@ export async function closeOpenIssue(context, owner, repo, title) {
 
 /**
  * * Gathers contributors of the repository and parses the user information
- *
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
@@ -191,7 +208,6 @@ export async function gatherRepoAuthors(context, owner, repo, fileType) {
 
 /**
  * * Gather the programming languages used in the repository
- *
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
@@ -207,7 +223,7 @@ export async function gatherLanguagesUsed(context, owner, repo) {
 
   // Parse the data for languages used
   let languagesUsed = [];
-  if (Object.keys(languages.data).length !== 0) {
+  if (Object.keys(languages.data).length > 0) {
     languagesUsed = Object.keys(languages.data);
   }
 
@@ -216,7 +232,6 @@ export async function gatherLanguagesUsed(context, owner, repo) {
 
 /**
  * * Gather the DOI from the README of the repository
- *
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
  * @param {string} repoName - The name of the repository
@@ -246,26 +261,29 @@ export async function getDOI(context, owner, repoName) {
 
 /**
  * * Verify if repository name has changed and update the database if necessary
- * 
- * @param {string} dbRepoName - The repository name in the database 
- * @param {string} repoName - The repository name from the event payload
+ * @param {string} dbRepoName - The repository name in the database
+ * @param {Object} repository - The repository name from the event payload
  * @param {string} owner - The owner of the repository
  * @param {*} collection - The MongoDB collection
  */
-export async function verifyRepoName(dbRepoName, repoName, owner, collection) {
-  console.log("Verifying repository name...");
-  if (dbRepoName !== repoName) {
-    console.log(
-      `Repository name for ${owner} has changed from ${dbRepoName} to ${repoName}`,
+export async function verifyRepoName(
+  dbRepoName,
+  repository,
+  owner,
+  collection,
+) {
+  if (dbRepoName !== repository.name) {
+    consola.info(
+      `Repository name for ${owner} has changed from ${dbRepoName} to ${repository.name}`,
     );
 
     // Check if the installation is already in the database
     await collection.updateOne(
-      { installationId, repositoryId: repository },
+      { installationId, repositoryId: repository.id },
       {
         $set: {
           owner,
-          repo: repoName,
+          repo: repository.name,
         },
       },
     );
@@ -274,26 +292,207 @@ export async function verifyRepoName(dbRepoName, repoName, owner, collection) {
 
 /**
  * * Check if the repository is empty
- * 
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository
- * @param {string} repo - The name of the repository
+ * @param {string} repoName - The name of the repository
  * @returns {bool} - Returns true if the repository is empty, false otherwise
  */
-export async function isRepoEmpty(context, owner, repo) {
+export async function isRepoEmpty(context, owner, repoName) {
   try {
     const repoContent = await context.octokit.repos.getContent({
       owner,
-      repo,
+      repo: repoName,
     });
 
     return repoContent.data.length === 0;
   } catch (error) {
-    console.log("Error getting the repository content");
-    console.log(error);
     if (error.status === 404) {
       return true;
     }
+    consola.error("Error checking if the repository is empty:", error);
+  }
+}
+
+/**
+ * * Verify the installation and analytics collections
+ * @param {object} context - GitHub payload context
+ * @param {object} repository - The repository object metadata
+ * @param {boolean} applyActionLimit - Whether to apply the action limit
+ * @param {number} actionCount - The number of actions performed
+ */
+export async function verifyInstallationAnalytics(
+  context,
+  repository,
+  applyActionLimit = false,
+  actionCount = 5,
+  latestCommitInfo,
+) {
+  const owner =
+    context.payload?.installation?.account?.login ||
+    context.payload?.repository?.owner?.login;
+
+  const installationId = context.payload.installation.id;
+
+  const installationCollection = dbInstance.getDb().collection("installation");
+  const analyticsCollection = dbInstance.getDb().collection("analytics");
+
+  const installation = await installationCollection.findOne({
+    repositoryId: repository.id,
+  });
+
+  const analytics = await analyticsCollection.findOne({
+    repositoryId: repository.id,
+  });
+
+  if (!installation) {
+    // If the installation is not in the database, add it
+    await installationCollection.insertOne({
+      action: applyActionLimit,
+      action_count: actionCount,
+      installationId,
+      latestCommitDate: latestCommitInfo.latestCommitDate,
+      latestCommitMessage: latestCommitInfo.latestCommitMessage,
+      latestCommitSha: latestCommitInfo.latestCommitSha,
+      latestCommitUrl: latestCommitInfo.latestCommitUrl,
+      owner,
+      repo: repository.name,
+      repositoryId: repository.id,
+      timestamp: Date.now(),
+    });
+  } else {
+    if (installation?.action && installation.action_count > 0) {
+      installationCollection.updateOne(
+        { repositoryId: repository.id },
+        {
+          $set: {
+            action_count: installation.action_count - 1,
+            latestCommitDate: latestCommitInfo.latestCommitDate,
+            latestCommitMessage: latestCommitInfo.latestCommitMessage,
+            latestCommitSha: latestCommitInfo.latestCommitSha,
+            latestCommitUrl: latestCommitInfo.latestCommitUrl,
+          },
+        },
+      );
+    }
+
+    if (installation?.action && installation.action_count === 0) {
+      consola.info("Action limit reached, no longer limiting actions");
+      installationCollection.updateOne(
+        { repositoryId: repository.id },
+        {
+          $set: {
+            action: false,
+            action_count: 0,
+            latestCommitDate: latestCommitInfo.latestCommitDate,
+            latestCommitMessage: latestCommitInfo.latestCommitMessage,
+            latestCommitSha: latestCommitInfo.latestCommitSha,
+            latestCommitUrl: latestCommitInfo.latestCommitUrl,
+          },
+        },
+      );
+    }
+    verifyRepoName(
+      installation.repo,
+      repository,
+      owner,
+      installationCollection,
+    );
   }
 
+  if (!analytics) {
+    // If the analytics for the installation is not in the database, add it
+    await analyticsCollection.insertOne({
+      owner,
+      repo: repository.name,
+      repositoryId: repository.id,
+      timestamp: Date.now(),
+    });
+  } else {
+    verifyRepoName(analytics.repo, repository, owner, analyticsCollection);
+  }
+}
+
+/**
+ * * Verify if repository is private
+ * @param {Object} context - The GitHub context object
+ * @param {String} owner - The owner of the repository
+ * @param {String} repoName - The name of the repository
+ * @returns {Boolean} - Returns true if the repository is private, false otherwise
+ */
+export async function isRepoPrivate(context, owner, repoName) {
+  try {
+    const repoDetails = await context.octokit.repos.get({
+      owner,
+      repo: repoName,
+    });
+
+    consola.info(
+      `Repository ${repoName} is private: ${repoDetails.data.private}`,
+    );
+    return repoDetails.data.private;
+  } catch (error) {
+    consola.error("Error verifying if the repository is private:", error);
+  }
+}
+
+/**
+ * * Apply the GitHub issue number to the installation collection in the database
+ * @param {Number} issueNumber - The issue number to apply to the database
+ * @param {Number} repoId - The repository ID
+ */
+export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
+  const collection = dbInstance.getDb().collection("installation");
+
+  await collection.updateOne(
+    { repositoryId: repoId },
+    {
+      $set: {
+        disabled: false,
+        issue_number: issueNumber,
+      },
+    },
+  );
+}
+
+/**
+ * * Replaces the raw GitHub URL in the string with another URL
+ * @param {String} inputString - The string to process
+ * @param {String} newUrl - The new URL to replace the raw GitHub URL with
+ * @returns {String} - The string with the raw GitHub URL replaced
+ */
+export function replaceRawGithubUrl(inputString, oldUrl, newUrl) {
+  // Regex to find the oldUrl with optional line numbers in the format :line:column
+  const urlRegex = new RegExp(
+    `(${oldUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})(:\\d+:\\d+)?`,
+    "g",
+  );
+
+  let firstLineNumber = null;
+  let secondLineNumber = null;
+
+  // Replace each found URL in the string with newUrl
+  const modifiedString = inputString.replace(urlRegex, (match, p1, p2) => {
+    if (p2) {
+      const lineNumbers = p2.split(":");
+      if (!firstLineNumber) {
+        firstLineNumber = lineNumbers[1];
+        secondLineNumber = lineNumbers[2];
+      }
+    }
+    return p2 ? `${newUrl}${p2}` : newUrl;
+  });
+
+  return [modifiedString, firstLineNumber, secondLineNumber];
+}
+
+export function applyLastModifiedTemplate(baseTemplate) {
+  const lastModified = dayjs()
+    .tz("America/Los_Angeles")
+    .format("MMM D YYYY, HH:mm:ss");
+
+  consola.info(
+    `GitHub Issue updated at: ${lastModified} (timezone: America/Los_Angeles)`,
+  );
+
+  return `${baseTemplate}\n\n<sub><span style="color: grey;">Last updated ${lastModified} (timezone: America/Los_Angeles)</span></sub>`;
 }

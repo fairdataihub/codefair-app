@@ -32,8 +32,8 @@ Your coding assistant to make research software reusable without breaking a swea
   <a href="https://github.com/fairdataihub/codefair-app/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/fairdataihub/codefair-app.svg?style=flat-square" alt="license" />
   </a>
-  <a href="https://doi.org/10.5281/zenodo.13376617">
-    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.13376617.svg" alt="Zenodo DOI" />
+  <a href="https://doi.org/10.5281/zenodo.13376616">
+    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.13376616.svg" alt="Zenodo DOI" />
   </a>
   <a href="https://archive.softwareheritage.org/browse/origin/https://github.com/fairdataihub/codefair-app/">
     <img src="https://archive.softwareheritage.org/badge/origin/https://github.com/fairdataihub/codefair-app/" alt="Software Heritage archive" />
@@ -65,46 +65,17 @@ Codefair is your personal assistant when it comes to making your research softwa
 > While Codefair is free, installing it via the GitHub Marketplace may still require a credit card to be associated with your (or your organization’s) GitHub account. To circumvent this requirement, you can alternatively install Codefair directly from the [app page](https://github.com/apps/codefair-app).
 
 ### Documentation
-See the our [dedicated webpage](https://docs.codefair.io) for the full documentation, including details about each features and how to use them.
+
+See our [dedicated webpage](https://docs.codefair.io/docs/installation.html) for full details on what permissions are used and the features Codefair provides.
 
 ## Run the GitHub app locally
 
-### Setup
-
-This repository uses a pnpm workspace to handle both the bot and the frontend UI. You will need to install pnpm globally to run the app locally. You will also need to be on Node.js version 20 or higher.
-
-```bash
-npm install -g pnpm
-```
-
-To start both the bot and the frontend UI, run the following command at the root of the repository:
-
-```bash
-pnpm dev
-```
-
-This will start the bot and the frontend UI in development mode. The bot will be available at `http://localhost:3001` and the frontend UI will be available at `http://localhost:3000`.
-
-The .env files for each package are located in the respective package directories. You will need to create a `.env` file in the `bot` and `ui` directories. Use the .env.example files in each directory as a template.
-
-To run the bot only, run the following command at the root of the repository:
-
-```bash
-cd bot
-pnpm dev
-```
-
-To run the frontend UI only, run the following command at the root of the repository:
-
-```bash
-cd ui
-pnpm dev
-```
+For detailed instructions on setting up running the application locally, please refer to our [documentation site](https://docs.codefair.io/dev/running-locally.html).
 
 ## How Codefair is developed
 
-Codefair is developed using Probot and is deployed on a server as a serverless function. The GitHub app is configured to receive webhooks for important actions such as pushing code, opening or closing issues, opening or merging pull requests and commenting on discussions.
-By leveraging a serverless environment on a server, Codefair can automatically scale to handle the workload of the GitHub app. The app is written in Node.js and utilizes the Octokit library to interact with the GitHub APIenabling seamless integration with GitHub's features and functionality.
+Codefair is developed using [Probot](https://probot.github.io/docs/) and is deployed on a server as a serverless function. The GitHub app is configured to receive webhooks for important actions such as pushing code, opening or closing issues, opening or merging pull requests and commenting on discussions.
+By leveraging a serverless environment on a server, Codefair can automatically scale to handle the workload of the GitHub app. The app is written in [Node.js](https://nodejs.org/en) and utilizes the [Octokit library](https://github.com/octokit) to interact with the GitHub API enabling seamless integration with GitHub's features and functionality.
 
 ## Contributing
 
@@ -127,11 +98,8 @@ This work is licensed under
 
 ## How to cite
 
-If you are using this package or reusing the source code from this repository for any purpose, please cite:
+If you are using this package or reusing the source code from this repository for any purpose, please cite the corresponding Zenodo record. If you are using the latest version, you can see the citation instruction in the GitHub Citation panel or in the CITATION.cff file. You can also find the citation instruction on the Zenodo page 10.5281/zenodo.13376616 (especially if you would like to cite an older version). 
 
-```text
-   Portillo, D., Soundarajan, S., & Patel, B., (2024). Codefair App. Zenodo. 10.5281/zenodo.13376617
-```
 <br />
 
 ---

@@ -6,6 +6,8 @@ const loggedIn = computed(() => !!user.value);
 
 const hideLoginPages = ["/login", "/", "/fairsoftware", "/codefair"];
 
+const devMode = process.env.NODE_ENV === "development";
+
 const onHideLoginPages = computed(() => {
   return hideLoginPages.includes(route.path);
   // return false;
