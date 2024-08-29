@@ -32,8 +32,8 @@ Your coding assistant to make research software reusable without breaking a swea
   <a href="https://github.com/fairdataihub/codefair-app/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/fairdataihub/codefair-app.svg?style=flat-square" alt="license" />
   </a>
-  <a href="https://doi.org/10.5281/zenodo.13376617">
-    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.13376617.svg" alt="Zenodo DOI" />
+  <a href="https://doi.org/10.5281/zenodo.13376616">
+    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.13376616.svg" alt="Zenodo DOI" />
   </a>
   <a href="https://archive.softwareheritage.org/browse/origin/https://github.com/fairdataihub/codefair-app/">
     <img src="https://archive.softwareheritage.org/badge/origin/https://github.com/fairdataihub/codefair-app/" alt="Software Heritage archive" />
@@ -98,11 +98,7 @@ This work is licensed under
 
 ## How to cite
 
-If you are using this package or reusing the source code from this repository for any purpose, please cite:
-
-```text
-   Portillo, D., Soundarajan, S., & Patel, B., (2024). Codefair App. Zenodo. 10.5281/zenodo.13376617
-```
+If you are using this package or reusing the source code from this repository for any purpose, please cite the corresponding Zenodo record. If you are using the latest version, you can see the citation instruction in the GitHub Citation panel or in the CITATION.cff file. You can also find the citation instruction on the Zenodo page 10.5281/zenodo.13376616 (especially if you would like to cite an older version). 
 
 <br />
 
