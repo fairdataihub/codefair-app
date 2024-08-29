@@ -1,8 +1,7 @@
+import fs from "fs";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
-import fs from "fs";
 import { consola } from "consola";
-import { nanoid } from "nanoid";
 
 if (process.env.NODE_ENV !== "production") {
   dotenv.config({
