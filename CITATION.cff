@@ -17,7 +17,7 @@ message: If you use this software, please cite it using the metadata from this f
 type: software
 identifiers:
   - type: doi
-    value: https://doi.org/10.5281/zenodo.13376617
+    value: https://doi.org/10.5281/zenodo.13544387
 abstract: "Codefair is a free and open source GitHub app that acts as your
   personal assistant when it comes to making your research software reusable and
   especially complying with the Findable, Accessible, Interoperable, Reusable
@@ -33,5 +33,5 @@ keywords:
   - software
 license: MIT
 repository-code: https://github.com/fairdataihub/codefair-app
-version: 1.0.0
-date-released: 2024-08-26
+version: 2.0.0
+date-released: 2024-08-29
