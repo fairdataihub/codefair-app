@@ -64,6 +64,11 @@ export function getCWLFiles(context, owner, repoName) {
   });
 }
 
+/**
+ * * This function validates the CWL file using the cwltool validator
+ * @param {String} downloadUrl - The download URL of the CWL file
+ * @returns {Array} - Array containing the validation status and message
+ */
 export async function validateCWLFile(downloadUrl) {
   try {
     const response = await fetch("https://cwl.saso.one/validate", {

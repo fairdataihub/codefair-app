@@ -36,7 +36,7 @@ async function logout() {
   </n-flex>
 
   <div v-else>
-    <a v-if="!onHideLoginPages || devMode" href="/login/github">
+    <a v-if="!onHideLoginPages" href="/login/github">
       <n-button color="black">
         <template #icon>
           <Icon name="bi:github" />

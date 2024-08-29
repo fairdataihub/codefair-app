@@ -436,7 +436,7 @@ export default async (app, { getRouter }) => {
   // When a pull request is opened
   app.on("pull_request.opened", async (context) => {
     const owner = context.payload.repository.owner.login;
-    const repository = context.payload.repository;
+    const { repository } = context.payload;
     const prTitle = context.payload.pull_request.title;
     const prLink = context.payload.pull_request.html_url;
     const definedPRTitles = [
