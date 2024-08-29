@@ -62,19 +62,20 @@ for (const file of files) {
 
   try {
     // Run the migration
-    await migrationFunction(uri, dbName, migrationId);
+    const entriesUpdated = await migrationFunction(uri, dbName, migrationId);
+
+    consola.success(`Migration ${migrationId} has been applied!`);
+
+    // Insert the migration into the migrations collection
+    await migrationsCollection.insertOne({
+      created_at: new Date(),
+      entries_updated: entriesUpdated,
+      migration_id: migrationId,
+    });
   } catch (error) {
     consola.error(`Error applying migration ${migrationId}: ${error.message}`);
     throw error;
   }
-
-  consola.success(`Migration ${migrationId} has been applied!`);
-
-  // Insert the migration into the migrations collection
-  await migrationsCollection.insertOne({
-    created_at: new Date(),
-    migration_id: migrationId,
-  });
 }
 
 await client.close();
