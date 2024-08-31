@@ -98,7 +98,6 @@ export default async (app, { getRouter }) => {
         await verifyInstallationAnalytics(
           context,
           repository,
-          applyActionLimit,
           actionCount,
           latestCommitInfo,
         );
@@ -746,7 +745,6 @@ export default async (app, { getRouter }) => {
       await verifyInstallationAnalytics(
         context,
         repository,
-        false,
         0,
         latestCommitInfo,
       );
