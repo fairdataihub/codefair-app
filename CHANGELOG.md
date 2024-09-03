@@ -5,6 +5,7 @@ All notable changes the Codefair App will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+
 ## v.2.0.1 - 2024-09-03
 
 ### Identifier
@@ -24,6 +25,7 @@ https://doi.org/10.5281/zenodo.13651177
 ### Removed
 
 - Removed references to the action key in the database as it was not being used.
+
 
 ## v.2.0.0 - 2024-08-29
 
