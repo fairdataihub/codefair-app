@@ -21,8 +21,6 @@ const isOrganizationMember = async (
       },
     );
 
-    console.log(isOrgMember);
-
     if (!isOrgMember.ok) {
       const statusMessage = `unauthorized-org-access|https://github.com/orgs/${owner}/policies/applications/${GITHUB_OAUTH_APP_ID}`;
 

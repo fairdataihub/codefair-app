@@ -81,6 +81,7 @@ export default defineEventHandler(async (event) => {
           containsCWL: cwlValidation.contains_cwl_files as boolean,
           identifier: cwlValidation.identifier as string,
           open: cwlValidation.open as boolean,
+          overallStatus: cwlValidation.overall_status as string,
           owner: cwlValidation.owner as string,
           repo: cwlValidation.repo as string,
         }

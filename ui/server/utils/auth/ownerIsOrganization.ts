@@ -31,7 +31,6 @@ const ownerIsOrganization = async (event: any, owner: string) => {
 
     // Check if the owner is an organization
     ownerIsOrganization = ownerProfileJson.type === "Organization";
-    console.log(ownerIsOrganization);
 
     return ownerIsOrganization;
   }
