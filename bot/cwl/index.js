@@ -266,11 +266,14 @@ export async function applyCWLTemplate(
 
     // Check if the overall status is still valid
     for (const file of newFiles) {
-      if (file.overall_status === "invalid") {
+      consola.info("file", file);
+      consola.info("HMMM");
+      if (file.validation_status === "invalid") {
         validOverall = false;
         break;
       }
     }
+    consola.info("validOverall", validOverall);
 
     await cwlCollection.updateOne(
       { repositoryId: repository.id },
