@@ -11,6 +11,7 @@ export default defineEventHandler(async (event) => {
   // Check if the user has write permissions to the repository
   await repoWritePermissions(event, owner, repo);
   const isOrg = await ownerIsOrganization(event, owner);
+  await isOrganizationMember(event, isOrg, owner);
 
   const client = new MongoClient(process.env.MONGODB_URI as string, {});
 
