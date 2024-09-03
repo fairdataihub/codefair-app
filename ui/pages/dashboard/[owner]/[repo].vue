@@ -356,6 +356,30 @@ const handleSettingsSelect = (key: any) => {
           <Icon name="cib:common-workflow-language" size="40" />
         </template>
 
+        <template #header-extra>
+          <div v-if="data?.cwlValidation?.containsCWL">
+            <n-tag
+              v-if="data?.cwlValidation?.overallStatus === 'valid'"
+              type="success"
+            >
+              <template #icon>
+                <Icon name="icon-park-solid:check-one" size="16" />
+              </template>
+              Valid CWL file(s)
+            </n-tag>
+
+            <n-tag
+              v-else-if="data?.cwlValidation?.overallStatus === 'invalid'"
+              type="error"
+            >
+              <template #icon>
+                <Icon name="icon-park-solid:close-one" size="16" />
+              </template>
+              Invalid CWL file(s)
+            </n-tag>
+          </div>
+        </template>
+
         <template #content>
           <n-alert
             v-if="!data?.cwlValidation || !data.cwlValidation.containsCWL"

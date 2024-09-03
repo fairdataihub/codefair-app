@@ -323,9 +323,8 @@ export async function isRepoEmpty(context, owner, repoName) {
 export async function verifyInstallationAnalytics(
   context,
   repository,
-  applyActionLimit = false,
   actionCount = 5,
-  latestCommitInfo,
+  latestCommitInfo = {},
 ) {
   const owner =
     context.payload?.installation?.account?.login ||
@@ -347,7 +346,6 @@ export async function verifyInstallationAnalytics(
   if (!installation) {
     // If the installation is not in the database, add it
     await installationCollection.insertOne({
-      action: applyActionLimit,
       action_count: actionCount,
       installationId,
       latestCommitDate: latestCommitInfo.latestCommitDate,
@@ -360,7 +358,7 @@ export async function verifyInstallationAnalytics(
       timestamp: Date.now(),
     });
   } else {
-    if (installation?.action && installation.action_count > 0) {
+    if (installation.action_count > 0) {
       installationCollection.updateOne(
         { repositoryId: repository.id },
         {
@@ -375,13 +373,12 @@ export async function verifyInstallationAnalytics(
       );
     }
 
-    if (installation?.action && installation.action_count === 0) {
+    if (installation.action_count === 0) {
       consola.info("Action limit reached, no longer limiting actions");
       installationCollection.updateOne(
         { repositoryId: repository.id },
         {
           $set: {
-            action: false,
             action_count: 0,
             latestCommitDate: latestCommitInfo.latestCommitDate,
             latestCommitMessage: latestCommitInfo.latestCommitMessage,
