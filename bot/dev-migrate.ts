@@ -19,6 +19,7 @@ if (!process.env.MONGODB_DB_NAME) {
 
 const uri = process.env.MONGODB_URI;
 const dbName = process.env.MONGODB_DB_NAME;
+const devDbName = `${dbName}-migrations-test`;
 
 // Create a new MongoClient
 const client = new MongoClient(uri);
@@ -31,13 +32,45 @@ if (!database) {
   throw new Error("Database not found");
 }
 
+const devDatabase = client.db(devDbName);
+
+// FOR DEV ONLY
+// Clone the original database
+// Get the list of collections in the original database
+consola.start("Cloning the original database...");
+
+const collections = await database.listCollections().toArray();
+
+for (const collection of collections) {
+  const collectionName = collection.name;
+
+  // Get the collection
+  const dbCollection = database.collection(collectionName);
+
+  // Get the documents in the collection
+  const documents = await dbCollection.find().toArray();
+
+  // Drop the collection in the new database if it exists
+  await devDatabase.dropCollection(collectionName).catch(() => {});
+
+  // Create a new collection in the new database
+  const newCollection = devDatabase.collection(collectionName);
+
+  // Insert the documents into the new collection
+  if (documents.length > 0) {
+    await newCollection.insertMany(documents);
+  }
+}
+
+consola.success("Database cloned!");
+
 // Get the list of files in the migrations folder
 const files = fs.readdirSync("./migrations");
 
 // Order the files by name
 files.sort();
 
-const migrationsCollection = database.collection("migrations");
+const migrationsCollection = devDatabase.collection("migrations");
 
 for (const file of files) {
   // Get the file name without the extension
@@ -62,20 +95,19 @@ for (const file of files) {
 
   try {
     // Run the migration
-    const entriesUpdated = await migrationFunction(uri, dbName, migrationId);
-
-    consola.success(`Migration ${migrationId} has been applied!`);
-
-    // Insert the migration into the migrations collection
-    await migrationsCollection.insertOne({
-      created_at: new Date(),
-      entries_updated: entriesUpdated,
-      migration_id: migrationId,
-    });
+    await migrationFunction(uri, devDbName, migrationId);
   } catch (error) {
     consola.error(`Error applying migration ${migrationId}: ${error.message}`);
     throw error;
   }
+
+  consola.success(`Migration ${migrationId} has been applied!`);
+
+  // Insert the migration into the migrations collection
+  // await migrationsCollection.insertOne({
+  //   migration_id: migrationId,
+  //   created_at: new Date(),
+  // });
 }
 
 await client.close();

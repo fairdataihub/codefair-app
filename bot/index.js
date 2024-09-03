@@ -98,7 +98,6 @@ export default async (app, { getRouter }) => {
         await verifyInstallationAnalytics(
           context,
           repository,
-          applyActionLimit,
           actionCount,
           latestCommitInfo,
         );
@@ -259,7 +258,7 @@ export default async (app, { getRouter }) => {
         installationCollection,
       );
 
-      if (installation?.action && installation?.action_count > 0) {
+      if (installation?.action_count > 0) {
         consola.warn(
           "Action limit count down:",
           installation.action_count,
@@ -288,7 +287,6 @@ export default async (app, { getRouter }) => {
           { repositoryId: repository.id },
           {
             $set: {
-              action: false,
               action_count: 0,
               latestCommitDate: latestCommitInfo.latestCommitDate,
               latestCommitMessage: latestCommitInfo.latestCommitMessage,
@@ -452,7 +450,7 @@ export default async (app, { getRouter }) => {
     const installation = await installationCollection.findOne({
       repositoryId: repository.id,
     });
-    if (installation?.action && installation?.action_count > 0) {
+    if (installation?.action_count > 0) {
       installationCollection.updateOne(
         { repositoryId: repository.id },
         {
@@ -470,7 +468,6 @@ export default async (app, { getRouter }) => {
         { repositoryId: repository.id },
         {
           $set: {
-            action: false,
             action_count: 0,
           },
         },
@@ -543,7 +540,7 @@ export default async (app, { getRouter }) => {
           installationCollection,
         );
 
-        if (installation?.action && installation?.action_count > 0) {
+        if (installation?.action_count > 0) {
           installationCollection.updateOne(
             { repositoryId: context.payload.repository.id },
             { $set: { action_count: installation.action_count - 1 } },
@@ -557,7 +554,6 @@ export default async (app, { getRouter }) => {
             { repositoryId: context.payload.repository.id },
             {
               $set: {
-                action: false,
                 action_count: 0,
               },
             },
@@ -749,7 +745,6 @@ export default async (app, { getRouter }) => {
       await verifyInstallationAnalytics(
         context,
         repository,
-        false,
         0,
         latestCommitInfo,
       );

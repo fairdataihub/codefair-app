@@ -39,20 +39,14 @@
   ],
   "codeRepository": "https://github.com/fairdataihub/codefair-app",
   "dateCreated": "2024-03-27",
-  "dateModified": "2024-08-29",
-  "datePublished": "2024-08-29",
+  "dateModified": "2024-09-03",
+  "datePublished": "2024-09-03",
   "description": "Codefair is a free and open source GitHub app that acts as your personal assistant when it comes to making your research software reusable and especially complying with the Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software (FAIR4RS Principles). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, Codefair is here to assist you. ",
   "developmentStatus": "active",
   "downloadUrl": "https://github.com/marketplace/codefair-app",
-  "identifier": "https://doi.org/10.5281/zenodo.13544387",
+  "identifier": "https://doi.org/10.5281/zenodo.13651177",
   "issueTracker": "https://github.com/fairdataihub/codefair-app/issues",
-  "keywords": [
-    "best-practices",
-    "fair",
-    "research",
-    "reusable",
-    "software"
-  ],
+  "keywords": ["best-practices", "fair", "research", "reusable", "software"],
   "license": "https://spdx.org/licenses/MIT",
   "operatingSystem": [],
   "programmingLanguage": [
@@ -65,8 +59,8 @@
   ],
   "relatedLink": [],
   "runtimePlatform": [],
-  "schema:releaseNotes": "First release",
+  "schema:releaseNotes": "## v.2.0.1 - 2024-09-03\n\n### Identifier\n\nhttps://doi.org/10.5281/zenodo.13651177\n\n### Added\n\n- Added a migration script to update the database for users who may try to access the dashboard before the v2.0.0 bot has ran on all their repositories.\n- Added badges to the CWL card on the dashboard to show the overall status of the CWL validations.\n\n### Fixed\n\n- Fixed a bug where the bot would updated the overall status of the CWL validation on the database.\n- Link generator for Codefair repository settings was fixed to correctly generate the link for a user or repository.\n\n### Removed\n\n- Removed references to the action key in the database as it was not being used.",
   "softwareRequirements": [],
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "SoftwareSourceCode"
 }

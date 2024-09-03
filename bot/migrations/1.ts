@@ -22,26 +22,27 @@ const migrationFunction = async (
   const installationCollection = database.collection("installation");
 
   consola.start(
-    "Replacing 'installationId' with 'installation_id' in the 'installation' collection",
+    "Adding 'action_count' to entries in the 'installation' collection",
   );
 
   // Get all the records where the 'installationId' field exists
-  const installationsWithInstallationId = await installationCollection
+  const installationsWithoutActionCount = await installationCollection
     .find({
-      installationId: { $exists: true },
+      action_count: { $exists: false },
     })
     .toArray();
 
   // Iterate over each record
-  installationsWithInstallationId.forEach(async (installation) => {
+  for (const installation of installationsWithoutActionCount) {
     // Insert the changes we are going to make into the 'migratedData' collection
+    consola.info(`Updating ${installation.repo} entry`);
     await migratedDataCollection.insertOne({
       collection: "installation",
       document_id: installation._id,
       field: "installation_id",
       migration_id: migrationId,
-      text: "Update the 'installationId' field to 'installation_id'",
-      value: installation.installationId,
+      text: "Set action_count to 0",
+      value: null,
     });
 
     // Update the 'installationId' field to 'installation_id'
@@ -49,25 +50,38 @@ const migrationFunction = async (
       { _id: installation._id },
       {
         $set: {
-          installation_id: installation.installationId,
+          action_count: 0,
         },
       },
     );
+  }
+  // installationsWithoutActionCount.forEach(async (installation) => {
+  //   // Insert the changes we are going to make into the 'migratedData' collection
+  //   await migratedDataCollection.insertOne({
+  //     collection: "installation",
+  //     document_id: installation._id,
+  //     field: "installation_id",
+  //     migration_id: migrationId,
+  //     text: "Set action_count to 0",
+  //     value: null,
+  //   });
 
-    // Delete the 'installationId' field
-    await installationCollection.updateOne(
-      { _id: installation._id },
-      {
-        $unset: {
-          installationId: "",
-        },
-      },
-    );
-  });
+  //   // Update the 'installationId' field to 'installation_id'
+  //   await installationCollection.updateOne(
+  //     { _id: installation._id },
+  //     {
+  //       $set: {
+  //         action_count: 0,
+  //       },
+  //     },
+  //   );
+  // });
 
   consola.success(
-    "Replaced 'installationId' with 'installation_id' in the 'installation' collection",
+    "Add action_count key entries in the 'installation' collection",
   );
+
+  return installationsWithoutActionCount.length;
 };
 
 export default migrationFunction;

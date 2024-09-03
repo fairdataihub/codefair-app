@@ -266,7 +266,7 @@ export async function applyCWLTemplate(
 
     // Check if the overall status is still valid
     for (const file of newFiles) {
-      if (file.overall_status === "invalid") {
+      if (file.validation_status === "invalid") {
         validOverall = false;
         break;
       }

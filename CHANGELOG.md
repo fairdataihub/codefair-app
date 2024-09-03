@@ -5,6 +5,28 @@ All notable changes the Codefair App will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+
+## v.2.0.1 - 2024-09-03
+
+### Identifier
+
+https://doi.org/10.5281/zenodo.13651177
+
+### Added
+
+- Added a migration script to update the database for users who may try to access the dashboard before the v2.0.0 bot has ran on all their repositories.
+- Added badges to the CWL card on the dashboard to show the overall status of the CWL validations.
+
+### Fixed
+
+- Fixed a bug where the bot would updated the overall status of the CWL validation on the database.
+- Link generator for Codefair repository settings was fixed to correctly generate the link for a user or repository.
+
+### Removed
+
+- Removed references to the action key in the database as it was not being used.
+
+
 ## v.2.0.0 - 2024-08-29
 
 ### Identifier

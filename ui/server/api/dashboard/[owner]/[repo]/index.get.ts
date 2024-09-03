@@ -10,6 +10,8 @@ export default defineEventHandler(async (event) => {
 
   // Check if the user has write permissions to the repository
   await repoWritePermissions(event, owner, repo);
+  const isOrg = await ownerIsOrganization(event, owner);
+  await isOrganizationMember(event, isOrg, owner);
 
   const client = new MongoClient(process.env.MONGODB_URI as string, {});
 
@@ -79,12 +81,13 @@ export default defineEventHandler(async (event) => {
           containsCWL: cwlValidation.contains_cwl_files as boolean,
           identifier: cwlValidation.identifier as string,
           open: cwlValidation.open as boolean,
+          overallStatus: cwlValidation.overall_status as string,
           owner: cwlValidation.owner as string,
           repo: cwlValidation.repo as string,
         }
       : null,
     installationId: installation.installationId as number,
-    isOrganization: installation.ownerIsOrganization as boolean,
+    isOrganization: isOrg as boolean,
     licenseRequest: licenseRequest
       ? {
           containsLicense:
