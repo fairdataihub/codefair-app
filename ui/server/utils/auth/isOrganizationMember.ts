@@ -29,10 +29,11 @@ const isOrganizationMember = async (
         statusMessage,
       });
     }
-  } else {
+  } else if (user.username !== owner && !orgStatus) {
+    // Check if the user is the owner of the repository
     throw createError({
       statusCode: 403,
-      statusMessage: "unauthorized-account-access",
+      statusMessage: "unauthorized-repo-access",
     });
   }
 };
