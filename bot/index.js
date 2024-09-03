@@ -573,7 +573,7 @@ export default async (app, { getRouter }) => {
       // Remove the section from the issue body starting from ## CWL Validations
       const slicedBody = issueBody.substring(
         0,
-        issueBody.indexOf("## CWL Validations"),
+        issueBody.indexOf("## Language Specific Standards"),
       );
 
       const cwlObject = {
