@@ -34,11 +34,11 @@ export default defineEventHandler(async (event) => {
   return installations.map((installation) => ({
     action_count: installation.action_count as number,
     installationId: installation.installationId as number,
+    isOrg,
     latestCommitDate: installation.latestCommitDate as string,
     latestCommitMessage: installation.latestCommitMessage as string,
     latestCommitSha: installation.latestCommitSha as string,
     latestCommitUrl: installation.latestCommitUrl as string,
-    ownerIsOrganization,
     repo: installation.repo as string,
     repositoryId: installation.repositoryId as number,
   }));
