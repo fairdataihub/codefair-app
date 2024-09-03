@@ -31,12 +31,10 @@ const isOrganizationMember = async (
     }
   } else if (user.username !== owner && !orgStatus) {
     // Check if the user is the owner of the repository
-    if (user.username !== owner) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: "unauthorized-repo-access",
-      });
-    }
+    throw createError({
+      statusCode: 403,
+      statusMessage: "unauthorized-repo-access",
+    });
   }
 };
 
