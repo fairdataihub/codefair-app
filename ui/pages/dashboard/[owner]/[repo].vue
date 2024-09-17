@@ -19,6 +19,7 @@ const devMode = process.env.NODE_ENV === "development";
 
 const botNotInstalled = ref(false);
 const cwlValidationRerunRequestLoading = ref(false);
+const readyForZenodoArchival = ref(false);
 
 const renderIcon = (icon: string) => {
   return () => {
@@ -61,6 +62,19 @@ if (error.value) {
 
     throw createError(error.value);
   }
+}
+
+if (data.value) {
+  // Verify the repository contains a license, citation, and codemeta.json
+  console.log(data?.value?.licenseRequest?.licenseStatus);
+  console.log(data?.value?.codeMetadataRequest?.citationStatus);
+  console.log(data?.value?.codeMetadataRequest?.codemetaStatus);
+  const validLicense = data?.value?.licenseRequest?.licenseStatus === "valid";
+  const validCitation =
+    data?.value?.codeMetadataRequest?.citationStatus === "valid";
+  const validCodemeta =
+    data?.value?.codeMetadataRequest?.codemetaStatus === "valid";
+  readyForZenodoArchival.value = validLicense && validCitation && validCodemeta;
 }
 
 const rerunCwlValidation = async () => {
@@ -346,7 +360,10 @@ const handleSettingsSelect = (key: any) => {
 
       <n-divider />
 
-      <h2 class="pb-6">Language Specific Standards</h2>
+      <h2 class="pb-6">
+        Language Specific Standards
+        <Icon name="mdi:file-code-outline" size="30" class="ml-2" />
+      </h2>
 
       <CardDashboard
         title="CWL Validation"
@@ -423,6 +440,140 @@ const handleSettingsSelect = (key: any) => {
               </n-button>
             </NuxtLink>
           </div>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <h2 class="pb-6">
+        Software Archival <Icon name="tabler:archive" size="30" class="ml-2" />
+      </h2>
+
+      <CardDashboard
+        title="Zenodo Archival"
+        subheader="Make a GitHub release and archive the software on Zenodo."
+      >
+        <template #icon>
+          <Icon name="simple-icons:zenodo" size="40" />
+        </template>
+
+        <template #header-extra>
+          <n-tag
+            v-if="readyForZenodoArchival"
+            :type="
+              data?.archiveRequest?.containsZenodoArchival ? 'success' : 'error'
+            "
+          >
+            <template #icon>
+              <Icon
+                :name="
+                  data?.archiveRequest?.containsZenodoArchival
+                    ? 'icon-park-solid:check-one'
+                    : 'icon-park-solid:close-one'
+                "
+                size="16"
+              />
+            </template>
+            Archived on Zenodo
+          </n-tag>
+        </template>
+
+        <template #content>
+          <n-alert
+            v-if="!data?.archiveRequest?.containsZenodoArchival"
+            type="info"
+            class="w-full"
+          >
+            There is no Zenodo archival in this repository.
+          </n-alert>
+
+          <p v-else>
+            The software archival for the repository is shown here. This
+            includes the number of files, the number of lines of code, and the
+            number of commits.
+          </p>
+        </template>
+
+        <template #action>
+          <a
+            :disable="readyForZenodoArchival"
+            :href="`/add/archive/zenodo/${data?.archiveRequest?.identifier ?? ''}`"
+          >
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="akar-icons:edit" size="16" />
+              </template>
+              Create Zenodo Archive
+            </n-button>
+          </a>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <CardDashboard
+        disable="true"
+        title="Figshare Archival"
+        subheader="Make a GitHub release and archive the software on Figshare."
+      >
+        <template #icon>
+          <Icon name="simple-icons:figshare" size="40" />
+        </template>
+
+        <template #header-extra>
+          <n-tag
+            v-if="readyForZenodoArchival"
+            :type="
+              data?.archiveRequest?.containsFigshareArchival
+                ? 'success'
+                : 'error'
+            "
+          >
+            <template #icon>
+              <Icon
+                :name="
+                  data?.archiveRequest?.containsFigshareArchival
+                    ? 'icon-park-solid:check-one'
+                    : 'icon-park-solid:close-one'
+                "
+                size="16"
+              />
+            </template>
+            Archived on Figshare
+          </n-tag>
+        </template>
+
+        <template #content>
+          <n-alert
+            v-if="
+              !data?.archiveRequest?.containsSoftwareArchival &&
+              !data?.archiveRequest?.containsFigshareArchival
+            "
+            type="info"
+            class="w-full"
+          >
+            There is no Figshare archival in this repository.
+          </n-alert>
+
+          <p v-else>
+            The Figshare archival for the repository is shown here. This
+            includes the number of files, the number of lines of code, and the
+            number of commits.
+          </p>
+        </template>
+
+        <template #action>
+          <a
+            :disable="readyForZenodoArchival"
+            :href="`/add/archive/figshare/${data?.archiveRequest?.identifier ?? ''}`"
+          >
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="akar-icons:edit" size="16" />
+              </template>
+              Create Figshare Archive
+            </n-button>
+          </a>
         </template>
       </CardDashboard>
 
