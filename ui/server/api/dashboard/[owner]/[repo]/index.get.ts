@@ -58,7 +58,26 @@ export default defineEventHandler(async (event) => {
     repositoryId,
   });
 
+  const archiveCollection = db.collection("repoArchives");
+
+  // Get the archive data for the repository
+  const archive = await archiveCollection.findOne({
+    repositoryId,
+  });
+
   return {
+    archiveRequest: archive
+      ? {
+          containsFigshareArchival:
+            (archive.contains_figshare_archival as boolean) || false,
+          containsSoftwareArchival:
+            (archive.contains_software_archival as boolean) || false,
+          containsZenodoArchival:
+            (archive.contains_zenodo_archival as boolean) || false,
+          identifier: (archive.identifier as string) || "",
+          timestamp: archive.updated_at as string,
+        }
+      : null,
     codeMetadataRequest: codeMetadataRequest
       ? {
           citationStatus:
