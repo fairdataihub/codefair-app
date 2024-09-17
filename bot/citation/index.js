@@ -215,3 +215,67 @@ export async function createCitationFile(context, owner, repo, citationText) {
     repo,
   });
 }
+
+/**
+ * * Applies the citation template to the base template
+ *
+ * @param {object} subjects - The subjects to check for
+ * @param {string} baseTemplate - The base template to add to
+ * @param {*} db - The database
+ * @param {object} repository - The GitHub repository information
+ * @param {string} owner - The owner of the repository
+ *
+ * @returns {string} - The updated base template
+ */
+export async function applyCitationTemplate(
+  subjects,
+  baseTemplate,
+  db,
+  repository,
+  owner,
+) {
+  if (!subjects.citation && subjects.license) {
+    // License was found but no citation file was found
+    const identifier = createId();
+
+    let badgeURL = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
+    const citationCollection = db.collection("citationRequests");
+    const existingCitation = await citationCollection.findOne({
+      repositoryId: repository.id,
+    });
+
+    if (!existingCitation) {
+      // Entry does not exist in db, create a new one
+      const newDate = Date.now();
+      await citationCollection.insertOne({
+        created_at: newDate,
+        identifier,
+        open: true,
+        owner,
+        repo: repository.name,
+        repositoryId: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing citation request
+      await citationCollection.updateOne(
+        { repositoryId: repository.id },
+        { $set: { updated_at: Date.now() } },
+      );
+      badgeURL = `${CODEFAIR_DOMAIN}/add/citation/${existingCitation.identifier}`;
+    }
+
+    const citationBadge = `[![Citation](https://img.shields.io/badge/Add_Citation-dc2626.svg)](${badgeURL})`;
+    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file was not found in the repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.\n\n${citationBadge}`;
+  } else if (subjects.citation && subjects.license) {
+    // Citation file was found and license was found
+    const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Added-6366f1.svg)`;
+    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file found in the repository.\n\n${citationBadge}`;
+  } else {
+    // Citation file was not found and license was not found
+    const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Not_Checked-fbbf24)`;
+    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file will be checked after a license file is added. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.\n\n${citationBadge}`;
+  }
+
+  return baseTemplate;
+}
