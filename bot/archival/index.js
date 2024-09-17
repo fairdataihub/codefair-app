@@ -1,8 +1,9 @@
-import { dbInstance } from "../db.js";
+import { createId } from "../utils/tools/index.js";
+import dbInstance from "../db.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
-export async function createArchivalTemplate(
+export async function applyArchivalTemplate(
   subjects,
   baseTemplate,
   repository,
@@ -16,18 +17,18 @@ export async function createArchivalTemplate(
     repositoryId: repository.id,
   });
   const currentDate = Date.now();
-  const archiveTitle = `## Software Archival\n\nMake a GitHub release and archive the software on Zenodo.`;
+  const archiveTitle = `\n\n## Software Archival\n\nMake a GitHub release and archive the software on Zenodo.`;
 
   // No existing archive, so create a new one
   if (!existingArchive) {
     await archiveCollection.insertOne({
-      badgeURL,
+      contains_figshare_archive: false,
+      contains_software_archive: false,
+      contains_zenodo_archive: false,
       created_at: currentDate,
       identifier,
       owner,
-      repository,
       repositoryId: repository.id,
-      subjects,
       updated_at: currentDate,
     });
   } else {
@@ -35,6 +36,10 @@ export async function createArchivalTemplate(
       { repositoryId: repository.id },
       {
         $set: {
+          contains_figshare_archive: false,
+          contains_software_archive: false,
+          contains_zenodo_archive: false,
+          owner,
           repository, // In the case that the repository name has changed
           updated_at: currentDate,
         },
@@ -44,7 +49,7 @@ export async function createArchivalTemplate(
     badgeURL = `${CODEFAIR_DOMAIN}/add/archive/${existingArchive.identifier}`;
   }
 
-  const badgeButton = `[![Archive & Release Software](${badgeURL})](${badgeURL})`;
-  baseTemplate += `${archiveTitle}\n\nCodefair provides a seamless workflow to create a GitHub release and archive the software on Zenodo with the latest version and metadata. Click the button below to get started.\n\n${badgeButton}\n\n`;
+  const badgeButton = `[![Release and Archive](https://img.shields.io/badge/Release_and_Archive-00bcd4.svg)](${badgeURL})`;
+  baseTemplate += `${archiveTitle}\nCodefair provides a seamless workflow to create a GitHub release and archive the software on Zenodo with the latest version and metadata. Click the button below to get started.\n\n${badgeButton}\n\n`;
   return baseTemplate;
 }
