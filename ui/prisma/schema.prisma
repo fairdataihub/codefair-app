@@ -33,12 +33,12 @@ model Session {
 }
 
 model Installation {
-  id Int @id
+  id Int @id // Is the repository id
 
   owner String
   repo  String
 
-  repository_id Int @unique
+  installation_id Int
 
   latest_commit_data    String @default("")
   latest_commit_message String @default("")
