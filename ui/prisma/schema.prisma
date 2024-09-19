@@ -31,3 +31,49 @@ model Session {
 
   user User @relation(references: [id], fields: [userId], onDelete: Cascade)
 }
+
+model Installation {
+  id Int @id @default(autoincrement())
+
+  owner           String
+  repo            String
+  repository_id   Int
+  installation_id Int
+
+  latest_commit_data    String
+  latest_commit_message String
+  latest_commit_sha     String
+  latest_commit_url     String
+
+  disabled     Boolean @default(false)
+  issue_number Int
+
+  owner_is_organization Boolean @default(false)
+
+  action_count Int @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  LicenseRequest LicenseRequest[]
+}
+
+model LicenseRequest {
+  id         String @id @default(cuid())
+  identifier String @unique
+
+  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  repository_id Int
+
+  contains_license Boolean @default(false)
+  license_status   String // Valid values are valid, invalid, or null
+
+  license_id      String
+  license_content String
+
+  pull_request    String
+  pull_request_id Int
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
