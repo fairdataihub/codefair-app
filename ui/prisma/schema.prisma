@@ -56,7 +56,7 @@ model Installation {
   updated_at DateTime @updatedAt
 
   LicenseRequest LicenseRequest[]
-  codeMetadata   codeMetadata[]
+  CodeMetadata   CodeMetadata[]
   CwlValidation  CwlValidation[]
 }
 
@@ -84,7 +84,7 @@ model Ping {
   timestamp DateTime @default(now())
 }
 
-model codeMetadata {
+model CodeMetadata {
   id         String @id @default(cuid())
   identifier String @unique
 
@@ -129,6 +129,7 @@ model Analytics {
   repository_id Int
 
   cwl_validated_file_count Int @default(0)
+  cwl_rerun_validation     Int @default(0)
 
   license_created Int @default(0)
 

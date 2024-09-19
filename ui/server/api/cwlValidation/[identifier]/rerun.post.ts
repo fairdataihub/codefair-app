@@ -1,4 +1,3 @@
-import { MongoClient } from "mongodb";
 import { App } from "octokit";
 
 export default defineEventHandler(async (event) => {
@@ -6,16 +5,13 @@ export default defineEventHandler(async (event) => {
 
   const { identifier } = event.context.params as { identifier: string };
 
-  const client = new MongoClient(process.env.MONGODB_URI as string, {});
-
-  await client.connect();
-
-  const db = client.db(process.env.MONGODB_DB_NAME);
-  const cwlValidation = db.collection("cwlValidation");
-  const installationCollection = db.collection("installation");
-
-  const cwlValidationRequest = await cwlValidation.findOne({
-    identifier,
+  const cwlValidationRequest = await prisma.cwlValidation.findFirst({
+    include: {
+      repository: true,
+    },
+    where: {
+      identifier,
+    },
   });
 
   if (!cwlValidationRequest) {
@@ -25,11 +21,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const installation = await installationCollection.findOne({
-    repositoryId: cwlValidationRequest.repositoryId,
-  });
-
-  if (!installation) {
+  if (!cwlValidationRequest.repository) {
     throw createError({
       statusCode: 404,
       statusMessage: "Installation not found",
@@ -38,7 +30,7 @@ export default defineEventHandler(async (event) => {
 
   // Check if the issue_number is present in the installation
 
-  if (!installation.issue_number) {
+  if (!cwlValidationRequest.repository.issue_number) {
     throw createError({
       statusCode: 404,
       statusMessage: "Issue Dashboard not found",
@@ -48,8 +40,8 @@ export default defineEventHandler(async (event) => {
   // Check if the user is authorized to access the repo to request the validation
   await repoWritePermissions(
     event,
-    cwlValidationRequest.owner,
-    cwlValidationRequest.repo,
+    cwlValidationRequest.repository.owner,
+    cwlValidationRequest.repository.repo,
   );
 
   // Create an octokit app instance
@@ -63,7 +55,9 @@ export default defineEventHandler(async (event) => {
   });
 
   // Get the installation instance for the app
-  const octokit = await app.getInstallationOctokit(installation.installationId);
+  const octokit = await app.getInstallationOctokit(
+    cwlValidationRequest.repository.installation_id,
+  );
 
   // Edit the issue body with a hidden request for the validation
   try {
@@ -71,9 +65,9 @@ export default defineEventHandler(async (event) => {
     const { data: issue } = await octokit.request(
       "GET /repos/{owner}/{repo}/issues/{issue_number}",
       {
-        issue_number: installation.issue_number,
-        owner: cwlValidationRequest.owner,
-        repo: cwlValidationRequest.repo,
+        issue_number: cwlValidationRequest.repository.issue_number,
+        owner: cwlValidationRequest.repository.owner,
+        repo: cwlValidationRequest.repository.repo,
       },
     );
 
@@ -100,9 +94,9 @@ export default defineEventHandler(async (event) => {
 
     await octokit.request("PATCH /repos/{owner}/{repo}/issues/{issue_number}", {
       body: updatedIssueBody,
-      issue_number: installation.issue_number,
-      owner: cwlValidationRequest.owner,
-      repo: cwlValidationRequest.repo,
+      issue_number: cwlValidationRequest.repository.issue_number,
+      owner: cwlValidationRequest.repository.owner,
+      repo: cwlValidationRequest.repository.repo,
     });
   } catch (error: any) {
     console.error("Failed to update issue body", error);
@@ -120,42 +114,30 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Update the analytics data for the repository
-  const analytics = db.collection("analytics");
-
-  // Get the existing analytics data for the repository
-  const existingAnalytics = await analytics.findOne({
-    repositoryId: cwlValidationRequest.repositoryId,
+  const existingAnalytics = await prisma.analytics.findFirst({
+    where: {
+      repository_id: cwlValidationRequest.repository.id,
+    },
   });
 
-  // Check if the codemeta analytics data exists
-  if (existingAnalytics?.cwlValidation?.rerunCwlValidation) {
-    await analytics.updateOne(
-      {
-        repositoryId: cwlValidationRequest.repositoryId,
+  if (!existingAnalytics) {
+    await prisma.analytics.create({
+      data: {
+        cwl_rerun_validation: 1,
+        repository_id: cwlValidationRequest.repository.id,
       },
-      {
-        $inc: {
-          "cwlValidation.rerunCwlValidation": 1,
-        },
+    });
+  }
+
+  if (existingAnalytics?.cwl_rerun_validation) {
+    await prisma.analytics.update({
+      data: {
+        cwl_rerun_validation: existingAnalytics.cwl_rerun_validation + 1,
       },
-    );
-  } else {
-    await analytics.updateOne(
-      {
-        repositoryId: cwlValidationRequest.repositoryId,
+      where: {
+        id: existingAnalytics.id,
       },
-      {
-        $set: {
-          cwlValidation: {
-            rerunCwlValidation: 1,
-          },
-        },
-      },
-      {
-        upsert: true,
-      },
-    );
+    });
   }
 
   return {

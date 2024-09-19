@@ -1,4 +1,3 @@
-import { MongoClient } from "mongodb";
 import { z } from "zod";
 import { App } from "octokit";
 import { nanoid } from "nanoid";
@@ -33,16 +32,13 @@ export default defineEventHandler(async (event) => {
 
   const { licenseId, licenseContent } = parsedBody.data;
 
-  const client = new MongoClient(process.env.MONGODB_URI as string, {});
-
-  await client.connect();
-
-  const db = client.db(process.env.MONGODB_DB_NAME);
-  const collection = db.collection("licenseRequests");
-  const installation = db.collection("installation");
-
-  const licenseRequest = await collection.findOne({
-    identifier,
+  const licenseRequest = await prisma.licenseRequest.findFirst({
+    where: {
+      identifier,
+    },
+    include: {
+      repository: true,
+    },
   });
 
   if (!licenseRequest) {
@@ -52,11 +48,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const installationId = await installation.findOne({
-    repositoryId: licenseRequest.repositoryId,
-  });
-
-  if (!installationId) {
+  if (!licenseRequest.repository) {
     throw createError({
       statusCode: 404,
       statusMessage: "Installation not found",
@@ -64,14 +56,11 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if the user is authorized to access the license request
-  await repoWritePermissions(event, licenseRequest.owner, licenseRequest.repo);
-
-  if (!licenseRequest.open) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "License request is not open",
-    });
-  }
+  await repoWritePermissions(
+    event,
+    licenseRequest.repository.owner,
+    licenseRequest.repository.repo,
+  );
 
   // Create an octokit app instance
   const app = new App({
@@ -85,15 +74,15 @@ export default defineEventHandler(async (event) => {
 
   // Get the installation instance for the app
   const octokit = await app.getInstallationOctokit(
-    installationId.installationId,
+    licenseRequest.repository.installation_id,
   );
 
   // Get the default branch of the repository
   const { data: repoData } = await octokit.request(
     "GET /repos/{owner}/{repo}",
     {
-      owner: licenseRequest.owner,
-      repo: licenseRequest.repo,
+      owner: licenseRequest.repository.owner,
+      repo: licenseRequest.repository.repo,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
@@ -106,8 +95,8 @@ export default defineEventHandler(async (event) => {
   const { data: refData } = await octokit.request(
     "GET /repos/{owner}/{repo}/git/ref/{ref}",
     {
-      owner: licenseRequest.owner,
-      repo: licenseRequest.repo,
+      owner: licenseRequest.repository.owner,
+      repo: licenseRequest.repository.repo,
       ref: `heads/${defaultBranch}`,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
@@ -120,8 +109,8 @@ export default defineEventHandler(async (event) => {
 
   // Create a new branch from the default branch
   await octokit.request("POST /repos/{owner}/{repo}/git/refs", {
-    owner: licenseRequest.owner,
-    repo: licenseRequest.repo,
+    owner: licenseRequest.repository.owner,
+    repo: licenseRequest.repository.repo,
     ref: `refs/heads/${newBranchName}`,
     sha: refData.object.sha,
     headers: {
@@ -136,8 +125,8 @@ export default defineEventHandler(async (event) => {
     const { data: licenseData } = await octokit.request(
       "GET /repos/{owner}/{repo}/contents/{path}",
       {
-        owner: licenseRequest.owner,
-        repo: licenseRequest.repo,
+        owner: licenseRequest.repository.owner,
+        repo: licenseRequest.repository.repo,
         path: "LICENSE",
         ref: newBranchName,
         headers: {
@@ -154,8 +143,8 @@ export default defineEventHandler(async (event) => {
 
   // Create a new file with the license content
   await octokit.request("PUT /repos/{owner}/{repo}/contents/{path}", {
-    owner: licenseRequest.owner,
-    repo: licenseRequest.repo,
+    owner: licenseRequest.repository.owner,
+    repo: licenseRequest.repository.repo,
     path: "LICENSE",
     message: `feat: ✨ add LICENSE file with ${licenseId} license terms`,
     content: Buffer.from(licenseContent).toString("base64"),
@@ -170,8 +159,8 @@ export default defineEventHandler(async (event) => {
   const { data: pullRequestData } = await octokit.request(
     "POST /repos/{owner}/{repo}/pulls",
     {
-      owner: licenseRequest.owner,
-      repo: licenseRequest.repo,
+      owner: licenseRequest.repository.owner,
+      repo: licenseRequest.repository.repo,
       title: "feat: ✨ LICENSE file added",
       head: newBranchName,
       base: defaultBranch,
@@ -188,55 +177,48 @@ export default defineEventHandler(async (event) => {
 
   // Save the PR URL to the database
   // Update the license content and the license id in the database
-  await collection.updateOne(
-    {
+  const updatedLicenseRequest = await prisma.licenseRequest.update({
+    data: {
+      license_content: licenseContent,
+      license_id: licenseId,
+      pull_request_url: pullRequestData.html_url,
+    },
+    where: {
       identifier,
     },
-    {
-      $set: {
-        licenseContent,
-        licenseId,
-        pullRequestURL: pullRequestData.html_url,
-      },
-    },
-  );
-
-  // Update the analytics data for the repository
-  const analytics = db.collection("analytics");
-
-  // Get the existing analytics data for the repository
-  const existingAnalytics = await analytics.findOne({
-    repositoryId: licenseRequest.repositoryId,
   });
 
-  // Check if the license analytics data exists
-  if (existingAnalytics?.license?.createLicense) {
-    await analytics.updateOne(
-      {
-        repositoryId: licenseRequest.repositoryId,
+  if (!updatedLicenseRequest) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: "license-request-update-failed",
+    });
+  }
+
+  const existingAnalytics = await prisma.analytics.findFirst({
+    where: {
+      repository_id: licenseRequest.repository.id,
+    },
+  });
+
+  if (!existingAnalytics) {
+    await prisma.analytics.create({
+      data: {
+        repository_id: licenseRequest.repository.id,
+        license_created: 1,
       },
-      {
-        $inc: {
-          "license.createLicense": 1,
-        },
+    });
+  }
+
+  if (existingAnalytics?.license_created) {
+    await prisma.analytics.update({
+      data: {
+        license_created: existingAnalytics.license_created + 1,
       },
-    );
-  } else {
-    await analytics.updateOne(
-      {
-        repositoryId: licenseRequest.repositoryId,
+      where: {
+        id: existingAnalytics.id,
       },
-      {
-        $set: {
-          license: {
-            createLicense: 1,
-          },
-        },
-      },
-      {
-        upsert: true,
-      },
-    );
+    });
   }
 
   return {
