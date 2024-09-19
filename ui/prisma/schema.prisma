@@ -124,9 +124,7 @@ model CwlValidation {
 }
 
 model Analytics {
-  id String @id @default(cuid())
-
-  repository_id Int @unique
+  id Int @id // used as repository_id
 
   cwl_validated_file_count Int @default(0)
   cwl_rerun_validation     Int @default(0)
