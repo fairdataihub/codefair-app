@@ -116,15 +116,15 @@ export default defineEventHandler(async (event) => {
 
   const existingAnalytics = await prisma.analytics.findFirst({
     where: {
-      repository_id: cwlValidationRequest.repository.id,
+      id: cwlValidationRequest.repository.id,
     },
   });
 
   if (!existingAnalytics) {
     await prisma.analytics.create({
       data: {
+        id: cwlValidationRequest.repository.id,
         cwl_rerun_validation: 1,
-        repository_id: cwlValidationRequest.repository.id,
       },
     });
   }

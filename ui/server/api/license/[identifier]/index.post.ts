@@ -197,14 +197,14 @@ export default defineEventHandler(async (event) => {
 
   const existingAnalytics = await prisma.analytics.findFirst({
     where: {
-      repository_id: licenseRequest.repository.id,
+      id: licenseRequest.repository.id,
     },
   });
 
   if (!existingAnalytics) {
     await prisma.analytics.create({
       data: {
-        repository_id: licenseRequest.repository.id,
+        id: licenseRequest.repository.id,
         license_created: 1,
       },
     });
