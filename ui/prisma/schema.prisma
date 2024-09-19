@@ -40,7 +40,7 @@ model Installation {
 
   installation_id Int
 
-  latest_commit_data    String @default("")
+  latest_commit_date    String @default("")
   latest_commit_message String @default("")
   latest_commit_sha     String @default("")
   latest_commit_url     String @default("")
