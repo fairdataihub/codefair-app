@@ -14,8 +14,8 @@ model User {
   id String @id
 
   username     String
-  access_token String
-  github_id    Int
+  access_token String @default("")
+  github_id    Int    @unique
 
   created_at DateTime @default(now())
   last_login DateTime
@@ -33,20 +33,20 @@ model Session {
 }
 
 model Installation {
-  id Int @id @default(autoincrement())
+  id Int @id
 
-  owner           String
-  repo            String
-  repository_id   Int
-  installation_id Int
+  owner String
+  repo  String
 
-  latest_commit_data    String
-  latest_commit_message String
-  latest_commit_sha     String
-  latest_commit_url     String
+  repository_id Int @unique
+
+  latest_commit_data    String @default("")
+  latest_commit_message String @default("")
+  latest_commit_sha     String @default("")
+  latest_commit_url     String @default("")
 
   disabled     Boolean @default(false)
-  issue_number Int
+  issue_number Int     @default(0)
 
   owner_is_organization Boolean @default(false)
 
@@ -71,11 +71,11 @@ model LicenseRequest {
   contains_license Boolean @default(false)
   license_status   String // Valid values are valid, invalid, or null
 
-  license_id      String
-  license_content String
+  license_id      String @default("")
+  license_content String @default("")
 
-  pull_request    String
-  pull_request_id Int
+  pull_request    String @default("")
+  pull_request_id Int    @default(0)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -93,10 +93,10 @@ model codeMetadata {
   repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
   repository_id Int
 
-  codemeta_status   String // Valid values are valid, invalid, or null
+  codemeta_status   String  @default("") // Valid values are valid, invalid
   contains_codemeta Boolean @default(false)
 
-  citation_status   String // Valid values are valid, invalid, or null
+  citation_status   String  @default("") // Valid values are valid, invalid
   contains_citation Boolean @default(false)
 
   contains_metadata Boolean @default(false) // True if both citation and codemeta are valid
@@ -114,7 +114,7 @@ model CwlValidation {
   repository_id Int
 
   contains_cwl_files Boolean @default(false)
-  overall_status     String // Valid values are valid, invalid, or null
+  overall_status     String  @default("") // Valid values are valid, invalid
 
   files Json @default("[]")
 
