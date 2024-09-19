@@ -73,8 +73,7 @@ model LicenseRequest {
   license_id      String @default("")
   license_content String @default("")
 
-  pull_request    String @default("")
-  pull_request_id Int    @default(0)
+  pull_request_url String @default("")
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -100,6 +99,8 @@ model codeMetadata {
 
   contains_metadata Boolean @default(false) // True if both citation and codemeta are valid
 
+  pull_request_url String @default("")
+
   metadata Json @default("{}")
 
   created_at DateTime @default(now())
@@ -107,7 +108,8 @@ model codeMetadata {
 }
 
 model CwlValidation {
-  id String @id @default(cuid())
+  id         String @id @default(cuid())
+  identifier String @unique
 
   repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
   repository_id Int          @unique

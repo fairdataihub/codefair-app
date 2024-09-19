@@ -31,9 +31,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const licenseRequst = installation.LicenseRequest;
-  const codeMetadataRequest = installation.codeMetadata;
-  const cwlValidation = installation.CwlValidation;
+  const licenseRequest = installation.LicenseRequest[0];
+  const codeMetadataRequest = installation.codeMetadata[0];
+  const cwlValidation = installation.CwlValidation[0];
 
   return {
     codeMetadataRequest: codeMetadataRequest
@@ -46,10 +46,9 @@ export default defineEventHandler(async (event) => {
           containsCodemeta: codeMetadataRequest.contains_codemeta as boolean,
           containsMetadata: codeMetadataRequest.contains_metadata as boolean,
           identifier: codeMetadataRequest.identifier as string,
-          open: codeMetadataRequest.open as boolean,
-          owner: codeMetadataRequest.owner as string,
-          pullRequest: (codeMetadataRequest.pullRequestURL as string) || "",
-          repo: codeMetadataRequest.repo as string,
+          owner: installation.owner as string,
+          pullRequest: (codeMetadataRequest.pull_request_url as string) || "",
+          repo: installation.repo as string,
           timestamp: codeMetadataRequest.updated_at as string,
         }
       : null,
