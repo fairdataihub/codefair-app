@@ -58,7 +58,6 @@ model Installation {
   LicenseRequest LicenseRequest[]
   codeMetadata   codeMetadata[]
   CwlValidation  CwlValidation[]
-  Analytics      Analytics[]
 }
 
 model LicenseRequest {
@@ -125,7 +124,6 @@ model CwlValidation {
 model Analytics {
   id String @id @default(cuid())
 
-  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
   repository_id Int
 
   cwl_validated_file_count Int @default(0)
