@@ -69,7 +69,7 @@ model LicenseRequest {
   repository_id Int
 
   contains_license Boolean @default(false)
-  license_status   String // Valid values are valid, invalid, or null
+  license_status   String  @default("") // Valid values are valid, invalid
 
   license_id      String @default("")
   license_content String @default("")
