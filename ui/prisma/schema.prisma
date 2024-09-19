@@ -56,6 +56,9 @@ model Installation {
   updated_at DateTime @updatedAt
 
   LicenseRequest LicenseRequest[]
+  codeMetadata   codeMetadata[]
+  CwlValidation  CwlValidation[]
+  Analytics      Analytics[]
 }
 
 model LicenseRequest {
@@ -73,6 +76,64 @@ model LicenseRequest {
 
   pull_request    String
   pull_request_id Int
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Ping {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+}
+
+model codeMetadata {
+  id         String @id @default(cuid())
+  identifier String @unique
+
+  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  repository_id Int
+
+  codemeta_status   String // Valid values are valid, invalid, or null
+  contains_codemeta Boolean @default(false)
+
+  citation_status   String // Valid values are valid, invalid, or null
+  contains_citation Boolean @default(false)
+
+  contains_metadata Boolean @default(false) // True if both citation and codemeta are valid
+
+  metadata Json @default("{}")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model CwlValidation {
+  id String @id @default(cuid())
+
+  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  repository_id Int
+
+  contains_cwl_files Boolean @default(false)
+  overall_status     String // Valid values are valid, invalid, or null
+
+  files Json @default("[]")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Analytics {
+  id String @id @default(cuid())
+
+  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  repository_id Int
+
+  cwl_validated_file_count Int @default(0)
+
+  license_created Int @default(0)
+
+  update_codemeta Int @default(0)
+  update_citation Int @default(0)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
