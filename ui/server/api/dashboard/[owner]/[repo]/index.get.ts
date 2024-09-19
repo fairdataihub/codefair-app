@@ -1,5 +1,3 @@
-import { MongoClient } from "mongodb";
-
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 
@@ -13,17 +11,17 @@ export default defineEventHandler(async (event) => {
   const isOrg = await ownerIsOrganization(event, owner);
   await isOrganizationMember(event, isOrg, owner);
 
-  const client = new MongoClient(process.env.MONGODB_URI as string, {});
-
-  await client.connect();
-
-  const db = client.db(process.env.MONGODB_DB_NAME);
-  const installationCollection = db.collection("installation");
-
   // Check if the installation exists in the database
-  const installation = await installationCollection.findOne({
-    owner,
-    repo,
+  const installation = await prisma.installation.findFirst({
+    include: {
+      codeMetadata: true,
+      CwlValidation: true,
+      LicenseRequest: true,
+    },
+    where: {
+      owner,
+      repo,
+    },
   });
 
   if (!installation) {
@@ -33,30 +31,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { repositoryId } = installation;
-
-  const licenseRequestsCollection = db.collection("licenseRequests");
-
-  // Get all license requests for the repository sorted by timestamp
-  const licenseRequest = await licenseRequestsCollection.findOne({
-    repositoryId,
-  });
-
-  const codeMetadataCollection = db.collection("codeMetadata");
-
-  // Get the code metadata request for the repository
-
-  const codeMetadataRequest = await codeMetadataCollection.findOne({
-    repositoryId,
-  });
-
-  const cwlValidationCollection = db.collection("cwlValidation");
-
-  // Get the CWL validation data for the repository
-
-  const cwlValidation = await cwlValidationCollection.findOne({
-    repositoryId,
-  });
+  const licenseRequst = installation.LicenseRequest;
+  const codeMetadataRequest = installation.codeMetadata;
+  const cwlValidation = installation.CwlValidation;
 
   return {
     codeMetadataRequest: codeMetadataRequest

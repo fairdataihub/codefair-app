@@ -9,6 +9,7 @@ const adapter = new PrismaAdapter(client.session, client.user);
 
 interface DatabaseUserAttributes {
   username: string;
+  access_token: string;
   github_id: number;
 }
 
@@ -16,7 +17,7 @@ export const lucia = new Lucia(adapter, {
   getUserAttributes: (attributes) => {
     return {
       username: attributes.username,
-
+      access_token: attributes.access_token,
       githubId: attributes.github_id,
     };
   },

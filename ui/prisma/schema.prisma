@@ -66,7 +66,7 @@ model LicenseRequest {
   identifier String @unique
 
   repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
-  repository_id Int
+  repository_id Int          @unique
 
   contains_license Boolean @default(false)
   license_status   String  @default("") // Valid values are valid, invalid
@@ -91,7 +91,7 @@ model codeMetadata {
   identifier String @unique
 
   repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
-  repository_id Int
+  repository_id Int          @unique
 
   codemeta_status   String  @default("") // Valid values are valid, invalid
   contains_codemeta Boolean @default(false)
@@ -111,7 +111,7 @@ model CwlValidation {
   id String @id @default(cuid())
 
   repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
-  repository_id Int
+  repository_id Int          @unique
 
   contains_cwl_files Boolean @default(false)
   overall_status     String  @default("") // Valid values are valid, invalid
