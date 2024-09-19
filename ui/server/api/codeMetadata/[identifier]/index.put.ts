@@ -1,4 +1,3 @@
-import { MongoClient } from "mongodb";
 import { z } from "zod";
 
 export default defineEventHandler(async (event) => {
@@ -99,15 +98,13 @@ export default defineEventHandler(async (event) => {
 
   const parsedMetadata = rawMetadata;
 
-  const client = new MongoClient(process.env.MONGODB_URI as string, {});
-
-  await client.connect();
-
-  const db = client.db(process.env.MONGODB_DB_NAME);
-  const collection = db.collection("codeMetadata");
-
-  const codeMetadataRequest = await collection.findOne({
-    identifier,
+  const codeMetadataRequest = await prisma.codeMetadata.findFirst({
+    include: {
+      repository: true,
+    },
+    where: {
+      identifier,
+    },
   });
 
   if (!codeMetadataRequest) {
@@ -120,18 +117,18 @@ export default defineEventHandler(async (event) => {
   // Check if the user is authorized to access the request
   await repoWritePermissions(
     event,
-    codeMetadataRequest.owner,
-    codeMetadataRequest.repo,
+    codeMetadataRequest.repository.owner,
+    codeMetadataRequest.repository.repo,
   );
 
-  const updatedRecord = await collection.updateOne(
-    { identifier },
-    {
-      $set: {
-        metadata: parsedMetadata,
-      },
+  const updatedRecord = await prisma.codeMetadata.update({
+    data: {
+      metadata: parsedMetadata,
     },
-  );
+    where: {
+      identifier,
+    },
+  });
 
   if (!updatedRecord) {
     throw createError({
@@ -142,8 +139,8 @@ export default defineEventHandler(async (event) => {
 
   return {
     identifier,
-    owner: codeMetadataRequest.owner,
-    repo: codeMetadataRequest.repo,
-    timestamp: codeMetadataRequest.timestamp,
+    owner: codeMetadataRequest.repository.owner,
+    repo: codeMetadataRequest.repository.repo,
+    timestamp: updatedRecord.updated_at,
   };
 });
