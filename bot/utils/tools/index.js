@@ -439,7 +439,7 @@ export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
       disabled: false,
       issue_number: issueNumber,
     },
-    where: { repository_id: repoId },
+    where: { id: repoId },
   });
 }
 

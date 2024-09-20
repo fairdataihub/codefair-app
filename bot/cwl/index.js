@@ -240,14 +240,14 @@ export async function applyCWLTemplate(
     await cwlCollection.create({
       data: {
         contains_cwl_files: subjects.cwl.contains_cwl,
-        created_at: newDate,
         files: cwlFiles,
         identifier,
         overall_status: validOverall ? "valid" : "invalid",
-        owner,
-        repo: repository.name,
-        repository_id: repository.id,
-        updated_at: newDate,
+        repository: {
+          connect: {
+            id: repository.id,
+          },
+        },
       },
     });
 
@@ -288,7 +288,6 @@ export async function applyCWLTemplate(
         contains_cwl_files: newFiles.length > 0,
         files: [...newFiles],
         overall_status: validOverall ? "valid" : "invalid",
-        updated_at: new Date(),
       },
       where: { repository_id: repository.id },
     });

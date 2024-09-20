@@ -547,7 +547,7 @@ export default async (app, { getRouter }) => {
       const installationCollection = db.installation;
       const installation = await installationCollection.findUnique({
         where: {
-          repository_id: context.payload.repository.id,
+          id: context.payload.repository.id,
         },
       });
 

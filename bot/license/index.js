@@ -179,8 +179,8 @@ export async function applyLicenseTemplate(
   const existingLicense = await licenseCollection.findUnique({
     where: { repository_id: repository.id },
   });
-  let licenseId = null;
-  let licenseContent = null;
+  let licenseId = "";
+  let licenseContent = "";
   let licenseContentNotEmpty = null;
 
   if (subjects.license) {
@@ -201,8 +201,8 @@ export async function applyLicenseTemplate(
       licenseRequest.data.license.spdx_id === "NOASSERTION"
     ) {
       consola.info("Resetting license id and content back to null");
-      licenseId = null;
-      licenseContent = null;
+      licenseId = "";
+      licenseContent = "";
     }
 
     licenseContentNotEmpty = licenseContent && licenseContent.trim().length > 0;
@@ -215,11 +215,11 @@ export async function applyLicenseTemplate(
 
     // Use the new license data if the existing license is invalid or the license has changed
     const finalLicenseId =
-      isExistingLicenseValid && licenseId === null && !subjects.license
+      isExistingLicenseValid && licenseId === "" && !subjects.license
         ? existingLicense?.licenseId
         : licenseId;
     const finalLicenseContent =
-      isExistingLicenseValid && licenseContent === null && !subjects.license
+      isExistingLicenseValid && licenseContent === "" && !subjects.license
         ? existingLicense?.licenseContent
         : licenseContent;
 
@@ -227,15 +227,14 @@ export async function applyLicenseTemplate(
     await licenseCollection.update({
       data: {
         contains_license: subjects.license,
-        updated_at: new Date(),
         license_status:
           finalLicenseContent &&
           finalLicenseContent.trim().length > 0 &&
           subjects.license
             ? "valid"
             : "invalid",
-        licenseId: finalLicenseId,
-        licenseContent: finalLicenseContent,
+        license_id: finalLicenseId,
+        license_content: finalLicenseContent,
       },
       where: { repository_id: repository.id },
     });
@@ -248,7 +247,6 @@ export async function applyLicenseTemplate(
         license_id: licenseId,
         license_content: licenseContent,
         identifier,
-        repository_id: repository.id,
         repository: {
           connect: {
             id: repository.id,
