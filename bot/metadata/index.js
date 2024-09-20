@@ -333,11 +333,12 @@ export async function applyMetadataTemplate(
           created_at: newDate,
           identifier,
           metadata: gatheredMetadata,
-          open: true,
-          owner,
-          repo: repository.name,
-          repository_id: repository.id,
           updated_at: newDate,
+          repository: {
+            connect: {
+              id: repository.id,
+            },
+          },
         },
       });
     } else {
@@ -429,7 +430,6 @@ export async function applyMetadataTemplate(
           created_at: newDate,
           identifier,
           metadata,
-          open: true,
           owner,
           repo: repository.name,
           repository_id: repository.id,

@@ -193,7 +193,6 @@ export async function applyCodemetaTemplate(
       await codemetaCollection.create({
         created_at: newDate,
         identifier,
-        open: true,
         owner,
         repo: repository.name,
         repository_id: repository.id,
@@ -221,7 +220,6 @@ export async function applyCodemetaTemplate(
         data: {
           created_at: newDate,
           identifier,
-          open: true,
           owner,
           repo: repository.name,
           repository_id: repository.id,
@@ -285,7 +283,6 @@ export async function applyCitationTemplate(
         data: {
           created_at: newDate,
           identifier,
-          open: true,
           owner,
           repo: repository.name,
           repository_id: repository.id,

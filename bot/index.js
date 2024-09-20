@@ -173,7 +173,7 @@ export default async (app, { getRouter }) => {
         // Check if the installation is already in the database
         const installation = await installationCollection.findUnique({
           where: {
-            repository_id: repository.id,
+            id: repository.id,
           },
         });
 
@@ -195,15 +195,6 @@ export default async (app, { getRouter }) => {
           },
         });
 
-        if (installation) {
-          // Remove from the database
-          await installationCollection.delete({
-            where: {
-              repository_id: repository.id,
-            },
-          });
-        }
-
         if (license) {
           await licenseCollection.delete({
             where: {
@@ -224,6 +215,15 @@ export default async (app, { getRouter }) => {
           await cwlCollection.delete({
             where: {
               repository_id: repository.id,
+            },
+          });
+        }
+
+        if (installation) {
+          // Remove from the database
+          await installationCollection.delete({
+            where: {
+              id: repository.id,
             },
           });
         }
@@ -286,10 +286,10 @@ export default async (app, { getRouter }) => {
         installationCollection.update({
           data: {
             action_count: installation.action_count - 1,
-            latestCommitDate: latestCommitInfo.latestCommitDate,
-            latestCommitMessage: latestCommitInfo.latestCommitMessage,
-            latestCommitSha: latestCommitInfo.latestCommitSha,
-            latestCommitUrl: latestCommitInfo.latestCommitUrl,
+            latest_commit_date: latestCommitInfo.latestCommitDate,
+            latest_commit_message: latestCommitInfo.latestCommitMessage,
+            latest_commit_sha: latestCommitInfo.latestCommitSha,
+            latest_commit_url: latestCommitInfo.latestCommitUrl,
           },
           where: { id: repository.id },
         });
@@ -299,15 +299,15 @@ export default async (app, { getRouter }) => {
 
       if (installation?.action_count === 0) {
         consola.warn("Removing action limit for", repository.name);
-        installationCollection.updateOne({
+        installationCollection.update({
           data: {
             action_count: 0,
-            latestCommitDate: latestCommitInfo.latestCommitDate,
-            latestCommitMessage: latestCommitInfo.latestCommitMessage,
-            latestCommitSha: latestCommitInfo.latestCommitSha,
-            latestCommitUrl: latestCommitInfo.latestCommitUrl,
+            latest_commit_date: latestCommitInfo.latestCommitDate,
+            latest_commit_message: latestCommitInfo.latestCommitMessage,
+            latest_commit_sha: latestCommitInfo.latestCommitSha,
+            latest_commit_url: latestCommitInfo.latestCommitUrl,
           },
-          where: { repository_id: repository.id },
+          where: { id: repository.id },
         });
 
         fullCodefairRun = true;
@@ -417,7 +417,7 @@ export default async (app, { getRouter }) => {
       removed_files: removedCWLFiles,
     };
 
-    const cwlExists = await db.collection("cwlValidation").findUnique({
+    const cwlExists = await db.cwlValidation.findUnique({
       where: {
         repository_id: repository.id,
       },
@@ -462,10 +462,10 @@ export default async (app, { getRouter }) => {
 
     await verifyInstallationAnalytics(context, repository);
 
-    const installationCollection = db.collection("installation");
+    const installationCollection = db.installation;
     const installation = await installationCollection.findUnique({
       where: {
-        repository_id: repository.id,
+        id: repository.id,
       },
     });
 

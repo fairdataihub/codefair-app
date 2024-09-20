@@ -1,6 +1,7 @@
 import { OAuth2RequestError } from "arctic";
 import { generateIdFromEntropySize } from "lucia";
-import prisma from "~/lib/prisma";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 import { github } from "~/server/utils/auth";
 
 interface GitHubUser {
