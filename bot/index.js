@@ -283,9 +283,14 @@ export default async (app, { getRouter }) => {
           "for",
           repository.name,
         );
-        installationCollection.update({
+        const result = await installationCollection.update({
           data: {
-            action_count: installation.action_count - 1,
+            action_count: {
+              set:
+                installation.action_count - 1 < 0
+                  ? 0
+                  : installation.action_count - 1,
+            },
             latest_commit_date: latestCommitInfo.latestCommitDate,
             latest_commit_message: latestCommitInfo.latestCommitMessage,
             latest_commit_sha: latestCommitInfo.latestCommitSha,
@@ -293,6 +298,8 @@ export default async (app, { getRouter }) => {
           },
           where: { id: repository.id },
         });
+
+        console.log(result);
 
         return;
       }
@@ -472,9 +479,14 @@ export default async (app, { getRouter }) => {
     if (installation?.action_count > 0) {
       installationCollection.update({
         data: {
-          action_count: installation.action_count - 1,
+          action_count: {
+            set:
+              installation.action_count - 1 < 0
+                ? 0
+                : installation.action_count - 1,
+          },
         },
-        where: { repository_id: repository.id },
+        where: { id: repository.id },
       });
       return;
     }
@@ -485,7 +497,7 @@ export default async (app, { getRouter }) => {
         data: {
           action_count: 0,
         },
-        where: { repository_id: repository.id },
+        where: { id: repository.id },
       });
     }
 
@@ -561,8 +573,15 @@ export default async (app, { getRouter }) => {
 
         if (installation?.action_count > 0) {
           installationCollection.update({
-            data: { action_count: installation.action_count - 1 },
-            where: { repository_id: context.payload.repository.id },
+            data: {
+              action_count: {
+                set:
+                  installation.action_count - 1 < 0
+                    ? 0
+                    : installation.action_count - 1,
+              },
+            },
+            where: { id: context.payload.repository.id },
           });
 
           return;
@@ -573,7 +592,7 @@ export default async (app, { getRouter }) => {
             data: {
               action_count: 0,
             },
-            where: { repository_id: context.payload.repository.id },
+            where: { id: context.payload.repository.id },
           });
         }
       }

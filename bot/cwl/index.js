@@ -213,7 +213,7 @@ export async function applyCWLTemplate(
       await analyticsCollection.upsert({
         create: {
           cwl_validated_file_count: 1, // Start count at 1 when creating
-          repository_id: repository.id, // Create a new record if it doesn't exist
+          id: repository.id, // Create a new record if it doesn't exist
         },
         update: {
           cwl_validated_file_count: {
@@ -221,7 +221,7 @@ export async function applyCWLTemplate(
           },
         },
         where: {
-          repository_id: repository.id,
+          id: repository.id,
         },
       });
 

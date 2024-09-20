@@ -430,9 +430,11 @@ export async function applyMetadataTemplate(
           created_at: newDate,
           identifier,
           metadata,
-          owner,
-          repo: repository.name,
-          repository_id: repository.id,
+          repository: {
+            connect: {
+              id: repository.id,
+            },
+          },
           updated_at: newDate,
         },
       });
