@@ -182,29 +182,29 @@ export async function applyCodemetaTemplate(
 
     let badgeURL = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
 
-    const codemetaCollection = db.collection("codeMetadata");
-    const existingCodemeta = await codemetaCollection.findOne({
-      repositoryId: repository.id,
+    const codemetaCollection = db.codeMetadata;
+    const existingCodemeta = await codemetaCollection.findUnique({
+      repository_id: repository.id,
     });
 
     if (!existingCodemeta) {
       // Entry does not exist in db, create a new one
-      const newDate = Date.now();
-      await codemetaCollection.insertOne({
+      const newDate = new Date();
+      await codemetaCollection.create({
         created_at: newDate,
         identifier,
         open: true,
         owner,
         repo: repository.name,
-        repositoryId: repository.id,
+        repository_id: repository.id,
         updated_at: newDate,
       });
     } else {
       // Get the identifier of the existing codemeta request
-      await codemetaCollection.updateOne(
-        { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
-      );
+      await codemetaCollection.update({
+        data: { updated_at: new Date() },
+        where: { repository_id: repository.id },
+      });
       badgeURL = `${CODEFAIR_DOMAIN}/add/codemeta/${existingCodemeta.identifier}`;
     }
 
@@ -216,23 +216,25 @@ export async function applyCodemetaTemplate(
 
     if (!existingLicense) {
       // Entry does not exist in db, create a new one
-      const newDate = Date.now();
-      await licenseCollection.insertOne({
-        created_at: newDate,
-        identifier,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
+      const newDate = new Date();
+      await licenseCollection.create({
+        data: {
+          created_at: newDate,
+          identifier,
+          open: true,
+          owner,
+          repo: repository.name,
+          repository_id: repository.id,
+          updated_at: newDate,
+        },
       });
     } else {
       // Get the identifier of the existing license request
       // Update the database
-      await licenseCollection.updateOne(
-        { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
-      );
+      await licenseCollection.update({
+        data: { updated_at: new Date() },
+        where: { repository_id: repository.id },
+      });
       badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     }
     const codemetaBadge = `[![Citation](https://img.shields.io/badge/Edit_Codemeta-dc2626.svg)](${badgeURL})`;
@@ -269,29 +271,33 @@ export async function applyCitationTemplate(
     const identifier = createId();
 
     let badgeURL = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
-    const citationCollection = db.collection("citationRequests");
-    const existingCitation = await citationCollection.findOne({
-      repositoryId: repository.id,
+    const citationCollection = db.citationRequests;
+    const existingCitation = await citationCollection.fineUnique({
+      where: {
+        repository_id: repository.id,
+      },
     });
 
     if (!existingCitation) {
       // Entry does not exist in db, create a new one
-      const newDate = Date.now();
-      await citationCollection.insertOne({
-        created_at: newDate,
-        identifier,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
+      const newDate = new Date();
+      await citationCollection.create({
+        data: {
+          created_at: newDate,
+          identifier,
+          open: true,
+          owner,
+          repo: repository.name,
+          repository_id: repository.id,
+          updated_at: newDate,
+        },
       });
     } else {
       // Get the identifier of the existing citation request
-      await citationCollection.updateOne(
-        { repositoryId: repository.id },
-        { $set: { updated_at: Date.now() } },
-      );
+      await citationCollection.updateOne({
+        data: { updated_at: new Date() },
+        where: { repository_id: repository.id },
+      });
       badgeURL = `${CODEFAIR_DOMAIN}/add/citation/${existingCitation.identifier}`;
     }
 

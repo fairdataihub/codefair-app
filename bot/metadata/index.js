@@ -281,9 +281,11 @@ export async function applyMetadataTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
-    const metadataCollection = dbInstance.getDb().collection("codeMetadata");
-    const existingMetadata = await metadataCollection.findOne({
-      repositoryId: repository.id,
+    const metadataCollection = dbInstance.codeMetadata;
+    const existingMetadata = await metadataCollection.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
     });
 
     if (subjects.codemeta) {
@@ -319,38 +321,38 @@ export async function applyMetadataTemplate(
 
     if (!existingMetadata) {
       // Entry does not exist in db, create a new one
-      const newDate = Date.now();
+      const newDate = new Date();
       const gatheredMetadata = await gatherMetadata(context, owner, repository);
-      await metadataCollection.insertOne({
-        citation_status: validCitation ? "valid" : "invalid",
-        codemeta_status: validCodemeta ? "valid" : "invalid",
-        contains_citation: subjects.citation,
-        contains_codemeta: subjects.codemeta,
-        contains_metadata: subjects.codemeta && subjects.citation,
-        created_at: newDate,
-        identifier,
-        metadata: gatheredMetadata,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
+      await metadataCollection.create({
+        data: {
+          citation_status: validCitation ? "valid" : "invalid",
+          codemeta_status: validCodemeta ? "valid" : "invalid",
+          contains_citation: subjects.citation,
+          contains_codemeta: subjects.codemeta,
+          contains_metadata: subjects.codemeta && subjects.citation,
+          created_at: newDate,
+          identifier,
+          metadata: gatheredMetadata,
+          open: true,
+          owner,
+          repo: repository.name,
+          repository_id: repository.id,
+          updated_at: newDate,
+        },
       });
     } else {
       // Get the identifier of the existing metadata request
-      await metadataCollection.updateOne(
-        { repositoryId: repository.id },
-        {
-          $set: {
-            citation_status: validCitation ? "valid" : "invalid",
-            codemeta_status: validCodemeta ? "valid" : "invalid",
-            contains_citation: subjects.citation,
-            contains_codemeta: subjects.codemeta,
-            contains_metadata: subjects.codemeta && subjects.citation,
-            updated_at: Date.now(),
-          },
+      await metadataCollection.update({
+        data: {
+          citation_status: validCitation ? "valid" : "invalid",
+          codemeta_status: validCodemeta ? "valid" : "invalid",
+          contains_citation: subjects.citation,
+          contains_codemeta: subjects.codemeta,
+          contains_metadata: subjects.codemeta && subjects.citation,
+          updated_at: new Date(),
         },
-      );
+        where: { repository_id: repository.id },
+      });
 
       url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
     }
@@ -406,46 +408,48 @@ export async function applyMetadataTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
-    const metadataCollection = dbInstance.getDb().collection("codeMetadata");
-    const existingMetadata = await metadataCollection.findOne({
-      repositoryId: repository.id,
+    const metadataCollection = dbInstance.codeMetadata;
+    const existingMetadata = await metadataCollection.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
     });
 
     if (!existingMetadata) {
       // Entry does not exist in db, create a new one
-      const newDate = Date.now();
+      const newDate = new Date();
       // const gatheredMetadata = await gatherMetadata(context, owner, repository);
-      await metadataCollection.insertOne({
-        citation_status: validCitation ? "valid" : "invalid",
-        codemeta_status: validCodemeta ? "valid" : "invalid",
-        contains_citation: subjects.citation,
-        contains_codemeta: subjects.codemeta,
-        contains_metadata: subjects.codemeta && subjects.citation,
-        created_at: newDate,
-        identifier,
-        metadata,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
+      await metadataCollection.create({
+        data: {
+          citation_status: validCitation ? "valid" : "invalid",
+          codemeta_status: validCodemeta ? "valid" : "invalid",
+          contains_citation: subjects.citation,
+          contains_codemeta: subjects.codemeta,
+          contains_metadata: subjects.codemeta && subjects.citation,
+          created_at: newDate,
+          identifier,
+          metadata,
+          open: true,
+          owner,
+          repo: repository.name,
+          repository_id: repository.id,
+          updated_at: newDate,
+        },
       });
     } else {
       // Get the identifier of the existing metadata request
-      await metadataCollection.updateOne(
-        { repositoryId: repository.id },
-        {
-          $set: {
-            citation_status: validCitation ? "valid" : "invalid",
-            codemeta_status: validCodemeta ? "valid" : "invalid",
-            contains_citation: subjects.citation,
-            contains_codemeta: subjects.codemeta,
-            contains_metadata: subjects.codemeta && subjects.citation,
-            metadata,
-            updated_at: Date.now(),
-          },
+      await metadataCollection.update({
+        data: {
+          citation_status: validCitation ? "valid" : "invalid",
+          codemeta_status: validCodemeta ? "valid" : "invalid",
+          contains_citation: subjects.citation,
+          contains_codemeta: subjects.codemeta,
+          contains_metadata: subjects.codemeta && subjects.citation,
+          metadata,
+          updated_at: new Date(),
         },
-      );
+        where: { repository_id: repository.id },
+      });
 
       url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
     }
