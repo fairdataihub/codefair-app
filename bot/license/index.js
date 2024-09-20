@@ -173,14 +173,14 @@ export async function applyLicenseTemplate(
   owner,
   context,
 ) {
-  const licenseCollection = dbInstance.getDb().collection("licenseRequests");
+  const licenseCollection = dbInstance.licenseRequest;
   const identifier = createId();
   let badgeURL = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
-  const existingLicense = await licenseCollection.findOne({
-    repositoryId: repository.id,
+  const existingLicense = await licenseCollection.findUnique({
+    where: { repository_id: repository.id },
   });
-  let licenseId = null;
-  let licenseContent = null;
+  let licenseId = "";
+  let licenseContent = "";
   let licenseContentNotEmpty = null;
 
   if (subjects.license) {
@@ -201,8 +201,8 @@ export async function applyLicenseTemplate(
       licenseRequest.data.license.spdx_id === "NOASSERTION"
     ) {
       consola.info("Resetting license id and content back to null");
-      licenseId = null;
-      licenseContent = null;
+      licenseId = "";
+      licenseContent = "";
     }
 
     licenseContentNotEmpty = licenseContent && licenseContent.trim().length > 0;
@@ -215,46 +215,44 @@ export async function applyLicenseTemplate(
 
     // Use the new license data if the existing license is invalid or the license has changed
     const finalLicenseId =
-      isExistingLicenseValid && licenseId === null && !subjects.license
+      isExistingLicenseValid && licenseId === "" && !subjects.license
         ? existingLicense?.licenseId
         : licenseId;
     const finalLicenseContent =
-      isExistingLicenseValid && licenseContent === null && !subjects.license
+      isExistingLicenseValid && licenseContent === "" && !subjects.license
         ? existingLicense?.licenseContent
         : licenseContent;
 
     badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
-    await licenseCollection.updateOne(
-      { repositoryId: repository.id },
-      {
-        $set: {
-          contains_license: subjects.license,
-          updated_at: Date.now(),
-          license_status:
-            finalLicenseContent &&
-            finalLicenseContent.trim().length > 0 &&
-            subjects.license
-              ? "valid"
-              : "invalid",
-          licenseId: finalLicenseId,
-          licenseContent: finalLicenseContent,
+    await licenseCollection.update({
+      data: {
+        contains_license: subjects.license,
+        license_status:
+          finalLicenseContent &&
+          finalLicenseContent.trim().length > 0 &&
+          subjects.license
+            ? "valid"
+            : "invalid",
+        license_id: finalLicenseId,
+        license_content: finalLicenseContent,
+      },
+      where: { repository_id: repository.id },
+    });
+  } else {
+    const newDate = new Date();
+    await licenseCollection.create({
+      data: {
+        contains_license: subjects.license,
+        license_status: licenseContentNotEmpty ? "valid" : "invalid",
+        license_id: licenseId,
+        license_content: licenseContent,
+        identifier,
+        repository: {
+          connect: {
+            id: repository.id,
+          },
         },
       },
-    );
-  } else {
-    const newDate = Date.now();
-    await licenseCollection.insertOne({
-      contains_license: subjects.license,
-      license_status: licenseContentNotEmpty ? "valid" : "invalid",
-      created_at: newDate,
-      licenseId,
-      licenseContent,
-      identifier,
-      open: true,
-      owner,
-      repo: repository.name,
-      repositoryId: repository.id,
-      updated_at: newDate,
     });
   }
 

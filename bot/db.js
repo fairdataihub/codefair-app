@@ -1,32 +1,18 @@
-import { MongoClient } from "mongodb";
-const { MONGODB_URI } = process.env;
-const { MONGODB_DB_NAME } = process.env;
+import { PrismaClient } from "@prisma/client";
 
-class Database {
-  constructor() {
-    if (!Database.instance) {
-      this.client = new MongoClient(MONGODB_URI, {});
-      Database.instance = this;
-    }
+// eslint-disable-next-line import/no-mutable-exports
+let prisma;
 
-    return Database.instance;
+if (process.env.NODE_ENV === "production") {
+  prisma = new PrismaClient();
+} else {
+  const globalWithPrisma = global;
+  globalWithPrisma.prisma = globalWithPrisma.prisma || new PrismaClient();
+
+  if (!globalWithPrisma.prisma) {
+    globalWithPrisma.prisma = new PrismaClient();
   }
-
-  async connect() {
-    if (!this.db) {
-      await this.client.connect();
-      this.db = this.client.db(MONGODB_DB_NAME);
-    }
-
-    return this.db;
-  }
-
-  getDb() {
-    return this.db;
-  }
+  prisma = globalWithPrisma.prisma;
 }
 
-const instance = new Database();
-// Object.freeze(instance);
-
-export default instance;
+export default prisma;

@@ -31,11 +31,10 @@ export default async (app, { getRouter }) => {
   // Connect to the MongoDB database
   await intializeDatabase();
 
-  const db = dbInstance.getDb();
-  const ping = db.collection("ping");
+  const db = dbInstance;
 
-  await ping.insertOne({
-    timestamp: Date.now(),
+  await db.ping.create({
+    data: { timestamp: new Date() },
   });
 
   const router = getRouter("/");
@@ -86,11 +85,12 @@ export default async (app, { getRouter }) => {
             repo: repository.name,
           });
 
-          latestCommitInfo.latestCommitSha = latestCommit.data.sha || "";
-          latestCommitInfo.latestCommitMessage =
+          latestCommitInfo.latest_commit_sha = latestCommit.data.sha || "";
+          latestCommitInfo.latest_commit_message =
             latestCommit.data.commit.message || "";
-          latestCommitInfo.latestCommitUrl = latestCommit.data.html_url || "";
-          latestCommitInfo.latestCommitDate =
+          latestCommitInfo.latest_commiut_url =
+            latestCommit.data.html_url || "";
+          latestCommitInfo.latest_commit_date =
             latestCommit.data.commit.committer.date || "";
         }
 
@@ -129,8 +129,8 @@ export default async (app, { getRouter }) => {
 
         // If existing cwl validation exists, update the contains_cwl value
         // If existing cwl validation exists, update the contains_cwl value
-        const cwlExists = await db.collection("cwlValidation").findOne({
-          repositoryId: repository.id,
+        const cwlExists = await dbInstance.cwlValidation.findUnique({
+          where: { repository_id: repository.id },
         });
 
         if (cwlExists?.contains_cwl_files) {
@@ -162,53 +162,69 @@ export default async (app, { getRouter }) => {
   app.on(
     ["installation.deleted", "installation_repositories.removed"],
     async (context) => {
-      const installationCollection = db.collection("installation");
-      const licenseCollection = db.collection("licenseRequests");
-      const metadataCollection = db.collection("codeMetadata");
-      const cwlCollection = db.collection("cwlValidation");
+      const installationCollection = db.installation;
+      const licenseCollection = db.licenseRequest;
+      const metadataCollection = db.codeMetadata;
+      const cwlCollection = db.cwlValidation;
       const repositories =
         context.payload.repositories || context.payload.repositories_removed;
 
       for (const repository of repositories) {
         // Check if the installation is already in the database
-        const installation = await installationCollection.findOne({
-          repositoryId: repository.id,
+        const installation = await installationCollection.findUnique({
+          where: {
+            repository_id: repository.id,
+          },
         });
 
-        const license = await licenseCollection.findOne({
-          repositoryId: repository.id,
+        const license = await licenseCollection.findUnique({
+          where: {
+            repository_id: repository.id,
+          },
         });
 
-        const metadata = await metadataCollection.findOne({
-          repositoryId: repository.id,
+        const metadata = await metadataCollection.findUnique({
+          where: {
+            repository_id: repository.id,
+          },
         });
 
-        const cwl = await cwlCollection.findOne({
-          repositoryId: repository.id,
+        const cwl = await cwlCollection.findUnique({
+          where: {
+            repository_id: repository.id,
+          },
         });
 
         if (installation) {
           // Remove from the database
-          await installationCollection.deleteOne({
-            repositoryId: repository.id,
+          await installationCollection.delete({
+            where: {
+              repository_id: repository.id,
+            },
           });
         }
 
         if (license) {
-          await licenseCollection.deleteOne({
-            repositoryId: repository.id,
+          await licenseCollection.delete({
+            where: {
+              repository_id: repository.id,
+            },
           });
         }
 
         if (metadata) {
-          await metadataCollection.deleteOne({
-            repositoryId: repository.id,
+          await metadataCollection.delete({
+            where: {
+              repository_id: repository.id,
+            },
           });
         }
 
         if (cwl) {
-          await cwlCollection.deleteOne({
-            repositoryId: repository.id,
+          await cwlCollection.delete({
+            where: {
+              repository_id: repository.id,
+            },
           });
         }
 
@@ -243,9 +259,11 @@ export default async (app, { getRouter }) => {
 
     let fullCodefairRun = false;
 
-    const installationCollection = db.collection("installation");
-    const installation = await installationCollection.findOne({
-      repositoryId: repository.id,
+    const installationCollection = db.installation;
+    const installation = await installationCollection.findUnique({
+      where: {
+        id: repository.id,
+      },
     });
 
     if (!installation) {
@@ -265,36 +283,32 @@ export default async (app, { getRouter }) => {
           "for",
           repository.name,
         );
-        installationCollection.updateOne(
-          { repositoryId: repository.id },
-          {
-            $set: {
-              action_count: installation.action_count - 1,
-              latestCommitDate: latestCommitInfo.latestCommitDate,
-              latestCommitMessage: latestCommitInfo.latestCommitMessage,
-              latestCommitSha: latestCommitInfo.latestCommitSha,
-              latestCommitUrl: latestCommitInfo.latestCommitUrl,
-            },
+        installationCollection.update({
+          data: {
+            action_count: installation.action_count - 1,
+            latestCommitDate: latestCommitInfo.latestCommitDate,
+            latestCommitMessage: latestCommitInfo.latestCommitMessage,
+            latestCommitSha: latestCommitInfo.latestCommitSha,
+            latestCommitUrl: latestCommitInfo.latestCommitUrl,
           },
-        );
+          where: { id: repository.id },
+        });
 
         return;
       }
 
       if (installation?.action_count === 0) {
         consola.warn("Removing action limit for", repository.name);
-        installationCollection.updateOne(
-          { repositoryId: repository.id },
-          {
-            $set: {
-              action_count: 0,
-              latestCommitDate: latestCommitInfo.latestCommitDate,
-              latestCommitMessage: latestCommitInfo.latestCommitMessage,
-              latestCommitSha: latestCommitInfo.latestCommitSha,
-              latestCommitUrl: latestCommitInfo.latestCommitUrl,
-            },
+        installationCollection.updateOne({
+          data: {
+            action_count: 0,
+            latestCommitDate: latestCommitInfo.latestCommitDate,
+            latestCommitMessage: latestCommitInfo.latestCommitMessage,
+            latestCommitSha: latestCommitInfo.latestCommitSha,
+            latestCommitUrl: latestCommitInfo.latestCommitUrl,
           },
-        );
+          where: { repository_id: repository.id },
+        });
 
         fullCodefairRun = true;
       }
@@ -403,8 +417,10 @@ export default async (app, { getRouter }) => {
       removed_files: removedCWLFiles,
     };
 
-    const cwlExists = await db.collection("cwlValidation").findOne({
-      repositoryId: repository.id,
+    const cwlExists = await db.collection("cwlValidation").findUnique({
+      where: {
+        repository_id: repository.id,
+      },
     });
 
     // Does the repository already contain CWL files
@@ -447,31 +463,30 @@ export default async (app, { getRouter }) => {
     await verifyInstallationAnalytics(context, repository);
 
     const installationCollection = db.collection("installation");
-    const installation = await installationCollection.findOne({
-      repositoryId: repository.id,
+    const installation = await installationCollection.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
     });
+
     if (installation?.action_count > 0) {
-      installationCollection.updateOne(
-        { repositoryId: repository.id },
-        {
-          $set: {
-            action_count: installation.action_count - 1,
-          },
+      installationCollection.update({
+        data: {
+          action_count: installation.action_count - 1,
         },
-      );
+        where: { repository_id: repository.id },
+      });
       return;
     }
 
     if (installation?.action_count === 0) {
       consola.info("Removing action limit for", repository.name);
-      installationCollection.updateOne(
-        { repositoryId: repository.id },
-        {
-          $set: {
-            action_count: 0,
-          },
+      installationCollection.update({
+        data: {
+          action_count: 0,
         },
-      );
+        where: { repository_id: repository.id },
+      });
     }
 
     if (definedPRTitles.includes(prTitle)) {
@@ -491,8 +506,10 @@ export default async (app, { getRouter }) => {
         removed_files: [],
       };
 
-      const cwlExists = await db.collection("cwlValidation").findOne({
-        repositoryId: repository.id,
+      const cwlExists = await db.cwlValidation.findUnique({
+        where: {
+          repository_id: repository.id,
+        },
       });
 
       if (cwlExists) {
@@ -527,9 +544,11 @@ export default async (app, { getRouter }) => {
     const owner = context.payload.repository.owner.login;
 
     if (issueTitle === ISSUE_TITLE) {
-      const installationCollection = db.collection("installation");
-      const installation = await installationCollection.findOne({
-        repositoryId: context.payload.repository.id,
+      const installationCollection = db.installation;
+      const installation = await installationCollection.findUnique({
+        where: {
+          id: context.payload.repository.id,
+        },
       });
 
       if (installation) {
@@ -541,23 +560,21 @@ export default async (app, { getRouter }) => {
         );
 
         if (installation?.action_count > 0) {
-          installationCollection.updateOne(
-            { repositoryId: context.payload.repository.id },
-            { $set: { action_count: installation.action_count - 1 } },
-          );
+          installationCollection.update({
+            data: { action_count: installation.action_count - 1 },
+            where: { repository_id: context.payload.repository.id },
+          });
 
           return;
         }
 
         if (installation?.action_count === 0) {
-          installationCollection.updateOne(
-            { repositoryId: context.payload.repository.id },
-            {
-              $set: {
-                action_count: 0,
-              },
+          installationCollection.update({
+            data: {
+              action_count: 0,
             },
-          );
+            where: { repository_id: context.payload.repository.id },
+          });
         }
       }
     }
@@ -582,8 +599,10 @@ export default async (app, { getRouter }) => {
         removed_files: [],
       };
 
-      const cwlExists = await db.collection("cwlValidation").findOne({
-        repositoryId: repository.id,
+      const cwlExists = await db.cwlValidation.findUnique({
+        where: {
+          repository_id: repository.id,
+        },
       });
 
       if (cwlExists) {
@@ -640,8 +659,10 @@ export default async (app, { getRouter }) => {
       };
 
       // If existing cwl validation exists, update the contains_cwl value
-      const cwlExists = await db.collection("cwlValidation").findOne({
-        repositoryId: repository.id,
+      const cwlExists = await db.cwlValidation.findUnique({
+        where: {
+          repository_id: repository.id,
+        },
       });
 
       if (cwlExists?.contains_cwl_files) {
@@ -682,17 +703,19 @@ export default async (app, { getRouter }) => {
 
     if (issueTitle === ISSUE_TITLE) {
       // Modify installation collection
-      const installationCollection = db.collection("installation");
+      const installationCollection = db.installation;
 
-      const installation = await installationCollection.findOne({
-        repositoryId: repository.id,
+      const installation = await installationCollection.findUnique({
+        where: {
+          id: repository.id,
+        },
       });
 
       if (installation) {
-        await installationCollection.updateOne(
-          { repositoryId: repository.id },
-          { $set: { disabled: true } },
-        );
+        await installationCollection.update({
+          data: { disabled: true },
+          where: { id: repository.id },
+        });
       }
 
       if (context.payload.action === "closed") {
@@ -760,8 +783,10 @@ export default async (app, { getRouter }) => {
         removed_files: [],
       };
 
-      const cwlExists = await db.collection("cwlValidation").findOne({
-        repositoryId: repository.id,
+      const cwlExists = await db.cwlValidation.findUnique({
+        where: {
+          repository_id: repository.id,
+        },
       });
 
       if (cwlExists) {
