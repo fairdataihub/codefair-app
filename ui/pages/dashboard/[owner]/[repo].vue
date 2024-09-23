@@ -66,9 +66,6 @@ if (error.value) {
 
 if (data.value) {
   // Verify the repository contains a license, citation, and codemeta.json
-  console.log(data?.value?.licenseRequest?.licenseStatus);
-  console.log(data?.value?.codeMetadataRequest?.citationStatus);
-  console.log(data?.value?.codeMetadataRequest?.codemetaStatus);
   const validLicense = data?.value?.licenseRequest?.licenseStatus === "valid";
   const validCitation =
     data?.value?.codeMetadataRequest?.citationStatus === "valid";
@@ -512,7 +509,7 @@ const handleSettingsSelect = (key: any) => {
       <n-divider />
 
       <CardDashboard
-        disable="true"
+        :deactivated="true"
         title="Figshare Archival"
         subheader="Make a GitHub release and archive the software on Figshare."
       >
@@ -564,10 +561,10 @@ const handleSettingsSelect = (key: any) => {
 
         <template #action>
           <a
-            :disable="readyForZenodoArchival"
+            :disable="readyForZenodoArchival || true"
             :href="`/add/archive/figshare/${data?.archiveRequest?.identifier ?? ''}`"
           >
-            <n-button type="primary">
+            <n-button type="primary" disabled>
               <template #icon>
                 <Icon name="akar-icons:edit" size="16" />
               </template>
