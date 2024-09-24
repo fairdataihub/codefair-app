@@ -18,6 +18,7 @@ const transferFunction = async () => {
   const metadataCollection = mongoDatabase.collection("codeMetadata");
   const cwlCollection = mongoDatabase.collection("cwlValidation");
   const analyticsCollection = mongoDatabase.collection("analytics");
+  const sessionCollection = mongoDatabase.collection("sessions");
 
   // Set up Prisma connection
   const prisma = new PrismaClient();
@@ -29,6 +30,7 @@ const transferFunction = async () => {
   const metadataReq = await metadataCollection.find().toArray();
   const cwlReq = await cwlCollection.find().toArray();
   const analytics = await analyticsCollection.find().toArray();
+  const sessions = await sessionCollection.find().toArray();
 
   await prisma.$executeRaw`TRUNCATE TABLE "User" RESTART IDENTITY CASCADE`;
   await prisma.$executeRaw`TRUNCATE TABLE "Installation" RESTART IDENTITY CASCADE`;
@@ -36,12 +38,13 @@ const transferFunction = async () => {
   await prisma.$executeRaw`TRUNCATE TABLE "CodeMetadata" RESTART IDENTITY CASCADE`;
   await prisma.$executeRaw`TRUNCATE TABLE "CwlValidation" RESTART IDENTITY CASCADE`;
   await prisma.$executeRaw`TRUNCATE TABLE "Analytics" RESTART IDENTITY CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "Session" RESTART IDENTITY CASCADE`;
 
   // Transfer user data
   for (const user of users) {
     await prisma.user.create({
       data: {
-        id: createId(),
+        id: String(user._id),
         username: user.username,
         access_token: user.access_token,
         github_id: user.github_id,
@@ -125,6 +128,16 @@ const transferFunction = async () => {
         update_citation:
           entry?.codeMetadata?.citationCFF?.updateCitationCFF || 0,
         update_codemeta: entry?.codeMetadata?.codemeta?.updateCodemeta || 0,
+      },
+    });
+  }
+
+  for (const session of sessions) {
+    await prisma.session.create({
+      data: {
+        id: createId(),
+        expiresAt: session.expires_at,
+        userId: session.user_id,
       },
     });
   }
