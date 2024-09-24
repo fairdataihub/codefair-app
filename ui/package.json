@@ -7,7 +7,7 @@
     "tunnel": "lt --port 3000 --subdomain codefair",
     "build": "nuxt build && yarn prisma:generate",
     "dev": "nuxt dev -p 3000",
-    "start": "node .output/server/index.mjs",
+    "start": "nuxt preview",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "prisma:generate": "prisma generate",
