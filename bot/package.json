@@ -14,12 +14,12 @@
   "scripts": {
     "dev-old": "probot run ./index.js ",
     "dev": "nodemon --watch ./ --exec \"run-p dev:smee dev:start\"",
-    "start": "npm run prisma:generate && node ./main.js",
+    "start": "node ./main.js",
     "dev:smee": "smee -u https://smee.io/n0NQN1LUpx2kI2T1 -p 3001",
     "dev:start": "node -r dotenv/config ./main.js",
     "build-css": "tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css",
     "watch-css": "npx tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css --watch",
-    "build": "npm run build-css",
+    "build": "npm run build-css && npm run prisma:generate",
     "migrate": "tsx ./migrate.ts",
     "dev-migrate": "tsx ./dev-migrate.ts",
     "test": "jest",
@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",
+    "@prisma/client": "^5.19.1",
     "axios": "^1.6.8",
     "consola": "^3.2.3",
     "cwl-ts-auto": "^0.1.3",
@@ -41,6 +42,7 @@
     "js-yaml": "^4.1.0",
     "mongodb": "^6.5.0",
     "nanoid": "^5.0.7",
+    "prisma": "^5.19.1",
     "probot": "12.4.0",
     "url": "^0.11.3"
   },
