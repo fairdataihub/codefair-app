@@ -19,7 +19,7 @@ dayjs.extend(timezone);
 export async function intializeDatabase() {
   try {
     consola.start("Connecting to database...");
-    await dbInstance.connect();
+    await dbInstance;
     consola.success("Connected to database!");
     return true;
   } catch (error) {
@@ -278,15 +278,14 @@ export async function verifyRepoName(
     );
 
     // Check if the installation is already in the database
-    await collection.updateOne(
-      { installationId, repositoryId: repository.id },
-      {
-        $set: {
-          owner,
-          repo: repository.name,
-        },
+    await collection.update({
+      data: {
+        repo: repository.name,
       },
-    );
+      where: {
+        id: repository.id,
+      },
+    });
   }
 }
 
@@ -332,80 +331,80 @@ export async function verifyInstallationAnalytics(
 
   const installationId = context.payload.installation.id;
 
-  const installationCollection = dbInstance.getDb().collection("installation");
-  const analyticsCollection = dbInstance.getDb().collection("analytics");
-
-  const installation = await installationCollection.findOne({
-    repositoryId: repository.id,
+  const installation = await dbInstance.installation.findUnique({
+    where: {
+      id: repository.id,
+    },
   });
 
-  const analytics = await analyticsCollection.findOne({
-    repositoryId: repository.id,
+  const analytics = await dbInstance.analytics.findUnique({
+    where: {
+      id: repository.id,
+    },
   });
 
   if (!installation) {
     // If the installation is not in the database, add it
-    await installationCollection.insertOne({
-      action_count: actionCount,
-      installationId,
-      latestCommitDate: latestCommitInfo.latestCommitDate,
-      latestCommitMessage: latestCommitInfo.latestCommitMessage,
-      latestCommitSha: latestCommitInfo.latestCommitSha,
-      latestCommitUrl: latestCommitInfo.latestCommitUrl,
-      owner,
-      repo: repository.name,
-      repositoryId: repository.id,
-      timestamp: Date.now(),
+    await dbInstance.installation.create({
+      data: {
+        id: repository.id,
+        action_count: actionCount,
+        installation_id: installationId,
+        latest_commit_date: latestCommitInfo.latestCommitDate || "",
+        latest_commit_message: latestCommitInfo.latestCommitMessage || "",
+        latest_commit_sha: latestCommitInfo.latestCommitSha || "",
+        latest_commit_url: latestCommitInfo.latestCommitUrl || "",
+        owner,
+        repo: repository.name,
+      },
     });
   } else {
     if (installation.action_count > 0) {
-      installationCollection.updateOne(
-        { repositoryId: repository.id },
-        {
-          $set: {
-            action_count: installation.action_count - 1,
-            latestCommitDate: latestCommitInfo.latestCommitDate,
-            latestCommitMessage: latestCommitInfo.latestCommitMessage,
-            latestCommitSha: latestCommitInfo.latestCommitSha,
-            latestCommitUrl: latestCommitInfo.latestCommitUrl,
+      await dbInstance.installation.update({
+        data: {
+          action_count: {
+            set:
+              installation.action_count - 1 < 0
+                ? 0
+                : installation.action_count - 1,
           },
+          latest_commit_date: latestCommitInfo.latestCommitDate || "",
+          latest_commit_message: latestCommitInfo.latestCommitMessage || "",
+          latest_commit_sha: latestCommitInfo.latestCommitSha || "",
+          latest_commit_url: latestCommitInfo.latestCommitUrl || "",
         },
-      );
+        where: { id: repository.id },
+      });
     }
 
     if (installation.action_count === 0) {
       consola.info("Action limit reached, no longer limiting actions");
-      installationCollection.updateOne(
-        { repositoryId: repository.id },
-        {
-          $set: {
-            action_count: 0,
-            latestCommitDate: latestCommitInfo.latestCommitDate,
-            latestCommitMessage: latestCommitInfo.latestCommitMessage,
-            latestCommitSha: latestCommitInfo.latestCommitSha,
-            latestCommitUrl: latestCommitInfo.latestCommitUrl,
-          },
+      await dbInstance.installation.update({
+        data: {
+          action_count: 0,
+          latest_commit_date: latestCommitInfo.latestCommitDate || "",
+          latest_commit_message: latestCommitInfo.latestCommitMessage || "",
+          latest_commit_sha: latestCommitInfo.latestCommitSha || "",
+          latest_commit_url: latestCommitInfo.latestCommitUrl || "",
         },
-      );
+        where: { id: repository.id },
+      });
     }
     verifyRepoName(
       installation.repo,
       repository,
       owner,
-      installationCollection,
+      dbInstance.installation,
     );
   }
 
   if (!analytics) {
     // If the analytics for the installation is not in the database, add it
-    await analyticsCollection.insertOne({
-      owner,
-      repo: repository.name,
-      repositoryId: repository.id,
-      timestamp: Date.now(),
+    await dbInstance.analytics.create({
+      data: {
+        id: repository.id,
+      },
     });
-  } else {
-    verifyRepoName(analytics.repo, repository, owner, analyticsCollection);
   }
 }
 
@@ -438,17 +437,15 @@ export async function isRepoPrivate(context, owner, repoName) {
  * @param {Number} repoId - The repository ID
  */
 export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
-  const collection = dbInstance.getDb().collection("installation");
+  const collection = dbInstance.installation;
 
-  await collection.updateOne(
-    { repositoryId: repoId },
-    {
-      $set: {
-        disabled: false,
-        issue_number: issueNumber,
-      },
+  await collection.update({
+    data: {
+      disabled: false,
+      issue_number: issueNumber,
     },
-  );
+    where: { id: repoId },
+  });
 }
 
 /**

@@ -1,0 +1,139 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id
+
+  username     String
+  access_token String @default("")
+  github_id    Int    @unique
+
+  created_at DateTime @default(now())
+  last_login DateTime
+
+  sessions Session[]
+}
+
+model Session {
+  id String @id
+
+  userId    String
+  expiresAt DateTime
+
+  user User @relation(references: [id], fields: [userId], onDelete: Cascade)
+}
+
+model Installation {
+  id Int @id // Is the repository id
+
+  owner String
+  repo  String
+
+  installation_id Int
+
+  latest_commit_date    String @default("")
+  latest_commit_message String @default("")
+  latest_commit_sha     String @default("")
+  latest_commit_url     String @default("")
+
+  disabled     Boolean @default(false)
+  issue_number Int     @default(0)
+
+  owner_is_organization Boolean @default(false)
+
+  action_count Int @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  LicenseRequest LicenseRequest[]
+  CodeMetadata   CodeMetadata[]
+  CwlValidation  CwlValidation[]
+}
+
+model LicenseRequest {
+  id         String @id @default(cuid())
+  identifier String @unique
+
+  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  repository_id Int          @unique
+
+  contains_license Boolean @default(false)
+  license_status   String  @default("") // Valid values are valid, invalid
+
+  license_id      String @default("")
+  license_content String @default("")
+
+  pull_request_url String @default("")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Ping {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+}
+
+model CodeMetadata {
+  id         String @id @default(cuid())
+  identifier String @unique
+
+  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  repository_id Int          @unique
+
+  codemeta_status   String  @default("") // Valid values are valid, invalid
+  contains_codemeta Boolean @default(false)
+
+  citation_status   String  @default("") // Valid values are valid, invalid
+  contains_citation Boolean @default(false)
+
+  contains_metadata Boolean @default(false) // True if both citation and codemeta are valid
+
+  pull_request_url String @default("")
+
+  metadata Json @default("{}")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model CwlValidation {
+  id         String @id @default(cuid())
+  identifier String @unique
+
+  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  repository_id Int          @unique
+
+  contains_cwl_files Boolean @default(false)
+  overall_status     String  @default("") // Valid values are valid, invalid
+
+  files Json @default("[]")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Analytics {
+  id Int @id // used as repository_id
+
+  cwl_validated_file_count Int @default(0)
+  cwl_rerun_validation     Int @default(0)
+
+  license_created Int @default(0)
+
+  update_codemeta Int @default(0)
+  update_citation Int @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}

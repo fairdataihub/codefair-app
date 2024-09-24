@@ -1,4 +1,3 @@
-import { MongoClient } from "mongodb";
 import { z } from "zod";
 
 export default defineEventHandler(async (event) => {
@@ -31,15 +30,13 @@ export default defineEventHandler(async (event) => {
 
   const { licenseId, licenseContent } = parsedBody.data;
 
-  const client = new MongoClient(process.env.MONGODB_URI as string, {});
-
-  await client.connect();
-
-  const db = client.db(process.env.MONGODB_DB_NAME);
-  const collection = db.collection("licenseRequests");
-
-  const licenseRequest = await collection.findOne({
-    identifier,
+  const licenseRequest = await prisma.licenseRequest.findFirst({
+    where: {
+      identifier,
+    },
+    include: {
+      repository: true,
+    },
   });
 
   if (!licenseRequest) {
@@ -50,26 +47,24 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if the user is authorized to access the license request
-  await repoWritePermissions(event, licenseRequest.owner, licenseRequest.repo);
-
-  if (!licenseRequest.open) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "License request is not open",
-    });
-  }
-
-  const updatedRecord = await collection.updateOne(
-    { identifier },
-    {
-      $set: {
-        licenseId,
-        licenseContent,
-      },
-    },
+  await repoWritePermissions(
+    event,
+    licenseRequest.repository.owner,
+    licenseRequest.repository.repo,
   );
 
-  if (!updatedRecord) {
+  const updatedLicenseRequest = await prisma.licenseRequest.update({
+    data: {
+      license_id: licenseId,
+      license_content: licenseContent,
+      updated_at: new Date(),
+    },
+    where: {
+      identifier,
+    },
+  });
+
+  if (!updatedLicenseRequest) {
     throw createError({
       statusCode: 500,
       statusMessage: "license-request-update-failed",
@@ -80,8 +75,7 @@ export default defineEventHandler(async (event) => {
     licenseId,
     licenseContent,
     identifier,
-    owner: licenseRequest.owner,
-    repo: licenseRequest.repo,
-    timestamp: licenseRequest.timestamp,
+    owner: licenseRequest.repository.owner,
+    repo: licenseRequest.repository.repo,
   };
 });

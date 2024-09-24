@@ -22,7 +22,14 @@
     "build": "npm run build-css",
     "migrate": "tsx ./migrate.ts",
     "dev-migrate": "tsx ./dev-migrate.ts",
-    "test": "jest"
+    "test": "jest",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev --preview-feature",
+    "prisma:studio": "prisma studio",
+    "prisma:db:push": "prisma db push",
+    "prisma:db:pull": "prisma db pull",
+    "scripts:truncate:tables": "tsx ./scripts/prismaM.ts"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",
