@@ -1,14 +1,16 @@
 import { MongoClient } from "mongodb";
 import { PrismaClient } from "@prisma/client";
+import { createId } from "../utils/tools";
 
 const transferFunction = async () => {
   // Set up Mongo Connection
   const mongodbUri = process.env.MONGODB_URI || "";
+  const mongoName = process.env.MONGODB_DB_NAME;
   const client = new MongoClient(mongodbUri);
 
   await client.connect();
 
-  const mongoDatabase = client.db("dev");
+  const mongoDatabase = client.db(mongoName);
 
   const userCollection = mongoDatabase.collection("users");
   const installationCollection = mongoDatabase.collection("installation");
@@ -28,7 +30,7 @@ const transferFunction = async () => {
   const cwlReq = await cwlCollection.find().toArray();
   const analytics = await analyticsCollection.find().toArray();
 
-  // await prisma.$executeRaw`TRUNCATE TABLE "User" RESTART IDENTITY CASCADE`;
+  await prisma.$executeRaw`TRUNCATE TABLE "User" RESTART IDENTITY CASCADE`;
   await prisma.$executeRaw`TRUNCATE TABLE "Installation" RESTART IDENTITY CASCADE`;
   await prisma.$executeRaw`TRUNCATE TABLE "LicenseRequest" RESTART IDENTITY CASCADE`;
   await prisma.$executeRaw`TRUNCATE TABLE "CodeMetadata" RESTART IDENTITY CASCADE`;
@@ -36,25 +38,27 @@ const transferFunction = async () => {
   await prisma.$executeRaw`TRUNCATE TABLE "Analytics" RESTART IDENTITY CASCADE`;
 
   // Transfer user data
-  // for (const user of users) {
-  //   await prisma.user.create({
-  //     data: {
-  //       id: createId(),
-  //       username: user.username,
-  //       access_token: user.access_token,
-  //       github_id: user.github_id,
-  //       last_login: new Date(),
-  //     },
-  //   });
-  // }
+  for (const user of users) {
+    await prisma.user.create({
+      data: {
+        id: createId(),
+        username: user.username,
+        access_token: user.access_token,
+        github_id: user.github_id,
+        last_login: new Date(),
+      },
+    });
+  }
 
   // Transfer installation data
   for (const install of installations) {
     await prisma.installation.create({
       data: {
         id: install.repositoryId,
+        action_count: install.action_count || 0,
         disabled: install.disabled || false,
         installation_id: install.installationId,
+        issue_number: install.issue_number || 0,
         latest_commit_date: install.latestCommitDate || "",
         latest_commit_message: install.latestCommitMessage || "",
         latest_commit_sha: install.latestCommitSha || "",
@@ -118,8 +122,9 @@ const transferFunction = async () => {
         cwl_rerun_validation: entry?.cwlValidation?.rerunCwlValidation || 0,
         cwl_validated_file_count: entry?.cwlValidation?.validatedFileCount || 0,
         license_created: entry?.license?.createLicense || 0,
-        update_citation: entry?.codeMetadata?.updateCitationCFF || 0,
-        update_codemeta: entry?.codeMetadata?.updateCodemeta || 0,
+        update_citation:
+          entry?.codeMetadata?.citationCFF?.updateCitationCFF || 0,
+        update_codemeta: entry?.codeMetadata?.codemeta?.updateCodemeta || 0,
       },
     });
   }
