@@ -34,7 +34,7 @@
     "lucia": "^3.2.0",
     "md-editor-v3": "^4.13.5",
     "notivue": "^2.4.4",
-    "nuxt": "3.11.1",
+    "nuxt": "^3.13.2",
     "octokit": "^4.0.2",
     "pinia": "^2.2.2",
     "prisma": "^5.19.1",
@@ -46,7 +46,7 @@
     "zod": "^3.23.5"
   },
   "devDependencies": {
-    "@bg-dev/nuxt-naiveui": "1.13.3",
+    "@bg-dev/nuxt-naiveui": "1.14.0",
     "@nuxtjs/color-mode": "3.4.1",
     "@nuxtjs/device": "3.1.1",
     "@nuxtjs/eslint-config-typescript": "12.1.0",
