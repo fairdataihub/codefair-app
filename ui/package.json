@@ -41,6 +41,8 @@
     "prisma": "^5.19.1",
     "random-words": "^2.0.1",
     "sanitize-html": "^2.13.0",
+    "unplugin-auto-import": "^0.18.3",
+    "unplugin-vue-components": "^0.27.4",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0",
     "yaml": "^2.4.5",

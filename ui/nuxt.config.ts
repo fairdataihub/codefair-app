@@ -1,3 +1,6 @@
+import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
+import Components from "unplugin-vue-components/vite";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   app: {
@@ -23,6 +26,18 @@ export default defineNuxtConfig({
     },
     layoutTransition: { name: "layout", mode: "out-in" },
     pageTransition: { name: "page", mode: "out-in" },
+  },
+
+  build: {
+    transpile:
+      process.env.NODE_ENV === "production"
+        ? [
+            "naive-ui",
+            "vueuc",
+            "@css-render/vue3-ssr",
+            "@juggle/resize-observer",
+          ]
+        : ["@juggle/resize-observer"],
   },
 
   colorMode: {
@@ -66,6 +81,18 @@ export default defineNuxtConfig({
 
   notivue: {
     position: "bottom-right",
+  },
+
+  vite: {
+    optimizeDeps: {
+      include:
+        process.env.NODE_ENV === "development" ? ["naive-ui", "vueuc"] : [],
+    },
+    plugins: [
+      Components({
+        resolvers: [NaiveUiResolver()],
+      }),
+    ],
   },
 
   // vite: {
