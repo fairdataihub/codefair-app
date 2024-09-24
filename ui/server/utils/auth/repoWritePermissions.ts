@@ -7,7 +7,7 @@ const repoWritePermissions = async (
 ) => {
   const user = event.context.user as User;
 
-  const { GITHUB_OAUTH_APP_ID } = useRuntimeConfig(event);
+  const GITHUB_OAUTH_APP_ID = process.env.GITHUB_OAUTH_APP_ID || "";
 
   if (!owner || !repo) {
     throw createError({
