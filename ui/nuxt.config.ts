@@ -64,14 +64,6 @@ export default defineNuxtConfig({
     "nuxt-icon",
   ],
 
-  nitro: {
-    esbuild: {
-      options: {
-        target: "esnext",
-      },
-    },
-  },
-
   notivue: {
     position: "bottom-right",
   },
@@ -80,11 +72,11 @@ export default defineNuxtConfig({
     GITHUB_OAUTH_APP_ID: process.env.GITHUB_OAUTH_APP_ID,
   },
 
-  vite: {
-    server: {
-      hmr: {
-        clientPort: 3000,
-      },
-    },
-  },
+  // vite: {
+  //   server: {
+  //     hmr: {
+  //       clientPort: 3000,
+  //     },
+  //   },
+  // },
 });
