@@ -745,7 +745,7 @@
   resolved "https://registry.yarnpkg.com/@css-render/plugin-bem/-/plugin-bem-0.15.14.tgz#de13fc9f59299c2b646119851763dfa08929b3c1"
   integrity sha512-QK513CJ7yEQxm/P3EwsI+d+ha8kSOcjGvD6SevM41neEMxdULE+18iuQK6tEChAWMOQNQPLG/Rw3Khb69r5neg==
 
-"@css-render/vue3-ssr@^0.15.10", "@css-render/vue3-ssr@^0.15.12":
+"@css-render/vue3-ssr@^0.15.10", "@css-render/vue3-ssr@^0.15.12", "@css-render/vue3-ssr@^0.15.14":
   version "0.15.14"
   resolved "https://registry.yarnpkg.com/@css-render/vue3-ssr/-/vue3-ssr-0.15.14.tgz#a2f4dedc3e86211a3ce1445555265095b7736491"
   integrity sha512-//8027GSbxE9n3QlD73xFY6z4ZbHbvrOVB7AO6hsmrEzGbg+h2A09HboUyDgu+xsmj7JnvJD39Irt+2D0+iV8g==
@@ -7634,6 +7634,14 @@ nuxt@3.11.1:
     vue-bundle-renderer "^2.0.0"
     vue-devtools-stub "^0.1.0"
     vue-router "^4.3.0"
+
+nuxtjs-naive-ui@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/nuxtjs-naive-ui/-/nuxtjs-naive-ui-1.0.2.tgz#83aaafea888bca74ccb296f8b44e3ed1265b496a"
+  integrity sha512-qJ5ZKTEQieNaSNJFHdRCCz9SOLRB7Rg0vwzFJe64WYKt+SzDM2sQ7ZXj2raJzyIPBtKInQv6yDo2vvSBsLiUHA==
+  dependencies:
+    "@css-render/vue3-ssr" "^0.15.14"
+    "@nuxt/kit" "^3.11.2"
 
 nypm@^0.3.11, nypm@^0.3.8:
   version "0.3.11"

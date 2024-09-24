@@ -47,7 +47,6 @@ export default defineNuxtConfig({
 
   modules: [
     "@nuxtjs/tailwindcss",
-    "@bg-dev/nuxt-naiveui",
     "notivue/nuxt",
     "@nuxtjs/color-mode",
     "@pinia/nuxt",
@@ -62,6 +61,7 @@ export default defineNuxtConfig({
       },
     ],
     "nuxt-icon",
+    "nuxtjs-naive-ui",
   ],
 
   notivue: {
