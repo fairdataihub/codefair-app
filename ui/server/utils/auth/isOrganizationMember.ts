@@ -1,5 +1,4 @@
 import type { User } from "lucia";
-const { GITHUB_OAUTH_APP_ID } = process.env;
 
 const isOrganizationMember = async (
   event: any,
@@ -7,6 +6,8 @@ const isOrganizationMember = async (
   owner: string,
 ) => {
   const user = event.context.user as User;
+
+  const GITHUB_OAUTH_APP_ID = process.env.GITHUB_OAUTH_APP_ID || "";
 
   if (orgStatus) {
     // Check organization membership for a user
