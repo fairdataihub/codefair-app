@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "tunnel": "lt --port 3000 --subdomain codefair",
-    "build": "nuxt build",
+    "build": "npm run prisma:generate && nuxt build",
     "dev": "nuxt dev -p 3000",
     "generate": "nuxt generate",
     "preview": "nuxt preview",

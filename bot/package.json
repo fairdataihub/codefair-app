@@ -14,7 +14,7 @@
   "scripts": {
     "dev-old": "probot run ./index.js ",
     "dev": "nodemon --watch ./ --exec \"run-p dev:smee dev:start\"",
-    "start": "npm run migrate && node ./main.js",
+    "start": "npm run prisma:generate && node ./main.js",
     "dev:smee": "smee -u https://smee.io/n0NQN1LUpx2kI2T1 -p 3001",
     "dev:start": "node -r dotenv/config ./main.js",
     "build-css": "tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css",
@@ -23,12 +23,12 @@
     "migrate": "tsx ./migrate.ts",
     "dev-migrate": "tsx ./dev-migrate.ts",
     "test": "jest",
-    "prisma:generate": "prisma generate",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:migrate:dev": "prisma migrate dev --preview-feature",
     "prisma:studio": "prisma studio",
     "prisma:db:push": "prisma db push",
     "prisma:db:pull": "prisma db pull",
+    "prisma:generate": "prisma generate",
     "scripts:truncate:tables": "tsx ./scripts/prismaM.ts"
   },
   "dependencies": {
