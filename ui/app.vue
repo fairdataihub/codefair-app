@@ -1,10 +1,11 @@
 <template>
   <n-config-provider :theme-overrides="themeOverrides">
     <Notivue v-slot="item">
-      <NotivueSwipe :item="item">
-        <Notifications :item="item" :theme="pastelTheme" />
-      </NotivueSwipe>
+      <Notification :item="item" />
     </Notivue>
+    <!-- <Notivue v-slot="item">
+      <Notification :item="item" :theme="pastelTheme" />
+    </Notivue> -->
 
     <NuxtLoadingIndicator color="#be185d" :height="5" />
 
