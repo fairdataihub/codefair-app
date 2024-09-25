@@ -123,6 +123,14 @@ model CwlValidation {
   updated_at DateTime @updatedAt
 }
 
+model ZenodoToken {
+  id String @id @default(cuid())
+}
+
+model ZenodoDeposition {
+  id String @id @default(cuid())
+}
+
 model Analytics {
   id Int @id // used as repository_id
 
