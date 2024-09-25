@@ -95,6 +95,7 @@ export async function validateCWLFile(downloadUrl) {
     }
   } catch (e) {
     consola.error("Error validating CWL file:", e);
+    return [false, "Error validating CWL file"];
   }
 }
 
