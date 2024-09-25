@@ -417,7 +417,7 @@ export default async (app, { getRouter }) => {
 
     const cwlObject = {
       contains_cwl: cwl.length > 0 || false,
-      files: cwl,
+      files: cwl.filter(file => !removedCWLFiles.includes(file.path)),
       removed_files: removedCWLFiles,
     };
 
