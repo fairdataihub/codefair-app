@@ -120,6 +120,7 @@ export async function applyCWLTemplate(
   const identifier = createId();
   const overallSection = `\n\n## Language Specific Standards\n\nTo make your software FAIR is it important to follow language specific standards and best practices. Codefair will check below that your code complies with applicable standards,`;
   let url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${identifier}`;
+  consola.warn(subjects.cwl)
 
   // Delete file entries from db if they were removed from the repository
   if (subjects.cwl.removed_files.length > 0) {
