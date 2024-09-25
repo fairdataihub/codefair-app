@@ -93,13 +93,10 @@ export default defineNuxtConfig({
         resolvers: [NaiveUiResolver()],
       }),
     ],
+    server: {
+      hmr: {
+        clientPort: 3000,
+      },
+    },
   },
-
-  // vite: {
-  //   server: {
-  //     hmr: {
-  //       clientPort: 3000,
-  //     },
-  //   },
-  // },
 });
