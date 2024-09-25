@@ -13,7 +13,10 @@ export default defineNuxtPlugin((nuxtApp) => {
           headTags: collect(),
         };
       }
-      const originalMeta = originalRenderMeta();
+      const originalMeta =
+        typeof originalRenderMeta === "function"
+          ? originalRenderMeta()
+          : originalRenderMeta;
       if ("then" in originalMeta) {
         return originalMeta.then((resolvedOriginalMeta: any) => {
           return {
