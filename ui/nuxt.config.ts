@@ -80,6 +80,9 @@ export default defineNuxtConfig({
   ],
 
   notivue: {
+    notifications: {
+      global: {},
+    },
     position: "bottom-right",
   },
 
