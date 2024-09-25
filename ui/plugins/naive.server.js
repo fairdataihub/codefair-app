@@ -5,7 +5,7 @@ export default defineNuxtPlugin({
   name: "naive-ui",
   enforce: "pre",
   setup(nuxtApp) {
-    if (process.server) {
+    if (import.meta.server) {
       const { collect } = setup(nuxtApp.vueApp);
 
       nuxtApp.ssrContext?.head.hooks.hook("tags:resolve", (ctx) => {
