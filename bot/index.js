@@ -1,4 +1,3 @@
-// import { MongoClient } from "mongodb";
 import * as express from "express";
 import { consola } from "consola";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
@@ -15,8 +14,6 @@ import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
 
-checkEnvVariable("MONGODB_URI");
-checkEnvVariable("MONGODB_DB_NAME");
 checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
@@ -28,7 +25,7 @@ const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If yo
  * @param {import('probot').Probot} app
  */
 export default async (app, { getRouter }) => {
-  // Connect to the MongoDB database
+  // Connect to the database
   await intializeDatabase();
 
   const db = dbInstance;
