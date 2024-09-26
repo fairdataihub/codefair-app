@@ -3,6 +3,9 @@
     <Notivue v-slot="item">
       <Notification :item="item" :theme="pastelTheme" />
     </Notivue>
+    <!-- <Notivue v-slot="item">
+      <Notification :item="item" :theme="pastelTheme" />
+    </Notivue> -->
 
     <NuxtLoadingIndicator color="#be185d" :height="5" />
 

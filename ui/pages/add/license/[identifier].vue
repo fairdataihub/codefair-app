@@ -88,6 +88,7 @@ if (data.value) {
 const sanitize = (html: string) => sanitizeHtml(html);
 
 const updateLicenseContent = async (value: string) => {
+  console.log(value);
   if (!value) {
     return;
   }

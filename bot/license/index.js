@@ -205,7 +205,7 @@ export async function applyLicenseTemplate(
       licenseContentEmpty = true;
     }
   }
-  
+
   if (existingLicense) {
     consola.info("Updating existing license request...");
     badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
