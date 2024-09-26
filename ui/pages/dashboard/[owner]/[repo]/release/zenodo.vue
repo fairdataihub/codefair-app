@@ -17,6 +17,8 @@ const { owner, repo } = route.params as { owner: string; repo: string };
 const zenodoLoginUrl = ref("");
 const haveValidZenodoToken = ref(false);
 
+const selectedExistingDeposition = ref<Boolean | null>(null);
+
 const { data, error } = await useFetch(`/api/${owner}/${repo}/release/zenodo`, {
   headers: useRequestHeaders(["cookie"]),
   method: "GET",
@@ -36,6 +38,10 @@ if (data.value) {
   zenodoLoginUrl.value = data.value.zenodoLoginUrl;
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
 }
+
+const handleChange = (value: Boolean) => {
+  selectedExistingDeposition.value = value;
+};
 </script>
 
 <template>
@@ -64,12 +70,13 @@ if (data.value) {
       Looks like we have a valid Zenodo token for you. You can now continue to
       the next step.
     </p>
+
     <p v-else>
       Looks like we don't have a valid Zenodo token for you. Please login to
       Zenodo using the button below.
     </p>
 
-    <a :href="zenodoLoginUrl" v-if="!haveValidZenodoToken">
+    <a v-if="!haveValidZenodoToken" :href="zenodoLoginUrl">
       <n-button type="primary">
         <template #icon>
           <Icon name="simple-icons:zenodo" size="16" />
@@ -78,7 +85,27 @@ if (data.value) {
       </n-button>
     </a>
 
-    <CardPlaceholder placeholder="Login to Zenodo" />
+    <n-divider />
+
+    <h2 class="pb-6">Select Zenodo deposition</h2>
+
+    <n-radio
+      :checked="selectedExistingDeposition === true"
+      :value="true"
+      name="existingZenodoDeposition"
+      @change="handleChange"
+    >
+      Definitely Maybe
+    </n-radio>
+
+    <n-radio
+      :checked="selectedExistingDeposition === false"
+      :value="false"
+      name="existingZenodoDeposition"
+      @change="handleChange"
+    >
+      Be Here Now
+    </n-radio>
 
     <CardPlaceholder placeholder="Select Zenodo deposition or create new" />
 

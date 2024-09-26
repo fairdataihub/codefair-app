@@ -1,5 +1,12 @@
-import { el } from "@faker-js/faker";
 import type { User } from "lucia";
+
+interface ZenodoDeposition {
+  id: number;
+  title: string;
+  conceptrecid: string;
+  state: string;
+  submitted: string;
+}
 
 export default defineEventHandler(async (event) => {
   const ZENODO_ENDPOINT = process.env.ZENODO_ENDPOINT || "";
@@ -35,6 +42,8 @@ export default defineEventHandler(async (event) => {
     },
   });
 
+  const existingDepositions: ZenodoDeposition[] = [];
+
   if (!zenodoTokenInfo) {
     haveValidZenodoToken = false;
   } else if (zenodoTokenInfo && zenodoTokenInfo.expires_at < new Date()) {
@@ -52,11 +61,36 @@ export default defineEventHandler(async (event) => {
       haveValidZenodoToken = false;
     } else {
       haveValidZenodoToken = true;
+
+      const response = await zenodoTokenInfoResponse.json();
+
+      for (const item of response) {
+        existingDepositions.push({
+          id: item.id,
+          title: item.title,
+          conceptrecid: item.conceptrecid,
+          state: item.state,
+          submitted: item.submitted,
+        });
+      }
     }
   }
 
+  const zenodoDeposition = await prisma.zenodoDeposition.findFirst({
+    where: {
+      repository: {
+        owner,
+        repo,
+      },
+    },
+  });
+
   return {
-    zenodoLoginUrl: zenodoLoginUrl || "",
+    existing_zenodo_deposition_id:
+      zenodoDeposition?.existing_zenodo_deposition_id || null,
     haveValidZenodoToken,
+    token: zenodoTokenInfo?.token || "",
+    zenodoDepositions: existingDepositions,
+    zenodoLoginUrl: zenodoLoginUrl || "",
   };
 });
