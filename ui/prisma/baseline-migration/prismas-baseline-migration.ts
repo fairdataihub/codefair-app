@@ -19,10 +19,8 @@ function runCommand(command: string): void {
 
 // Step 1: Check and create baseline migration folder
 if (fs.existsSync(migrationsFolder)) {
-  console.log("Migrations folder exists. Archiving or deleting it.");
-  // You can archive it, rename, or delete it
-  // fs.renameSync(migrationsFolder, `${migrationsFolder}_backup_${Date.now()}`);
-  fs.rmSync(migrationsFolder, { recursive: true, force: true });
+  console.log("Baseline migration folder already exists, skipping...");
+  process.exit(0);
 }
 
 console.log("Creating baseline migration folder...");
