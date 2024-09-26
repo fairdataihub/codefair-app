@@ -44,7 +44,7 @@ const settingsOptions = [
   },
 ];
 
-const { data, error } = await useFetch(`/api/dashboard/${owner}/${repo}`, {
+const { data, error } = await useFetch(`/api/${owner}/${repo}/dashboard`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
@@ -107,7 +107,7 @@ const rerunCodefairChecks = async () => {
       "Please wait while we submit a request to rerun the codefair checks on this repository.",
   });
 
-  await $fetch(`/api/dashboard/${owner}/${repo}/rerun`, {
+  await $fetch(`/api/${owner}/${repo}/rerun`, {
     headers: useRequestHeaders(["cookie"]),
     method: "POST",
   })
@@ -427,26 +427,28 @@ const handleSettingsSelect = (key: any) => {
       </CardDashboard>
 
       <n-divider />
+
+      <h2 class="pb-6">Release</h2>
+
+      <CardDashboard title="Zenodo" subheader="todo.">
+        <template #icon>
+          <Icon name="simple-icons:zenodo" size="40" />
+        </template>
+
+        <template #content> hello </template>
+
+        <template #action>
+          <NuxtLink :to="`/dashboard/${owner}/${repo}/release/zenodo`">
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="material-symbols:package-2" size="16" />
+              </template>
+              Release on Zenodo
+            </n-button>
+          </NuxtLink>
+        </template>
+      </CardDashboard>
     </div>
-
-    <CardDashboard title="Zenodo" subheader="todo.">
-      <template #icon>
-        <Icon name="simple-icons:zenodo" size="40" />
-      </template>
-
-      <template #content> hello </template>
-
-      <template #action>
-        <NuxtLink :to="`/dashboard/${owner}/${repo}/zenodo/release`">
-          <n-button type="primary">
-            <template #icon>
-              <Icon name="material-symbols:package-2" size="16" />
-            </template>
-            Release on Zenodo
-          </n-button>
-        </NuxtLink>
-      </template>
-    </CardDashboard>
 
     <n-collapse v-if="devMode" class="mt-8">
       <n-collapse-item title="data" name="data">

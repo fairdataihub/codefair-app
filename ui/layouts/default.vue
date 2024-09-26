@@ -229,11 +229,11 @@ const toggleMobileMenu = () => {
             <n-breadcrumb-item
               v-if="
                 breadcrumbsStore.repo &&
-                breadcrumbsStore.feature.id === 'zenodo-settings'
+                breadcrumbsStore.feature.id === 'release-zenodo'
               "
             >
-              <Icon name="system-uicons:box" />
-              Zenodo
+              <Icon name="material-symbols:package-2" />
+              Release
             </n-breadcrumb-item>
 
             <n-breadcrumb-item
