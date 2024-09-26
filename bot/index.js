@@ -597,7 +597,7 @@ export default async (app, { getRouter }) => {
 
       const cwl = await getCWLFiles(context, owner, repository.name);
 
-      // Remove the section from the issue body starting from ## CWL Validations
+      // Remove the section from the issue body starting from ## Language Specific Standards
       const slicedBody = issueBody.substring(
         0,
         issueBody.indexOf("## Language Specific Standards"),
