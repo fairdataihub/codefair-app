@@ -24,10 +24,12 @@ const props = defineProps({
 </script>
 
 <template>
-  <div
-    class="my-10 flex h-[100px] w-full items-center justify-center rounded-lg border border-dashed border-slate-600"
-    :style="{ backgroundColor: getRandomPastelColor() }"
-  >
-    {{ placeholder }}
-  </div>
+  <ClientOnly>
+    <div
+      class="my-10 flex h-[100px] w-full items-center justify-center rounded-lg border border-dashed border-slate-600"
+      :style="{ backgroundColor: getRandomPastelColor() }"
+    >
+      {{ placeholder }}
+    </div>
+  </ClientOnly>
 </template>

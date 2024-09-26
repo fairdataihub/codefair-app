@@ -16,8 +16,9 @@ model User {
   created_at DateTime @default(now())
   last_login DateTime
 
-  sessions    Session[]
-  ZenodoToken ZenodoToken[]
+  sessions         Session[]
+  ZenodoToken      ZenodoToken[]
+  ZenodoDeposition ZenodoDeposition[]
 }
 
 model Session {
@@ -50,9 +51,10 @@ model Installation {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  CodeMetadata   CodeMetadata?
-  CwlValidation  CwlValidation?
-  LicenseRequest LicenseRequest?
+  CodeMetadata     CodeMetadata?
+  CwlValidation    CwlValidation?
+  LicenseRequest   LicenseRequest?
+  ZenodoDeposition ZenodoDeposition?
 }
 
 model LicenseRequest {
@@ -131,6 +133,15 @@ model ZenodoToken {
 
 model ZenodoDeposition {
   id String @id @default(cuid())
+
+  repository_id Int          @unique
+  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+
+  zenodo_id       Int?
+  zenodo_metadata Json @default("{}")
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model Analytics {

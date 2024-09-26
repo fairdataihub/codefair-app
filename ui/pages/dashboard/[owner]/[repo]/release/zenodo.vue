@@ -15,6 +15,7 @@ breadcrumbsStore.setFeature({
 const { owner, repo } = route.params as { owner: string; repo: string };
 
 const zenodoLoginUrl = ref("");
+const haveValidZenodoToken = ref(false);
 
 const { data, error } = await useFetch(`/api/${owner}/${repo}/release/zenodo`, {
   headers: useRequestHeaders(["cookie"]),
@@ -33,6 +34,7 @@ if (error.value) {
 if (data.value) {
   console.log(data.value);
   zenodoLoginUrl.value = data.value.zenodoLoginUrl;
+  haveValidZenodoToken.value = data.value.haveValidZenodoToken;
 }
 </script>
 
@@ -54,9 +56,20 @@ if (data.value) {
 
     <n-divider />
 
+    <pre>{{ data }}</pre>
+
     <h2 class="pb-6">Login to Zenodo</h2>
 
-    <a :href="zenodoLoginUrl">
+    <p v-if="haveValidZenodoToken">
+      Looks like we have a valid Zenodo token for you. You can now continue to
+      the next step.
+    </p>
+    <p v-else>
+      Looks like we don't have a valid Zenodo token for you. Please login to
+      Zenodo using the button below.
+    </p>
+
+    <a :href="zenodoLoginUrl" v-if="!haveValidZenodoToken">
       <n-button type="primary">
         <template #icon>
           <Icon name="simple-icons:zenodo" size="16" />

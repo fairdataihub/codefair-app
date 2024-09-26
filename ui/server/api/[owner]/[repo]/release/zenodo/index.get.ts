@@ -1,7 +1,9 @@
+import { el } from "@faker-js/faker";
 import type { User } from "lucia";
 
 export default defineEventHandler(async (event) => {
   const ZENODO_ENDPOINT = process.env.ZENODO_ENDPOINT || "";
+  const ZENODO_API_ENDPOINT = process.env.ZENODO_API_ENDPOINT || "";
   const ZENODO_CLIENT_ID = process.env.ZENODO_CLIENT_ID || "";
   const ZENODO_REDIRECT_URI = process.env.ZENODO_REDIRECT_URI || "";
 
@@ -25,7 +27,36 @@ export default defineEventHandler(async (event) => {
 
   const zenodoLoginUrl = `${ZENODO_ENDPOINT}/oauth/authorize?response_type=code&client_id=${ZENODO_CLIENT_ID}&scope=${encodeURIComponent("deposit:write deposit:actions")}&state=${encodeURIComponent(state)}&redirect_uri=${encodeURIComponent(ZENODO_REDIRECT_URI)}`;
 
+  let haveValidZenodoToken = false;
+
+  const zenodoTokenInfo = await prisma.zenodoToken.findFirst({
+    where: {
+      user_id: userId,
+    },
+  });
+
+  if (!zenodoTokenInfo) {
+    haveValidZenodoToken = false;
+  } else if (zenodoTokenInfo && zenodoTokenInfo.expires_at < new Date()) {
+    haveValidZenodoToken = false;
+  } else {
+    // Check if the token is valid
+    const zenodoTokenInfoResponse = await fetch(
+      `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoTokenInfo.token}`,
+      {
+        method: "GET",
+      },
+    );
+
+    if (!zenodoTokenInfoResponse.ok) {
+      haveValidZenodoToken = false;
+    } else {
+      haveValidZenodoToken = true;
+    }
+  }
+
   return {
     zenodoLoginUrl: zenodoLoginUrl || "",
+    haveValidZenodoToken,
   };
 });
