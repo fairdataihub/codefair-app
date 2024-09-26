@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
 
   const { licenseId, licenseContent } = parsedBody.data;
 
-  const licenseRequest = await prisma.licenseRequest.findFirst({
+  const licenseRequest = await prisma.licenseRequest.findUnique({
     where: {
       identifier,
     },
