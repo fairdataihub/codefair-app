@@ -7193,7 +7193,7 @@ markdown-it@^14.0.0:
     punycode.js "^2.3.1"
     uc.micro "^2.1.0"
 
-md-editor-v3@^4.13.5:
+md-editor-v3@4.20.2:
   version "4.20.2"
   resolved "https://registry.yarnpkg.com/md-editor-v3/-/md-editor-v3-4.20.2.tgz#6f7effab1b6d1160b8a502532c3d69d70903d39d"
   integrity sha512-zgwMOk5YI6H1fBAMisWPa3UkSWCzK5duDGi7+kDJliN32NnyNOXlk5njh3LvsD0hiGxpCU6O4TuFiXRVEJ6Qhg==

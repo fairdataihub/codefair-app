@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 
@@ -29,7 +27,7 @@ export default defineEventHandler(async (event) => {
   );
 
   const response: LicenseRequestGetResponse = {
-    licenseId: licenseRequest.license_id || null,
+    licenseId: licenseRequest.license_id,
     licenseContent: licenseRequest.license_content,
     identifier: licenseRequest.identifier,
     owner: licenseRequest.repository.owner,
