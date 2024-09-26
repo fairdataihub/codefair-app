@@ -227,6 +227,16 @@ const toggleMobileMenu = () => {
             </n-breadcrumb-item>
 
             <n-breadcrumb-item
+              v-if="
+                breadcrumbsStore.repo &&
+                breadcrumbsStore.feature.id === 'zenodo-settings'
+              "
+            >
+              <Icon name="system-uicons:box" />
+              Zenodo
+            </n-breadcrumb-item>
+
+            <n-breadcrumb-item
               v-if="breadcrumbsStore.feature.id"
               :clickable="false"
             >

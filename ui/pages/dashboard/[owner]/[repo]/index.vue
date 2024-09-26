@@ -429,6 +429,25 @@ const handleSettingsSelect = (key: any) => {
       <n-divider />
     </div>
 
+    <CardDashboard title="Zenodo" subheader="todo.">
+      <template #icon>
+        <Icon name="simple-icons:zenodo" size="40" />
+      </template>
+
+      <template #content> hello </template>
+
+      <template #action>
+        <NuxtLink :to="`/dashboard/${owner}/${repo}/zenodo/release`">
+          <n-button type="primary">
+            <template #icon>
+              <Icon name="material-symbols:package-2" size="16" />
+            </template>
+            Release on Zenodo
+          </n-button>
+        </NuxtLink>
+      </template>
+    </CardDashboard>
+
     <n-collapse v-if="devMode" class="mt-8">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
