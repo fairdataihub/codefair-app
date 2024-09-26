@@ -179,7 +179,7 @@ export async function applyLicenseTemplate(
   const existingLicense = await licenseCollection.findUnique({
     where: { repository_id: repository.id },
   });
-  let licenseId = "";
+  let licenseId = null;
   let licenseContent = "";
   let licenseContentNotEmpty = null;
 
@@ -201,7 +201,7 @@ export async function applyLicenseTemplate(
       licenseRequest.data.license.spdx_id === "NOASSERTION"
     ) {
       consola.info("Resetting license id and content back to null");
-      licenseId = "";
+      licenseId = null;
       licenseContent = "";
     }
 
