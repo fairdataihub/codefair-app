@@ -159,41 +159,37 @@ export default async (app, { getRouter }) => {
   app.on(
     ["installation.deleted", "installation_repositories.removed"],
     async (context) => {
-      const installationCollection = db.installation;
-      const licenseCollection = db.licenseRequest;
-      const metadataCollection = db.codeMetadata;
-      const cwlCollection = db.cwlValidation;
       const repositories =
         context.payload.repositories || context.payload.repositories_removed;
 
       for (const repository of repositories) {
         // Check if the installation is already in the database
-        const installation = await installationCollection.findUnique({
+        const installation = await db.installation.findUnique({
           where: {
             id: repository.id,
           },
         });
 
-        const license = await licenseCollection.findUnique({
+        const license = await db.licenseRequest.findUnique({
           where: {
             repository_id: repository.id,
           },
         });
 
-        const metadata = await metadataCollection.findUnique({
+        const metadata = await db.codeMetadata.findUnique({
           where: {
             repository_id: repository.id,
           },
         });
 
-        const cwl = await cwlCollection.findUnique({
+        const cwl = await db.cwlValidation.findUnique({
           where: {
             repository_id: repository.id,
           },
         });
 
         if (license) {
-          await licenseCollection.delete({
+          await db.licenseRequest.delete({
             where: {
               repository_id: repository.id,
             },
@@ -201,7 +197,7 @@ export default async (app, { getRouter }) => {
         }
 
         if (metadata) {
-          await metadataCollection.delete({
+          await db.codeMetadata.delete({
             where: {
               repository_id: repository.id,
             },
@@ -209,7 +205,7 @@ export default async (app, { getRouter }) => {
         }
 
         if (cwl) {
-          await cwlCollection.delete({
+          await db.cwlValidation.delete({
             where: {
               repository_id: repository.id,
             },
@@ -218,7 +214,7 @@ export default async (app, { getRouter }) => {
 
         if (installation) {
           // Remove from the database
-          await installationCollection.delete({
+          await db.installation.delete({
             where: {
               id: repository.id,
             },
@@ -256,8 +252,7 @@ export default async (app, { getRouter }) => {
 
     let fullCodefairRun = false;
 
-    const installationCollection = db.installation;
-    const installation = await installationCollection.findUnique({
+    const installation = await db.installation.findUnique({
       where: {
         id: repository.id,
       },
@@ -270,7 +265,7 @@ export default async (app, { getRouter }) => {
         installation.repo,
         repository,
         owner,
-        installationCollection,
+        db.installation,
       );
 
       if (installation?.action_count > 0) {
@@ -280,7 +275,7 @@ export default async (app, { getRouter }) => {
           "for",
           repository.name,
         );
-        const result = await installationCollection.update({
+        const result = await db.installation.update({
           data: {
             action_count: {
               set:
@@ -303,7 +298,7 @@ export default async (app, { getRouter }) => {
 
       if (installation?.action_count === 0) {
         consola.warn("Removing action limit for", repository.name);
-        installationCollection.update({
+        db.installation.update({
           data: {
             action_count: 0,
             latest_commit_date: latestCommitInfo.latestCommitDate,
@@ -466,15 +461,14 @@ export default async (app, { getRouter }) => {
 
     await verifyInstallationAnalytics(context, repository);
 
-    const installationCollection = db.installation;
-    const installation = await installationCollection.findUnique({
+    const installation = await db.installation.findUnique({
       where: {
         id: repository.id,
       },
     });
 
     if (installation?.action_count > 0) {
-      installationCollection.update({
+      db.installation.update({
         data: {
           action_count: {
             set:
@@ -490,7 +484,7 @@ export default async (app, { getRouter }) => {
 
     if (installation?.action_count === 0) {
       consola.info("Removing action limit for", repository.name);
-      installationCollection.update({
+      db.installation.update({
         data: {
           action_count: 0,
         },
@@ -554,7 +548,7 @@ export default async (app, { getRouter }) => {
 
     if (issueTitle === ISSUE_TITLE) {
       const installationCollection = db.installation;
-      const installation = await installationCollection.findUnique({
+      const installation = await db.installation.findUnique({
         where: {
           id: context.payload.repository.id,
         },
@@ -565,11 +559,11 @@ export default async (app, { getRouter }) => {
           installation.repo,
           context.payload.repository,
           context.payload.repository.owner.login,
-          installationCollection,
+          db.installation,
         );
 
         if (installation?.action_count > 0) {
-          installationCollection.update({
+          db.installation.update({
             data: {
               action_count: {
                 set:
@@ -585,7 +579,7 @@ export default async (app, { getRouter }) => {
         }
 
         if (installation?.action_count === 0) {
-          installationCollection.update({
+          db.installation.update({
             data: {
               action_count: 0,
             },
@@ -719,16 +713,14 @@ export default async (app, { getRouter }) => {
 
     if (issueTitle === ISSUE_TITLE) {
       // Modify installation collection
-      const installationCollection = db.installation;
-
-      const installation = await installationCollection.findUnique({
+      const installation = await db.installation.findUnique({
         where: {
           id: repository.id,
         },
       });
 
       if (installation) {
-        await installationCollection.update({
+        await db.installation.update({
           data: { disabled: true },
           where: { id: repository.id },
         });

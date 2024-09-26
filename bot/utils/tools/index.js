@@ -437,9 +437,7 @@ export async function isRepoPrivate(context, owner, repoName) {
  * @param {Number} repoId - The repository ID
  */
 export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
-  const collection = dbInstance.installation;
-
-  await collection.update({
+  await dbInstance.installation.update({
     data: {
       disabled: false,
       issue_number: issueNumber,

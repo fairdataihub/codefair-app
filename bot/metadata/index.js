@@ -281,8 +281,7 @@ export async function applyMetadataTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
-    const metadataCollection = dbInstance.codeMetadata;
-    const existingMetadata = await metadataCollection.findUnique({
+    const existingMetadata = await dbInstance.codeMetadata.findUnique({
       where: {
         repository_id: repository.id,
       },
@@ -323,7 +322,7 @@ export async function applyMetadataTemplate(
       // Entry does not exist in db, create a new one
       const newDate = new Date();
       const gatheredMetadata = await gatherMetadata(context, owner, repository);
-      await metadataCollection.create({
+      await dbInstance.codeMetadata.create({
         data: {
           citation_status: validCitation ? "valid" : "invalid",
           codemeta_status: validCodemeta ? "valid" : "invalid",
@@ -343,7 +342,7 @@ export async function applyMetadataTemplate(
       });
     } else {
       // Get the identifier of the existing metadata request
-      await metadataCollection.update({
+      await dbInstance.codeMetadata.update({
         data: {
           citation_status: validCitation ? "valid" : "invalid",
           codemeta_status: validCodemeta ? "valid" : "invalid",
@@ -409,8 +408,7 @@ export async function applyMetadataTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
-    const metadataCollection = dbInstance.codeMetadata;
-    const existingMetadata = await metadataCollection.findUnique({
+    const existingMetadata = await dbInstance.codeMetadata.findUnique({
       where: {
         repository_id: repository.id,
       },
@@ -420,7 +418,7 @@ export async function applyMetadataTemplate(
       // Entry does not exist in db, create a new one
       const newDate = new Date();
       // const gatheredMetadata = await gatherMetadata(context, owner, repository);
-      await metadataCollection.create({
+      await dbInstance.codeMetadata.create({
         data: {
           citation_status: validCitation ? "valid" : "invalid",
           codemeta_status: validCodemeta ? "valid" : "invalid",
@@ -440,7 +438,7 @@ export async function applyMetadataTemplate(
       });
     } else {
       // Get the identifier of the existing metadata request
-      await metadataCollection.update({
+      await dbInstance.codeMetadata.update({
         data: {
           citation_status: validCitation ? "valid" : "invalid",
           codemeta_status: validCodemeta ? "valid" : "invalid",

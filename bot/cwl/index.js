@@ -116,7 +116,6 @@ export async function applyCWLTemplate(
   context,
 ) {
   const privateRepo = await isRepoPrivate(context, owner, repository.name);
-  const cwlCollection = dbInstance.cwlValidation;
   const identifier = createId();
   const overallSection = `\n\n## Language Specific Standards\n\nTo make your software FAIR is it important to follow language specific standards and best practices. Codefair will check below that your code complies with applicable standards,`;
   let url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${identifier}`;
@@ -125,7 +124,7 @@ export async function applyCWLTemplate(
   // Delete file entries from db if they were removed from the repository
   if (subjects.cwl.removed_files.length > 0) {
     // Remove the files from the database
-    const existingCWL = await cwlCollection.findUnique({
+    const existingCWL = await dbInstance.cwlValidation.findUnique({
       where: {
         repository_id: repository.id,
       },
@@ -137,7 +136,7 @@ export async function applyCWLTemplate(
       });
 
       const newDate = new Date();
-      await cwlCollection.update({
+      await dbInstance.cwlValidation.update({
         data: {
           contains_cwl_files: newFiles.length > 0,
           files: newFiles,
@@ -154,7 +153,7 @@ export async function applyCWLTemplate(
   let validOverall = true;
   let tableContent = "";
   let failedCount = 0;
-  const existingCWL = await cwlCollection.findUnique({
+  const existingCWL = await dbInstance.cwlValidation.findUnique({
     where: {
       repository_id: repository.id,
     },
@@ -238,8 +237,7 @@ export async function applyCWLTemplate(
 
   // Entry does not exist in the db, create a new one (no old files exist, first time seeing cwl files)
   if (!existingCWL) {
-    const newDate = new Date();
-    await cwlCollection.create({
+    await dbInstance.cwlValidation.create({
       data: {
         contains_cwl_files: subjects.cwl.contains_cwl,
         files: cwlFiles,
@@ -285,7 +283,7 @@ export async function applyCWLTemplate(
       }
     }
 
-    await cwlCollection.update({
+    await dbInstance.cwlValidation.update({
       data: {
         contains_cwl_files: newFiles.length > 0,
         files: [...newFiles],
