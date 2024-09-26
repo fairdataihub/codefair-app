@@ -5,7 +5,7 @@
   "scripts": {
     "tunnel": "lt --port 3000 --subdomain codefair",
     "migrate:baseline": "node ./scripts/prismas-baseline-migration.js",
-    "build": "nuxt build && yarn prisma:migrate:deploy && yarn prisma:generate",
+    "build": "nuxt build && yarn migrate:baseline && yarn prisma:migrate:deploy && yarn prisma:generate",
     "dev": "nuxt dev -p 3000",
     "start": "node .output/server/index.mjs",
     "generate": "nuxt generate",
