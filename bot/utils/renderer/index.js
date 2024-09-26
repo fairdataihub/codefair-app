@@ -1,15 +1,14 @@
 import { consola } from "consola";
 import {
   applyGitHubIssueToDatabase,
-  createId,
   applyLastModifiedTemplate,
 } from "../tools/index.js";
 import { applyCWLTemplate } from "../../cwl/index.js";
 import { applyMetadataTemplate } from "../../metadata/index.js";
 import { applyLicenseTemplate } from "../../license/index.js";
+import { createArchivalTemplate } from "../../archival/index.js";
 
 const { GITHUB_APP_NAME } = process.env;
-const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
 /**
  * * Renders the body of the dashboard issue message
@@ -72,6 +71,14 @@ export async function renderIssues(
   }
 
   baseTemplate = await applyCWLTemplate(
+    subjects,
+    baseTemplate,
+    repository,
+    owner,
+    context,
+  );
+
+  baseTemplate = await applyArchivalTemplate(
     subjects,
     baseTemplate,
     repository,
