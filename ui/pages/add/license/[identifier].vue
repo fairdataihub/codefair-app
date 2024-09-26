@@ -247,7 +247,15 @@ const navigateToPR = () => {
         </p>
       </div>
 
+<<<<<<< HEAD
       <n-form-item class="mb-3 mt-5" :show-feedback="false" size="large">
+=======
+      <n-form-item
+        class="mb-3 mt-5"
+        :show-feedback="false"
+        size="large"
+      >
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
         <template #label>
           <p class="pb-1 text-base">Select a license</p>
         </template>

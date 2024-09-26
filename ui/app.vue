@@ -1,7 +1,11 @@
 <template>
   <n-config-provider :theme-overrides="themeOverrides">
     <Notivue v-slot="item">
+<<<<<<< HEAD
       <Notification :item="item" :theme="pastelTheme" />
+=======
+      <Notification :item="item" />
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
     </Notivue>
     <!-- <Notivue v-slot="item">
       <Notification :item="item" :theme="pastelTheme" />

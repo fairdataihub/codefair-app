@@ -52,6 +52,7 @@ const purgeTokens = async () => {
           {{ user?.github_id }}
         </p>
       </n-card>
+<<<<<<< HEAD
 
       <n-card title="Purge tokens">
         <p class="m-0">
@@ -63,6 +64,8 @@ const purgeTokens = async () => {
           </n-button>
         </p>
       </n-card>
+=======
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
     </n-flex>
   </section>
 </template>

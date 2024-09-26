@@ -285,10 +285,17 @@ export default async (app, { getRouter }) => {
                   ? 0
                   : installation.action_count - 1,
             },
+<<<<<<< HEAD
             latest_commit_date: latestCommitInfo.latest_commit_date,
             latest_commit_message: latestCommitInfo.latest_commit_message,
             latest_commit_sha: latestCommitInfo.latest_commit_sha,
             latest_commit_url: latestCommitInfo.latest_commit_url,
+=======
+            latest_commit_date: latestCommitInfo.latestCommitDate,
+            latest_commit_message: latestCommitInfo.latestCommitMessage,
+            latest_commit_sha: latestCommitInfo.latestCommitSha,
+            latest_commit_url: latestCommitInfo.latestCommitUrl,
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
           },
           where: { id: repository.id },
         });
@@ -303,10 +310,17 @@ export default async (app, { getRouter }) => {
         db.installation.update({
           data: {
             action_count: 0,
+<<<<<<< HEAD
             latest_commit_date: latestCommitInfo.latest_commit_date,
             latest_commit_message: latestCommitInfo.latest_commit_message,
             latest_commit_sha: latestCommitInfo.latest_commit_sha,
             latest_commit_url: latestCommitInfo.latest_commit_url,
+=======
+            latest_commit_date: latestCommitInfo.latestCommitDate,
+            latest_commit_message: latestCommitInfo.latestCommitMessage,
+            latest_commit_sha: latestCommitInfo.latestCommitSha,
+            latest_commit_url: latestCommitInfo.latestCommitUrl,
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
           },
           where: { id: repository.id },
         });
@@ -559,6 +573,7 @@ export default async (app, { getRouter }) => {
     const { repository } = context.payload;
     const owner = context.payload.repository.owner.login;
 
+<<<<<<< HEAD
     if (!issueTitle === ISSUE_TITLE) {
       return;
     }
@@ -600,6 +615,48 @@ export default async (app, { getRouter }) => {
           },
           where: { id: context.payload.repository.id },
         });
+=======
+    if (issueTitle === ISSUE_TITLE) {
+      const installationCollection = db.installation;
+      const installation = await db.installation.findUnique({
+        where: {
+          id: context.payload.repository.id,
+        },
+      });
+
+      if (installation) {
+        verifyRepoName(
+          installation.repo,
+          context.payload.repository,
+          context.payload.repository.owner.login,
+          db.installation,
+        );
+
+        if (installation?.action_count > 0) {
+          db.installation.update({
+            data: {
+              action_count: {
+                set:
+                  installation.action_count - 1 < 0
+                    ? 0
+                    : installation.action_count - 1,
+              },
+            },
+            where: { id: context.payload.repository.id },
+          });
+
+          return;
+        }
+
+        if (installation?.action_count === 0) {
+          db.installation.update({
+            data: {
+              action_count: 0,
+            },
+            where: { id: context.payload.repository.id },
+          });
+        }
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
       }
     }
 

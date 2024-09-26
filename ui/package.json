@@ -4,7 +4,11 @@
   "private": true,
   "scripts": {
     "tunnel": "lt --port 3000 --subdomain codefair",
+<<<<<<< HEAD
     "build": "yarn prisma:migrate:deploy && nuxt build && yarn prisma:generate",
+=======
+    "build": "nuxt build && yarn prisma:generate",
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
     "dev": "nuxt dev -p 3000",
     "start": "node .output/server/index.mjs",
     "generate": "nuxt generate",
@@ -51,7 +55,10 @@
     "zod": "^3.23.5"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "@faker-js/faker": "^9.0.3",
+=======
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
     "@nuxtjs/color-mode": "3.4.1",
     "@nuxtjs/device": "3.1.1",
     "@nuxtjs/eslint-config-typescript": "12.1.0",
@@ -79,8 +86,12 @@
     "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.14",
     "tailwindcss-debug-screens": "^2.2.1",
+<<<<<<< HEAD
     "tsx": "^4.19.1",
     "typescript": "^5.6.2"
+=======
+    "tsx": "^4.19.1"
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
   },
   "engines": {
     "node": ">=20.0.0"

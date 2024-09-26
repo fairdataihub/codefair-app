@@ -180,7 +180,11 @@ export async function applyLicenseTemplate(
   });
   let licenseId = null;
   let licenseContent = "";
+<<<<<<< HEAD
   let licenseContentEmpty = false;
+=======
+  let licenseContentNotEmpty = null;
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
 
   if (subjects.license) {
     // Get the license identifier
@@ -202,31 +206,68 @@ export async function applyLicenseTemplate(
       consola.info("Resetting license id and content back to null");
       licenseId = null;
       licenseContent = "";
+<<<<<<< HEAD
       licenseContentEmpty = true;
+=======
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
     }
   }
 
   if (existingLicense) {
+<<<<<<< HEAD
     consola.info("Updating existing license request...");
+=======
+    // Determine if the existing license is still valid
+    const isExistingLicenseValid =
+      existingLicense?.licenseContent && existingLicense.licenseId;
+
+    // Use the new license data if the existing license is invalid or the license has changed
+    const finalLicenseId =
+      isExistingLicenseValid && licenseId === "" && !subjects.license
+        ? existingLicense?.licenseId
+        : licenseId;
+    const finalLicenseContent =
+      isExistingLicenseValid && licenseContent === "" && !subjects.license
+        ? existingLicense?.licenseContent
+        : licenseContent;
+
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
     badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     await dbInstance.licenseRequest.update({
       data: {
         contains_license: subjects.license,
         license_status:
+<<<<<<< HEAD
         licenseContentEmpty
             ? "invalid"
             : "valid",
         license_id: licenseId,
         license_content: licenseContent,
+=======
+          finalLicenseContent &&
+          finalLicenseContent.trim().length > 0 &&
+          subjects.license
+            ? "valid"
+            : "invalid",
+        license_id: finalLicenseId,
+        license_content: finalLicenseContent,
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
       },
       where: { repository_id: repository.id },
     });
   } else {
+<<<<<<< HEAD
     consola.info("Creating new license request...");
     await dbInstance.licenseRequest.create({
       data: {
         contains_license: subjects.license,
         license_status: licenseContentEmpty ? "invalid" : "valid",
+=======
+    await dbInstance.licenseRequest.create({
+      data: {
+        contains_license: subjects.license,
+        license_status: licenseContentNotEmpty ? "valid" : "invalid",
+>>>>>>> 33e433d (refactor: ♻️ migrate mongdb to postgres (#69))
         license_id: licenseId,
         license_content: licenseContent,
         identifier,
