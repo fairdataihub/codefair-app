@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
   );
 
   const response: LicenseRequestGetResponse = {
-    licenseId: licenseRequest.license_id,
+    licenseId: licenseRequest.license_id || null,
     licenseContent: licenseRequest.license_content,
     identifier: licenseRequest.identifier,
     owner: licenseRequest.repository.owner,
