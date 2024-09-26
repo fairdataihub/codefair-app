@@ -70,8 +70,8 @@ model LicenseRequest {
   contains_license Boolean @default(false)
   license_status   String  @default("") // Valid values are valid, invalid
 
-  license_id      String @default("")
-  license_content String @default("")
+  license_id      String?
+  license_content String  @default("")
 
   pull_request_url String @default("")
 

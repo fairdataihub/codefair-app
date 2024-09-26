@@ -241,8 +241,8 @@ const navigateToPR = () => {
             class="text-blue-500 underline transition-all hover:text-blue-600"
             >https://choosealicense.com</NuxtLink
           >. To make your software reusable a license file is expected at the
-          root level of your repository. It is important to choose your license early since it will affect
-          your software's dependencies.
+          root level of your repository. It is important to choose your license
+          early since it will affect your software's dependencies.
         </p>
       </div>
 
@@ -254,6 +254,7 @@ const navigateToPR = () => {
         <template #label>
           <p class="pb-1 text-base font-bold">Select a license</p>
         </template>
+
         <n-select
           v-model:value="licenseId"
           placeholder="MIT License Modern Variant"

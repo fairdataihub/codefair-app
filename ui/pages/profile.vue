@@ -22,28 +22,19 @@ breadcrumbsStore.hideBreadcrumbs();
     <n-divider />
 
     <n-flex vertical size="large">
-      <Card>
-        <template #title>GitHub Username</template>
-
-        <template #content>
-          <NuxtLink
-            :to="`https://github.com/${user?.username}`"
-            target="_blank"
-          >
+      <n-card title="GitHub Username">
+        <NuxtLink :to="`https://github.com/${user?.username}`" target="_blank">
+          <p>
             {{ user?.username }}
-          </NuxtLink>
-        </template>
-      </Card>
-
-      <Card>
-        <template #title>GitHub ID</template>
-
-        <template #content>
-          <p class="m-0">
-            {{ user?.github_id }}
           </p>
-        </template>
-      </Card>
+        </NuxtLink>
+      </n-card>
+
+      <n-card title="GitHub ID">
+        <p class="m-0">
+          {{ user?.github_id }}
+        </p>
+      </n-card>
     </n-flex>
   </section>
 </template>
