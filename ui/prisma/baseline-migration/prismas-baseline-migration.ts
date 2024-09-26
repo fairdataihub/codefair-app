@@ -18,7 +18,8 @@ function runCommand(command: string): void {
 }
 
 // Step 1: Check and create baseline migration folder
-if (fs.existsSync(migrationsFolder)) {
+console.log("Verifying baseline migration folder...", initMigrationFolder);
+if (fs.existsSync(initMigrationFolder)) {
   console.log("Baseline migration folder already exists, skipping...");
   process.exit(0);
 }
