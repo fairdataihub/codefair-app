@@ -31,30 +31,30 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const licenseRequest = installation.LicenseRequest[0];
-  const codeMetadataRequest = installation.CodeMetadata[0];
-  const cwlValidation = installation.CwlValidation[0];
+  const licenseRequest = installation.LicenseRequest;
+  const codeMetadataRequest = installation.CodeMetadata;
+  const cwlValidation = installation.CwlValidation;
 
   return {
     codeMetadataRequest: codeMetadataRequest
       ? {
           citationStatus: codeMetadataRequest.citation_status || "invalid",
           codemetaStatus: codeMetadataRequest.codemeta_status || "invalid",
-          containsCitation: codeMetadataRequest.contains_citation,
-          containsCodemeta: codeMetadataRequest.contains_codemeta,
-          containsMetadata: codeMetadataRequest.contains_metadata,
-          identifier: codeMetadataRequest.identifier,
+          containsCitation: codeMetadataRequest.contains_citation || false,
+          containsCodemeta: codeMetadataRequest.contains_codemeta || false,
+          containsMetadata: codeMetadataRequest.contains_metadata || false,
+          identifier: codeMetadataRequest.identifier || "",
           owner: installation.owner,
           pullRequest: codeMetadataRequest.pull_request_url || "",
           repo: installation.repo,
-          timestamp: codeMetadataRequest.updated_at,
+          timestamp: codeMetadataRequest.updated_at || null,
         }
       : null,
     cwlValidation: cwlValidation
       ? {
-          containsCWL: cwlValidation.contains_cwl_files,
-          identifier: cwlValidation.identifier,
-          overallStatus: cwlValidation.overall_status,
+          containsCWL: cwlValidation.contains_cwl_files || false,
+          identifier: cwlValidation.identifier || "",
+          overallStatus: cwlValidation.overall_status || "",
           owner: installation.owner,
           repo: installation.repo,
         }
@@ -64,13 +64,13 @@ export default defineEventHandler(async (event) => {
     licenseRequest: licenseRequest
       ? {
           containsLicense: licenseRequest.contains_license || false,
-          identifier: licenseRequest.identifier,
-          licenseId: licenseRequest.license_id,
+          identifier: licenseRequest.identifier || "",
+          licenseId: licenseRequest.license_id || null,
           licenseStatus: licenseRequest.license_status || "invalid",
           owner: installation.owner,
           pullRequest: licenseRequest.pull_request_url || "",
           repo: installation.repo,
-          timestamp: licenseRequest.updated_at,
+          timestamp: licenseRequest.updated_at || null,
         }
       : null,
   };
