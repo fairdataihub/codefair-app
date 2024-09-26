@@ -137,8 +137,13 @@ model ZenodoDeposition {
   repository_id Int          @unique
   repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
 
+  existing_zenodo_deposition_id Boolean? //null, false, true
+
   zenodo_id       Int?
   zenodo_metadata Json @default("{}")
+
+  github_release_id Int?
+  github_tag_name   String?
 
   user_id String
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
