@@ -85,7 +85,7 @@ export default async (app, { getRouter }) => {
           latestCommitInfo.latest_commit_sha = latestCommit.data.sha || "";
           latestCommitInfo.latest_commit_message =
             latestCommit.data.commit.message || "";
-          latestCommitInfo.latest_commiut_url =
+          latestCommitInfo.latest_commit_url =
             latestCommit.data.html_url || "";
           latestCommitInfo.latest_commit_date =
             latestCommit.data.commit.committer.date || "";
