@@ -281,9 +281,10 @@ export async function applyMetadataTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
-    const metadataCollection = dbInstance.getDb().collection("codeMetadata");
-    const existingMetadata = await metadataCollection.findOne({
-      repositoryId: repository.id,
+    const existingMetadata = await dbInstance.codeMetadata.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
     });
 
     if (subjects.codemeta) {
@@ -319,43 +320,44 @@ export async function applyMetadataTemplate(
 
     if (!existingMetadata) {
       // Entry does not exist in db, create a new one
-      const newDate = Date.now();
+      const newDate = new Date();
       const gatheredMetadata = await gatherMetadata(context, owner, repository);
-      await metadataCollection.insertOne({
-        citation_status: validCitation ? "valid" : "invalid",
-        codemeta_status: validCodemeta ? "valid" : "invalid",
-        contains_citation: subjects.citation,
-        contains_codemeta: subjects.codemeta,
-        contains_metadata: subjects.codemeta && subjects.citation,
-        created_at: newDate,
-        identifier,
-        metadata: gatheredMetadata,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
+      await dbInstance.codeMetadata.create({
+        data: {
+          citation_status: validCitation ? "valid" : "invalid",
+          codemeta_status: validCodemeta ? "valid" : "invalid",
+          contains_citation: subjects.citation,
+          contains_codemeta: subjects.codemeta,
+          contains_metadata: subjects.codemeta && subjects.citation,
+          created_at: newDate,
+          identifier,
+          metadata: gatheredMetadata,
+          updated_at: newDate,
+          repository: {
+            connect: {
+              id: repository.id,
+            },
+          },
+        },
       });
     } else {
       // Get the identifier of the existing metadata request
-      await metadataCollection.updateOne(
-        { repositoryId: repository.id },
-        {
-          $set: {
-            citation_status: validCitation ? "valid" : "invalid",
-            codemeta_status: validCodemeta ? "valid" : "invalid",
-            contains_citation: subjects.citation,
-            contains_codemeta: subjects.codemeta,
-            contains_metadata: subjects.codemeta && subjects.citation,
-            updated_at: Date.now(),
-          },
+      await dbInstance.codeMetadata.update({
+        data: {
+          citation_status: validCitation ? "valid" : "invalid",
+          codemeta_status: validCodemeta ? "valid" : "invalid",
+          contains_citation: subjects.citation,
+          contains_codemeta: subjects.codemeta,
+          contains_metadata: subjects.codemeta && subjects.citation,
+          updated_at: new Date(),
         },
-      );
+        where: { repository_id: repository.id },
+      });
 
       url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
     }
     const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
-    baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemetada.json are expected at the root level of your repository. These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
+    baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemeta.json are expected at the root level of your repository. These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
   }
 
   if (subjects.codemeta && subjects.citation && subjects.license) {
@@ -406,46 +408,48 @@ export async function applyMetadataTemplate(
 
     let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
-    const metadataCollection = dbInstance.getDb().collection("codeMetadata");
-    const existingMetadata = await metadataCollection.findOne({
-      repositoryId: repository.id,
+    const existingMetadata = await dbInstance.codeMetadata.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
     });
 
     if (!existingMetadata) {
       // Entry does not exist in db, create a new one
-      const newDate = Date.now();
+      const newDate = new Date();
       // const gatheredMetadata = await gatherMetadata(context, owner, repository);
-      await metadataCollection.insertOne({
-        citation_status: validCitation ? "valid" : "invalid",
-        codemeta_status: validCodemeta ? "valid" : "invalid",
-        contains_citation: subjects.citation,
-        contains_codemeta: subjects.codemeta,
-        contains_metadata: subjects.codemeta && subjects.citation,
-        created_at: newDate,
-        identifier,
-        metadata,
-        open: true,
-        owner,
-        repo: repository.name,
-        repositoryId: repository.id,
-        updated_at: newDate,
+      await dbInstance.codeMetadata.create({
+        data: {
+          citation_status: validCitation ? "valid" : "invalid",
+          codemeta_status: validCodemeta ? "valid" : "invalid",
+          contains_citation: subjects.citation,
+          contains_codemeta: subjects.codemeta,
+          contains_metadata: subjects.codemeta && subjects.citation,
+          created_at: newDate,
+          identifier,
+          metadata,
+          repository: {
+            connect: {
+              id: repository.id,
+            },
+          },
+          updated_at: newDate,
+        },
       });
     } else {
       // Get the identifier of the existing metadata request
-      await metadataCollection.updateOne(
-        { repositoryId: repository.id },
-        {
-          $set: {
-            citation_status: validCitation ? "valid" : "invalid",
-            codemeta_status: validCodemeta ? "valid" : "invalid",
-            contains_citation: subjects.citation,
-            contains_codemeta: subjects.codemeta,
-            contains_metadata: subjects.codemeta && subjects.citation,
-            metadata,
-            updated_at: Date.now(),
-          },
+      await dbInstance.codeMetadata.update({
+        data: {
+          citation_status: validCitation ? "valid" : "invalid",
+          codemeta_status: validCodemeta ? "valid" : "invalid",
+          contains_citation: subjects.citation,
+          contains_codemeta: subjects.codemeta,
+          contains_metadata: subjects.codemeta && subjects.citation,
+          metadata,
+          updated_at: new Date(),
         },
-      );
+        where: { repository_id: repository.id },
+      });
 
       url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
     }
@@ -456,7 +460,7 @@ export async function applyMetadataTemplate(
   if (!subjects.license) {
     // License was not found
     const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemetada.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n${metadataBadge}`;
+    baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n${metadataBadge}`;
   }
 
   return baseTemplate;

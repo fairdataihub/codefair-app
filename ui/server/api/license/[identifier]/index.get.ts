@@ -1,20 +1,15 @@
-import { MongoClient } from "mongodb";
-
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 
   const { identifier } = event.context.params as { identifier: string };
 
-  const client = new MongoClient(process.env.MONGODB_URI as string, {});
-
-  await client.connect();
-
-  const db = client.db(process.env.MONGODB_DB_NAME);
-  const collection = db.collection("licenseRequests");
-
-  // Check if the request identifier exists in the database
-  const licenseRequest = await collection.findOne({
-    identifier,
+  const licenseRequest = await prisma.licenseRequest.findFirst({
+    where: {
+      identifier,
+    },
+    include: {
+      repository: true,
+    },
   });
 
   if (!licenseRequest) {
@@ -25,15 +20,19 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if the user is authorized to access the license request
-  await repoWritePermissions(event, licenseRequest.owner, licenseRequest.repo);
+  await repoWritePermissions(
+    event,
+    licenseRequest.repository.owner,
+    licenseRequest.repository.repo,
+  );
 
   const response: LicenseRequestGetResponse = {
-    licenseId: licenseRequest.licenseId,
-    licenseContent: licenseRequest.licenseContent,
+    licenseId: licenseRequest.license_id,
+    licenseContent: licenseRequest.license_content,
     identifier: licenseRequest.identifier,
-    owner: licenseRequest.owner,
-    repo: licenseRequest.repo,
-    timestamp: licenseRequest.timestamp,
+    owner: licenseRequest.repository.owner,
+    repo: licenseRequest.repository.repo,
+    timestamp: Date.parse(licenseRequest.updated_at.toString()),
   };
 
   // return the valid license request

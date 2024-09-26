@@ -1,38 +1,33 @@
 <template>
-  <NaiveConfig :theme-config="themeConfig">
+  <n-config-provider :theme-overrides="themeOverrides">
     <Notivue v-slot="item">
-      <NotivueSwipe :item="item">
-        <Notifications :item="item" :theme="pastelTheme" />
-      </NotivueSwipe>
+      <Notification :item="item" />
     </Notivue>
+    <!-- <Notivue v-slot="item">
+      <Notification :item="item" :theme="pastelTheme" />
+    </Notivue> -->
 
     <NuxtLoadingIndicator color="#be185d" :height="5" />
 
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-  </NaiveConfig>
+  </n-config-provider>
 </template>
 
 <script setup lang="ts">
 import { pastelTheme } from "notivue";
-import type { ThemeConfig } from "@bg-dev/nuxt-naiveui";
+import { NConfigProvider, type GlobalThemeOverrides } from "naive-ui";
 
-const themeConfig: ThemeConfig = {
-  dark: {}, // Theme options applied on dark mode
-  light: {}, // Theme options applied on light mode
-  mobile: {}, // Theme options applied on mobile only
-  mobileOrTablet: {}, // Theme options applied on mobile and tablet
-  shared: {
-    common: {
-      // primaryColor: "#898CF3",
-      primaryColor: "#6366f1",
-      primaryColorHover: "#4F46E5",
-      // primaryColorHover: "#6074aa",
-      primaryColorPressed: "#c7d6ff",
-      primaryColorSuppl: "#0ea5e9",
-    },
-  }, // Common theme options
+const themeOverrides: GlobalThemeOverrides = {
+  common: {
+    // primaryColor: "#898CF3",
+    primaryColor: "#6366f1",
+    primaryColorHover: "#4F46E5",
+    // primaryColorHover: "#6074aa",
+    primaryColorPressed: "#c7d6ff",
+    primaryColorSuppl: "#0ea5e9",
+  },
 };
 
 useHead({

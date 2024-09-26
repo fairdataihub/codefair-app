@@ -1,3 +1,7 @@
+import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
+import Components from "unplugin-vue-components/vite";
+import AutoImport from "unplugin-auto-import/vite";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   app: {
@@ -25,6 +29,18 @@ export default defineNuxtConfig({
     pageTransition: { name: "page", mode: "out-in" },
   },
 
+  build: {
+    transpile:
+      process.env.NODE_ENV === "production"
+        ? [
+            "naive-ui",
+            "vueuc",
+            "@css-render/vue3-ssr",
+            "@juggle/resize-observer",
+          ]
+        : ["@juggle/resize-observer"],
+  },
+
   colorMode: {
     classPrefix: "",
     classSuffix: "-mode",
@@ -47,7 +63,6 @@ export default defineNuxtConfig({
 
   modules: [
     "@nuxtjs/tailwindcss",
-    "@bg-dev/nuxt-naiveui",
     "notivue/nuxt",
     "@nuxtjs/color-mode",
     "@pinia/nuxt",
@@ -62,29 +77,44 @@ export default defineNuxtConfig({
       },
     ],
     "nuxt-icon",
+    "nuxtjs-naive-ui",
   ],
 
-  nitro: {
-    esbuild: {
-      options: {
-        target: "esnext",
-      },
-    },
-  },
-
   notivue: {
+    notifications: {
+      global: {},
+    },
     position: "bottom-right",
   },
 
-  runtimeConfig: {
-    GITHUB_OAUTH_APP_ID: process.env.GITHUB_OAUTH_APP_ID,
-  },
-
   vite: {
+    optimizeDeps: {
+      include:
+        process.env.NODE_ENV === "development" ? ["naive-ui", "vueuc"] : [],
+    },
+    plugins: [
+      AutoImport({
+        imports: [
+          {
+            "naive-ui": [
+              "useDialog",
+              "useMessage",
+              "useNotification",
+              "useLoadingBar",
+            ],
+          },
+        ],
+      }),
+      Components({
+        resolvers: [NaiveUiResolver()],
+      }),
+    ],
     server: {
       hmr: {
         clientPort: 3000,
       },
     },
   },
+
+  compatibilityDate: "2024-09-24",
 });

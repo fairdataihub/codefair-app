@@ -67,14 +67,14 @@ if (error.value) {
     message: "Please try again later",
   });
 
-  // console.error("Failed to fetch license details:", error.value);
+  console.error("Failed to fetch license details:", error.value);
 
   throw createError(error.value);
 }
 
 if (data.value) {
   githubRepo.value = `${data.value.owner}/${data.value.repo}`;
-  licenseId.value = data.value.licenseId ?? null;
+  licenseId.value = data.value.licenseId || null;
   licenseContent.value = data.value.licenseContent ?? "";
 
   if (licenseContent.value) {
@@ -88,6 +88,7 @@ if (data.value) {
 const sanitize = (html: string) => sanitizeHtml(html);
 
 const updateLicenseContent = async (value: string) => {
+  console.log(value);
   if (!value) {
     return;
   }
@@ -241,19 +242,20 @@ const navigateToPR = () => {
             class="text-blue-500 underline transition-all hover:text-blue-600"
             >https://choosealicense.com</NuxtLink
           >. To make your software reusable a license file is expected at the
-          root level of your repository. It is important to choose your license early since it will affect
-          your software's dependencies.
+          root level of your repository. It is important to choose your license
+          early since it will affect your software's dependencies.
         </p>
       </div>
 
       <n-form-item
-        class="mb-3 mt-5 font-bold"
+        class="mb-3 mt-5"
         :show-feedback="false"
         size="large"
       >
         <template #label>
-          <p class="pb-1 text-base font-bold">Select a license</p>
+          <p class="pb-1 text-base">Select a license</p>
         </template>
+
         <n-select
           v-model:value="licenseId"
           placeholder="MIT License Modern Variant"
@@ -266,34 +268,37 @@ const navigateToPR = () => {
       </n-form-item>
 
       <TransitionFade>
-        <div v-if="displayLicenseEditor">
-          <n-form-item :show-feedback="false" size="large">
-            <template #label>
-              <p class="pb-1 text-base font-bold">
-                Edit your license if required
-                <span class="text-right text-xs text-stone-500">
-                  (You can use the left panel to edit the content and right
-                  panel to preview the changes)
-                </span>
-              </p>
-            </template>
-            <MdEditor
-              v-model="licenseContent"
-              language="en-US"
-              :toolbars-exclude="[
-                'preview',
-                'fullscreen',
-                'save',
-                'pageFullscreen',
-                'github',
-                'catalog',
-              ]"
-              preview-theme="github"
-              :show-code-row-number="true"
-              :sanitize="sanitize"
-            />
-          </n-form-item>
-        </div>
+        <n-form-item
+          :show-feedback="false"
+          size="large"
+          v-show="displayLicenseEditor"
+        >
+          <template #label>
+            <p class="pb-1 text-base font-bold">
+              Edit your license if required
+              <span class="text-right text-xs text-stone-500">
+                (You can use the left panel to edit the content and right panel
+                to preview the changes)
+              </span>
+            </p>
+          </template>
+
+          <MdEditor
+            v-model="licenseContent"
+            language="en-US"
+            :toolbars-exclude="[
+              'preview',
+              'fullscreen',
+              'save',
+              'pageFullscreen',
+              'github',
+              'catalog',
+            ]"
+            preview-theme="github"
+            :show-code-row-number="true"
+            :sanitize="sanitize"
+          />
+        </n-form-item>
       </TransitionFade>
     </n-flex>
 

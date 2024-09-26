@@ -1,4 +1,3 @@
-import { MongoClient } from "mongodb";
 import { App } from "octokit";
 
 export default defineEventHandler(async (event) => {
@@ -9,16 +8,12 @@ export default defineEventHandler(async (event) => {
     repo: string;
   };
 
-  const client = new MongoClient(process.env.MONGODB_URI as string, {});
-
-  await client.connect();
-
-  const db = client.db(process.env.MONGODB_DB_NAME);
-  const installationCollection = db.collection("installation");
-
-  const installation = await installationCollection.findOne({
-    owner,
-    repo,
+  // Check if the installation exists in the database
+  const installation = await prisma.installation.findFirst({
+    where: {
+      owner,
+      repo,
+    },
   });
 
   if (!installation) {
@@ -50,7 +45,9 @@ export default defineEventHandler(async (event) => {
   });
 
   // Get the installation instance for the app
-  const octokit = await app.getInstallationOctokit(installation.installationId);
+  const octokit = await app.getInstallationOctokit(
+    installation.installation_id,
+  );
 
   // Edit the issue body with a hidden request for the validation
   try {

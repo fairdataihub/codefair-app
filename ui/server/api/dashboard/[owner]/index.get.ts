@@ -1,5 +1,3 @@
-import { MongoClient } from "mongodb";
-
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 
@@ -17,29 +15,24 @@ export default defineEventHandler(async (event) => {
   const isOrg = await ownerIsOrganization(event, owner);
   await isOrganizationMember(event, isOrg, owner);
 
-  const client = new MongoClient(process.env.MONGODB_URI as string, {});
-
-  await client.connect();
-
-  const db = client.db(process.env.MONGODB_DB_NAME);
-  const installationCollection = db.collection("installation");
-
   // Get all installations for the owner
-  const installations = await installationCollection
-    .find({
+  const installations = await prisma.installation.findMany({
+    where: {
       owner,
-    })
-    .toArray();
+    },
+  });
 
-  return installations.map((installation) => ({
-    action_count: installation.action_count as number,
-    installationId: installation.installationId as number,
-    isOrg,
-    latestCommitDate: installation.latestCommitDate as string,
-    latestCommitMessage: installation.latestCommitMessage as string,
-    latestCommitSha: installation.latestCommitSha as string,
-    latestCommitUrl: installation.latestCommitUrl as string,
-    repo: installation.repo as string,
-    repositoryId: installation.repositoryId as number,
-  }));
+  return installations.map((installation) => {
+    return {
+      action_count: installation.action_count as number,
+      installationId: installation.installation_id as number,
+      isOrg,
+      latestCommitDate: installation.latest_commit_date as string,
+      latestCommitMessage: installation.latest_commit_message as string,
+      latestCommitSha: installation.latest_commit_sha as string,
+      latestCommitUrl: installation.latest_commit_url as string,
+      repo: installation.repo as string,
+      repositoryId: installation.id as number,
+    };
+  });
 });

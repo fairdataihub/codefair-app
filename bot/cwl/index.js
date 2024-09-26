@@ -95,6 +95,7 @@ export async function validateCWLFile(downloadUrl) {
     }
   } catch (e) {
     consola.error("Error validating CWL file:", e);
+    return [false, "Error validating CWL file"];
   }
 }
 
@@ -115,16 +116,18 @@ export async function applyCWLTemplate(
   context,
 ) {
   const privateRepo = await isRepoPrivate(context, owner, repository.name);
-  const cwlCollection = dbInstance.getDb().collection("cwlValidation");
   const identifier = createId();
   const overallSection = `\n\n## Language Specific Standards\n\nTo make your software FAIR is it important to follow language specific standards and best practices. Codefair will check below that your code complies with applicable standards,`;
   let url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${identifier}`;
+  consola.warn(subjects.cwl)
 
   // Delete file entries from db if they were removed from the repository
   if (subjects.cwl.removed_files.length > 0) {
     // Remove the files from the database
-    const existingCWL = await cwlCollection.findOne({
-      repositoryId: repository.id,
+    const existingCWL = await dbInstance.cwlValidation.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
     });
 
     if (existingCWL) {
@@ -132,17 +135,15 @@ export async function applyCWLTemplate(
         return !subjects.cwl.removed_files.includes(file.path);
       });
 
-      const newDate = Date.now();
-      await cwlCollection.updateOne(
-        { repositoryId: repository.id },
-        {
-          $set: {
-            contains_cwl_files: newFiles.length > 0,
-            files: newFiles,
-            updated_at: newDate,
-          },
+      const newDate = new Date();
+      await dbInstance.cwlValidation.update({
+        data: {
+          contains_cwl_files: newFiles.length > 0,
+          files: newFiles,
+          updated_at: newDate,
         },
-      );
+        where: { repository_id: repository.id },
+      });
     }
   }
 
@@ -152,8 +153,10 @@ export async function applyCWLTemplate(
   let validOverall = true;
   let tableContent = "";
   let failedCount = 0;
-  const existingCWL = await cwlCollection.findOne({
-    repositoryId: repository.id,
+  const existingCWL = await dbInstance.cwlValidation.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
   });
 
   if (subjects.cwl.files.length === 0) {
@@ -196,7 +199,7 @@ export async function applyCWLTemplate(
       }
 
       // Create a new object for the file entry to be added to the db
-      const newDate = Date.now();
+      const newDate = new Date();
       cwlFiles.push({
         href: file.html_url,
         last_modified: newDate,
@@ -207,14 +210,21 @@ export async function applyCWLTemplate(
       });
 
       // Apply the validation file count to the analytics collection on the db
-      const analyticsCollection = dbInstance.getDb().collection("analytics");
-      await analyticsCollection.updateOne(
-        { repositoryId: repository.id },
-        {
-          $inc: { "cwlValidation.validatedFileCount": 1 },
+      const analyticsCollection = dbInstance.analytics;
+      await analyticsCollection.upsert({
+        create: {
+          cwl_validated_file_count: 1, // Start count at 1 when creating
+          id: repository.id, // Create a new record if it doesn't exist
         },
-        { upsert: true },
-      );
+        update: {
+          cwl_validated_file_count: {
+            increment: 1,
+          },
+        },
+        where: {
+          id: repository.id,
+        },
+      });
 
       // Add the file to the table content of the issue dashboard
       tableContent += `| ${file.path} | ${isValidCWL ? "✔️" : "❌"} |\n`;
@@ -227,17 +237,18 @@ export async function applyCWLTemplate(
 
   // Entry does not exist in the db, create a new one (no old files exist, first time seeing cwl files)
   if (!existingCWL) {
-    const newDate = Date.now();
-    await cwlCollection.insertOne({
-      contains_cwl_files: subjects.cwl.contains_cwl,
-      created_at: newDate,
-      files: cwlFiles,
-      identifier,
-      overall_status: validOverall ? "valid" : "invalid",
-      owner,
-      repo: repository.name,
-      repositoryId: repository.id,
-      updated_at: newDate,
+    await dbInstance.cwlValidation.create({
+      data: {
+        contains_cwl_files: subjects.cwl.contains_cwl,
+        files: cwlFiles,
+        identifier,
+        overall_status: validOverall ? "valid" : "invalid",
+        repository: {
+          connect: {
+            id: repository.id,
+          },
+        },
+      },
     });
 
     if (!cwlFiles.length > 0) {
@@ -272,23 +283,20 @@ export async function applyCWLTemplate(
       }
     }
 
-    await cwlCollection.updateOne(
-      { repositoryId: repository.id },
-      {
-        $set: {
-          contains_cwl_files: newFiles.length > 0,
-          files: [...newFiles],
-          overall_status: validOverall ? "valid" : "invalid",
-          updated_at: Date.now(),
-        },
+    await dbInstance.cwlValidation.update({
+      data: {
+        contains_cwl_files: newFiles.length > 0,
+        files: [...newFiles],
+        overall_status: validOverall ? "valid" : "invalid",
       },
-    );
+      where: { repository_id: repository.id },
+    });
 
     if (!newFiles.length > 0) {
       // All CWL files were removed from the repository
       consola.warn(
         "All CWL files were removed from:",
-        existingCWL.repo,
+        repository.name,
         "skipping CWL section",
       );
       return baseTemplate;

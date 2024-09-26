@@ -1,6 +1,7 @@
 import { OAuth2RequestError } from "arctic";
 import { generateIdFromEntropySize } from "lucia";
-import clientPromise from "~/server/utils/mongodb";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 import { github } from "~/server/utils/auth";
 
 interface GitHubUser {
@@ -9,11 +10,6 @@ interface GitHubUser {
 }
 
 export default defineEventHandler(async (event) => {
-  const client = await clientPromise;
-  await client.connect();
-
-  const db = client.db(process.env.MONGODB_DB_NAME);
-
   const query = getQuery(event);
 
   const code = query.code?.toString() ?? null;
@@ -38,31 +34,27 @@ export default defineEventHandler(async (event) => {
     });
     const githubUser: GitHubUser = await githubUserResponse.json();
 
-    const existingUser = await db.collection("users").findOne({
-      github_id: githubUser.id,
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        github_id: parseInt(githubUser.id),
+      },
     });
 
     if (existingUser) {
-      const { _id } = existingUser;
+      const { id } = existingUser;
 
-      const session = await lucia.createSession(_id, {});
+      const session = await lucia.createSession(id, {});
 
       // Add a last login timestamp to the user
-      await db.collection("users").updateOne(
-        {
-          _id,
+      await prisma.user.update({
+        data: {
+          last_login: new Date(),
+          access_token: tokens.accessToken,
         },
-        {
-          $set: {
-            access_token: tokens.accessToken,
-            last_login: Date.now(),
-          },
+        where: {
+          id,
         },
-      );
-
-      // Update the session in the DB
-
-      // await sessions.updateOne({ _id: session.id }, { $set: { _id: _id } });
+      });
 
       appendHeader(
         event,
@@ -78,12 +70,14 @@ export default defineEventHandler(async (event) => {
 
     const userId = generateIdFromEntropySize(10); // 16 characters long
 
-    await db.collection("users").insertOne({
-      username: githubUser.login,
-      _id: userId,
-      access_token: tokens.accessToken,
-      created_at: Date.now(),
-      github_id: githubUser.id,
+    await prisma.user.create({
+      data: {
+        id: userId,
+        username: githubUser.login,
+        access_token: tokens.accessToken,
+        github_id: parseInt(githubUser.id),
+        last_login: new Date(),
+      },
     });
 
     const session = await lucia.createSession(userId, {});

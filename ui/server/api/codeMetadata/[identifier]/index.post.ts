@@ -1,4 +1,3 @@
-import { MongoClient } from "mongodb";
 import { App } from "octokit";
 import { nanoid } from "nanoid";
 import dayjs from "dayjs";
@@ -9,16 +8,13 @@ export default defineEventHandler(async (event) => {
 
   const { identifier } = event.context.params as { identifier: string };
 
-  const client = new MongoClient(process.env.MONGODB_URI as string, {});
-
-  await client.connect();
-
-  const db = client.db(process.env.MONGODB_DB_NAME);
-  const collection = db.collection("codeMetadata");
-  const installation = db.collection("installation");
-
-  const codeMetadataRequest = await collection.findOne({
-    identifier,
+  const codeMetadataRequest = await prisma.codeMetadata.findFirst({
+    include: {
+      repository: true,
+    },
+    where: {
+      identifier,
+    },
   });
 
   if (!codeMetadataRequest) {
@@ -28,11 +24,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const installationId = await installation.findOne({
-    repositoryId: codeMetadataRequest.repositoryId,
-  });
-
-  if (!installationId) {
+  if (!codeMetadataRequest.repository.installation_id) {
     throw createError({
       statusCode: 404,
       statusMessage: "Installation not found",
@@ -42,8 +34,8 @@ export default defineEventHandler(async (event) => {
   // Check if the user is authorized to access the request
   await repoWritePermissions(
     event,
-    codeMetadataRequest.owner,
-    codeMetadataRequest.repo,
+    codeMetadataRequest.repository.owner,
+    codeMetadataRequest.repository.repo,
   );
 
   const codeMetadataRecord =
@@ -256,7 +248,7 @@ export default defineEventHandler(async (event) => {
   });
 
   const octokit = await app.getInstallationOctokit(
-    installationId.installationId,
+    codeMetadataRequest.repository.installation_id,
   );
 
   // Get the default branch of the repository
@@ -266,8 +258,8 @@ export default defineEventHandler(async (event) => {
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
-      owner: codeMetadataRequest.owner,
-      repo: codeMetadataRequest.repo,
+      owner: codeMetadataRequest.repository.owner,
+      repo: codeMetadataRequest.repository.repo,
     },
   );
 
@@ -280,9 +272,9 @@ export default defineEventHandler(async (event) => {
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
-      owner: codeMetadataRequest.owner,
+      owner: codeMetadataRequest.repository.owner,
       ref: `heads/${defaultBranch}`,
-      repo: codeMetadataRequest.repo,
+      repo: codeMetadataRequest.repository.repo,
     },
   );
 
@@ -294,9 +286,9 @@ export default defineEventHandler(async (event) => {
     headers: {
       "X-GitHub-Api-Version": "2022-11-28",
     },
-    owner: codeMetadataRequest.owner,
+    owner: codeMetadataRequest.repository.owner,
     ref: `refs/heads/${newBranchName}`,
-    repo: codeMetadataRequest.repo,
+    repo: codeMetadataRequest.repository.repo,
     sha: refData.object.sha,
   });
 
@@ -310,10 +302,10 @@ export default defineEventHandler(async (event) => {
         headers: {
           "X-GitHub-Api-Version": "2022-11-28",
         },
-        owner: codeMetadataRequest.owner,
+        owner: codeMetadataRequest.repository.owner,
         path: "codemeta.json",
         ref: newBranchName,
-        repo: codeMetadataRequest.repo,
+        repo: codeMetadataRequest.repository.repo,
       },
     );
 
@@ -331,9 +323,9 @@ export default defineEventHandler(async (event) => {
       "X-GitHub-Api-Version": "2022-11-28",
     },
     message: `feat: ✨ ${existingCodeMetaSHA ? "update" : "add"} codemeta file`,
-    owner: codeMetadataRequest.owner,
+    owner: codeMetadataRequest.repository.owner,
     path: "codemeta.json",
-    repo: codeMetadataRequest.repo,
+    repo: codeMetadataRequest.repository.repo,
     ...(existingCodeMetaSHA && { sha: existingCodeMetaSHA }),
   });
 
@@ -347,10 +339,10 @@ export default defineEventHandler(async (event) => {
         headers: {
           "X-GitHub-Api-Version": "2022-11-28",
         },
-        owner: codeMetadataRequest.owner,
+        owner: codeMetadataRequest.repository.owner,
         path: "CITATION.cff",
         ref: newBranchName,
-        repo: codeMetadataRequest.repo,
+        repo: codeMetadataRequest.repository.repo,
       },
     );
 
@@ -423,9 +415,9 @@ export default defineEventHandler(async (event) => {
     message: `feat: ✨ ${
       existingCitationCFFSHA ? "update" : "add"
     } citation file`,
-    owner: codeMetadataRequest.owner,
+    owner: codeMetadataRequest.repository.owner,
     path: "CITATION.cff",
-    repo: codeMetadataRequest.repo,
+    repo: codeMetadataRequest.repository.repo,
     ...(existingCitationCFFSHA && { sha: existingCitationCFFSHA }),
   });
 
@@ -446,76 +438,36 @@ export default defineEventHandler(async (event) => {
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
-      owner: codeMetadataRequest.owner,
-      repo: codeMetadataRequest.repo,
+      owner: codeMetadataRequest.repository.owner,
+      repo: codeMetadataRequest.repository.repo,
     },
   );
 
   // Update the analytics data for the repository
-  const analytics = db.collection("analytics");
-
-  // Get the existing analytics data for the repository
-  const existingAnalytics = await analytics.findOne({
-    repositoryId: codeMetadataRequest.repositoryId,
+  const existingAnalytics = await prisma.analytics.findUnique({
+    where: {
+      id: codeMetadataRequest.repository.id,
+    },
   });
 
-  // Check if the codemeta analytics data exists
-  if (existingAnalytics?.codeMetadata?.codemeta?.updateCodemeta) {
-    await analytics.updateOne(
-      {
-        repositoryId: codeMetadataRequest.repositoryId,
+  if (!existingAnalytics) {
+    await prisma.analytics.create({
+      data: {
+        id: codeMetadataRequest.repository.id,
+        update_citation: 1,
+        update_codemeta: 1,
       },
-      {
-        $inc: {
-          "codeMetadata.codemeta.updateCodemeta": 1,
-        },
-      },
-    );
+    });
   } else {
-    await analytics.updateOne(
-      {
-        repositoryId: codeMetadataRequest.repositoryId,
+    await prisma.analytics.update({
+      data: {
+        update_citation: existingAnalytics.update_citation + 1,
+        update_codemeta: existingAnalytics.update_codemeta + 1,
       },
-      {
-        $set: {
-          "codeMetadata.codemeta": {
-            updateCodemeta: 1,
-          },
-        },
+      where: {
+        id: existingAnalytics.id,
       },
-      {
-        upsert: true,
-      },
-    );
-  }
-
-  if (existingAnalytics?.codeMetadata?.citationCFF?.updateCitationCFF) {
-    await analytics.updateOne(
-      {
-        repositoryId: codeMetadataRequest.repositoryId,
-      },
-      {
-        $inc: {
-          "codeMetadata.citationCFF.updateCitationCFF": 1,
-        },
-      },
-    );
-  } else {
-    await analytics.updateOne(
-      {
-        repositoryId: codeMetadataRequest.repositoryId,
-      },
-      {
-        $set: {
-          "codeMetadata.citationCFF": {
-            updateCitationCFF: 1,
-          },
-        },
-      },
-      {
-        upsert: true,
-      },
-    );
+    });
   }
 
   return {

@@ -1,5 +1,3 @@
-import { MongoClient } from "mongodb";
-
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 
@@ -13,17 +11,17 @@ export default defineEventHandler(async (event) => {
   const isOrg = await ownerIsOrganization(event, owner);
   await isOrganizationMember(event, isOrg, owner);
 
-  const client = new MongoClient(process.env.MONGODB_URI as string, {});
-
-  await client.connect();
-
-  const db = client.db(process.env.MONGODB_DB_NAME);
-  const installationCollection = db.collection("installation");
-
   // Check if the installation exists in the database
-  const installation = await installationCollection.findOne({
-    owner,
-    repo,
+  const installation = await prisma.installation.findFirst({
+    include: {
+      CodeMetadata: true,
+      CwlValidation: true,
+      LicenseRequest: true,
+    },
+    where: {
+      owner,
+      repo,
+    },
   });
 
   if (!installation) {
@@ -33,73 +31,46 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { repositoryId } = installation;
-
-  const licenseRequestsCollection = db.collection("licenseRequests");
-
-  // Get all license requests for the repository sorted by timestamp
-  const licenseRequest = await licenseRequestsCollection.findOne({
-    repositoryId,
-  });
-
-  const codeMetadataCollection = db.collection("codeMetadata");
-
-  // Get the code metadata request for the repository
-
-  const codeMetadataRequest = await codeMetadataCollection.findOne({
-    repositoryId,
-  });
-
-  const cwlValidationCollection = db.collection("cwlValidation");
-
-  // Get the CWL validation data for the repository
-
-  const cwlValidation = await cwlValidationCollection.findOne({
-    repositoryId,
-  });
+  const licenseRequest = installation.LicenseRequest;
+  const codeMetadataRequest = installation.CodeMetadata;
+  const cwlValidation = installation.CwlValidation;
 
   return {
     codeMetadataRequest: codeMetadataRequest
       ? {
-          citationStatus:
-            (codeMetadataRequest.citation_status as string) || "invalid",
-          codemetaStatus:
-            (codeMetadataRequest.codemeta_status as string) || "invalid",
-          containsCitation: codeMetadataRequest.contains_citation as boolean,
-          containsCodemeta: codeMetadataRequest.contains_codemeta as boolean,
-          containsMetadata: codeMetadataRequest.contains_metadata as boolean,
-          identifier: codeMetadataRequest.identifier as string,
-          open: codeMetadataRequest.open as boolean,
-          owner: codeMetadataRequest.owner as string,
-          pullRequest: (codeMetadataRequest.pullRequestURL as string) || "",
-          repo: codeMetadataRequest.repo as string,
-          timestamp: codeMetadataRequest.updated_at as string,
+          citationStatus: codeMetadataRequest.citation_status || "invalid",
+          codemetaStatus: codeMetadataRequest.codemeta_status || "invalid",
+          containsCitation: codeMetadataRequest.contains_citation || false,
+          containsCodemeta: codeMetadataRequest.contains_codemeta || false,
+          containsMetadata: codeMetadataRequest.contains_metadata || false,
+          identifier: codeMetadataRequest.identifier || "",
+          owner: installation.owner,
+          pullRequest: codeMetadataRequest.pull_request_url || "",
+          repo: installation.repo,
+          timestamp: codeMetadataRequest.updated_at || null,
         }
       : null,
     cwlValidation: cwlValidation
       ? {
-          containsCWL: cwlValidation.contains_cwl_files as boolean,
-          identifier: cwlValidation.identifier as string,
-          open: cwlValidation.open as boolean,
-          overallStatus: cwlValidation.overall_status as string,
-          owner: cwlValidation.owner as string,
-          repo: cwlValidation.repo as string,
+          containsCWL: cwlValidation.contains_cwl_files || false,
+          identifier: cwlValidation.identifier || "",
+          overallStatus: cwlValidation.overall_status || "",
+          owner: installation.owner,
+          repo: installation.repo,
         }
       : null,
-    installationId: installation.installationId as number,
-    isOrganization: isOrg as boolean,
+    installationId: installation.installation_id,
+    isOrganization: isOrg,
     licenseRequest: licenseRequest
       ? {
-          containsLicense:
-            (licenseRequest.contains_license as boolean) || false,
-          identifier: licenseRequest.identifier as string,
-          licenseId: licenseRequest.licenseId as string,
-          licenseStatus: (licenseRequest.license_status as string) || "invalid",
-          open: licenseRequest.open as boolean,
-          owner: licenseRequest.owner as string,
-          pullRequest: (licenseRequest.pullRequestURL as string) || "",
-          repo: licenseRequest.repo as string,
-          timestamp: licenseRequest.updated_at as string,
+          containsLicense: licenseRequest.contains_license || false,
+          identifier: licenseRequest.identifier || "",
+          licenseId: licenseRequest.license_id || null,
+          licenseStatus: licenseRequest.license_status || "invalid",
+          owner: installation.owner,
+          pullRequest: licenseRequest.pull_request_url || "",
+          repo: installation.repo,
+          timestamp: licenseRequest.updated_at || null,
         }
       : null,
   };

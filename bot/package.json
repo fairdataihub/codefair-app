@@ -14,26 +14,36 @@
   "scripts": {
     "dev-old": "probot run ./index.js ",
     "dev": "nodemon --watch ./ --exec \"run-p dev:smee dev:start\"",
-    "start": "npm run migrate && node ./main.js",
+    "start": "node ./main.js",
     "dev:smee": "smee -u https://smee.io/n0NQN1LUpx2kI2T1 -p 3001",
     "dev:start": "node -r dotenv/config ./main.js",
     "build-css": "tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css",
     "watch-css": "npx tailwindcss build -i ./public/assets/css/tailwind.css -o ./public/assets/css/styles.css --watch",
-    "build": "npm run build-css",
+    "build": "npm run build-css && npm run prisma:generate",
     "migrate": "tsx ./migrate.ts",
     "dev-migrate": "tsx ./dev-migrate.ts",
-    "test": "jest"
+    "test": "jest",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev --preview-feature",
+    "prisma:studio": "prisma studio",
+    "prisma:db:push": "prisma db push",
+    "prisma:db:pull": "prisma db pull",
+    "prisma:generate": "prisma generate",
+    "scripts:truncate:tables": "tsx ./scripts/prismaM.ts"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",
+    "@prisma/client": "^5.19.1",
     "axios": "^1.6.8",
     "consola": "^3.2.3",
     "cwl-ts-auto": "^0.1.3",
     "dayjs": "^1.11.11",
+    "express": "^4.21.0",
     "humanparser": "^2.7.0",
     "js-yaml": "^4.1.0",
     "mongodb": "^6.5.0",
     "nanoid": "^5.0.7",
+    "prisma": "^5.19.1",
     "probot": "12.4.0",
     "url": "^0.11.3"
   },
@@ -53,16 +63,7 @@
   "jest": {
     "testEnvironment": "node"
   },
-  "packageManager": "pnpm@9.1.4",
   "engines": {
     "node": ">=20"
-  },
-  "package-manager-strict": false,
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": ">= 9.0.0",
-      "onFail": "warn"
-    }
   }
 }
