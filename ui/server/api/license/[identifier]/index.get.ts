@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 

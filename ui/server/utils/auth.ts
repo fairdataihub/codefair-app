@@ -18,7 +18,7 @@ export const lucia = new Lucia(adapter, {
     return {
       username: attributes.username,
       access_token: attributes.access_token,
-      githubId: attributes.github_id,
+      github_id: attributes.github_id,
     };
   },
   sessionCookie: {

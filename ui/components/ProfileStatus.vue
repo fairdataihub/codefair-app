@@ -13,7 +13,7 @@ async function logout() {
 
 <template>
   <n-flex v-if="loggedIn" align="center">
-    <NuxtLink :to="`/`" class="flex items-center">
+    <NuxtLink :to="`/profile`" class="flex items-center">
       <n-avatar
         round
         :src="`https://avatars.githubusercontent.com/u/${user?.github_id}?v=4`"

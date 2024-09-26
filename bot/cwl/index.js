@@ -298,7 +298,7 @@ export async function applyCWLTemplate(
       // All CWL files were removed from the repository
       consola.warn(
         "All CWL files were removed from:",
-        existingCWL.repo,
+        repository.name,
         "skipping CWL section",
       );
       return baseTemplate;
