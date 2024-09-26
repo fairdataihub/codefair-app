@@ -173,10 +173,9 @@ export async function applyLicenseTemplate(
   owner,
   context,
 ) {
-  const licenseCollection = dbInstance.licenseRequest;
   const identifier = createId();
   let badgeURL = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
-  const existingLicense = await licenseCollection.findUnique({
+  const existingLicense = await dbInstance.licenseRequest.findUnique({
     where: { repository_id: repository.id },
   });
   let licenseId = null;
@@ -224,7 +223,7 @@ export async function applyLicenseTemplate(
         : licenseContent;
 
     badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
-    await licenseCollection.update({
+    await dbInstance.licenseRequest.update({
       data: {
         contains_license: subjects.license,
         license_status:
@@ -239,8 +238,7 @@ export async function applyLicenseTemplate(
       where: { repository_id: repository.id },
     });
   } else {
-    const newDate = new Date();
-    await licenseCollection.create({
+    await dbInstance.licenseRequest.create({
       data: {
         contains_license: subjects.license,
         license_status: licenseContentNotEmpty ? "valid" : "invalid",
