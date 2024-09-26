@@ -49,6 +49,7 @@ export default defineEventHandler(async (event) => {
       await prisma.user.update({
         data: {
           last_login: new Date(),
+          access_token: tokens.accessToken,
         },
         where: {
           id,
