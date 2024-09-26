@@ -248,7 +248,7 @@ const navigateToPR = () => {
       </div>
 
       <n-form-item
-        class="mb-3 mt-5 font-bold"
+        class="mb-3 mt-5"
         :show-feedback="false"
         size="large"
       >
