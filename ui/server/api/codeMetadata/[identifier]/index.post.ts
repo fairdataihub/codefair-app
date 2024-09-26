@@ -444,7 +444,7 @@ export default defineEventHandler(async (event) => {
   );
 
   // Update the analytics data for the repository
-  const existingAnalytics = await prisma.analytics.findFirst({
+  const existingAnalytics = await prisma.analytics.findUnique({
     where: {
       id: codeMetadataRequest.repository.id,
     },
