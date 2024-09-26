@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 // Define migration folder paths
-const migrationsFolder = path.join(__dirname, "prisma", "migrations");
+const migrationsFolder = path.join(__dirname, "ui", "prisma", "migrations");
 const initMigrationFolder = path.join(migrationsFolder, "0_init");
 
 // Function to run shell commands
