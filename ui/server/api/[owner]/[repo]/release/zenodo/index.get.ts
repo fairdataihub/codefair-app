@@ -86,7 +86,7 @@ export default defineEventHandler(async (event) => {
   });
 
   return {
-    existing_zenodo_deposition_id:
+    existingZenodoDepositionId:
       zenodoDeposition?.existing_zenodo_deposition_id || null,
     haveValidZenodoToken,
     token: zenodoTokenInfo?.token || "",
