@@ -17,7 +17,8 @@ const { owner, repo } = route.params as { owner: string; repo: string };
 const zenodoLoginUrl = ref("");
 const haveValidZenodoToken = ref(false);
 
-const selectedExistingDeposition = ref<Boolean | null>(null);
+const selectedExistingDeposition = ref<String | null>(null);
+const selectedDeposition = ref<String | null>(null);
 
 const { data, error } = await useFetch(`/api/${owner}/${repo}/release/zenodo`, {
   headers: useRequestHeaders(["cookie"]),
@@ -37,10 +38,13 @@ if (data.value) {
   console.log(data.value);
   zenodoLoginUrl.value = data.value.zenodoLoginUrl;
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
+  selectedExistingDeposition.value = data.value.existingZenodoDepositionId
+    ? "existing"
+    : data;
 }
 
-const handleChange = (value: Boolean) => {
-  selectedExistingDeposition.value = value;
+const handleChange = (e: Event) => {
+  selectedExistingDeposition.value = (e.target as HTMLInputElement).value;
 };
 </script>
 
@@ -90,22 +94,27 @@ const handleChange = (value: Boolean) => {
     <h2 class="pb-6">Select Zenodo deposition</h2>
 
     <n-radio
-      :checked="selectedExistingDeposition === true"
-      :value="true"
-      name="existingZenodoDeposition"
+      :checked="selectedExistingDeposition === 'existing'"
+      value="existing"
+      name="selectedExistingDeposition"
       @change="handleChange"
     >
-      Definitely Maybe
+      Existing Zenodo Deposition
     </n-radio>
 
     <n-radio
-      :checked="selectedExistingDeposition === false"
-      :value="false"
-      name="existingZenodoDeposition"
+      :checked="selectedExistingDeposition === 'new'"
+      value="new"
+      name="selectedExistingDeposition"
       @change="handleChange"
     >
-      Be Here Now
+      New Zenodo Deposition
     </n-radio>
+
+    <n-select
+      v-model:value="selectedDeposition"
+      :options="generateSelectableDepositions()"
+    />
 
     <CardPlaceholder placeholder="Select Zenodo deposition or create new" />
 
