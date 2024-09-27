@@ -2,7 +2,7 @@ import dbInstance from '../db.js';
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
-export async function createArchivalTemplate(
+export async function applyArchivalTemplate(
   subjects,
   baseTemplate,
   repository,
@@ -11,7 +11,7 @@ export async function createArchivalTemplate(
 ) {
   const zenDepositionCollection = dbInstance.zenododeposition;
   const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/zenodo`;
-  const archiveTitle = `## Software Archival\n\nMake a GitHub release and archive your software on Zenodo.`;
+  const archiveTitle = `\n\n## Software Archival\n\nMake a GitHub release and archive your software on Zenodo.`;
   const existingZenodoDep = await zenDepositionCollection.findUnique({
     where: {
       repository_id: repository.id,
@@ -23,7 +23,7 @@ export async function createArchivalTemplate(
     await zenDepositionCollection.create({
       data: {
         repository_id: repository.id,
-        existing_zenodo_deposition: false,
+        existing_zenodo_deposition: null,
         zenodo_id: null,
         zenodo
       }
@@ -41,7 +41,7 @@ export async function createArchivalTemplate(
     });
   }
 
-  const badgeButton = `[![Archive & Release on Zenodo](${badgeURL})](${badgeURL})`;
+  const badgeButton = `[![Release and Archive on Zenodo](https://img.shields.io/badge/Release_and_Archive-00bcd4.svg)](${badgeURL})`
   baseTemplate = `${archiveTitle}}\n\nCodefair provides a seamless workflow to create a GitHub release and archive the software on Zenodo with the latest version and metadata. Click the button below to get started.\n\n${badgeButton}\n\n`;
   return baseTemplate;
 }

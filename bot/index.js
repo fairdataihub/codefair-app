@@ -821,6 +821,23 @@ export default async (app, { getRouter }) => {
     }
   });
 
+  // When a release is published
+  app.on("release.created", async (context) => {
+    // Check if the release was made using the Codefair dashboard
+    const owner = context.payload.repository.owner.login;
+    const { repository } = context.payload;
+
+    const installation = await db.installation.findUnique({
+      where: {
+        id: repository.id,
+      }
+    });
+
+    if (!installation) {
+      return;
+    }
+  })
+
   // When a comment is made on an issue
   // TODO: Verify if this is still needed, currently does not run due to issue titles being changed
   // app.on("issue_comment.created", async (context) => {
