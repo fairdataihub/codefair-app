@@ -20,28 +20,32 @@ const haveValidZenodoToken = ref(false);
 
 const licenseChecked = ref(false);
 const metadataChecked = ref(false);
+const licenseId = ref("");
+const metadataId  = ref("");
 
 const allConfirmed = computed(() => licenseChecked.value && metadataChecked.value);
 
-// const { data, error } = await useFetch(`/api/${owner}/${repo}/release/zenodo`, {
-//   headers: useRequestHeaders(["cookie"]),
-//   method: "GET",
-// });
+const { data, error } = await useFetch(`/api/${owner}/${repo}/release/zenodo`, {
+  headers: useRequestHeaders(["cookie"]),
+  method: "GET",
+});
 
-// if (error.value) {
-//   push.error({
-//     title: "Failed to fetch release details",
-//     message: "Please try again later",
-//   });
+if (error.value) {
+  push.error({
+    title: "Failed to fetch release details",
+    message: "Please try again later",
+  });
 
-//   throw createError(error.value);
-// }
+  throw createError(error.value);
+}
 
-// if (data.value) {
-//   console.log(data.value);
-//   zenodoLoginUrl.value = data.value.zenodoLoginUrl;
-//   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
-// }
+if (data.value) {
+  console.log(data.value);
+  zenodoLoginUrl.value = data.value.zenodoLoginUrl;
+  haveValidZenodoToken.value = data.value.haveValidZenodoToken;
+  licenseId.value = data.value.licenseId;
+  metadataId.value = data.value.metadataId;
+}
 </script>
 
 <template>
@@ -61,10 +65,10 @@ const allConfirmed = computed(() => licenseChecked.value && metadataChecked.valu
     
     <CardDashboard
       title="License"
-      subheader="Please confirm that you have the right to create a release of this repository."
+      subheader="Confirm that the license is correct for your software and release. You can edit the license if needed."
     >
       <template #icon>
-        <Icon name="simple-icons:figshare" size="40" />
+        <Icon name="tabler:license" size="40" />
       </template>
 
       <!-- Custom checkbox with a checkmark -->
@@ -84,23 +88,31 @@ const allConfirmed = computed(() => licenseChecked.value && metadataChecked.valu
             size="24"
             class="absolute inset-0 text-white pointer-events-none"
           />
-          <span class="text-slate-700 font-medium">Confirm License</span>
+          <span class="text-slate-700 font-medium">Release with License as is</span>
         </label>
+        <NuxtLink :to="`/add/license/${licenseId}`">
+          <n-button class="bg-indigo-500 text-white">
+            <template #icon>
+              <Icon name="ri:settings-4-fill" />
+            </template>
+            Edit License
+          </n-button>
+        </NuxtLink>
       </template>
     </CardDashboard>
 
     <CardDashboard
-      title="Code Metadata"
-      subheader="Confirm that the code metadata is correct and up to date."
+      title="Code metadata"
+      subheader="Confirm that the code metadata is correct and up-to-date. You can edit the metadata if needed."
       class="mt-6"
     >
       <template #icon>
-        <Icon name="simple-icons:github" size="40" />
+        <Icon name="tabler:code" size="40" />
       </template>
 
       <!-- Custom checkbox with a checkmark -->
       <template #action>
-        <label class="flex items-center gap-3 cursor-pointer relative">
+        <label class="flex items-center gap-2 cursor-pointer relative">
           <!-- Custom-styled checkbox with checkmark -->
           <input
             type="checkbox"
@@ -115,8 +127,16 @@ const allConfirmed = computed(() => licenseChecked.value && metadataChecked.valu
             size="24"
             class="absolute inset-0 text-white pointer-events-none"
           />
-          <span class="text-slate-700 font-medium">Confirm Code Metadata</span>
+          <span class="text-slate-700 font-medium">Release with code metadata as is</span>
         </label>
+        <NuxtLink :to="`/add/code-metadata/${metadataId}`">
+          <n-button class="bg-indigo-500 text-white">
+            <template #icon>
+              <Icon name="ri:settings-4-fill" />
+            </template>
+            Edit code metadata
+          </n-button>
+        </NuxtLink>
       </template>
     </CardDashboard>
 
@@ -135,14 +155,16 @@ const allConfirmed = computed(() => licenseChecked.value && metadataChecked.valu
       Zenodo using the button below.
     </p>
 
-    <a :href="zenodoLoginUrl" v-if="!haveValidZenodoToken">
-      <n-button type="primary" :disabled="!allConfirmed">
-        <template #icon>
-          <Icon name="simple-icons:zenodo" size="16" />
-        </template>
-        Login to Zenodo
-      </n-button>
-    </a>
+    <div>
+      <a :href="zenodoLoginUrl" v-if="!haveValidZenodoToken">
+        <n-button type="primary" :disabled="!allConfirmed">
+          <template #icon>
+            <Icon name="simple-icons:zenodo" size="16" />
+          </template>
+          Login to Zenodo
+        </n-button>
+      </a>
+    </div>
 
     <CardPlaceholder placeholder="Login to Zenodo" />
 

@@ -21,6 +21,47 @@ export default defineEventHandler(async (event) => {
   const isOrg = await ownerIsOrganization(event, owner);
   await isOrganizationMember(event, isOrg, owner);
 
+  // Make GitHub API call to get the user's repo ID number
+  const repoResponse = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}`,
+    {
+      headers: {
+        Authorization: `token ${user?.access_token}`,
+      },
+    },
+  );
+
+  if (!repoResponse.ok) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: "repository-not-found",
+    });
+  }
+
+  const repoData = await repoResponse.json();
+  const repoId = repoData.id;
+  console.log(repoId);
+
+  // Call both the license and metadata tables to get their identifiers
+  const licenseResponse = await prisma.licenseRequest.findFirst({
+    where: {
+      repository_id: repoId,
+    },
+  });
+
+  const metadataResponse = await prisma.codeMetadata.findFirst({
+    where: {
+      repository_id: repoId,
+    },
+  });
+
+  if (!licenseResponse || !metadataResponse) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: "license-metadata-not-found",
+    });
+  }
+
   const userId = user?.id;
 
   const state = `${userId}:${owner}:${repo}`;
@@ -54,8 +95,13 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  console.log(licenseResponse);
+  console.log(metadataResponse);
+
   return {
     zenodoLoginUrl: zenodoLoginUrl || "",
     haveValidZenodoToken,
+    licenseId: licenseResponse.identifier,
+    metadataId: metadataResponse.identifier,
   };
 });
