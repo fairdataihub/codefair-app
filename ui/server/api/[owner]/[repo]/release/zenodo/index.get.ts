@@ -29,11 +29,10 @@ export default defineEventHandler(async (event) => {
 
   let haveValidZenodoToken = false;
 
-  const zenodoTokenInfo = await prisma.zenodoToken.findFirst({
-    where: {
-      user_id: userId,
-    },
-  });
+  const zenodoTokenInfo = {
+    token: "",
+    expires_at: new Date("2024-09-20 18:34:54.961"),
+  };
 
   if (!zenodoTokenInfo) {
     haveValidZenodoToken = false;

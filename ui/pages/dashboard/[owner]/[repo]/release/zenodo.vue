@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+import CardDashboard from "~/components/card/CardDashboard.vue";
 
 const route = useRoute();
 const user = useUser();
@@ -17,25 +18,30 @@ const { owner, repo } = route.params as { owner: string; repo: string };
 const zenodoLoginUrl = ref("");
 const haveValidZenodoToken = ref(false);
 
-const { data, error } = await useFetch(`/api/${owner}/${repo}/release/zenodo`, {
-  headers: useRequestHeaders(["cookie"]),
-  method: "GET",
-});
+const licenseChecked = ref(false);
+const metadataChecked = ref(false);
 
-if (error.value) {
-  push.error({
-    title: "Failed to fetch release details",
-    message: "Please try again later",
-  });
+const allConfirmed = computed(() => licenseChecked.value && metadataChecked.value);
 
-  throw createError(error.value);
-}
+// const { data, error } = await useFetch(`/api/${owner}/${repo}/release/zenodo`, {
+//   headers: useRequestHeaders(["cookie"]),
+//   method: "GET",
+// });
 
-if (data.value) {
-  console.log(data.value);
-  zenodoLoginUrl.value = data.value.zenodoLoginUrl;
-  haveValidZenodoToken.value = data.value.haveValidZenodoToken;
-}
+// if (error.value) {
+//   push.error({
+//     title: "Failed to fetch release details",
+//     message: "Please try again later",
+//   });
+
+//   throw createError(error.value);
+// }
+
+// if (data.value) {
+//   console.log(data.value);
+//   zenodoLoginUrl.value = data.value.zenodoLoginUrl;
+//   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
+// }
 </script>
 
 <template>
@@ -49,10 +55,70 @@ if (data.value) {
         release.
       </p>
     </n-flex>
+    <n-divider />
 
-    <CardPlaceholder placeholder="Confirm license" />
+    <!-- <CardPlaceholder placeholder="Confirm license" /> -->
+    
+    <CardDashboard
+      title="License"
+      subheader="Please confirm that you have the right to create a release of this repository."
+    >
+      <template #icon>
+        <Icon name="simple-icons:figshare" size="40" />
+      </template>
 
-    <CardPlaceholder placeholder="Confirm code metadata" />
+      <!-- Custom checkbox with a checkmark -->
+      <template #action>
+        <label class="flex items-center gap-3 cursor-pointer relative">
+          <!-- Custom-styled checkbox with checkmark -->
+          <input
+            type="checkbox"
+            :checked="licenseChecked"
+            @change="licenseChecked = $event.target.checked"
+            class="h-6 w-6 cursor-pointer appearance-none border border-gray-300 rounded-md checked:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+          />
+          <!-- Nuxt Icon that appears when checkbox is checked -->
+          <Icon
+            v-if="licenseChecked"
+            name="mdi:check"
+            size="24"
+            class="absolute inset-0 text-white pointer-events-none"
+          />
+          <span class="text-slate-700 font-medium">Confirm License</span>
+        </label>
+      </template>
+    </CardDashboard>
+
+    <CardDashboard
+      title="Code Metadata"
+      subheader="Confirm that the code metadata is correct and up to date."
+      class="mt-6"
+    >
+      <template #icon>
+        <Icon name="simple-icons:github" size="40" />
+      </template>
+
+      <!-- Custom checkbox with a checkmark -->
+      <template #action>
+        <label class="flex items-center gap-3 cursor-pointer relative">
+          <!-- Custom-styled checkbox with checkmark -->
+          <input
+            type="checkbox"
+            :checked="metadataChecked"
+            @change="metadataChecked = $event.target.checked"
+            class="h-6 w-6 cursor-pointer appearance-none border border-gray-300 rounded-md checked:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+          />
+          <!-- Nuxt Icon that appears when checkbox is checked -->
+          <Icon
+            v-if="metadataChecked"
+            name="mdi:check"
+            size="24"
+            class="absolute inset-0 text-white pointer-events-none"
+          />
+          <span class="text-slate-700 font-medium">Confirm Code Metadata</span>
+        </label>
+      </template>
+    </CardDashboard>
 
     <n-divider />
 
@@ -70,7 +136,7 @@ if (data.value) {
     </p>
 
     <a :href="zenodoLoginUrl" v-if="!haveValidZenodoToken">
-      <n-button type="primary">
+      <n-button type="primary" :disabled="!allConfirmed">
         <template #icon>
           <Icon name="simple-icons:zenodo" size="16" />
         </template>

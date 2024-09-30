@@ -460,6 +460,16 @@ const handleSettingsSelect = (key: any) => {
         </template>
       
         <template #content> hello</template>
+        <template #action>
+          <NuxtLink :to="`/dashboard/${owner}/${repo}/release/figshare`">
+            <n-button type="primary" :disabled="true">
+              <template #icon>
+                <Icon name="material-symbols:package-2" size="16" />
+              </template>
+              Release on Fighsare
+            </n-button>
+          </NuxtLink>
+        </template>
       </CardDashboard>
     </div>
 
