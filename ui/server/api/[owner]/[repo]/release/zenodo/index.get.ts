@@ -1,4 +1,3 @@
-import { el } from "@faker-js/faker";
 import type { User } from "lucia";
 
 export default defineEventHandler(async (event) => {
@@ -18,6 +17,7 @@ export default defineEventHandler(async (event) => {
 
   // Check if the user has write permissions to the repository
   await repoWritePermissions(event, owner, repo);
+
   const isOrg = await ownerIsOrganization(event, owner);
   await isOrganizationMember(event, isOrg, owner);
 
@@ -63,17 +63,21 @@ export default defineEventHandler(async (event) => {
   }
 
   const userId = user?.id;
-
+  const githubAccessToken = user?.access_token;
   const state = `${userId}:${owner}:${repo}`;
 
   const zenodoLoginUrl = `${ZENODO_ENDPOINT}/oauth/authorize?response_type=code&client_id=${ZENODO_CLIENT_ID}&scope=${encodeURIComponent("deposit:write deposit:actions")}&state=${encodeURIComponent(state)}&redirect_uri=${encodeURIComponent(ZENODO_REDIRECT_URI)}`;
 
   let haveValidZenodoToken = false;
 
-  const zenodoTokenInfo = {
-    token: "",
-    expires_at: new Date("2024-09-20 18:34:54.961"),
-  };
+  const zenodoTokenInfo = await prisma.zenodoToken.findFirst({
+    where: {
+      user_id: userId,
+    },
+  });
+
+  const existingDepositions: ZenodoDeposition[] = [];
+  const rawData = [];
 
   if (!zenodoTokenInfo) {
     haveValidZenodoToken = false;
@@ -92,15 +96,86 @@ export default defineEventHandler(async (event) => {
       haveValidZenodoToken = false;
     } else {
       haveValidZenodoToken = true;
+
+      const response = await zenodoTokenInfoResponse.json();
+
+      for (const item of response) {
+        existingDepositions.push({
+          id: item.id,
+          title: item.title,
+          conceptrecid: item.conceptrecid,
+          state: item.state,
+          submitted: item.submitted,
+        });
+        rawData.push(item);
+      }
     }
+  }
+
+  const zenodoDeposition = await prisma.zenodoDeposition.findFirst({
+    where: {
+      repository: {
+        owner,
+        repo,
+      },
+    },
+  });
+
+  const raw = zenodoDeposition?.zenodo_metadata as unknown as ZenodoMetadata;
+
+  const zenodoMetadata: ZenodoMetadata = {
+    accessRight: raw?.accessRight || null,
+  };
+
+  // Get a list of github releases
+  const gr = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/releases`,
+    {
+      headers: {
+        Authorization: `Bearer ${githubAccessToken}`,
+      },
+      method: "GET",
+    },
+  );
+
+  if (!gr.ok) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Failed to fetch GitHub releases",
+    });
+  }
+
+  const githubReleases: GitHubReleases = [];
+
+  const githubReleasesJson = await gr.json();
+
+  for (const release of githubReleasesJson) {
+    githubReleases.push({
+      id: release.id,
+      name: release.name,
+      tagName: release.tag_name,
+      targetCommitish: release.target_commitish,
+      assetsUrl: release.assets_url,
+      htmlUrl: release.html_url,
+      draft: release.draft,
+      prerelease: release.prerelease,
+    });
   }
 
   console.log(licenseResponse);
   console.log(metadataResponse);
 
   return {
-    zenodoLoginUrl: zenodoLoginUrl || "",
+    existingZenodoDepositionId:
+      zenodoDeposition?.existing_zenodo_deposition_id || null,
     haveValidZenodoToken,
+    token: zenodoTokenInfo?.token || "",
+    zenodoDepositions: existingDepositions,
+    zenodoLoginUrl: zenodoLoginUrl || "",
+    zenodoMetadata,
+    rawReleases: githubReleasesJson,
+    githubReleases,
+    // rawZenodoDepositions: rawData,
     licenseId: licenseResponse.identifier,
     metadataId: metadataResponse.identifier,
   };
