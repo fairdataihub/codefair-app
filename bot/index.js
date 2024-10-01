@@ -13,6 +13,7 @@ import { checkForLicense } from "./license/index.js";
 import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
+import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier } from "./metadata/index.js";
 
 checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
@@ -244,10 +245,10 @@ export default async (app, { getRouter }) => {
     const emptyRepo = await isRepoEmpty(context, owner, repository.name);
 
     const latestCommitInfo = {
-      latestCommitDate: context.payload.head_commit.timestamp,
-      latestCommitMessage: context.payload.head_commit.message,
-      latestCommitSha: context.payload.head_commit.id,
-      latestCommitUrl: context.payload.head_commit.url,
+      latest_commit_date: context.payload.head_commit.timestamp,
+      latest_commit_message: context.payload.head_commit.message,
+      latest_commit_sha: context.payload.head_commit.id,
+      latest_commit_url: context.payload.head_commit.url,
     };
 
     let fullCodefairRun = false;
@@ -283,10 +284,10 @@ export default async (app, { getRouter }) => {
                   ? 0
                   : installation.action_count - 1,
             },
-            latest_commit_date: latestCommitInfo.latestCommitDate,
-            latest_commit_message: latestCommitInfo.latestCommitMessage,
-            latest_commit_sha: latestCommitInfo.latestCommitSha,
-            latest_commit_url: latestCommitInfo.latestCommitUrl,
+            latest_commit_date: latestCommitInfo.latest_commit_date,
+            latest_commit_message: latestCommitInfo.latest_commit_message,
+            latest_commit_sha: latestCommitInfo.latest_commit_sha,
+            latest_commit_url: latestCommitInfo.latest_commit_url,
           },
           where: { id: repository.id },
         });
@@ -301,10 +302,10 @@ export default async (app, { getRouter }) => {
         db.installation.update({
           data: {
             action_count: 0,
-            latest_commit_date: latestCommitInfo.latestCommitDate,
-            latest_commit_message: latestCommitInfo.latestCommitMessage,
-            latest_commit_sha: latestCommitInfo.latestCommitSha,
-            latest_commit_url: latestCommitInfo.latestCommitUrl,
+            latest_commit_date: latestCommitInfo.latest_commit_date,
+            latest_commit_message: latestCommitInfo.latest_commit_message,
+            latest_commit_sha: latestCommitInfo.latest_commit_sha,
+            latest_commit_url: latestCommitInfo.latest_commit_url,
           },
           where: { id: repository.id },
         });
@@ -587,11 +588,12 @@ export default async (app, { getRouter }) => {
           });
         }
       }
+    } else {
+      return;
     }
 
     if (
-      issueBody.includes("<!-- @codefair-bot rerun-cwl-validation -->") &&
-      issueTitle === ISSUE_TITLE
+      issueBody.includes("<!-- @codefair-bot rerun-cwl-validation -->")
     ) {
       consola.start("Rerunning CWL Validation...");
 
@@ -652,8 +654,7 @@ export default async (app, { getRouter }) => {
     }
 
     if (
-      issueBody.includes("<!-- @codefair-bot rerun-full-repo-validation -->") &&
-      issueTitle === ISSUE_TITLE
+      issueBody.includes("<!-- @codefair-bot rerun-full-repo-validation -->")
     ) {
       consola.start("Rerunning full repository validation...");
 
@@ -703,6 +704,61 @@ export default async (app, { getRouter }) => {
       );
 
       await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+    }
+
+    if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
+      consola.log("Publishing to Zenodo...");
+      // 1. Get the metadata from the repository
+      const citationCff = await getCitationContent(context, owner, repository);
+      const codemeta = await getCodemetaContent(context, owner, repository);
+      
+      // 2. Validate the CITATION.cff and codemeta.json files
+      const validCodemeta = await validateMetadata(citationCff, "citation")
+      const validCitation = await validateMetadata(codemeta, "codemeta")
+
+      consola.warn("valid citation?", validCitation);
+      consola.warn("valid codemeta?", validCodemeta);
+
+      // 3. Create the Zenodo record or get the existing one (comes in issueBody)
+      // Extract the content between <!-- @codefair-bot publish-zenodo and -->
+      const str = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*[\s\S]*?-->/);
+      const extratedContent = str[0];
+      const match = extratedContent.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
+      const uiInfo = match[1];
+
+      const resultArray = extratedContent.split(/\s+/);
+
+      consola.info("UI Info:", uiInfo);
+      const depositionId = uiInfo[0];
+      const tagVersion = uiInfo[1];
+      const user = uiInfo[2];
+
+      // 4. Request a DOI from Zenodo
+
+      // 5. Update the CITATION.cff and codemeta.json files with the DOI
+      await updateMetadataIdentifier(context, owner, repository, depositionId);
+
+      // 6. Release the draft GitHub release
+      // const release = await context.octokit.repos.createRelease({
+      //   owner,
+      //   repo: repository.name,
+      //   tag_name: tagVersion,
+      //   name: tagVersion,
+      //   draft: false,
+
+      // });
+
+      // consola.warn(release);
+
+      // 7. Submit the files to Zenodo (gather the files from the release)
+      const files = await context.octokit.repos.listReleaseAssets({
+        owner,
+        repo: repository.name,
+      });
+
+      consola.warn(files);
+
+      // 8. Publish the Zenodo record
     }
   });
 
@@ -764,11 +820,11 @@ export default async (app, { getRouter }) => {
           repo: repository.name,
         });
 
-        latestCommitInfo.latestCommitSha = latestCommit.data.sha || "";
-        latestCommitInfo.latestCommitMessage =
+        latestCommitInfo.latest_commit_sha = latestCommit.data.sha || "";
+        latestCommitInfo.latest_commit_message =
           latestCommit.data.commit.message || "";
-        latestCommitInfo.latestCommitUrl = latestCommit.data.html_url || "";
-        latestCommitInfo.latestCommitDate =
+        latestCommitInfo.latest_commit_url = latestCommit.data.html_url || "";
+        latestCommitInfo.latest_commit_date =
           latestCommit.data.commit.committer.date || "";
       }
 
@@ -822,7 +878,7 @@ export default async (app, { getRouter }) => {
   });
 
   // When a release is published
-  app.on("release.created", async (context) => {
+  app.on("release.drafted", async (context) => {
     // Check if the release was made using the Codefair dashboard
     const owner = context.payload.repository.owner.login;
     const { repository } = context.payload;

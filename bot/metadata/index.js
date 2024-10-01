@@ -255,6 +255,117 @@ export async function gatherMetadata(context, owner, repo) {
   return codeMeta;
 }
 
+export async function getCodemetaContent(context, owner, repository) {
+  try {
+    const codemetaFile = await context.octokit.repos.getContent({
+      owner,
+      path: "codemeta.json",
+      repo: repository.name,
+    });
+
+    return {
+      content: Buffer.from(codemetaFile.data.content, "base64").toString(),
+      sha: codemetaFile.data.sha,
+    }
+
+    // return JSON.parse(Buffer.from(codemetaFile.data.content, "base64").toString());
+  } catch (error) {
+    consola.error("Error getting codemeta.json file", error);
+    return null;
+  }
+}
+
+export async function getCitationContent(context, owner, repository) {
+ try {
+  const citationFile = await context.octokit.repos.getContent({
+    owner,
+    path: "CITATION.cff",
+    repo: repository.name,
+  });
+
+  return {
+    content: Buffer.from(citationFile.data.content, "base64").toString(),
+    sha: citationFile.data.sha,
+  }
+
+  // return yaml.load(Buffer.from(citationFile.data.content, "base64").toString());
+ } catch (error) {
+    consola.error("Error getting CITATION.cff file", error);
+    return null;
+ }
+}
+
+export async function validateMetadata(content, fileType) {
+  if (fileType === "codemeta") {
+    try {
+      JSON.parse(content);
+      // Verify the required fields are present
+      if (!content.name || !content.authors || !content.identifier || !content.description) {
+        return false;
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  if (fileType === "citation") {
+    try {
+      yaml.load(content);
+      // Verify the required fields are present
+      if (!content.title || !content.authors || !content.identifiers) {
+        return false;
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+}
+
+export async function updateMetadataIdentifier(context, owner, repository, identifier) {
+  // Get the citation file
+  const citationObj = await getCitationContent(context, owner, repository);
+  const codeMetaObj = await getCodemetaContent(context, owner, repository);
+
+  let codeMetaFile = JSON.parse(codeMetaObj.content);
+  const codeMetaSha = codeMetaObj.sha;
+
+  let citationFile = yaml.load(citationObj.content);
+  const citationSha = citationObj.sha;
+
+  citationFile.identifier = identifier;
+  codeMetaFile.identifier = identifier;
+
+  consola.info(citationFile);
+  consola.info(codeMetaFile);
+
+  // Update the citation file
+  await context.octokit.repos.createOrUpdateFileContents({
+    owner,
+    repo: repository.name,
+    path: "CITATION.cff",
+    message: "refactor: 📝♻️ Update CITATION.cff with Zenodo identifier",
+    content: Buffer.from(yaml.dump(citationFile, { noRefs: true, indent: 2 })).toString("base64"),
+    sha: citationSha,
+  });
+
+  consola.info("CITATION.cff file updated with Zenodo identifier");
+
+  // Update the codemeta file
+  await context.octokit.repos.createOrUpdateFileContents({
+    owner,
+    repo: repository.name,
+    path: "codemeta.json",
+    message: "refactor: 📝♻️ Update codemeta.json with Zenodo identifier",
+    content: Buffer.from(JSON.stringify(codeMetaFile, null, 2)).toString("base64"),
+    sha: codeMetaSha,
+  });
+
+  consola.info("codemeta.json file updated with Zenodo identifier");
+}
+
 /**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
  *
@@ -361,44 +472,11 @@ export async function applyMetadataTemplate(
   }
 
   if (subjects.codemeta && subjects.citation && subjects.license) {
-    // Download the codemeta.json file from the repo
-    let validCodemeta = false;
-    let validCitation = false;
+    const codemetaContent = await getCodemetaContent(context, owner, repository);
+    const citationContent = await getCitationContent(context, owner, repository);
 
-    let codemetaFile = null;
-    let citationFile = null;
-
-    try {
-      codemetaFile = await context.octokit.repos.getContent({
-        owner,
-        path: "codemeta.json",
-        repo: repository.name,
-      });
-
-      JSON.parse(Buffer.from(codemetaFile.data.content, "base64").toString());
-
-      validCodemeta = true;
-    } catch (error) {
-      consola.error("Error getting codemeta.json file", error);
-    }
-
-    try {
-      citationFile = await context.octokit.repos.getContent({
-        owner,
-        path: "CITATION.cff",
-        repo: repository.name,
-      });
-
-      yaml.load(Buffer.from(citationFile.data.content, "base64").toString());
-      validCitation = true;
-    } catch (error) {
-      consola.error("Error getting CITATION.cff file", error);
-    }
-
-    // Convert the content to a json object
-    const codemetaContent = JSON.parse(
-      Buffer.from(codemetaFile.data.content, "base64").toString(),
-    );
+    const validCodemeta = await validateMetadata(citationContent, "citation");
+    const validCitation = await validateMetadata(codemetaContent, "codemeta");
 
     // Convert the content to the structure we use for code metadata
     const metadata = convertMetadataForDB(codemetaContent);
