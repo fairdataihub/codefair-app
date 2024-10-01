@@ -226,10 +226,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const updatedIssueBody = `<!-- @codefair-bot publish-zenodo ${zenodoDepositionId} ${release} ${tag} ${user?.username} -->`;
-
-  console.log(updatedIssueBody);
-
   if (publish) {
     // Edit the issue body with a hidden request for the release
 
