@@ -279,106 +279,105 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
       class="bg-white"
       horizontal
     >
-    <div class="flex flex-row justify-around py-2">
-      <CardIcon
-        title="Confirm License"
-        icon="tabler:license"
-        subheader="Confirm that the license is correct and up-to-date. You can edit the license if needed."
-        :editLink="`/add/license/${licenseId}`"
-      >
-        <template #icon>
-          <Icon name="tabler:license" size="40" />
-        </template>
-  
-        <!-- Custom checkbox with a checkmark -->
-        <template #action>
-          <label class="flex items-center gap-3 cursor-pointer relative">
-            <!-- Custom-styled checkbox with checkmark -->
-            <input
-              type="checkbox"
-              :checked="licenseChecked"
-              @change="licenseChecked = $event.target.checked"
-              class="h-6 w-6 cursor-pointer appearance-none border border-gray-300 rounded-md checked:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
-            />
-            <!-- Nuxt Icon that appears when checkbox is checked -->
-            <Icon
-              v-if="licenseChecked"
-              name="mdi:check"
-              size="24"
-              class="absolute inset-0 text-white pointer-events-none"
-            />
-            <span class="text-slate-700 font-medium">Release with License as is</span>
-          </label>
-          <NuxtLink :to="`/add/license/${licenseId}`">
-            <n-button class="bg-indigo-500 text-white">
-              <template #icon>
-                <Icon name="ri:settings-4-fill" />
-              </template>
-              Edit License
-            </n-button>
-          </NuxtLink>
-        </template>
-      </CardIcon>
-  
-      <CardIcon
-        title="Confirm Code Metadata"
-        subheader="Confirm that the code metadata is correct and up-to-date. You can edit the metadata if needed."
-        icon="tabler:code"
-        :editLink="`/add/code-metadata/${metadataId}`"
-      >
-        <template #icon>
-          <Icon name="tabler:code" size="40" />
-        </template>
-  
-        <!-- Custom checkbox with a checkmark -->
-        <template #action>
-          <label class="flex items-center gap-2 cursor-pointer relative">
-            <!-- Custom-styled checkbox with checkmark -->
-            <input
-              type="checkbox"
-              :checked="metadataChecked"
-              @change="metadataChecked = $event.target.checked"
-              class="h-6 w-6 cursor-pointer appearance-none border border-gray-300 rounded-md checked:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
-            />
-            <!-- Nuxt Icon that appears when checkbox is checked -->
-            <Icon
-              v-if="metadataChecked"
-              name="mdi:check"
-              size="24"
-              class="absolute inset-0 text-white pointer-events-none"
-            />
-            <span class="text-slate-700 font-medium">Release with code metadata as is</span>
-          </label>
-          <NuxtLink :to="`/add/code-metadata/${metadataId}`">
-            <n-button class="bg-indigo-500 text-white">
-              <template #icon>
-                <Icon name="ri:settings-4-fill" />
-              </template>
-              Edit code metadata
-            </n-button>
-          </NuxtLink>
-        </template>
-      </CardIcon>
-    </div>
+      <div class="flex flex-row justify-around py-2">
+        <CardIcon
+          title="Confirm License"
+          icon="tabler:license"
+          subheader="Confirm that the license is correct and up-to-date. You can edit the license if needed."
+          :editLink="`/add/license/${licenseId}`"
+        >
+          <template #icon>
+            <Icon name="tabler:license" size="40" />
+          </template>
+
+          <!-- Custom checkbox with a checkmark -->
+          <template #action>
+            <label class="flex items-center gap-3 cursor-pointer relative">
+              <!-- Custom-styled checkbox with checkmark -->
+              <input
+                type="checkbox"
+                :checked="licenseChecked"
+                @change="licenseChecked = $event.target.checked"
+                class="h-6 w-6 cursor-pointer appearance-none border border-gray-300 rounded-md checked:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+              />
+              <!-- Nuxt Icon that appears when checkbox is checked -->
+              <Icon
+                v-if="licenseChecked"
+                name="mdi:check"
+                size="24"
+                class="absolute inset-0 text-white pointer-events-none"
+              />
+              <span class="text-slate-700 font-medium">Release with License as is</span>
+            </label>
+            <NuxtLink :to="`/add/license/${licenseId}`">
+              <n-button class="bg-indigo-500 text-white">
+                <template #icon>
+                  <Icon name="ri:settings-4-fill" />
+                </template>
+                Edit License
+              </n-button>
+            </NuxtLink>
+          </template>
+        </CardIcon>
+
+        <CardIcon
+          title="Confirm Code Metadata"
+          subheader="Confirm that the code metadata is correct and up-to-date. You can edit the metadata if needed."
+          icon="tabler:code"
+          :editLink="`/add/code-metadata/${metadataId}`"
+        >
+          <template #icon>
+            <Icon name="tabler:code" size="40" />
+          </template>
+
+          <!-- Custom checkbox with a checkmark -->
+          <template #action>
+            <label class="flex items-center gap-2 cursor-pointer relative">
+              <!-- Custom-styled checkbox with checkmark -->
+              <input
+                type="checkbox"
+                :checked="metadataChecked"
+                @change="metadataChecked = $event.target.checked"
+                class="h-6 w-6 cursor-pointer appearance-none border border-gray-300 rounded-md checked:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+              />
+              <!-- Nuxt Icon that appears when checkbox is checked -->
+              <Icon
+                v-if="metadataChecked"
+                name="mdi:check"
+                size="24"
+                class="absolute inset-0 text-white pointer-events-none"
+              />
+              <span class="text-slate-700 font-medium">Release with code metadata as is</span>
+            </label>
+            <NuxtLink :to="`/add/code-metadata/${metadataId}`">
+              <n-button class="bg-indigo-500 text-white">
+                <template #icon>
+                  <Icon name="ri:settings-4-fill" />
+                </template>
+                Edit code metadata
+              </n-button>
+            </NuxtLink>
+          </template>
+        </CardIcon>
+      </div>
     </CardCollapsible>
 
     <n-divider />
 
-
     <!-- Zenodo Log In Section -->
     <CardCollapsible title="Zenodo Log In" class="bg-white" v-if="allConfirmed" bordered>
       <h2 class="pb-6">Login to Zenodo</h2>
-     
+
       <p v-if="haveValidZenodoToken">
         Looks like we have a valid Zenodo token for you. You can now continue to
         the next step.
       </p>
-  
+
       <p v-else>
         Looks like we don't have a valid Zenodo token for you. Please login to
         Zenodo using the button below.
       </p>
-  
+
       <a v-if="!haveValidZenodoToken && allConfirmed" :href="zenodoLoginUrl">
         <n-button type="primary">
           <template #icon>
@@ -403,7 +402,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
       >
         Existing Zenodo Deposition
       </n-radio>
-  
+
       <n-radio
         :checked="selectedExistingDeposition === 'new'"
         value="new"
@@ -412,20 +411,13 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
       >
         New Zenodo Deposition
       </n-radio>
-  
+
       <n-select
         v-if="selectedExistingDeposition === 'existing'"
         v-model:value="selectedDeposition"
         :options="selectableDepositions"
       />
-
     </CardCollapsible>
-
-    <!-- Select Zenodo Community -->
-    <!-- <div>
-      <CardPlaceholder placeholder="?Select Zenodo community?" />
-
-    </div> -->
 
     <n-divider />
 
@@ -451,10 +443,9 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
             </n-flex>
           </n-radio-group>
         </n-form-item>
-  
+
         <n-button @click="validateZenodoForm"> Validate </n-button>
       </n-form>
-  
     </CardCollapsible>
 
     <n-divider />
@@ -478,7 +469,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
             placeholder="Select a tag"
           />
         </n-form-item>
-  
+
         <n-form-item label="Github Release" path="release">
           <n-select
             v-model:value="githubFormValue.release"
@@ -488,7 +479,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
             filterable
           />
         </n-form-item>
-  
+
         <n-form-item
           label="Release Title"
           path="title"
@@ -505,13 +496,13 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
             placeholder="Enter release title"
           />
         </n-form-item>
-  
+
         <p>
           Your github release will be created in a draft state. Please make sure
           to add any additional executables and update the release notes. Once you
           are done, you can come back to this page and publish the release.
         </p>
-  
+
         <n-button
           @click="createDraftGithubRelease"
           :loading="createDraftGithubReleaseSpinner"
@@ -521,26 +512,10 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
           </template>
           Create draft GitHub release
         </n-button>
-  
+
         <pre>{{ githubFormValue }}</pre>
       </n-form>
     </CardCollapsible>
-
-    <n-divider />
-
-    <!-- Publish Zenodo Release -->
-    <CardCollapsible title="Published Zenodo Release" bordered class="bg-white">
-      <CardPlaceholder placeholder="Publish Zenodo release" />
-
-    </CardCollapsible>
-
-    <n-divider />
-        <template #icon>
-          <Icon name="fa:plus" size="16" />
-        </template>
-        Create draft GitHub release
-      </n-button>
-    </n-form>
 
     <n-divider />
 
@@ -569,7 +544,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         Start Zenodo publish process
       </n-button>
     </n-flex>
-    
+
     <n-collapse v-if="devMode" class="mt-8" :default-expanded-names="['data']">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
@@ -577,3 +552,4 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     </n-collapse>
   </main>
 </template>
+
