@@ -597,7 +597,7 @@ export default async (app, { getRouter }) => {
 
       const cwl = await getCWLFiles(context, owner, repository.name);
 
-      // Remove the section from the issue body starting from ## CWL Validations
+      // Remove the section from the issue body starting from ## Language Specific Standards
       const slicedBody = issueBody.substring(
         0,
         issueBody.indexOf("## Language Specific Standards"),
@@ -820,6 +820,23 @@ export default async (app, { getRouter }) => {
       await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
     }
   });
+
+  // When a release is published
+  app.on("release.created", async (context) => {
+    // Check if the release was made using the Codefair dashboard
+    const owner = context.payload.repository.owner.login;
+    const { repository } = context.payload;
+
+    const installation = await db.installation.findUnique({
+      where: {
+        id: repository.id,
+      }
+    });
+
+    if (!installation) {
+      return;
+    }
+  })
 
   // When a comment is made on an issue
   // TODO: Verify if this is still needed, currently does not run due to issue titles being changed

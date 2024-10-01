@@ -15,6 +15,10 @@ const props = defineProps({
     default: "",
     type: String,
   },
+  horizontal: {
+    default: false,
+    type: Boolean,
+  },
 });
 
 const slots = useSlots();
@@ -97,7 +101,7 @@ const toggleCollapse = () => {
 
     <div
       v-if="hasAction"
-      class="flex items-center justify-start rounded-lg bg-slate-50 px-6 py-4"
+      class="flex items-center justify-start flex-row rounded-lg bg-slate-50 px-6 py-4"
     >
       <slot name="action"></slot>
     </div>
