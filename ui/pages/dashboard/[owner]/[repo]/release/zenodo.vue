@@ -226,10 +226,14 @@ const createDraftGithubRelease = async () => {
       bordered
       :title="`Confirm Metadata and License for ${owner}/${repo}`"
       class="bg-white"
+      horizontal
     >
-      <CardDashboard
-        title="License"
-        subheader="Confirm that the license is correct for your software and release. You can edit the license if needed."
+    <div class="flex flex-row justify-around py-2">
+      <CardIcon
+        title="Confirm License"
+        icon="tabler:license"
+        subheader="Confirm that the license is correct and up-to-date. You can edit the license if needed."
+        :editLink="`/add/license/${licenseId}`"
       >
         <template #icon>
           <Icon name="tabler:license" size="40" />
@@ -263,12 +267,13 @@ const createDraftGithubRelease = async () => {
             </n-button>
           </NuxtLink>
         </template>
-      </CardDashboard>
+      </CardIcon>
   
-      <CardDashboard
-        title="Code metadata"
+      <CardIcon
+        title="Confirm Code Metadata"
         subheader="Confirm that the code metadata is correct and up-to-date. You can edit the metadata if needed."
-        class="mt-6"
+        icon="tabler:code"
+        :editLink="`/add/code-metadata/${metadataId}`"
       >
         <template #icon>
           <Icon name="tabler:code" size="40" />
@@ -302,7 +307,8 @@ const createDraftGithubRelease = async () => {
             </n-button>
           </NuxtLink>
         </template>
-      </CardDashboard>
+      </CardIcon>
+    </div>
     </CardCollapsible>
 
     <n-divider />
