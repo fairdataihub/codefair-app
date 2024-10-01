@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+import type { FormInst, SelectOption, SelectGroupOption } from "naive-ui";
+import { faker } from "@faker-js/faker";
 
 const route = useRoute();
 const user = useUser();
@@ -14,11 +16,48 @@ breadcrumbsStore.setFeature({
 
 const { owner, repo } = route.params as { owner: string; repo: string };
 
+const devMode = process.env.NODE_ENV === "development";
+
 const zenodoLoginUrl = ref("");
 const haveValidZenodoToken = ref(false);
 
 const selectedExistingDeposition = ref<String | null>(null);
-const selectedDeposition = ref<String | null>(null);
+const selectedDeposition = ref(null);
+const selectableDepositions = ref<Array<SelectOption | SelectGroupOption>>([]);
+
+const zenodoFormRef = ref<FormInst | null>(null);
+const zenodoFormValue = ref<ZenodoMetadata>({
+  accessRight: null,
+});
+const zenodoFormRules = ref({
+  accessRight: {
+    message: "Please select an access right",
+    required: true,
+    trigger: ["blur", "input"],
+  },
+});
+
+const githubFormRef = ref<FormInst | null>(null);
+const githubFormValue = ref({
+  tag: null,
+  release: null,
+  title: "",
+});
+const githubFormRules = ref({
+  tag: {
+    message: "Please select a tag",
+    required: true,
+    trigger: ["blur", "change"],
+  },
+  release: {
+    message: "Please select a release",
+    required: true,
+    trigger: ["blur", "change"],
+  },
+});
+
+const githubTagOptions = ref<Array<SelectOption | SelectGroupOption>>([]);
+const githubReleaseOptions = ref<Array<SelectOption | SelectGroupOption>>([]);
 
 const { data, error } = await useFetch(`/api/${owner}/${repo}/release/zenodo`, {
   headers: useRequestHeaders(["cookie"]),
@@ -40,11 +79,121 @@ if (data.value) {
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
   selectedExistingDeposition.value = data.value.existingZenodoDepositionId
     ? "existing"
-    : data;
+    : data.value.existingZenodoDepositionId === null
+      ? null
+      : "new";
+
+  selectableDepositions.value = [];
+  for (const deposition of data.value.zenodoDepositions) {
+    selectableDepositions.value.push({
+      label: deposition.title,
+      value: deposition.id,
+    });
+  }
+
+  zenodoFormValue.value.accessRight =
+    data.value.zenodoMetadata.accessRight || null;
+
+  githubTagOptions.value = [];
+  githubReleaseOptions.value = [];
+
+  for (const release of data.value.githubReleases) {
+    githubTagOptions.value.push({
+      label: release.tagName,
+      value: release.tagName,
+      disabled: !release.draft,
+    });
+    githubReleaseOptions.value.push({
+      label: release.name || "Untitled release",
+      value: release.id.toString(),
+      disabled: !release.draft,
+    });
+  }
+
+  // Add 'new' option to the top of the list
+  githubReleaseOptions.value.unshift({
+    label: "new",
+    value: "new",
+  });
+
+  //dev
+  githubFormValue.value.tag = `v${faker.system.semver()}`;
+  githubTagOptions.value.push({
+    label: githubFormValue.value.tag,
+    value: githubFormValue.value.tag,
+    disabled: false,
+  });
+
+  githubFormValue.value.release = "new";
+  githubFormValue.value.title = faker.lorem.sentence();
 }
 
 const handleChange = (e: Event) => {
   selectedExistingDeposition.value = (e.target as HTMLInputElement).value;
+};
+
+const validateZenodoForm = () => {
+  zenodoFormRef.value?.validate(async (errors) => {
+    if (!errors) {
+      console.log("Form validated successfully");
+    } else {
+      console.log("Form validation failed");
+      console.log(errors);
+    }
+  });
+};
+
+const createDraftGithubReleaseSpinner = ref(false);
+
+const createDraftGithubRelease = async () => {
+  githubFormRef.value?.validate(async (errors) => {
+    if (!errors) {
+      createDraftGithubReleaseSpinner.value = true;
+      await $fetch(`/api/${owner}/${repo}/release/github`, {
+        headers: useRequestHeaders(["cookie"]),
+        method: "POST",
+        body: JSON.stringify({
+          tag: githubFormValue.value.tag,
+          release: githubFormValue.value.release,
+          title: githubFormValue.value.title,
+        }),
+      })
+        .then(async (response) => {
+          console.log(response);
+          push.success({
+            title: "Success",
+            message: "Your draft GitHub release has been created.",
+          });
+
+          //Add the releaseid to the options
+          githubReleaseOptions.value.push({
+            label: githubFormValue.value.title,
+            value: response.releaseId.toString(),
+            disabled: false,
+          });
+
+          //Select the new release
+          githubFormValue.value.release = response.releaseId.toString();
+          const htmlUrl = response.htmlUrl;
+          const editUrl = htmlUrl.replace("/tag/", "/edit/");
+
+          window.open(editUrl, "_blank");
+        })
+        .catch((error) => {
+          console.error("Failed to create draft GitHub release:", error);
+          push.error({
+            title: "Failed to create draft GitHub release",
+            message: "Please try again later",
+          });
+        })
+        .finally(() => {
+          createDraftGithubReleaseSpinner.value = false;
+        });
+    } else {
+      console.log("Form validation failed");
+      console.log(errors);
+    }
+  });
 };
 </script>
 
@@ -65,8 +214,6 @@ const handleChange = (e: Event) => {
     <CardPlaceholder placeholder="Confirm code metadata" />
 
     <n-divider />
-
-    <pre>{{ data }}</pre>
 
     <h2 class="pb-6">Login to Zenodo</h2>
 
@@ -112,22 +259,115 @@ const handleChange = (e: Event) => {
     </n-radio>
 
     <n-select
+      v-if="selectedExistingDeposition === 'existing'"
       v-model:value="selectedDeposition"
-      :options="generateSelectableDepositions()"
+      :options="selectableDepositions"
     />
-
-    <CardPlaceholder placeholder="Select Zenodo deposition or create new" />
 
     <CardPlaceholder placeholder="?Select Zenodo community?" />
 
-    <CardPlaceholder placeholder="Add zenodo required metadata" />
+    <n-divider />
 
-    <CardPlaceholder
-      placeholder="Create draft github release (add additional executables and update release notes)"
-    />
+    <h2 class="pb-6">Add Zenodo required metadata</h2>
 
-    <CardPlaceholder placeholder="Confirm github release" />
+    <n-form
+      ref="zenodoFormRef"
+      :label-width="80"
+      :model="zenodoFormValue"
+      :rules="zenodoFormRules"
+      size="large"
+    >
+      <n-form-item label="Access Right" path="accessRight">
+        <n-radio-group
+          v-model:value="zenodoFormValue.accessRight"
+          name="accessRight"
+        >
+          <n-flex vertical>
+            <n-radio value="open"> Open Access </n-radio>
+            <n-radio value="embargoed" disabled> Embargoed Access </n-radio>
+            <n-radio value="restricted" disabled> Restricted Access </n-radio>
+            <n-radio value="closed" disabled> Closed Access </n-radio>
+          </n-flex>
+        </n-radio-group>
+      </n-form-item>
+
+      <n-button @click="validateZenodoForm"> Validate </n-button>
+    </n-form>
+
+    <n-divider />
+
+    <h2 class="pb-6">Create draft GitHub release</h2>
+
+    <n-form
+      ref="githubFormRef"
+      :label-width="80"
+      :model="githubFormValue"
+      :rules="githubFormRules"
+      size="large"
+    >
+      <n-form-item label="Github Tag" path="tag">
+        <n-select
+          v-model:value="githubFormValue.tag"
+          :options="githubTagOptions"
+          tag
+          filterable
+          clearable
+          placeholder="Select a tag"
+        />
+      </n-form-item>
+
+      <n-form-item label="Github Release" path="release">
+        <n-select
+          v-model:value="githubFormValue.release"
+          :options="githubReleaseOptions"
+          placeholder="Select a release"
+          clearable
+          filterable
+        />
+      </n-form-item>
+
+      <n-form-item
+        label="Release Title"
+        path="title"
+        :rule="{
+          message: 'Please enter a title',
+          required: githubFormValue.release === 'new',
+          trigger: ['blur', 'input'],
+        }"
+        v-show="githubFormValue.release === 'new'"
+      >
+        <n-input
+          clearable
+          v-model:value="githubFormValue.title"
+          placeholder="Enter release title"
+        />
+      </n-form-item>
+
+      <p>
+        Your github release will be created in a draft state. Please make sure
+        to add any additional executables and update the release notes. Once you
+        are done, you can come back to this page and publish the release.
+      </p>
+
+      <n-button
+        @click="createDraftGithubRelease"
+        :loading="createDraftGithubReleaseSpinner"
+      >
+        <template #icon>
+          <Icon name="fa:plus" size="16" />
+        </template>
+        Create draft GitHub release
+      </n-button>
+
+      <pre>{{ githubFormValue }}</pre>
+    </n-form>
 
     <CardPlaceholder placeholder="Publish Zenodo release" />
+
+    <n-collapse v-if="devMode" class="mt-8" :default-expanded-names="['data']">
+      <n-collapse-item title="data" name="data">
+        <pre>{{ data }}</pre>
+      </n-collapse-item>
+    </n-collapse>
   </main>
 </template>
