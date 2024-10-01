@@ -30,7 +30,7 @@ const metadataId  = ref("");
 const allConfirmed = computed(() => licenseChecked.value && metadataChecked.value);
 
 const selectedExistingDeposition = ref<String | null>(null);
-const selectedDeposition = ref(null);
+const selectedDeposition = ref<String | null>(null);
 const selectableDepositions = ref<Array<SelectOption | SelectGroupOption>>([]);
 
 const zenodoFormRef = ref<FormInst | null>(null);
@@ -82,8 +82,8 @@ if (error.value) {
 }
 
 if (data.value) {
-  console.log(data.value);
   zenodoLoginUrl.value = data.value.zenodoLoginUrl;
+  selectedDeposition.value = data.value.zenodoDepositionId || null;
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
   licenseId.value = data.value.licenseId;
   metadataId.value = data.value.metadataId;
@@ -205,6 +205,57 @@ const createDraftGithubRelease = async () => {
       console.log(errors);
     }
   });
+};
+
+const zenodoPublishSpinner = ref(false);
+const zenodoDraftSpinner = ref(false);
+
+const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
+  if (shouldPublish) {
+    zenodoPublishSpinner.value = true;
+  } else {
+    zenodoDraftSpinner.value = true;
+  }
+  await $fetch(`/api/${owner}/${repo}/release/zenodo`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "POST",
+    body: JSON.stringify({
+      useExistingDeposition: selectedExistingDeposition.value === "existing",
+      zenodoDepositionId:
+        selectedExistingDeposition.value === "existing"
+          ? selectedDeposition.value?.toString()
+          : "",
+      metadata: zenodoFormValue.value,
+      tag: githubFormValue.value.tag,
+      release: githubFormValue.value.release,
+      publish: shouldPublish,
+    }),
+  })
+    .then(async (response) => {
+      console.log(response);
+      if (shouldPublish) {
+        push.success({
+          title: "Success",
+          message: "Your Zenodo publish process has been started.",
+        });
+      } else {
+        push.success({
+          title: "Success",
+          message: "Your Zenodo draft has been saved.",
+        });
+      }
+    })
+    .catch((error) => {
+      console.error("Failed to start Zenodo publish process:", error);
+      push.error({
+        title: "Failed to start Zenodo publish process",
+        message: "Please try again later",
+      });
+    })
+    .finally(() => {
+      zenodoPublishSpinner.value = false;
+      zenodoDraftSpinner.value = false;
+    });
 };
 </script>
 
@@ -340,6 +391,7 @@ const createDraftGithubRelease = async () => {
 
     <n-divider />
 
+    <pre>{{ selectedDeposition }} {{ selectedExistingDeposition }}</pre>
 
     <!-- Select Zenodo Deposition -->
     <CardCollapsible title="Select Zenodo Deposition" bordered class="bg-white">
@@ -483,7 +535,41 @@ const createDraftGithubRelease = async () => {
     </CardCollapsible>
 
     <n-divider />
+        <template #icon>
+          <Icon name="fa:plus" size="16" />
+        </template>
+        Create draft GitHub release
+      </n-button>
+    </n-form>
 
+    <n-divider />
+
+    <h2 class="pb-6">Start the Zenodo publish process</h2>
+
+    <n-flex>
+      <n-button
+        @click="startZenodoPublishProcess(false)"
+        :loading="zenodoDraftSpinner"
+      >
+        <template #icon>
+          <Icon name="fa:save" size="16" />
+        </template>
+
+        Save draft
+      </n-button>
+
+      <n-button
+        @click="startZenodoPublishProcess(true)"
+        :loading="zenodoPublishSpinner"
+      >
+        <template #icon>
+          <Icon name="raphael:start" size="16" />
+        </template>
+
+        Start Zenodo publish process
+      </n-button>
+    </n-flex>
+    
     <n-collapse v-if="devMode" class="mt-8" :default-expanded-names="['data']">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>

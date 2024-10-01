@@ -169,6 +169,7 @@ export default defineEventHandler(async (event) => {
     existingZenodoDepositionId:
       zenodoDeposition?.existing_zenodo_deposition_id || null,
     haveValidZenodoToken,
+    zenodoDepositionId: zenodoDeposition?.zenodo_id || null,
     token: zenodoTokenInfo?.token || "",
     zenodoDepositions: existingDepositions,
     zenodoLoginUrl: zenodoLoginUrl || "",
