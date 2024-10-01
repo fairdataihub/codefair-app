@@ -8,57 +8,72 @@ datasource db {
 }
 
 model User {
-  id               String             @id
-  username         String
-  access_token     String             @default("")
-  github_id        Int                @unique
-  created_at       DateTime           @default(now())
-  last_login       DateTime
+  id           String @id
+  github_id    Int    @unique
+  username     String
+  access_token String @default("")
+
+  created_at DateTime @default(now())
+  last_login DateTime
+
   sessions         Session[]
+  ZenodoToken      ZenodoToken[]
   ZenodoDeposition ZenodoDeposition[]
-  ZenodoToken      ZenodoToken?
 }
 
 model Session {
   id        String   @id
-  userId    String
   expiresAt DateTime
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Installation {
-  id                    Int               @id
-  owner                 String
-  repo                  String
-  installation_id       Int
-  latest_commit_date    String            @default("")
-  latest_commit_message String            @default("")
-  latest_commit_sha     String            @default("")
-  latest_commit_url     String            @default("")
-  disabled              Boolean           @default(false)
-  issue_number          Int               @default(0)
-  owner_is_organization Boolean           @default(false)
-  action_count          Int               @default(0)
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
-  CodeMetadata          CodeMetadata?
-  CwlValidation         CwlValidation?
-  LicenseRequest        LicenseRequest?
-  ZenodoDeposition      ZenodoDeposition?
+  id    Int    @id
+  owner String
+  repo  String
+
+  installation_id Int
+
+  latest_commit_date    String @default("")
+  latest_commit_message String @default("")
+  latest_commit_sha     String @default("")
+  latest_commit_url     String @default("")
+
+  disabled     Boolean @default(false)
+  action_count Int     @default(0)
+
+  issue_number Int @default(0)
+
+  owner_is_organization Boolean @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  CodeMetadata     CodeMetadata?
+  CwlValidation    CwlValidation?
+  LicenseRequest   LicenseRequest?
+  ZenodoDeposition ZenodoDeposition?
 }
 
 model LicenseRequest {
-  id               String       @id @default(cuid())
-  identifier       String       @unique
-  repository_id    Int          @unique
-  contains_license Boolean      @default(false)
-  license_status   String       @default("")
-  license_id       String?
-  license_content  String       @default("")
-  pull_request_url String       @default("")
-  created_at       DateTime     @default(now())
-  updated_at       DateTime     @updatedAt
-  repository       Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  id         String @id @default(cuid())
+  identifier String @unique
+
+  contains_license Boolean @default(false)
+  license_status   String  @default("")
+
+  license_id      String?
+  license_content String  @default("")
+
+  pull_request_url String @default("")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  repository_id Int          @unique
+  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
 }
 
 model Ping {
@@ -67,53 +82,71 @@ model Ping {
 }
 
 model CodeMetadata {
-  id                String       @id @default(cuid())
-  identifier        String       @unique
-  repository_id     Int          @unique
-  codemeta_status   String       @default("")
-  contains_codemeta Boolean      @default(false)
-  citation_status   String       @default("")
-  contains_citation Boolean      @default(false)
-  contains_metadata Boolean      @default(false)
-  pull_request_url  String       @default("")
-  metadata          Json         @default("{}")
-  created_at        DateTime     @default(now())
-  updated_at        DateTime     @updatedAt
-  repository        Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  id         String @id @default(cuid())
+  identifier String @unique
+
+  contains_codemeta Boolean @default(false)
+  contains_citation Boolean @default(false)
+  contains_metadata Boolean @default(false)
+
+  codemeta_status String @default("")
+  citation_status String @default("")
+
+  pull_request_url String @default("")
+
+  metadata Json @default("{}")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  repository_id Int          @unique
+  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
 }
 
 model CwlValidation {
-  id                 String       @id @default(cuid())
-  identifier         String       @unique
-  repository_id      Int          @unique
-  contains_cwl_files Boolean      @default(false)
-  overall_status     String       @default("")
-  files              Json         @default("[]")
-  created_at         DateTime     @default(now())
-  updated_at         DateTime     @updatedAt
-  repository         Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  id         String @id @default(cuid())
+  identifier String @unique
+
+  contains_cwl_files Boolean @default(false)
+  overall_status     String  @default("")
+
+  files Json @default("[]")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  repository_id Int          @unique
+  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
 }
 
 model ZenodoToken {
-  id            String   @id @default(cuid())
-  token         String
-  expires_at    DateTime
+  id String @id @default(cuid())
+
+  token      String
+  expires_at DateTime
+
   refresh_token String
-  user_id       String   @unique
-  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  user_id String @unique
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model ZenodoDeposition {
-  id                            String       @id @default(cuid())
-  repository_id                 Int          @unique
-  existing_zenodo_deposition_id Boolean?
-  zenodo_id                     Int?
-  zenodo_metadata               Json         @default("{}")
-  github_release_id             Int?
-  github_tag_name               String?
-  user_id                       String
-  repository                    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
-  user                          User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id String @id @default(cuid())
+
+  repository_id Int          @unique
+  repository    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+
+  existing_zenodo_deposition_id Boolean? //null, false, true
+
+  zenodo_id       Int?
+  zenodo_metadata Json @default("{}")
+
+  github_release_id Int?
+  github_tag_name   String?
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model Analytics {
