@@ -287,6 +287,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
           icon="tabler:license"
           subheader="Confirm that the license is correct and up-to-date. You can edit the license if needed."
           :edit-link="`/add/license/${licenseId}`"
+          @click="licenseChecked = !licenseChecked"
         >
           <template #icon>
             <Icon name="tabler:license" size="40" />
@@ -331,6 +332,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
           subheader="Confirm that the code metadata is correct and up-to-date. You can edit the metadata if needed."
           icon="tabler:code"
           :edit-link="`/add/code-metadata/${metadataId}`"
+          @click="metadataChecked = !metadataChecked"
         >
           <template #icon>
             <Icon name="tabler:code" size="40" />

@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
     },
   });
 
-  if (!installation) {
+  if (!installation?.installation_id) {
     throw createError({
       statusCode: 404,
       statusMessage: "installation-not-found",

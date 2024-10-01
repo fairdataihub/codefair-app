@@ -78,13 +78,13 @@ export async function renderIssues(
     context,
   );
 
-  baseTemplate = await applyArchivalTemplate(
-    subjects,
-    baseTemplate,
-    repository,
-    owner,
-    context,
-  );
+  // baseTemplate = await applyArchivalTemplate(
+  //   subjects,
+  //   baseTemplate,
+  //   repository,
+  //   owner,
+  //   context,
+  // );
 
   baseTemplate = applyLastModifiedTemplate(baseTemplate);
 

@@ -2,6 +2,16 @@ import dbInstance from '../db.js';
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
+export async function releaseGitHubDraft(context, owner, repository, tagVersion) {
+  const release = await context.octokit.repos.createRelease({
+    owner,
+    repo: repository.name,
+    tag_name: tagVersion,
+    name: tagVersion,
+    draft: false,
+  })
+}
+
 export async function applyArchivalTemplate(
   subjects,
   baseTemplate,
