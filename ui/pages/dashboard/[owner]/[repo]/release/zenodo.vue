@@ -222,7 +222,11 @@ const createDraftGithubRelease = async () => {
     <n-divider />
 
     <!-- Confirm Metadata and License Section -->
-    <div>
+    <CardCollapsible
+      bordered
+      :title="`Confirm Metadata and License for ${owner}/${repo}`"
+      class="bg-white"
+    >
       <CardDashboard
         title="License"
         subheader="Confirm that the license is correct for your software and release. You can edit the license if needed."
@@ -299,13 +303,13 @@ const createDraftGithubRelease = async () => {
           </NuxtLink>
         </template>
       </CardDashboard>
-    </div>
+    </CardCollapsible>
 
     <n-divider />
 
 
     <!-- Zenodo Log In Section -->
-    <div v-if="allConfirmed">
+    <CardCollapsible title="Zenodo Log In" class="bg-white" v-if="allConfirmed" bordered>
       <h2 class="pb-6">Login to Zenodo</h2>
      
       <p v-if="haveValidZenodoToken">
@@ -326,13 +330,13 @@ const createDraftGithubRelease = async () => {
           Login to Zenodo
         </n-button>
       </a>
-    </div>
+    </CardCollapsible>
+
+    <n-divider />
 
 
     <!-- Select Zenodo Deposition -->
-    <div>
-      <h2 class="pb-6">Select Zenodo deposition</h2>
-
+    <CardCollapsible title="Select Zenodo Deposition" bordered class="bg-white">
       <n-radio
         :checked="selectedExistingDeposition === 'existing'"
         value="existing"
@@ -357,18 +361,18 @@ const createDraftGithubRelease = async () => {
         :options="selectableDepositions"
       />
 
-    </div>
+    </CardCollapsible>
 
     <!-- Select Zenodo Community -->
-    <div>
+    <!-- <div>
       <CardPlaceholder placeholder="?Select Zenodo community?" />
 
-    </div>
+    </div> -->
+
+    <n-divider />
 
     <!-- Add Zenodo Metadata -->
-    <div>
-      <h2 class="pb-6">Add Zenodo required metadata</h2>
-
+    <CardCollapsible title="Add Zenodo required metadata" bordered class="bg-white">
       <n-form
         ref="zenodoFormRef"
         :label-width="80"
@@ -393,12 +397,12 @@ const createDraftGithubRelease = async () => {
         <n-button @click="validateZenodoForm"> Validate </n-button>
       </n-form>
   
-    </div>
+    </CardCollapsible>
+
+    <n-divider />
 
     <!-- Create Draft Github Release -->
-    <div>
-      <h2 class="pb-6">Create draft GitHub release</h2>
-
+    <CardCollapsible bordered title="Create draft GitHub release" class="bg-white">
       <n-form
         ref="githubFormRef"
         :label-width="80"
@@ -462,14 +466,15 @@ const createDraftGithubRelease = async () => {
   
         <pre>{{ githubFormValue }}</pre>
       </n-form>
+    </CardCollapsible>
 
-    </div>
+    <n-divider />
 
     <!-- Publish Zenodo Release -->
-    <div>
+    <CardCollapsible title="Published Zenodo Release" bordered class="bg-white">
       <CardPlaceholder placeholder="Publish Zenodo release" />
 
-    </div>
+    </CardCollapsible>
 
     <n-divider />
 
