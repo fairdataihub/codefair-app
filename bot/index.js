@@ -729,9 +729,10 @@ export default async (app, { getRouter }) => {
       const resultArray = extratedContent.split(/\s+/);
 
       consola.info("UI Info:", uiInfo);
+      consola.info("Result Array:", resultArray);
       const depositionId = uiInfo[0];
       const tagVersion = uiInfo[1];
-      const user = uiInfo[2];
+      const userWhoSubmitted = uiInfo[2];
 
       // 4. Request a DOI from Zenodo
 
@@ -739,16 +740,15 @@ export default async (app, { getRouter }) => {
       await updateMetadataIdentifier(context, owner, repository, depositionId);
 
       // 6. Release the draft GitHub release
-      // const release = await context.octokit.repos.createRelease({
-      //   owner,
-      //   repo: repository.name,
-      //   tag_name: tagVersion,
-      //   name: tagVersion,
-      //   draft: false,
+      const release = await context.octokit.repos.createRelease({
+        owner,
+        repo: repository.name,
+        tag_name: tagVersion,
+        name: tagVersion,
+        draft: false,
+      });
 
-      // });
-
-      // consola.warn(release);
+      consola.warn(release);
 
       // 7. Submit the files to Zenodo (gather the files from the release)
       const files = await context.octokit.repos.listReleaseAssets({
