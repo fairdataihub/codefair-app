@@ -10,14 +10,14 @@ export default defineEventHandler(async (event) => {
   const user = event.context.user as User | null;
 
   const bodySchema = z.object({
-    useExistingDeposition: z.boolean(),
-    zenodoDepositionId: z.string(),
     metadata: z.object({
       accessRight: z.string(),
     }),
-    tag: z.string(),
-    release: z.string(),
     publish: z.boolean(),
+    release: z.string(),
+    tag: z.string(),
+    useExistingDeposition: z.boolean(),
+    zenodoDepositionId: z.string(),
   });
 
   const { owner, repo } = event.context.params as {
@@ -40,18 +40,18 @@ export default defineEventHandler(async (event) => {
     console.error(parsedBody.error.issues);
 
     throw createError({
-      statusMessage: "The provided parameters are invalid",
       statusCode: 400,
+      statusMessage: "The provided parameters are invalid",
     });
   }
 
   const {
-    zenodoDepositionId,
     metadata,
-    tag,
-    release,
     publish,
+    release,
+    tag,
     useExistingDeposition,
+    zenodoDepositionId,
   } = parsedBody.data;
 
   // Check if the user has write permissions to the repository
@@ -74,18 +74,18 @@ export default defineEventHandler(async (event) => {
 
   const app = new App({
     appId: process.env.GITHUB_APP_ID!,
-    privateKey: process.env.GITHUB_APP_PRIVATE_KEY!,
     oauth: {
       clientId: null as unknown as string,
       clientSecret: null as unknown as string,
     },
+    privateKey: process.env.GITHUB_APP_PRIVATE_KEY!,
   });
 
   const octokit = await app.getInstallationOctokit(
     installation.installation_id,
   );
 
-  //TODO: Check if the license, codemeta and citation files are present and valid
+  // TODO: Check if the license, codemeta and citation files are present and valid
 
   // Check if the zenodotoken is valid
   const zenodoTokenInfo = await prisma.zenodoToken.findFirst({
@@ -201,30 +201,34 @@ export default defineEventHandler(async (event) => {
   if (!zenodoDeposition) {
     await prisma.zenodoDeposition.create({
       data: {
-        repository_id: installation.id,
         existing_zenodo_deposition_id: useExistingDeposition,
-        zenodo_id: parseInt(zenodoDepositionId) || null,
-        zenodo_metadata: metadata,
         github_release_id: parseInt(release) || null,
         github_tag_name: tag,
+        repository_id: installation.id,
         user_id: user?.id || "",
+        zenodo_id: parseInt(zenodoDepositionId) || null,
+        zenodo_metadata: metadata,
       },
     });
   } else {
     await prisma.zenodoDeposition.update({
       data: {
         existing_zenodo_deposition_id: useExistingDeposition,
-        zenodo_id: parseInt(zenodoDepositionId) || null,
-        zenodo_metadata: metadata,
         github_release_id: parseInt(release) || null,
         github_tag_name: tag,
         user_id: user?.id || "",
+        zenodo_id: parseInt(zenodoDepositionId) || null,
+        zenodo_metadata: metadata,
       },
       where: {
         repository_id: installation.id,
       },
     });
   }
+
+  const updatedIssueBody = `<!-- @codefair-bot publish-zenodo ${zenodoDepositionId} ${release} ${tag} ${user?.username} -->`;
+
+  console.log(updatedIssueBody);
 
   if (publish) {
     // Edit the issue body with a hidden request for the release

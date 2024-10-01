@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 import type { FormInst, SelectOption, SelectGroupOption } from "naive-ui";
 import { faker } from "@faker-js/faker";
-import CardDashboard from "~/components/card/CardDashboard.vue";
+import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 const route = useRoute();
 const user = useUser();
@@ -25,9 +24,11 @@ const haveValidZenodoToken = ref(false);
 const licenseChecked = ref(false);
 const metadataChecked = ref(false);
 const licenseId = ref("");
-const metadataId  = ref("");
+const metadataId = ref("");
 
-const allConfirmed = computed(() => licenseChecked.value && metadataChecked.value);
+const allConfirmed = computed(
+  () => licenseChecked.value && metadataChecked.value,
+);
 
 const selectedExistingDeposition = ref<String | null>(null);
 const selectedDeposition = ref<String | null>(null);
@@ -47,18 +48,18 @@ const zenodoFormRules = ref({
 
 const githubFormRef = ref<FormInst | null>(null);
 const githubFormValue = ref({
-  tag: null,
-  release: null,
   title: "",
+  release: null,
+  tag: null,
 });
 const githubFormRules = ref({
-  tag: {
-    message: "Please select a tag",
+  release: {
+    message: "Please select a release",
     required: true,
     trigger: ["blur", "change"],
   },
-  release: {
-    message: "Please select a release",
+  tag: {
+    message: "Please select a tag",
     required: true,
     trigger: ["blur", "change"],
   },
@@ -110,14 +111,14 @@ if (data.value) {
 
   for (const release of data.value.githubReleases) {
     githubTagOptions.value.push({
+      disabled: !release.draft,
       label: release.tagName,
       value: release.tagName,
-      disabled: !release.draft,
     });
     githubReleaseOptions.value.push({
+      disabled: !release.draft,
       label: release.name || "Untitled release",
       value: release.id.toString(),
-      disabled: !release.draft,
     });
   }
 
@@ -130,9 +131,9 @@ if (data.value) {
   // dev
   githubFormValue.value.tag = `v${faker.system.semver()}`;
   githubTagOptions.value.push({
+    disabled: false,
     label: githubFormValue.value.tag,
     value: githubFormValue.value.tag,
-    disabled: false,
   });
 
   githubFormValue.value.release = "new";
@@ -161,13 +162,13 @@ const createDraftGithubRelease = async () => {
     if (!errors) {
       createDraftGithubReleaseSpinner.value = true;
       await $fetch(`/api/${owner}/${repo}/release/github`, {
+        body: JSON.stringify({
+          title: githubFormValue.value.title,
+          release: githubFormValue.value.release,
+          tag: githubFormValue.value.tag,
+        }),
         headers: useRequestHeaders(["cookie"]),
         method: "POST",
-        body: JSON.stringify({
-          tag: githubFormValue.value.tag,
-          release: githubFormValue.value.release,
-          title: githubFormValue.value.title,
-        }),
       })
         .then(async (response) => {
           console.log(response);
@@ -176,14 +177,14 @@ const createDraftGithubRelease = async () => {
             message: "Your draft GitHub release has been created.",
           });
 
-          //Add the releaseid to the options
+          // Add the releaseid to the options
           githubReleaseOptions.value.push({
+            disabled: false,
             label: githubFormValue.value.title,
             value: response.releaseId.toString(),
-            disabled: false,
           });
 
-          //Select the new release
+          // Select the new release
           githubFormValue.value.release = response.releaseId.toString();
           const htmlUrl = response.htmlUrl;
           const editUrl = htmlUrl.replace("/tag/", "/edit/");
@@ -217,19 +218,19 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     zenodoDraftSpinner.value = true;
   }
   await $fetch(`/api/${owner}/${repo}/release/zenodo`, {
-    headers: useRequestHeaders(["cookie"]),
-    method: "POST",
     body: JSON.stringify({
+      metadata: zenodoFormValue.value,
+      publish: shouldPublish,
+      release: githubFormValue.value.release,
+      tag: githubFormValue.value.tag,
       useExistingDeposition: selectedExistingDeposition.value === "existing",
       zenodoDepositionId:
         selectedExistingDeposition.value === "existing"
           ? selectedDeposition.value?.toString()
           : "",
-      metadata: zenodoFormValue.value,
-      tag: githubFormValue.value.tag,
-      release: githubFormValue.value.release,
-      publish: shouldPublish,
     }),
+    headers: useRequestHeaders(["cookie"]),
+    method: "POST",
   })
     .then(async (response) => {
       console.log(response);
@@ -270,6 +271,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         release.
       </p>
     </n-flex>
+
     <n-divider />
 
     <!-- Confirm Metadata and License Section -->
@@ -284,7 +286,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
           title="Confirm License"
           icon="tabler:license"
           subheader="Confirm that the license is correct and up-to-date. You can edit the license if needed."
-          :editLink="`/add/license/${licenseId}`"
+          :edit-link="`/add/license/${licenseId}`"
         >
           <template #icon>
             <Icon name="tabler:license" size="40" />
@@ -292,23 +294,27 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
 
           <!-- Custom checkbox with a checkmark -->
           <template #action>
-            <label class="flex items-center gap-3 cursor-pointer relative">
+            <label class="relative flex cursor-pointer items-center gap-3">
               <!-- Custom-styled checkbox with checkmark -->
               <input
                 type="checkbox"
                 :checked="licenseChecked"
+                class="h-6 w-6 cursor-pointer appearance-none rounded-md border border-gray-300 checked:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
                 @change="licenseChecked = $event.target.checked"
-                class="h-6 w-6 cursor-pointer appearance-none border border-gray-300 rounded-md checked:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
               />
               <!-- Nuxt Icon that appears when checkbox is checked -->
               <Icon
                 v-if="licenseChecked"
                 name="mdi:check"
                 size="24"
-                class="absolute inset-0 text-white pointer-events-none"
+                class="pointer-events-none absolute inset-0 text-white"
               />
-              <span class="text-slate-700 font-medium">Release with License as is</span>
+
+              <span class="font-medium text-slate-700"
+                >Release with License as is</span
+              >
             </label>
+
             <NuxtLink :to="`/add/license/${licenseId}`">
               <n-button class="bg-indigo-500 text-white">
                 <template #icon>
@@ -324,7 +330,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
           title="Confirm Code Metadata"
           subheader="Confirm that the code metadata is correct and up-to-date. You can edit the metadata if needed."
           icon="tabler:code"
-          :editLink="`/add/code-metadata/${metadataId}`"
+          :edit-link="`/add/code-metadata/${metadataId}`"
         >
           <template #icon>
             <Icon name="tabler:code" size="40" />
@@ -332,23 +338,27 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
 
           <!-- Custom checkbox with a checkmark -->
           <template #action>
-            <label class="flex items-center gap-2 cursor-pointer relative">
+            <label class="relative flex cursor-pointer items-center gap-2">
               <!-- Custom-styled checkbox with checkmark -->
               <input
                 type="checkbox"
                 :checked="metadataChecked"
+                class="h-6 w-6 cursor-pointer appearance-none rounded-md border border-gray-300 checked:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
                 @change="metadataChecked = $event.target.checked"
-                class="h-6 w-6 cursor-pointer appearance-none border border-gray-300 rounded-md checked:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
               />
               <!-- Nuxt Icon that appears when checkbox is checked -->
               <Icon
                 v-if="metadataChecked"
                 name="mdi:check"
                 size="24"
-                class="absolute inset-0 text-white pointer-events-none"
+                class="pointer-events-none absolute inset-0 text-white"
               />
-              <span class="text-slate-700 font-medium">Release with code metadata as is</span>
+
+              <span class="font-medium text-slate-700"
+                >Release with code metadata as is</span
+              >
             </label>
+
             <NuxtLink :to="`/add/code-metadata/${metadataId}`">
               <n-button class="bg-indigo-500 text-white">
                 <template #icon>
@@ -365,7 +375,12 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     <n-divider />
 
     <!-- Zenodo Log In Section -->
-    <CardCollapsible title="Zenodo Log In" class="bg-white" v-if="allConfirmed" bordered>
+    <CardCollapsible
+      v-if="allConfirmed"
+      title="Zenodo Log In"
+      class="bg-white"
+      bordered
+    >
       <h2 class="pb-6">Login to Zenodo</h2>
 
       <p v-if="haveValidZenodoToken">
@@ -422,7 +437,11 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     <n-divider />
 
     <!-- Add Zenodo Metadata -->
-    <CardCollapsible title="Add Zenodo required metadata" bordered class="bg-white">
+    <CardCollapsible
+      title="Add Zenodo required metadata"
+      bordered
+      class="bg-white"
+    >
       <n-form
         ref="zenodoFormRef"
         :label-width="80"
@@ -437,8 +456,11 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
           >
             <n-flex vertical>
               <n-radio value="open"> Open Access </n-radio>
+
               <n-radio value="embargoed" disabled> Embargoed Access </n-radio>
+
               <n-radio value="restricted" disabled> Restricted Access </n-radio>
+
               <n-radio value="closed" disabled> Closed Access </n-radio>
             </n-flex>
           </n-radio-group>
@@ -451,7 +473,11 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     <n-divider />
 
     <!-- Create Draft Github Release -->
-    <CardCollapsible bordered title="Create draft GitHub release" class="bg-white">
+    <CardCollapsible
+      bordered
+      title="Create draft GitHub release"
+      class="bg-white"
+    >
       <n-form
         ref="githubFormRef"
         :label-width="80"
@@ -481,6 +507,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         </n-form-item>
 
         <n-form-item
+          v-show="githubFormValue.release === 'new'"
           label="Release Title"
           path="title"
           :rule="{
@@ -488,24 +515,23 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
             required: githubFormValue.release === 'new',
             trigger: ['blur', 'input'],
           }"
-          v-show="githubFormValue.release === 'new'"
         >
           <n-input
-            clearable
             v-model:value="githubFormValue.title"
+            clearable
             placeholder="Enter release title"
           />
         </n-form-item>
 
         <p>
           Your github release will be created in a draft state. Please make sure
-          to add any additional executables and update the release notes. Once you
-          are done, you can come back to this page and publish the release.
+          to add any additional executables and update the release notes. Once
+          you are done, you can come back to this page and publish the release.
         </p>
 
         <n-button
-          @click="createDraftGithubRelease"
           :loading="createDraftGithubReleaseSpinner"
+          @click="createDraftGithubRelease"
         >
           <template #icon>
             <Icon name="fa:plus" size="16" />
@@ -523,8 +549,8 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
 
     <n-flex>
       <n-button
-        @click="startZenodoPublishProcess(false)"
         :loading="zenodoDraftSpinner"
+        @click="startZenodoPublishProcess(false)"
       >
         <template #icon>
           <Icon name="fa:save" size="16" />
@@ -534,8 +560,8 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
       </n-button>
 
       <n-button
-        @click="startZenodoPublishProcess(true)"
         :loading="zenodoPublishSpinner"
+        @click="startZenodoPublishProcess(true)"
       >
         <template #icon>
           <Icon name="raphael:start" size="16" />
@@ -552,4 +578,3 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     </n-collapse>
   </main>
 </template>
-
