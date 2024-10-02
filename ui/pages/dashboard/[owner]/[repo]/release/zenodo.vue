@@ -376,210 +376,213 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
 
       <n-divider />
 
-      TODO: ADD ZENODO DEPOSITION SELECTION CARD
+      <CardDashboard title="Select your Zenodo record">
+        <template #icon>
+          <Icon name="tabler:file-text" size="40" />
+        </template>
+
+        <template #content>
+          <div class="flex w-full flex-col">
+            <h4 class="pb-2">
+              Do you want to publish this repository to a new Zenodo deposition
+              or to an existing one?
+            </h4>
+
+            <n-radio-group
+              v-model:value="selectedExistingDeposition"
+              name="selectedExistingDeposition"
+              @update:value="selectedDeposition = null"
+            >
+              <n-radio-button
+                key="existing"
+                value="existing"
+                label="Existing Zenodo Deposition"
+              />
+              <n-radio-button
+                key="new"
+                value="new"
+                label="New Zenodo Deposition"
+              />
+            </n-radio-group>
+
+            <div class="mt-4" v-if="selectedExistingDeposition === 'existing'">
+              <h4 class="pb-2">Select your Zenodo record</h4>
+
+              <n-select
+                v-model:value="selectedDeposition"
+                size="large"
+                :options="selectableDepositions"
+              />
+            </div>
+          </div>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <h2 class="pb-6">Zenodo metadata</h2>
+
+      <CardDashboard title="Add missing metadata">
+        <template #icon>
+          <Icon name="material-symbols:add-notes-outline" size="40" />
+        </template>
+
+        <template #content>
+          <div class="flex w-full flex-col">
+            <n-form
+              ref="zenodoFormRef"
+              :label-width="80"
+              :model="zenodoFormValue"
+              :rules="zenodoFormRules"
+              size="large"
+            >
+              <n-form-item label="Access Right" path="accessRight">
+                <n-radio-group
+                  v-model:value="zenodoFormValue.accessRight"
+                  name="accessRight"
+                >
+                  <n-flex vertical>
+                    <n-radio value="open"> Open Access </n-radio>
+
+                    <n-radio value="embargoed" disabled>
+                      Embargoed Access
+                    </n-radio>
+
+                    <n-radio value="restricted" disabled>
+                      Restricted Access
+                    </n-radio>
+
+                    <n-radio value="closed" disabled> Closed Access </n-radio>
+                  </n-flex>
+                </n-radio-group>
+              </n-form-item>
+
+              <n-button @click="validateZenodoForm"> Continue </n-button>
+            </n-form>
+          </div>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <h2 class="pb-6">GitHub release</h2>
+
+      <CardDashboard title="Draft a GitHub release">
+        <template #icon>
+          <Icon name="lucide:folder-git-2" size="40" />
+        </template>
+
+        <template #content>
+          <div class="flex w-full flex-col">
+            <n-form
+              ref="githubFormRef"
+              :label-width="80"
+              :model="githubFormValue"
+              :rules="githubFormRules"
+              size="large"
+            >
+              <n-form-item label="Github Tag" path="tag">
+                <n-select
+                  v-model:value="githubFormValue.tag"
+                  :options="githubTagOptions"
+                  tag
+                  filterable
+                  clearable
+                  placeholder="Select a tag"
+                />
+              </n-form-item>
+
+              <n-form-item label="Github Release" path="release">
+                <n-select
+                  v-model:value="githubFormValue.release"
+                  :options="githubReleaseOptions"
+                  placeholder="Select a release"
+                  clearable
+                  filterable
+                />
+              </n-form-item>
+
+              <n-form-item
+                v-show="githubFormValue.release === 'new'"
+                label="Release Title"
+                path="title"
+                :rule="{
+                  message: 'Please enter a title',
+                  required: githubFormValue.release === 'new',
+                  trigger: ['blur', 'input'],
+                }"
+              >
+                <n-input
+                  v-model:value="githubFormValue.title"
+                  clearable
+                  placeholder="Enter release title"
+                />
+              </n-form-item>
+
+              <p>
+                Your github release will be created in a draft state. Please
+                make sure to add any additional executables and update the
+                release notes. Once you are done, you can come back to this page
+                and publish the release.
+              </p>
+
+              <n-button
+                :loading="createDraftGithubReleaseSpinner"
+                @click="createDraftGithubRelease"
+              >
+                <template #icon>
+                  <Icon name="fa:plus" size="16" />
+                </template>
+                Create draft GitHub release
+              </n-button>
+            </n-form>
+          </div>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <h2 class="pb-6">Publish Zenodo release</h2>
+
+      <CardDashboard title="Publish Zenodo release">
+        <template #icon>
+          <Icon name="simple-icons:zenodo" size="40" />
+        </template>
+
+        <template #content>
+          <div class="flex w-full flex-col">
+            <n-flex>
+              <n-button
+                :loading="zenodoDraftSpinner"
+                @click="startZenodoPublishProcess(false)"
+              >
+                <template #icon>
+                  <Icon name="fa:save" size="16" />
+                </template>
+
+                Save draft
+              </n-button>
+
+              <n-button
+                :loading="zenodoPublishSpinner"
+                @click="startZenodoPublishProcess(true)"
+              >
+                <template #icon>
+                  <Icon name="raphael:start" size="16" />
+                </template>
+
+                Start Zenodo publish process
+              </n-button>
+            </n-flex>
+          </div>
+        </template>
+      </CardDashboard>
     </div>
 
     <n-alert v-else type="warning" class="w-full">
       You have not yet confirmed the required metadata files. Please review the
       license and code metadata files above to continue.
     </n-alert>
-
-    <!-- Zenodo Log In Section -->
-    <CardCollapsible
-      v-if="allConfirmed"
-      title="Zenodo Log In"
-      class="bg-white"
-      bordered
-    >
-      <h2 class="pb-6">Login to Zenodo</h2>
-
-      <p v-if="haveValidZenodoToken">
-        Looks like we have a valid Zenodo token for you. You can now continue to
-        the next step.
-      </p>
-
-      <p v-else>
-        Looks like we don't have a valid Zenodo token for you. Please login to
-        Zenodo using the button below.
-      </p>
-
-      <a v-if="!haveValidZenodoToken && allConfirmed" :href="zenodoLoginUrl">
-        <n-button type="primary">
-          <template #icon>
-            <Icon name="simple-icons:zenodo" size="16" />
-          </template>
-          Login to Zenodo
-        </n-button>
-      </a>
-    </CardCollapsible>
-
-    <n-divider />
-
-    <pre>{{ selectedDeposition }} {{ selectedExistingDeposition }}</pre>
-
-    <!-- Select Zenodo Deposition -->
-    <CardCollapsible title="Select Zenodo Deposition" bordered class="bg-white">
-      <n-radio
-        :checked="selectedExistingDeposition === 'existing'"
-        value="existing"
-        name="selectedExistingDeposition"
-        @change="handleChange"
-      >
-        Existing Zenodo Deposition
-      </n-radio>
-
-      <n-radio
-        :checked="selectedExistingDeposition === 'new'"
-        value="new"
-        name="selectedExistingDeposition"
-        @change="handleChange"
-      >
-        New Zenodo Deposition
-      </n-radio>
-
-      <n-select
-        v-if="selectedExistingDeposition === 'existing'"
-        v-model:value="selectedDeposition"
-        :options="selectableDepositions"
-      />
-    </CardCollapsible>
-
-    <n-divider />
-
-    <!-- Add Zenodo Metadata -->
-    <CardCollapsible
-      title="Add Zenodo required metadata"
-      bordered
-      class="bg-white"
-    >
-      <n-form
-        ref="zenodoFormRef"
-        :label-width="80"
-        :model="zenodoFormValue"
-        :rules="zenodoFormRules"
-        size="large"
-      >
-        <n-form-item label="Access Right" path="accessRight">
-          <n-radio-group
-            v-model:value="zenodoFormValue.accessRight"
-            name="accessRight"
-          >
-            <n-flex vertical>
-              <n-radio value="open"> Open Access </n-radio>
-
-              <n-radio value="embargoed" disabled> Embargoed Access </n-radio>
-
-              <n-radio value="restricted" disabled> Restricted Access </n-radio>
-
-              <n-radio value="closed" disabled> Closed Access </n-radio>
-            </n-flex>
-          </n-radio-group>
-        </n-form-item>
-
-        <n-button @click="validateZenodoForm"> Validate </n-button>
-      </n-form>
-    </CardCollapsible>
-
-    <n-divider />
-
-    <!-- Create Draft Github Release -->
-    <CardCollapsible
-      bordered
-      title="Create draft GitHub release"
-      class="bg-white"
-    >
-      <n-form
-        ref="githubFormRef"
-        :label-width="80"
-        :model="githubFormValue"
-        :rules="githubFormRules"
-        size="large"
-      >
-        <n-form-item label="Github Tag" path="tag">
-          <n-select
-            v-model:value="githubFormValue.tag"
-            :options="githubTagOptions"
-            tag
-            filterable
-            clearable
-            placeholder="Select a tag"
-          />
-        </n-form-item>
-
-        <n-form-item label="Github Release" path="release">
-          <n-select
-            v-model:value="githubFormValue.release"
-            :options="githubReleaseOptions"
-            placeholder="Select a release"
-            clearable
-            filterable
-          />
-        </n-form-item>
-
-        <n-form-item
-          v-show="githubFormValue.release === 'new'"
-          label="Release Title"
-          path="title"
-          :rule="{
-            message: 'Please enter a title',
-            required: githubFormValue.release === 'new',
-            trigger: ['blur', 'input'],
-          }"
-        >
-          <n-input
-            v-model:value="githubFormValue.title"
-            clearable
-            placeholder="Enter release title"
-          />
-        </n-form-item>
-
-        <p>
-          Your github release will be created in a draft state. Please make sure
-          to add any additional executables and update the release notes. Once
-          you are done, you can come back to this page and publish the release.
-        </p>
-
-        <n-button
-          :loading="createDraftGithubReleaseSpinner"
-          @click="createDraftGithubRelease"
-        >
-          <template #icon>
-            <Icon name="fa:plus" size="16" />
-          </template>
-          Create draft GitHub release
-        </n-button>
-
-        <pre>{{ githubFormValue }}</pre>
-      </n-form>
-    </CardCollapsible>
-
-    <n-divider />
-
-    <h2 class="pb-6">Start the Zenodo publish process</h2>
-
-    <n-flex>
-      <n-button
-        :loading="zenodoDraftSpinner"
-        @click="startZenodoPublishProcess(false)"
-      >
-        <template #icon>
-          <Icon name="fa:save" size="16" />
-        </template>
-
-        Save draft
-      </n-button>
-
-      <n-button
-        :loading="zenodoPublishSpinner"
-        @click="startZenodoPublishProcess(true)"
-      >
-        <template #icon>
-          <Icon name="raphael:start" size="16" />
-        </template>
-
-        Start Zenodo publish process
-      </n-button>
-    </n-flex>
 
     <n-collapse v-if="devMode" class="mt-8" :default-expanded-names="['data']">
       <n-collapse-item title="data" name="data">
