@@ -346,10 +346,7 @@ const handleSettingsSelect = (key: any) => {
 
       <n-divider />
 
-      <h2 class="pb-6">
-        Language Specific Standards
-        <Icon name="mdi:file-code-outline" size="30" clss="ml-2"></Icon>
-      </h2>
+      <h2 class="pb-6">Language Specific Standards</h2>
 
       <CardDashboard
         title="CWL Validation"
@@ -431,9 +428,15 @@ const handleSettingsSelect = (key: any) => {
 
       <n-divider />
 
-      <h2 class="pb-6">Software Archival <Icon name="tabler:archive" size="30" class="ml-2"></Icon></h2>
+      <h2 class="pb-6">
+        Software Archival
+        <Icon name="tabler:archive" size="30" class="ml-2"></Icon>
+      </h2>
 
-      <CardDashboard title="Zenodo" subheader="Make a GitHub release and archive the software on Zenodo.">
+      <CardDashboard
+        title="Zenodo"
+        subheader="Make a GitHub release and archive the software on Zenodo."
+      >
         <template #icon>
           <Icon name="simple-icons:zenodo" size="40" />
         </template>
@@ -454,11 +457,14 @@ const handleSettingsSelect = (key: any) => {
 
       <n-divider />
 
-      <CardDashboard title="Fighshare" subheader="Make a GitHub release and archive the software on Figshare.">
+      <CardDashboard
+        title="Fighshare"
+        subheader="Make a GitHub release and archive the software on Figshare."
+      >
         <template #icon>
           <Icon name="simple-icons:figshare" size="40" />
         </template>
-      
+
         <template #content> hello</template>
         <template #action>
           <NuxtLink :to="`/dashboard/${owner}/${repo}/release/figshare`">

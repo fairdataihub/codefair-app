@@ -21,8 +21,8 @@ const devMode = process.env.NODE_ENV === "development";
 const zenodoLoginUrl = ref("");
 const haveValidZenodoToken = ref(false);
 
-const licenseChecked = ref(false);
-const metadataChecked = ref(false);
+const licenseChecked = ref(true);
+const metadataChecked = ref(true);
 const licenseId = ref("");
 const metadataId = ref("");
 
@@ -281,7 +281,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         subheader="A license file is required for the repository to be released on Zenodo."
       >
         <template #icon>
-          <Icon name="tabler:code" size="40" />
+          <Icon name="material-symbols:license" size="40" />
         </template>
 
         <template #content>
@@ -340,8 +340,18 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
       <h2 class="pb-6">Select Zenodo deposition</h2>
 
       <CardDashboard title="Check Zenodo connection">
+        <template #icon>
+          <Icon
+            v-if="!haveValidZenodoToken"
+            name="clarity:disconnect-line"
+            size="40"
+            class="text-red-500"
+          />
+          <Icon v-else name="wpf:connected" size="40" />
+        </template>
+
         <template #content>
-          <n-flex justify="space-between">
+          <n-flex justify="space-between" class="w-full" align="center">
             <p v-if="haveValidZenodoToken">
               Looks like we have a valid Zenodo connection to your account. You
               can now continue to the next step.
