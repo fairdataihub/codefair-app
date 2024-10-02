@@ -20,6 +20,7 @@ checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
+const ZENODO_API = process.env.ZENODO_API_ENDPOINT;
 
 /**
  * This is the main entrypoint to your Probot app
@@ -734,29 +735,58 @@ export default async (app, { getRouter }) => {
       const match = extratedContent.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
       const uiInfo = match[1];
 
-      const resultArray = extratedContent.split(/\s+/);
+      const resultArray = uiInfo.split(/\s+/);
 
-      consola.info("UI Info:", uiInfo);
-      // consola.info("Result Array:", resultArray);
-      const depositionId = uiInfo[0];
-      const tagVersion = uiInfo[1];
-      const userWhoSubmitted = uiInfo[2];
+      // consola.info("UI Info:", uiInfo);
+      consola.info("Result Array:", resultArray);
+      const depositionId = resultArray[0];
+      const tagVersion = resultArray[1];
+      const userWhoSubmitted = resultArray[2];
 
       // 4. Request a DOI from Zenodo
 
       // 5. Update the CITATION.cff and codemeta.json files with the DOI
       await updateMetadataIdentifier(context, owner, repository, depositionId);
 
-      // 6. Get the drafted release and publish it
-      const release = await context.octokit.repos.getLatestRelease({
+      // 6. Get release based on tag and update to publish
+      // const release = await context.octokit.repos.getReleaseByTag({
+      //   owner,
+      //   repo: repository.name,
+      //   tag: tagVersion,
+      // });
+
+      consola.info("Need to find tag:", tagVersion);
+      consola.info("Getting releases...");
+
+      const releases = await context.octokit.repos.listReleases({
         owner,
         repo: repository.name,
       });
 
+      consola.warn("releases", releases);
+      
+      const draftRelease = releases.data.find(release => release.draft && release.tag_name === tagVersion);
+      consola.warn("draft release", draftRelease);
+
+      if (!draftRelease) {
+        throw new Error(`Draft release with tag ${tagVersion} not found.`);
+      }
+      
+      // To publish the draft release
+      const updatedRelease = await context.octokit.repos.updateRelease({
+        owner,
+        repo: repository.name,
+        release_id: draftRelease.id,
+        draft: false, // This will publish the release
+      });
+
+      consola.warn("release was created, response")
+      consola.warn(updatedRelease);
+
       // 7. Gather the files from the release
 
       consola.warn("release was created, gathering files...");
-      consola.warn(release);
+      consola.warn(updatedRelease);
 
       // 8. Submit the files to Zenodo (gather the files from the release)
       const files = await context.octokit.repos.listReleaseAssets({
@@ -766,7 +796,20 @@ export default async (app, { getRouter }) => {
 
       consola.warn(files);
 
-      // 8. Publish the Zenodo record
+      // 8. Make connection with Zenodo API to submit the files
+      const access_token = dbInstance.user.findUnique({
+        where: {
+          username: userWhoSubmitted,
+        },
+      });
+      const zenodoResponse = await fetch(`${ZENODO_API}/depositions/${depositionId}/files`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${access_token}`,
+        },
+        body: JSON.stringify(files),
+      })
     }
   });
 
