@@ -747,19 +747,18 @@ export default async (app, { getRouter }) => {
       // 5. Update the CITATION.cff and codemeta.json files with the DOI
       await updateMetadataIdentifier(context, owner, repository, depositionId);
 
-      // 6. Release the draft GitHub release
-      const release = await context.octokit.repos.createRelease({
+      // 6. Get the drafted release and publish it
+      const release = await context.octokit.repos.getLatestRelease({
         owner,
         repo: repository.name,
-        tag_name: tagVersion,
-        name: depositionId,
-        draft: false,
       });
+
+      // 7. Gather the files from the release
 
       consola.warn("release was created, gathering files...");
       consola.warn(release);
 
-      // 7. Submit the files to Zenodo (gather the files from the release)
+      // 8. Submit the files to Zenodo (gather the files from the release)
       const files = await context.octokit.repos.listReleaseAssets({
         owner,
         repo: repository.name,
