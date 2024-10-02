@@ -18,6 +18,8 @@ import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadat
 checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
+const ZENODO_API_ENDPOINT = process.env.ZENODO_API_ENDPOINT;
+
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
 const ZENODO_API = process.env.ZENODO_API_ENDPOINT;
@@ -712,7 +714,8 @@ export default async (app, { getRouter }) => {
       // 1. Get the metadata from the repository
       const citationCff = await getCitationContent(context, owner, repository);
       const codemeta = await getCodemetaContent(context, owner, repository);
-      
+
+      // 2. Validate the CITATION.cff and codemeta.json files
       // 2. Validate the CITATION.cff and codemeta.json files
       try {
         await validateMetadata(citationCff, "citation")
@@ -731,8 +734,8 @@ export default async (app, { getRouter }) => {
       // 3. Create the Zenodo record or get the existing one (comes in issueBody)
       // Extract the content between <!-- @codefair-bot publish-zenodo and -->
       const str = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*[\s\S]*?-->/);
-      const extratedContent = str[0];
-      const match = extratedContent.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
+      const extractedContent = str[0];
+      const match = extractedContent.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
       const uiInfo = match[1];
 
       const resultArray = uiInfo.split(/\s+/);
@@ -742,21 +745,6 @@ export default async (app, { getRouter }) => {
       const depositionId = resultArray[0];
       const tagVersion = resultArray[1];
       const userWhoSubmitted = resultArray[2];
-
-      // 4. Request a DOI from Zenodo
-
-      // 5. Update the CITATION.cff and codemeta.json files with the DOI
-      await updateMetadataIdentifier(context, owner, repository, depositionId);
-
-      // 6. Get release based on tag and update to publish
-      // const release = await context.octokit.repos.getReleaseByTag({
-      //   owner,
-      //   repo: repository.name,
-      //   tag: tagVersion,
-      // });
-
-      consola.info("Need to find tag:", tagVersion);
-      consola.info("Getting releases...");
 
       const releases = await context.octokit.repos.listReleases({
         owner,
@@ -771,8 +759,122 @@ export default async (app, { getRouter }) => {
       if (!draftRelease) {
         throw new Error(`Draft release with tag ${tagVersion} not found.`);
       }
-      
-      // To publish the draft release
+
+      const zenodoToken = null // TODO: get the zenodo token from the database.
+      // Check if the token is valid
+      const zenodoTokenInfo = await fetch(
+        `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoToken}`,
+        {
+          method: "GET",
+        },
+      );
+
+      if (!zenodoTokenInfo.ok) {
+        throw new Error("Zenodo token not found");
+      }
+
+      const zenodoDepositionInfo = {}
+
+      if (depositionId === "new") {
+       const zenodoRecord =  await fetch(
+          `${ZENODO_API_ENDPOINT}/deposit/depositions`,
+          {
+            method: "POST",
+            params: { 'access_token': zenodoToken },
+            headers: {
+              "Content-Type": "application/json",
+            },
+
+          },
+        )
+
+        zenodoDepositionInfo= await zenodoRecord.json();
+      } else {
+        // Check if the deposition exists
+        const zenodoDeposition = await fetch(
+          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
+          {
+            method: "GET",
+            params: { 'access_token': zenodoToken },
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (!zenodoDeposition.ok) {
+          throw new Error("Deposition not found");
+        }
+
+        const zenodoDepositionInfo = await zenodoDeposition.json();
+
+        // Check if the deposition is published
+        if (zenodoDepositionInfo.submitted === false){
+          // Delete the draft
+          await fetch(
+            `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
+            {
+              method: "DELETE",
+              params: { 'access_token': zenodoToken },
+              headers: {
+                "Content-Type": "application/json",
+              },
+            },
+          )
+        }
+
+        // Create a new version of an existing Zenodo deposition
+        const zenodoRecord = await fetch(
+          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
+          {
+            method: "POST",
+            params: { 'access_token': zenodoToken },
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        )
+
+        zenodoDepositionInfo = await zenodoRecord.json();
+
+
+
+      }
+
+      // 4. Request a DOI from Zenodo
+      bucket_url = zenodoDepositionInfo.links.bucket;
+      const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
+
+
+
+      // 5. Update the CITATION.cff and codemeta.json files with the DOI
+      await updateMetadataIdentifier(context, owner, repository, depositionId);
+
+      // 6. Update the zenodo deposition metadata
+      const newZenodoMetadata = {} // TODO: Generate the minimal one from the info from codemeta.
+
+      const zenodoDeposition = await fetch(
+        `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
+        {
+          method: "PUT",
+          params: { 'access_token': zenodoToken },
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(zenodoMetadata),
+        },
+      )
+
+      // 7. Release the draft GitHub release
+      // const release = await context.octokit.repos.createRelease({
+      //   owner,
+      //   repo: repository.name,
+      //   tag_name: tagVersion,
+      //   name: tagVersion,
+      //   draft: false,
+      // });
+
+            // To publish the draft release
       const updatedRelease = await context.octokit.repos.updateRelease({
         owner,
         repo: repository.name,
@@ -780,47 +882,24 @@ export default async (app, { getRouter }) => {
         draft: false, // This will publish the release
       });
 
-      // consola.warn("release was created, response")
-      
-      // 7. Gather the files from the release
-      
-      consola.warn("release was created, gathering files...");
-      consola.warn(updatedRelease);
-      // consola.warn(updatedRelease);
 
-      // 8. Submit the files to Zenodo (gather the files from the release)
-
-      // Create a zip file of the repository source code
+      // Grab the Files from the release
       const baseRepoUrl = `https://github.com/${owner}/${repository.name}/archive/refs/tags/${tagVersion}`;
       const baseRepoUrlZip = `${baseRepoUrl}.zip`;
 
       const zipResponse = await fetch(baseRepoUrlZip);
-      consola.info("Zip response:", zipResponse);
 
 
+
+      // 8. Submit the files to Zenodo (gather the files from the release)
       const files = await context.octokit.repos.listReleaseAssets({
         owner,
         repo: repository.name,
-        release_id: updatedRelease.data.id,
       });
 
-      consola.info("Gathered files from the release");
       consola.warn(files);
 
-      // 8. Make connection with Zenodo API to submit the files
-      const access_token = dbInstance.user.findUnique({
-        where: {
-          username: userWhoSubmitted,
-        },
-      });
-      // const zenodoResponse = await fetch(`${ZENODO_API}/depositions/${depositionId}/files`, {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Authorization: `Bearer ${access_token}`,
-      //   },
-      //   body: JSON.stringify(files),
-      // })
+      // 9. Publish the Zenodo record
     }
   });
 

@@ -9,16 +9,18 @@ export default defineEventHandler(async (event) => {
 
   const user = event.context.user as User | null;
 
-  const bodySchema = z.object({
-    metadata: z.object({
-      accessRight: z.string(),
-    }),
-    publish: z.boolean(),
-    release: z.string(),
-    tag: z.string(),
-    useExistingDeposition: z.boolean(),
-    zenodoDepositionId: z.string(),
-  });
+  const bodySchema = z
+    .object({
+      metadata: z.object({
+        accessRight: z.string(),
+      }),
+      publish: z.boolean(),
+      release: z.string(),
+      tag: z.string(),
+      useExistingDeposition: z.boolean(),
+      zenodoDepositionId: z.string(),
+    })
+    .strict();
 
   const { owner, repo } = event.context.params as {
     owner: string;
@@ -251,7 +253,7 @@ export default defineEventHandler(async (event) => {
         });
       }
 
-      const updatedIssueBody = `${issue.body}<!-- @codefair-bot publish-zenodo ${zenodoDepositionId} ${release} ${tag} ${user?.username} -->`;
+      const updatedIssueBody = `${issue.body}<!-- @codefair-bot publish-zenodo ${zenodoDepositionId || "new"} ${release} ${tag} ${user?.username} -->`;
 
       await octokit.request(
         "PATCH /repos/{owner}/{repo}/issues/{issue_number}",
