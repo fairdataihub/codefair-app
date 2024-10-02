@@ -713,11 +713,19 @@ export default async (app, { getRouter }) => {
       const codemeta = await getCodemetaContent(context, owner, repository);
       
       // 2. Validate the CITATION.cff and codemeta.json files
-      const validCodemeta = await validateMetadata(citationCff, "citation")
-      const validCitation = await validateMetadata(codemeta, "codemeta")
+      try {
+        await validateMetadata(citationCff, "citation")
+      } catch (error) {
+        consola.error("Error validating the citation:", error);
+        return;
+      }
 
-      consola.warn("valid citation?", validCitation);
-      consola.warn("valid codemeta?", validCodemeta);
+      try {
+        await validateMetadata(codemeta, "codemeta")
+      } catch (error) {
+        consola.error("Error validating the codemeta:", error);
+        return;
+      }
 
       // 3. Create the Zenodo record or get the existing one (comes in issueBody)
       // Extract the content between <!-- @codefair-bot publish-zenodo and -->
@@ -729,7 +737,7 @@ export default async (app, { getRouter }) => {
       const resultArray = extratedContent.split(/\s+/);
 
       consola.info("UI Info:", uiInfo);
-      consola.info("Result Array:", resultArray);
+      // consola.info("Result Array:", resultArray);
       const depositionId = uiInfo[0];
       const tagVersion = uiInfo[1];
       const userWhoSubmitted = uiInfo[2];
@@ -744,10 +752,11 @@ export default async (app, { getRouter }) => {
         owner,
         repo: repository.name,
         tag_name: tagVersion,
-        name: tagVersion,
+        name: depositionId,
         draft: false,
       });
 
+      consola.warn("release was created, gathering files...");
       consola.warn(release);
 
       // 7. Submit the files to Zenodo (gather the files from the release)
@@ -878,21 +887,21 @@ export default async (app, { getRouter }) => {
   });
 
   // When a release is published
-  app.on("release.drafted", async (context) => {
-    // Check if the release was made using the Codefair dashboard
-    const owner = context.payload.repository.owner.login;
-    const { repository } = context.payload;
+  // app.on("release.drafted", async (context) => {
+  //   // Check if the release was made using the Codefair dashboard
+  //   const owner = context.payload.repository.owner.login;
+  //   const { repository } = context.payload;
 
-    const installation = await db.installation.findUnique({
-      where: {
-        id: repository.id,
-      }
-    });
+  //   const installation = await db.installation.findUnique({
+  //     where: {
+  //       id: repository.id,
+  //     }
+  //   });
 
-    if (!installation) {
-      return;
-    }
-  })
+  //   if (!installation) {
+  //     return;
+  //   }
+  // })
 
   // When a comment is made on an issue
   // TODO: Verify if this is still needed, currently does not run due to issue titles being changed

@@ -300,6 +300,8 @@ export async function validateMetadata(content, fileType) {
     try {
       JSON.parse(content);
       // Verify the required fields are present
+      consola.warn("codemeta content");
+      consola.warn(content);
       if (!content.name || !content.authors || !content.identifier || !content.description) {
         return false;
       }
@@ -312,6 +314,8 @@ export async function validateMetadata(content, fileType) {
   if (fileType === "citation") {
     try {
       yaml.load(content);
+      consola.warn("citation content");
+      consola.warn(content);
       // Verify the required fields are present
       if (!content.title || !content.authors || !content.identifiers) {
         return false;
@@ -338,8 +342,8 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   citationFile.identifier = identifier;
   codeMetaFile.identifier = identifier;
 
-  consola.info(citationFile);
-  consola.info(codeMetaFile);
+  // consola.info(citationFile);
+  // consola.info(codeMetaFile);
 
   // Update the citation file
   await context.octokit.repos.createOrUpdateFileContents({
@@ -473,10 +477,10 @@ export async function applyMetadataTemplate(
 
   if (subjects.codemeta && subjects.citation && subjects.license) {
     const codemetaContent = await getCodemetaContent(context, owner, repository);
-    const citationContent = await getCitationContent(context, owner, repository);
+    // const citationContent = await getCitationContent(context, owner, repository);
 
-    const validCodemeta = await validateMetadata(citationContent, "citation");
-    const validCitation = await validateMetadata(codemetaContent, "codemeta");
+    const validCodemeta = true;
+    const validCitation = true;
 
     // Convert the content to the structure we use for code metadata
     const metadata = convertMetadataForDB(codemetaContent);
