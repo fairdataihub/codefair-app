@@ -202,8 +202,8 @@ const createDraftGithubRelease = async () => {
           createDraftGithubReleaseSpinner.value = false;
         });
     } else {
-      console.log("Form validation failed");
-      console.log(errors);
+      console.error("Form validation failed");
+      console.error(errors);
     }
   });
 };
@@ -233,7 +233,6 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     method: "POST",
   })
     .then(async (response) => {
-      console.log(response);
       if (shouldPublish) {
         push.success({
           title: "Success",
@@ -274,107 +273,106 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
 
     <n-divider />
 
-    <!-- Confirm Metadata and License Section -->
-    <CardCollapsible
-      bordered
-      :title="`Confirm Metadata and License for ${owner}/${repo}`"
-      class="bg-white"
-      horizontal
-    >
-      <div class="flex flex-row justify-around py-2">
-        <CardIcon
-          title="Confirm License"
-          icon="tabler:license"
-          subheader="Confirm that the license is correct and up-to-date. You can edit the license if needed."
-          :edit-link="`/add/license/${licenseId}`"
-          @click="licenseChecked = !licenseChecked"
-        >
-          <template #icon>
-            <Icon name="tabler:license" size="40" />
-          </template>
+    <h2 class="pb-6">Confirm required metadata files</h2>
 
-          <!-- Custom checkbox with a checkmark -->
-          <template #action>
-            <label class="relative flex cursor-pointer items-center gap-3">
-              <!-- Custom-styled checkbox with checkmark -->
-              <input
-                type="checkbox"
-                :checked="licenseChecked"
-                class="h-6 w-6 cursor-pointer appearance-none rounded-md border border-gray-300 checked:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
-                @change="licenseChecked = $event.target.checked"
-              />
-              <!-- Nuxt Icon that appears when checkbox is checked -->
-              <Icon
-                v-if="licenseChecked"
-                name="mdi:check"
-                size="24"
-                class="pointer-events-none absolute inset-0 text-white"
-              />
+    <n-flex vertical class="mb-4">
+      <CardDashboard
+        title="License"
+        subheader="A license file is required for the repository to be released on Zenodo."
+      >
+        <template #icon>
+          <Icon name="tabler:code" size="40" />
+        </template>
 
-              <span class="font-medium text-slate-700"
-                >Release with License as is</span
-              >
-            </label>
+        <template #content>
+          <n-checkbox v-model:checked="licenseChecked">
+            I have added and reviewed the license file that is required for the
+            repository to be released on Zenodo.
+          </n-checkbox>
+        </template>
 
-            <NuxtLink :to="`/add/license/${licenseId}`">
-              <n-button class="bg-indigo-500 text-white">
+        <template #header-extra>
+          <a :href="`/add/license/${licenseId}`">
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="akar-icons:edit" size="16" />
+              </template>
+              Review License
+            </n-button>
+          </a>
+        </template>
+      </CardDashboard>
+
+      <CardDashboard
+        title="Code Metadata"
+        subheader="A code metadata file is required for the repository to be released on Zenodo."
+      >
+        <template #icon>
+          <Icon name="tabler:code" size="40" />
+        </template>
+
+        <template #content>
+          <n-checkbox v-model:checked="metadataChecked">
+            I have added and reviewed the <code> citation.CFF </code>
+
+            and <code> codemeta.json </code>
+            files. I have verified that the content of these files are correct
+            and up-to-date.
+          </n-checkbox>
+        </template>
+
+        <template #header-extra>
+          <a :href="`/add/code-metadata/${metadataId}`">
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="akar-icons:edit" size="16" />
+              </template>
+              Review Code Metadata
+            </n-button>
+          </a>
+        </template>
+      </CardDashboard>
+    </n-flex>
+
+    <div v-if="allConfirmed">
+      <n-divider />
+
+      <h2 class="pb-6">Select Zenodo deposition</h2>
+
+      <CardDashboard title="Check Zenodo connection">
+        <template #content>
+          <n-flex justify="space-between">
+            <p v-if="haveValidZenodoToken">
+              Looks like we have a valid Zenodo connection to your account. You
+              can now continue to the next step.
+            </p>
+
+            <p v-else>
+              There seems to be an issue with your Zenodo connection. Please
+              login to Zenodo to continue.
+            </p>
+
+            <a v-if="!haveValidZenodoToken" :href="zenodoLoginUrl">
+              <n-button type="primary">
                 <template #icon>
-                  <Icon name="ri:settings-4-fill" />
+                  <Icon name="simple-icons:zenodo" size="16" />
                 </template>
-                Edit License
+                Login to Zenodo
               </n-button>
-            </NuxtLink>
-          </template>
-        </CardIcon>
+            </a>
+          </n-flex>
+        </template>
+      </CardDashboard>
 
-        <CardIcon
-          title="Confirm Code Metadata"
-          subheader="Confirm that the code metadata is correct and up-to-date. You can edit the metadata if needed."
-          icon="tabler:code"
-          :edit-link="`/add/code-metadata/${metadataId}`"
-          @click="metadataChecked = !metadataChecked"
-        >
-          <template #icon>
-            <Icon name="tabler:code" size="40" />
-          </template>
+      <n-divider />
 
-          <!-- Custom checkbox with a checkmark -->
-          <template #action>
-            <label class="relative flex cursor-pointer items-center gap-2">
-              <!-- Custom-styled checkbox with checkmark -->
-              <input
-                type="checkbox"
-                :checked="metadataChecked"
-                class="h-6 w-6 cursor-pointer appearance-none rounded-md border border-gray-300 checked:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
-                @change="metadataChecked = $event.target.checked"
-              />
-              <!-- Nuxt Icon that appears when checkbox is checked -->
-              <Icon
-                v-if="metadataChecked"
-                name="mdi:check"
-                size="24"
-                class="pointer-events-none absolute inset-0 text-white"
-              />
+      TODO: ADD ZENODO DEPOSITION SELECTION CARD
+    </div>
 
-              <span class="font-medium text-slate-700"
-                >Release with code metadata as is</span
-              >
-            </label>
-
-            <NuxtLink :to="`/add/code-metadata/${metadataId}`">
-              <n-button class="bg-indigo-500 text-white">
-                <template #icon>
-                  <Icon name="ri:settings-4-fill" />
-                </template>
-                Edit code metadata
-              </n-button>
-            </NuxtLink>
-          </template>
-        </CardIcon>
-      </div>
-    </CardCollapsible>
-
-    <n-divider />
+    <n-alert v-else type="warning" class="w-full">
+      You have not yet confirmed the required metadata files. Please review the
+      license and code metadata files above to continue.
+    </n-alert>
 
     <!-- Zenodo Log In Section -->
     <CardCollapsible
