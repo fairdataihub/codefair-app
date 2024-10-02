@@ -763,10 +763,10 @@ export default async (app, { getRouter }) => {
         repo: repository.name,
       });
 
-      consola.warn("releases", releases);
+      // consola.warn("releases", releases);
       
       const draftRelease = releases.data.find(release => release.draft && release.tag_name === tagVersion);
-      consola.warn("draft release", draftRelease);
+      // consola.warn("draft release", draftRelease);
 
       if (!draftRelease) {
         throw new Error(`Draft release with tag ${tagVersion} not found.`);
@@ -780,20 +780,31 @@ export default async (app, { getRouter }) => {
         draft: false, // This will publish the release
       });
 
-      consola.warn("release was created, response")
-      consola.warn(updatedRelease);
-
+      // consola.warn("release was created, response")
+      
       // 7. Gather the files from the release
-
+      
       consola.warn("release was created, gathering files...");
       consola.warn(updatedRelease);
+      // consola.warn(updatedRelease);
 
       // 8. Submit the files to Zenodo (gather the files from the release)
+
+      // Create a zip file of the repository source code
+      const baseRepoUrl = `https://github.com/${owner}/${repository.name}/archive/refs/tags/${tagVersion}`;
+      const baseRepoUrlZip = `${baseRepoUrl}.zip`;
+
+      const zipResponse = await fetch(baseRepoUrlZip);
+      consola.info("Zip response:", zipResponse);
+
+
       const files = await context.octokit.repos.listReleaseAssets({
         owner,
         repo: repository.name,
+        release_id: updatedRelease.data.id,
       });
 
+      consola.info("Gathered files from the release");
       consola.warn(files);
 
       // 8. Make connection with Zenodo API to submit the files
@@ -802,14 +813,14 @@ export default async (app, { getRouter }) => {
           username: userWhoSubmitted,
         },
       });
-      const zenodoResponse = await fetch(`${ZENODO_API}/depositions/${depositionId}/files`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${access_token}`,
-        },
-        body: JSON.stringify(files),
-      })
+      // const zenodoResponse = await fetch(`${ZENODO_API}/depositions/${depositionId}/files`, {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     Authorization: `Bearer ${access_token}`,
+      //   },
+      //   body: JSON.stringify(files),
+      // })
     }
   });
 
