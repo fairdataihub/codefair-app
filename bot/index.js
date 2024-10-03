@@ -742,25 +742,47 @@ export default async (app, { getRouter }) => {
 
       // consola.info("UI Info:", uiInfo);
       consola.info("Result Array:", resultArray);
-      const depositionId = resultArray[0];
-      const tagVersion = resultArray[1];
-      const userWhoSubmitted = resultArray[2];
+      const depositionName = resultArray[0];
+      const depositionId = resultArray[1];
+      const tagVersion = resultArray[2];
+      const userWhoSubmitted = resultArray[3];
 
-      const releases = await context.octokit.repos.listReleases({
-        owner,
-        repo: repository.name,
-      });
+      // const releases = await context.octokit.repos.listReleases({
+      //   owner,
+      //   repo: repository.name,
+      // });
 
       // consola.warn("releases", releases);
       
-      const draftRelease = releases.data.find(release => release.draft && release.tag_name === tagVersion);
-      // consola.warn("draft release", draftRelease);
+      // const draftRelease = releases.data.find(release => release.draft && release.tag_name === tagVersion);
+      // // consola.warn("draft release", draftRelease);
 
-      if (!draftRelease) {
-        throw new Error(`Draft release with tag ${tagVersion} not found.`);
+      // if (!draftRelease) {
+      //   throw new Error(`Draft release with tag ${tagVersion} not found.`);
+      // }
+
+      const deposition = await db.zenodoDeposition.findFirst({
+        where: {
+          repository: {
+            id: repository.id,
+            repo: repository.name,
+          },
+          github_tag_name: tagVersion,
+        },
+        include: {
+          user: true,
+        },
+      });
+
+      consola.info("Deposition:", deposition);
+      if (!deposition) {
+        throw new Error(`Deposition with tag ${tagVersion} not found.`);
       }
 
-      const zenodoToken = null // TODO: get the zenodo token from the database.
+
+      consola.warn(deposition.user.access_token);
+
+      const zenodoToken = deposition.user.access_token // TODO: get the zenodo token from the database.
       // Check if the token is valid
       const zenodoTokenInfo = await fetch(
         `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoToken}`,
@@ -866,21 +888,21 @@ export default async (app, { getRouter }) => {
       )
 
       // 7. Release the draft GitHub release
-      // const release = await context.octokit.repos.createRelease({
-      //   owner,
-      //   repo: repository.name,
-      //   tag_name: tagVersion,
-      //   name: tagVersion,
-      //   draft: false,
-      // });
-
-            // To publish the draft release
-      const updatedRelease = await context.octokit.repos.updateRelease({
+      const release = await context.octokit.repos.createRelease({
         owner,
         repo: repository.name,
-        release_id: draftRelease.id,
-        draft: false, // This will publish the release
+        tag_name: tagVersion,
+        name: tagVersion,
+        draft: false,
       });
+
+            // To publish the draft release
+      // const updatedRelease = await context.octokit.repos.updateRelease({
+      //   owner,
+      //   repo: repository.name,
+      //   release_id: draftRelease.id,
+      //   draft: false, // This will publish the release
+      // });
 
 
       // Grab the Files from the release
