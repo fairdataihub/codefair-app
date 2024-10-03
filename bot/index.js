@@ -742,8 +742,8 @@ export default async (app, { getRouter }) => {
 
       // consola.info("UI Info:", uiInfo);
       consola.info("Result Array:", resultArray);
-      const depositionName = resultArray[0];
-      const depositionId = resultArray[1];
+      // const depositionName = resultArray[0];
+      const depositionId = resultArray[0];
       const tagVersion = resultArray[2];
       const userWhoSubmitted = resultArray[3];
 
@@ -784,45 +784,64 @@ export default async (app, { getRouter }) => {
 
       const zenodoToken = deposition.user.access_token // TODO: get the zenodo token from the database.
       // Check if the token is valid
-      const zenodoTokenInfo = await fetch(
-        `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoToken}`,
-        {
-          method: "GET",
-        },
-      );
+      // const zenodoTokenInfo = await fetch(
+      //   `${ZENODO_API_ENDPOINT}/deposit/depositions${depositionId}?access_token=${zenodoToken}`,
+      //   {
+      //     method: "GET",
+      //   },
+      // );
 
-      if (!zenodoTokenInfo.ok) {
-        throw new Error("Zenodo token not found");
-      }
+      // if (!zenodoTokenInfo) {
+      //   throw new Error("Zenodo token not found");
+      // }
 
-      const zenodoDepositionInfo = {}
+      // consola.warn("zenodoTokenInfo");
+      // consola.warn(zenodoTokenInfo);
+
+      let zenodoDepositionInfo = {}
 
       if (depositionId === "new") {
-       const zenodoRecord =  await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions`,
-          {
-            method: "POST",
-            params: { 'access_token': zenodoToken },
-            headers: {
-              "Content-Type": "application/json",
-            },
-
+        const zenodoRecord = await fetch(`${ZENODO_API_ENDPOINT}/deposit/depositions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${zenodoToken}`, 
           },
-        )
+          body: JSON.stringify({
+            metadata: {
+              title: "Title",
+              upload_type: "test",
+              publication_type: "asdf",
+              description: "My deposition description",
+              creators: [
+                {
+                  name: "Name",
+                  affiliation: "Organization",
+                },
+              ],
+            },
+          }),
+        });
 
-        zenodoDepositionInfo= await zenodoRecord.json();
+        zenodoDepositionInfo = await zenodoRecord.json();
       } else {
         // Check if the deposition exists
-        const zenodoDeposition = await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
-          {
-            method: "GET",
-            params: { 'access_token': zenodoToken },
-            headers: {
-              "Content-Type": "application/json",
+        let zenodoDeposition;
+        try {
+          zenodoDeposition = await fetch(
+            `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
+            {
+              method: "GET",
+              params: { 'access_token': zenodoToken },
+              headers: {
+          "Content-Type": "application/json",
+              },
             },
-          },
-        );
+          );
+        } catch (error) {
+          consola.error("Error fetching the Zenodo deposition:", error);
+          return;
+        }
 
         if (!zenodoDeposition.ok) {
           throw new Error("Deposition not found");
@@ -833,29 +852,39 @@ export default async (app, { getRouter }) => {
         // Check if the deposition is published
         if (zenodoDepositionInfo.submitted === false){
           // Delete the draft
-          await fetch(
-            `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
-            {
+            try {
+            await fetch(
+              `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
+              {
               method: "DELETE",
               params: { 'access_token': zenodoToken },
               headers: {
                 "Content-Type": "application/json",
               },
-            },
-          )
+              },
+            );
+            } catch (error) {
+            consola.error("Error deleting the draft deposition:", error);
+            return;
+            }
         }
 
         // Create a new version of an existing Zenodo deposition
-        const zenodoRecord = await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
-          {
-            method: "POST",
-            params: { 'access_token': zenodoToken },
-            headers: {
-              "Content-Type": "application/json",
+        try {
+          const zenodoRecord = await fetch(
+            `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
+            {
+              method: "POST",
+              params: { 'access_token': zenodoToken },
+              headers: {
+                "Content-Type": "application/json",
+              },
             },
-          },
-        )
+          );
+        } catch (error) {
+          consola.error("Error creating new version of Zenodo deposition:", error);
+          return;
+        }
 
         zenodoDepositionInfo = await zenodoRecord.json();
 
@@ -864,6 +893,9 @@ export default async (app, { getRouter }) => {
       }
 
       // 4. Request a DOI from Zenodo
+      consola.info("DFKLJSD:LFKJSDF")
+      consola.warn(zenodoDepositionInfo);
+      consola.info("DFKLJSD:LFKJSDF")
       bucket_url = zenodoDepositionInfo.links.bucket;
       const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
 
