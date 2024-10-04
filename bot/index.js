@@ -744,21 +744,22 @@ export default async (app, { getRouter }) => {
         return;
       }
 
-      // 3. Create the Zenodo record or get the existing one (comes in issueBody)
+      
       // Extract the content between <!-- @codefair-bot publish-zenodo and -->
-      const str = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*[\s\S]*?-->/);
-      const extractedContent = str[0];
-      const match = extractedContent.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
-      const uiInfo = match[1];
+      // Gather the information for the Zenodo deposition provided in the issue body
+      const match = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
+      if (!match) {
+        throw new Error("Zenodo publish information not found in issue body.");
+      }
 
-      const resultArray = uiInfo.split(/\s+/);
+      const [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
 
-      consola.info("Result Array:", resultArray);
-      let depositionId = resultArray[0];
-      const releaseId = resultArray[1];
-      const tagVersion = resultArray[2];
-      const userWhoSubmitted = resultArray[3];
+      consola.info("Deposition ID:", depositionId);
+      consola.info("Release ID:", releaseId);
+      consola.info("Tag Version:", tagVersion);
+      consola.info("User Who Submitted:", userWhoSubmitted);
 
+      // Fetch the Zenodo token from the database
       const deposition = await db.zenodoToken.findFirst({
         where: {
           user: {
@@ -774,8 +775,8 @@ export default async (app, { getRouter }) => {
         throw new Error(`Deposition with tag ${tagVersion} not found in db.`);
       }
 
-      const zenodoToken = deposition.token;
       // Check if the token is valid
+      const zenodoToken = deposition.token;
       const zenodoTokenInfo = await fetch(
         `${ZENODO_API_ENDPOINT}/deposit/depositions${depositionId}?access_token=${zenodoToken}`,
         {
@@ -787,8 +788,8 @@ export default async (app, { getRouter }) => {
         throw new Error("Zenodo token not found");
       }
 
+      // 3. Create the Zenodo record or get the existing one
       let zenodoDepositionInfo = {}
-
       if (depositionId === "new") {
         // Create new Zenodo deposition
         const zenodoRecord = await fetch(`${ZENODO_API_ENDPOINT}/deposit/depositions`, {
@@ -867,7 +868,7 @@ export default async (app, { getRouter }) => {
         zenodoDepositionInfo = await zenodoRecord.json();
       }
 
-      // 4. Request a DOI from Zenodo
+      // 4. Set the bucket URL and DOI
       const bucket_url = zenodoDepositionInfo.links.bucket;
       const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
 
@@ -875,6 +876,7 @@ export default async (app, { getRouter }) => {
       await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
 
       // Gather metadata for Zenodo deposition
+      const new_date = new Date().toISOString().split("T")[0];
       const codeMetaContent = JSON.parse(codemeta.content);
       const zenodoCreators = codeMetaContent.author.map((author) => {
         let tempObj = {};
@@ -890,19 +892,14 @@ export default async (app, { getRouter }) => {
       
         return tempObj;
       });
-      
-      const new_date = new Date().toISOString().split("T")[0];
-      // Find the license ID based on the codemeta.content.license url, watch it with detailsUrl
-      consola.warn(codeMetaContent.license);
       const license = licensesJson.find((license) => license.detailsUrl === `${codeMetaContent.license}.json`);
       const licenseId = license ? license.licenseId : null;
+      
       if (!licenseId) {
         throw new Error(`License not found for URL: ${codeMetaContent.license}`);
       }
 
       // 6. Update the zenodo deposition metadata
-      
-      // Use the parsed data in your metadata payload
       const newZenodoMetadata = {
         metadata: {
           title: codeMetaContent?.name,           // Now accessing "name" from the parsed object
@@ -919,20 +916,18 @@ export default async (app, { getRouter }) => {
       consola.warn("THIS IS THE the DEPOSITIONID", depositionId);
       try {
         consola.start("Updating Zenodo deposition with new metadata...", depositionId);
-        zenodoDeposition = await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
+        await fetch(`${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
           {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${zenodoToken}`,
-        },
-        body: JSON.stringify(newZenodoMetadata),
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${zenodoToken}`,
+            },
+            body: JSON.stringify(newZenodoMetadata),
           },
         );
 
         consola.success("Zenodo deposition metadata updated successfully!");
-        // consola.info(zenodoDeposition);
       } catch (error) {
         consola.error("Error updating Zenodo deposition:", error);
         return;
@@ -945,38 +940,22 @@ export default async (app, { getRouter }) => {
         release_id: releaseId,
       });
 
-      // throw Error("Test error", draftRelease);
-
-      consola.warn("ESSENTIAL");
-      consola.warn(draftRelease);
-      consola.warn("ESSENTIAL");
-
-
-      consola.info("Updating the existing release...");
-
-
-      // consola.success("Release updated successfully!", updatedRelease);
 
       const { data: repositoryArchive } = await context.octokit.repos.downloadZipballArchive({
         owner,
         repo: repository.name,
         ref: tagVersion
       });
+      consola.success("Downloaded the repository archive successfully!");
       
-      consola.info("Repository Archive:", repositoryArchive);
-      
-      consola.start("Fetching the release assets...");
-      const { data: assets } = await context.octokit.repos.getReleaseByTag({
+      const { data: release } = await context.octokit.repos.getReleaseByTag({
         owner,
         repo: repository.name,
         tag: tagVersion,
       });
+      consola.success("Gathered release assets successfully!");
       
-      consola.info("Release assets gathered below:");
-      consola.warn(assets);
-      consola.info("type of assets", typeof assets.assets);
-      consola.info(Array.isArray(assets.assets));
-      for (const asset of assets.assets) {
+      for (const asset of release.assets) {
         // Download the raw file from GitHub
         const { data: assetData } = await context.octokit.repos.getReleaseAsset({
           owner,
@@ -989,14 +968,13 @@ export default async (app, { getRouter }) => {
 
         // Upload the file to Zenodo
         consola.start(`Uploading ${asset.name} to Zenodo...`);
-        const uploadAsset = await fetch(
-          `${bucket_url}/${asset.name}`,
+        const uploadAsset = await fetch(`${bucket_url}/${asset.name}`,
           {
-        method: "PUT",
-        body: assetData,  // Upload the raw file directly
-        headers: {
-          Authorization: `Bearer ${zenodoToken}`, // Specify the correct content type
-        },
+            method: "PUT",
+            body: assetData,  // Upload the raw file directly
+            headers: {
+              Authorization: `Bearer ${zenodoToken}`, // Specify the correct content type
+            },
           }
         );
 
@@ -1007,19 +985,14 @@ export default async (app, { getRouter }) => {
           consola.success(uploadAsset);
         }
       }
-      consola.warn("Release assets gathered above.");
       
-      // 7. Upload the Zip file to Zenodo
-      consola.start("Uploading zip file to Zenodo...");
-      
-      // `repositoryArchive` might already be a buffer, so just upload it directly
       const uploadZip = await fetch(
         `${bucket_url}/${repository.name}-${tagVersion}.zip`,
         {
           method: "PUT",
-          body: repositoryArchive,  // Upload the raw file directly
+          body: repositoryArchive,
           headers: {
-            Authorization: `Bearer ${zenodoToken}`,// Specify the correct content type
+            Authorization: `Bearer ${zenodoToken}`,
           },
         }
       );
@@ -1030,9 +1003,7 @@ export default async (app, { getRouter }) => {
         consola.success("Zip file successfully uploaded to Zenodo!");
       }
 
-      consola.success("Zip file uploaded successfully!");
-
-      const updatedRelease = await context.octokit.repos.updateRelease({
+      await context.octokit.repos.updateRelease({
         owner,
         repo: repository.name,
         release_id: releaseId,
