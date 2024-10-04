@@ -15,6 +15,7 @@ import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
 import fs from 'fs';
 import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier } from "./metadata/index.js";
+import { title } from "process";
 
 checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
@@ -900,11 +901,13 @@ export default async (app, { getRouter }) => {
       }
 
       // 6. Update the zenodo deposition metadata
+      
+      // Use the parsed data in your metadata payload
       const newZenodoMetadata = {
         metadata: {
-          title: codemeta.content.name,
+          title: codeMetaContent?.name,           // Now accessing "name" from the parsed object
+          description: codeMetaContent?.description,
           upload_type: "software",
-          description: codemeta.content.description,
           creators: zenodoCreators,
           access_right: "open",
           publication_date: new_date,
@@ -913,6 +916,7 @@ export default async (app, { getRouter }) => {
       }
 
       let zenodoDeposition;
+      consola.warn("THIS IS THE the DEPOSITIONID", depositionId);
       try {
         consola.start("Updating Zenodo deposition with new metadata...", depositionId);
         zenodoDeposition = await fetch(
@@ -949,6 +953,85 @@ export default async (app, { getRouter }) => {
 
 
       consola.info("Updating the existing release...");
+
+
+      // consola.success("Release updated successfully!", updatedRelease);
+
+      const { data: repositoryArchive } = await context.octokit.repos.downloadZipballArchive({
+        owner,
+        repo: repository.name,
+        ref: tagVersion
+      });
+      
+      consola.info("Repository Archive:", repositoryArchive);
+      
+      consola.start("Fetching the release assets...");
+      const { data: assets } = await context.octokit.repos.getReleaseByTag({
+        owner,
+        repo: repository.name,
+        tag: tagVersion,
+      });
+      
+      consola.info("Release assets gathered below:");
+      consola.warn(assets);
+      consola.info("type of assets", typeof assets.assets);
+      consola.info(Array.isArray(assets.assets));
+      for (const asset of assets.assets) {
+        // Download the raw file from GitHub
+        const { data: assetData } = await context.octokit.repos.getReleaseAsset({
+          owner,
+          repo: repository.name,
+          asset_id: asset.id,
+          headers: {
+        accept: 'application/octet-stream'
+          }
+        });
+
+        // Upload the file to Zenodo
+        consola.start(`Uploading ${asset.name} to Zenodo...`);
+        const uploadAsset = await fetch(
+          `${bucket_url}/${asset.name}`,
+          {
+        method: "PUT",
+        body: assetData,  // Upload the raw file directly
+        headers: {
+          Authorization: `Bearer ${zenodoToken}`, // Specify the correct content type
+        },
+          }
+        );
+
+        if (!uploadAsset.ok) {
+          consola.error(`Failed to upload ${asset.name}. Status: ${uploadAsset.statusText}. Error: ${uploadAsset}`);
+        } else {
+          consola.success(`${asset.name} successfully uploaded to Zenodo!`);
+          consola.success(uploadAsset);
+        }
+      }
+      consola.warn("Release assets gathered above.");
+      
+      // 7. Upload the Zip file to Zenodo
+      consola.start("Uploading zip file to Zenodo...");
+      
+      // `repositoryArchive` might already be a buffer, so just upload it directly
+      const uploadZip = await fetch(
+        `${bucket_url}/${repository.name}-${tagVersion}.zip`,
+        {
+          method: "PUT",
+          body: repositoryArchive,  // Upload the raw file directly
+          headers: {
+            Authorization: `Bearer ${zenodoToken}`,// Specify the correct content type
+          },
+        }
+      );
+      
+      if (!uploadZip.ok) {
+        consola.error(`Failed to upload zip file. Status: ${uploadZip.statusText}`);
+      } else {
+        consola.success("Zip file successfully uploaded to Zenodo!");
+      }
+
+      consola.success("Zip file uploaded successfully!");
+
       const updatedRelease = await context.octokit.repos.updateRelease({
         owner,
         repo: repository.name,
@@ -956,107 +1039,24 @@ export default async (app, { getRouter }) => {
         draft: false,
       });
 
-      consola.success("Release updated successfully!", updatedRelease);
+      // 8. Publish the Zenodo deposition
+      consola.start("Publishing the Zenodo deposition...");
+      const publishDeposition = await fetch(
+        `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/publish`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${zenodoToken}`,
+          },
+        },
+      );
 
-      // Grab the Files from the release
-      const baseRepoUrlZip = `https://github.com/${owner}/${repository.name}/archive/refs/tags/${tagVersion}.zip`;
+      if (!publishDeposition.ok) {
+        consola.error("Failed to publish the Zenodo deposition:", publishDeposition);
+        return;
+      }
 
-      // Fetch the .zip file
-      const downloadUrl = `https://github.com/${owner}/${repository}/archive/refs/tags/${tagVersion}.zip`;
-
-      const zenodoAccessToken = zenodoToken;
-      const zenodoSandboxUrl = `${ZENODO_API_ENDPOINT}/deposit/depositions`; // Sandbox URL
-
-      // (async () => {
-      //   try {
-      //     // 1. Download the .zip file from GitHub
-      //     consola.warn("bucket_url", bucket_url);
-      //     consola.warn(`Downloading the file from ${downloadUrl}`);
-      //     const zipResponse = await fetch(downloadUrl, {
-      //       method: "GET",
-      //       headers: {
-      //         Authorization: `token ${context.octokit.auth.token}`,
-      //         Accept: "application/vnd.github.v3+json",
-      //       }
-      //     });
-      //     const fileName = `./${repository.name}-${tagVersion}.zip`;
-        
-      //     if (zipResponse.ok) {
-      //       const fileStream = fs.createWriteStream(fileName);
-      //       zipResponse.body.pipe(fileStream);
-          
-      //       fileStream.on('finish', async () => {
-      //         console.log('Download complete.');
-            
-      //         // 2. Upload the file to Zenodo once it's downloaded
-      //         const form = new FormData();
-      //         form.append('file', fs.createReadStream(fileName)); // Attach the downloaded file
-            
-      //         const zenodoResponse = await fetch(`${bucket_url}/${fileName}?access_token=${zenodoAccessToken}`, {
-      //           method: 'POST',
-      //           body: form,
-      //         });
-
-      //         consola.warn(zenodoResponse);
-            
-      //         if (zenodoResponse.ok) {
-      //           console.log('File uploaded to Zenodo successfully.');
-              
-      //           // 3. Delete the temporary file after successful upload
-      //           fs.unlink(fileName, (err) => {
-      //             if (err) {
-      //               console.error('Error deleting the file:', err);
-      //             } else {
-      //               console.log(`Temporary file ${fileName} deleted.`);
-      //             }
-      //           });
-      //         } else {
-      //           console.error('Error uploading to Zenodo:', zenodoResponse.statusText);
-      //         }
-      //       });
-          
-      //       fileStream.on('error', (err) => {
-      //         console.error('Error writing the file:', err);
-      //       });
-          
-      //     } else {
-      //       console.error('Failed to download the file:', zipResponse.status, zipResponse.statusText);
-      //     }
-      //   } catch (error) {
-      //     console.error('Error occurred:', error);
-      //   }
-      // })();
-
-      // Fetches the assets if any from the release tag
-      
-      const { data: repositoryArchive } = await context.octokit.repos.downloadZipballArchive({
-        owner,
-        repo: repository.name,
-        ref: tagVersion
-      });
-
-      consola.info("Repository Archive:", repositoryArchive);
-
-      consola.start("Fetching the release assets...");
-      const { data: assets } = await context.octokit.repos.getReleaseByTag({
-        owner,
-        repo: repository.name,
-        tag: tagVersion,
-      });
-
-      consola.info("Release assets gathered below:");
-      consola.warn(releaseAssets);
-      consola.warn(assets);
-      consola.warn("Release assets gathered above.");
-
-      // 8. Submit the files to Zenodo (gather the files from the release)
-      // Upload files to zenodo with bucket url
-      const zenodoFiles = [];
-
-
-      // consola.warn(files);
-
-      // 9. Publish the Zenodo record
+      consola.success("Zenodo deposition published successfully!");
     }
   });
 
