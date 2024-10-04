@@ -302,7 +302,7 @@ export async function validateMetadata(content, fileType) {
       // Verify the required fields are present
       consola.warn("codemeta content");
       consola.warn(content);
-      if (!content.name || !content.authors || !content.identifier || !content.description) {
+      if (!content.name || !content.authors || !content.description) {
         return false;
       }
       return true;
@@ -317,7 +317,7 @@ export async function validateMetadata(content, fileType) {
       consola.warn("citation content");
       consola.warn(content);
       // Verify the required fields are present
-      if (!content.title || !content.authors || !content.identifiers) {
+      if (!content.title || !content.authors) {
         return false;
       }
       return true;
@@ -328,7 +328,7 @@ export async function validateMetadata(content, fileType) {
 
 }
 
-export async function updateMetadataIdentifier(context, owner, repository, identifier) {
+export async function updateMetadataIdentifier(context, owner, repository, identifier, version) {
   // Get the citation file
   const citationObj = await getCitationContent(context, owner, repository);
   const codeMetaObj = await getCodemetaContent(context, owner, repository);
@@ -338,12 +338,15 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
 
   let citationFile = yaml.load(citationObj.content);
   const citationSha = citationObj.sha;
+  const updated_date = new Date().toISOString().split('T')[0];
 
   citationFile.identifier = identifier;
+  citationFile["date-released"] = updated_date;
+  citationFile.version = version;
   codeMetaFile.identifier = identifier;
-
-  // consola.info(citationFile);
-  // consola.info(codeMetaFile);
+  codeMetaFile.version = version;
+  codeMetaFile.dateModified = updated_date;
+  codeMetaFile.datePublished = updated_date;
 
   // Update the citation file
   await context.octokit.repos.createOrUpdateFileContents({
@@ -355,7 +358,7 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
     sha: citationSha,
   });
 
-  consola.info("CITATION.cff file updated with Zenodo identifier");
+  consola.success("CITATION.cff file updated with Zenodo identifier");
 
   // Update the codemeta file
   await context.octokit.repos.createOrUpdateFileContents({
@@ -367,7 +370,7 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
     sha: codeMetaSha,
   });
 
-  consola.info("codemeta.json file updated with Zenodo identifier");
+  consola.success("codemeta.json file updated with Zenodo identifier");
 }
 
 /**
