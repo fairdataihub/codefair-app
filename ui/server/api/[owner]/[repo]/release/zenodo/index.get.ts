@@ -40,7 +40,6 @@ export default defineEventHandler(async (event) => {
 
   const repoData = await repoResponse.json();
   const repoId = repoData.id;
-  console.log(repoId);
 
   // Call both the license and metadata tables to get their identifiers
   const licenseResponse = await prisma.licenseRequest.findFirst({
@@ -153,12 +152,12 @@ export default defineEventHandler(async (event) => {
     githubReleases.push({
       id: release.id,
       name: release.name,
+      assetsUrl: release.assets_url,
+      draft: release.draft,
+      htmlUrl: release.html_url,
+      prerelease: release.prerelease,
       tagName: release.tag_name,
       targetCommitish: release.target_commitish,
-      assetsUrl: release.assets_url,
-      htmlUrl: release.html_url,
-      draft: release.draft,
-      prerelease: release.prerelease,
     });
   }
 
@@ -168,16 +167,19 @@ export default defineEventHandler(async (event) => {
   return {
     existingZenodoDepositionId:
       zenodoDeposition?.existing_zenodo_deposition_id || null,
+    githubReleases,
     haveValidZenodoToken,
-    zenodoDepositionId: zenodoDeposition?.zenodo_id || null,
+    license: {
+      id: licenseResponse.license_id || "",
+      identifier: licenseResponse.identifier || "",
+    },
+    // rawZenodoDepositions: rawData,
+    metadataId: metadataResponse.identifier,
+    rawReleases: githubReleasesJson,
     token: zenodoTokenInfo?.token || "",
+    zenodoDepositionId: zenodoDeposition?.zenodo_id || null,
     zenodoDepositions: existingDepositions,
     zenodoLoginUrl: zenodoLoginUrl || "",
     zenodoMetadata,
-    rawReleases: githubReleasesJson,
-    githubReleases,
-    // rawZenodoDepositions: rawData,
-    licenseId: licenseResponse.identifier,
-    metadataId: metadataResponse.identifier,
   };
 });

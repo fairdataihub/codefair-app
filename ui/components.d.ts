@@ -30,6 +30,7 @@ declare module 'vue' {
     NModal: typeof import('naive-ui')['NModal']
     NPopconfirm: typeof import('naive-ui')['NPopconfirm']
     NRadio: typeof import('naive-ui')['NRadio']
+    NRadioButton: typeof import('naive-ui')['NRadioButton']
     NRadioGroup: typeof import('naive-ui')['NRadioGroup']
     NSelect: typeof import('naive-ui')['NSelect']
     NSpace: typeof import('naive-ui')['NSpace']
