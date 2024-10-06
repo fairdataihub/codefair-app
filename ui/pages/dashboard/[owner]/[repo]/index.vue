@@ -466,6 +466,7 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #content> hello</template>
+
         <template #action>
           <NuxtLink :to="`/dashboard/${owner}/${repo}/release/figshare`">
             <n-button type="primary" :disabled="true">

@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import type { FormInst, SelectOption, SelectGroupOption } from "naive-ui";
-import { faker } from "@faker-js/faker";
+import {
+  type FormInst,
+  type SelectOption,
+  type SelectGroupOption,
+} from "naive-ui";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 const route = useRoute();
-const user = useUser();
+// const user = useUser();
 const breadcrumbsStore = useBreadcrumbsStore();
 
 breadcrumbsStore.showBreadcrumbs();
@@ -23,17 +26,21 @@ const haveValidZenodoToken = ref(false);
 
 const licenseChecked = ref(true);
 const metadataChecked = ref(true);
-const licenseId = ref("");
+const license = ref({
+  id: "x",
+  identifier: "x",
+});
 const metadataId = ref("");
 
 const allConfirmed = computed(
   () => licenseChecked.value && metadataChecked.value,
 );
 
-const selectedExistingDeposition = ref<String | null>(null);
-const selectedDeposition = ref<String | null>(null);
+const selectedExistingDeposition = ref<string | null>(null);
+const selectedDeposition = ref<string | null>(null);
 const selectableDepositions = ref<Array<SelectOption | SelectGroupOption>>([]);
 
+const zenodoFormIsValid = ref(false);
 const zenodoFormRef = ref<FormInst | null>(null);
 const zenodoFormValue = ref<ZenodoMetadata>({
   accessRight: null,
@@ -46,11 +53,18 @@ const zenodoFormRules = ref({
   },
 });
 
+const githubFormIsValid = ref(false);
 const githubFormRef = ref<FormInst | null>(null);
-const githubFormValue = ref({
-  title: "",
+const githubFormValue = ref<{
+  release: string | null;
+  releaseTitle: string;
+  tag: string | null;
+  tagTitle: string;
+}>({
   release: null,
+  releaseTitle: "",
   tag: null,
+  tagTitle: "",
 });
 const githubFormRules = ref({
   release: {
@@ -84,9 +98,10 @@ if (error.value) {
 
 if (data.value) {
   zenodoLoginUrl.value = data.value.zenodoLoginUrl;
-  selectedDeposition.value = data.value.zenodoDepositionId || null;
+  selectedDeposition.value = data.value.zenodoDepositionId?.toString() || null;
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
-  licenseId.value = data.value.licenseId;
+  license.value.id = data.value.license.id || "";
+  license.value.identifier = data.value.license.identifier;
   metadataId.value = data.value.metadataId;
 
   selectedExistingDeposition.value = data.value.existingZenodoDepositionId
@@ -99,7 +114,7 @@ if (data.value) {
   for (const deposition of data.value.zenodoDepositions) {
     selectableDepositions.value.push({
       label: deposition.title,
-      value: deposition.id,
+      value: deposition.id.toString(),
     });
   }
 
@@ -122,56 +137,50 @@ if (data.value) {
     });
   }
 
+  // Remove duplicates in the githubTagOptions array
+  githubTagOptions.value = githubTagOptions.value.filter(
+    (option, index, self) =>
+      index === self.findIndex((t) => t.value === option.value),
+  );
+
   // Add 'new' option to the top of the list
+  githubTagOptions.value.unshift({
+    label: "I want to create a new tag",
+    value: "new",
+  });
   githubReleaseOptions.value.unshift({
-    label: "new",
+    label: "I want to create a new release",
     value: "new",
   });
 
   // dev
-  githubFormValue.value.tag = `v${faker.system.semver()}`;
-  githubTagOptions.value.push({
-    disabled: false,
-    label: githubFormValue.value.tag,
-    value: githubFormValue.value.tag,
-  });
+  // githubFormValue.value.tag = `v${faker.system.semver()}`;
+  // githubTagOptions.value.push({
+  //   disabled: false,
+  //   label: githubFormValue.value.tag || "",
+  //   value: githubFormValue.value.tag,
+  // });
 
-  githubFormValue.value.release = "new";
-  githubFormValue.value.title = faker.lorem.sentence();
+  // githubFormValue.value.release = "new";
+  // githubFormValue.value.title = faker.lorem.sentence();
 }
-
-const handleChange = (e: Event) => {
-  selectedExistingDeposition.value = (e.target as HTMLInputElement).value;
-};
-
-const validateZenodoForm = () => {
-  zenodoFormRef.value?.validate(async (errors) => {
-    if (!errors) {
-      console.log("Form validated successfully");
-    } else {
-      console.log("Form validation failed");
-      console.log(errors);
-    }
-  });
-};
 
 const createDraftGithubReleaseSpinner = ref(false);
 
-const createDraftGithubRelease = async () => {
+const createDraftGithubRelease = () => {
   githubFormRef.value?.validate(async (errors) => {
     if (!errors) {
       createDraftGithubReleaseSpinner.value = true;
       await $fetch(`/api/${owner}/${repo}/release/github`, {
         body: JSON.stringify({
-          title: githubFormValue.value.title,
+          title: githubFormValue.value.releaseTitle,
           release: githubFormValue.value.release,
           tag: githubFormValue.value.tag,
         }),
         headers: useRequestHeaders(["cookie"]),
         method: "POST",
       })
-        .then(async (response) => {
-          console.log(response);
+        .then((response) => {
           push.success({
             title: "Success",
             message: "Your draft GitHub release has been created.",
@@ -180,12 +189,21 @@ const createDraftGithubRelease = async () => {
           // Add the releaseid to the options
           githubReleaseOptions.value.push({
             disabled: false,
-            label: githubFormValue.value.title,
+            label: githubFormValue.value.releaseTitle,
             value: response.releaseId.toString(),
           });
 
+          if (githubFormValue.value.tag === "new") {
+            githubTagOptions.value.push({
+              disabled: false,
+              label: githubFormValue.value.tagTitle,
+              value: githubFormValue.value.tagTitle,
+            });
+          }
+
           // Select the new release
           githubFormValue.value.release = response.releaseId.toString();
+
           const htmlUrl = response.htmlUrl;
           const editUrl = htmlUrl.replace("/tag/", "/edit/");
 
@@ -208,6 +226,58 @@ const createDraftGithubRelease = async () => {
   });
 };
 
+const checkGithubReleaseSpinner = ref(false);
+const githubReleaseIsDraft = ref(false);
+const showGithubReleaseIsDraftStausBadge = ref(false);
+
+const checkIfGithubReleaseIsDraft = async () => {
+  const releaseId = githubFormValue.value.release;
+
+  if (!releaseId) {
+    showGithubReleaseIsDraftStausBadge.value = false;
+    return null;
+  }
+
+  if (releaseId === "new") {
+    showGithubReleaseIsDraftStausBadge.value = false;
+    return null;
+  }
+
+  checkGithubReleaseSpinner.value = true;
+
+  return await $fetch(`/api/${owner}/${repo}/release/github/${releaseId}`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "GET",
+  })
+    .then((response) => {
+      if (response.draft) {
+        githubReleaseIsDraft.value = true;
+      } else {
+        githubReleaseIsDraft.value = false;
+      }
+    })
+    .catch((error) => {
+      githubReleaseIsDraft.value = false;
+      showGithubReleaseIsDraftStausBadge.value = false;
+
+      console.error("Failed to fetch GitHub release:", error);
+    })
+    .finally(() => {
+      showGithubReleaseIsDraftStausBadge.value = true;
+      checkGithubReleaseSpinner.value = false;
+    });
+};
+
+const handleGithubReleaseChange = () => {
+  githubFormValue.value.releaseTitle = "";
+  checkIfGithubReleaseIsDraft();
+};
+
+const handleGithubTagChange = () => {
+  githubFormValue.value.tagTitle = "";
+  checkIfGithubReleaseIsDraft();
+};
+
 const zenodoPublishSpinner = ref(false);
 const zenodoDraftSpinner = ref(false);
 
@@ -217,12 +287,16 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
   } else {
     zenodoDraftSpinner.value = true;
   }
+
   await $fetch(`/api/${owner}/${repo}/release/zenodo`, {
     body: JSON.stringify({
       metadata: zenodoFormValue.value,
       publish: shouldPublish,
       release: githubFormValue.value.release,
-      tag: githubFormValue.value.tag,
+      tag:
+        githubFormValue.value.tag !== "new"
+          ? githubFormValue.value.tag
+          : githubFormValue.value.tagTitle,
       useExistingDeposition: selectedExistingDeposition.value === "existing",
       zenodoDepositionId:
         selectedExistingDeposition.value === "existing"
@@ -232,7 +306,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     headers: useRequestHeaders(["cookie"]),
     method: "POST",
   })
-    .then(async (response) => {
+    .then((_response) => {
       if (shouldPublish) {
         push.success({
           title: "Success",
@@ -257,6 +331,50 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
       zenodoDraftSpinner.value = false;
     });
 };
+
+const validateZenodoForm = () => {
+  zenodoFormRef.value?.validate((errors) => {
+    if (!errors) {
+      zenodoFormIsValid.value = true;
+
+      push.success({
+        title: "Success",
+        message: "Your Zenodo metadata has been validated.",
+      });
+    } else {
+      console.error("Form validation failed");
+      console.error(errors);
+
+      push.error({
+        title: "Error",
+        message: "Your Zenodo metadata could not be validated.",
+      });
+
+      zenodoFormIsValid.value = false;
+    }
+  });
+};
+
+const githubReleaseInterval = ref<any>(null);
+
+onMounted(() => {
+  // if there are items in the zenodoMetadata object, validate the zenodoForm
+  if (
+    data.value?.zenodoMetadata &&
+    Object.keys(data.value.zenodoMetadata).length > 0
+  ) {
+    validateZenodoForm();
+  }
+
+  // check if the github release is a draft in a 1sec interval
+  githubReleaseInterval.value = setInterval(async () => {
+    await checkIfGithubReleaseIsDraft();
+  }, 3000);
+});
+
+onBeforeUnmount(() => {
+  clearInterval(githubReleaseInterval.value);
+});
 </script>
 
 <template>
@@ -276,6 +394,28 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     <h2 class="pb-6">Confirm required metadata files</h2>
 
     <n-flex vertical class="mb-4">
+      <n-alert type="info" class="w-full">
+        A zenodo release was last configured for this repoitory by
+        <NuxtLink
+          :to="`https://github.com/${data?.lastSelectedUser}`"
+          target="_blank"
+          class="text-blue-500 underline transition-all hover:text-blue-700"
+        >
+          {{ data?.lastSelectedUser }}</NuxtLink
+        >
+        The selected tag was
+        <code>{{ data?.lastSelectedGithubTag }}</code>
+        and the selected release was
+        <NuxtLink
+          :to="`https://github.com/${owner}/${repo}/releases/${data?.lastSelectedGithubRelease}`"
+          target="_blank"
+          class="text-blue-500 underline transition-all hover:text-blue-700"
+        >
+          {{ data?.lastSelectedGithubRelease }}
+        </NuxtLink>
+        .
+      </n-alert>
+
       <CardDashboard
         title="License"
         subheader="A license file is required for the repository to be released on Zenodo."
@@ -285,26 +425,36 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         </template>
 
         <template #content>
-          <n-checkbox v-model:checked="licenseChecked">
-            I have added and reviewed the license file that is required for the
-            repository to be released on Zenodo.
-          </n-checkbox>
+          <div class="flex w-full flex-col">
+            <n-flex class="mb-4 border p-2" align="center">
+              <Icon name="tabler:license" size="24" />
+
+              <p class="text-sm">
+                The license file was identified as `{{ license.id }}`
+              </p>
+            </n-flex>
+
+            <n-checkbox v-model:checked="licenseChecked">
+              I have added and reviewed the license file that is required for
+              the repository to be released on Zenodo.
+            </n-checkbox>
+          </div>
         </template>
 
         <template #header-extra>
-          <a :href="`/add/license/${licenseId}`">
+          <a :href="`/add/license/${license.identifier}`">
             <n-button type="primary">
               <template #icon>
                 <Icon name="akar-icons:edit" size="16" />
               </template>
-              Review License
+              Review license
             </n-button>
           </a>
         </template>
       </CardDashboard>
 
       <CardDashboard
-        title="Code Metadata"
+        title="Code metadata"
         subheader="A code metadata file is required for the repository to be released on Zenodo."
       >
         <template #icon>
@@ -312,13 +462,21 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         </template>
 
         <template #content>
-          <n-checkbox v-model:checked="metadataChecked">
-            I have added and reviewed the <code> citation.CFF </code>
+          <div class="flex w-full flex-col space-y-4">
+            <n-alert type="warning" class="w-full">
+              Your <code> codemeta.json </code> file is used to generate the
+              title, description, and metadata of your Zenodo deposition. Please
+              make sure that the content of this file is correct and up-to-date.
+            </n-alert>
 
-            and <code> codemeta.json </code>
-            files. I have verified that the content of these files are correct
-            and up-to-date.
-          </n-checkbox>
+            <n-checkbox v-model:checked="metadataChecked">
+              I have added and reviewed the <code> citation.CFF </code>
+              and
+              <code> codemeta.json </code>
+              files. I have verified that the content of these files are correct
+              and up-to-date.
+            </n-checkbox>
+          </div>
         </template>
 
         <template #header-extra>
@@ -327,7 +485,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
               <template #icon>
                 <Icon name="akar-icons:edit" size="16" />
               </template>
-              Review Code Metadata
+              Review code metadata
             </n-button>
           </a>
         </template>
@@ -347,6 +505,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
             size="40"
             class="text-red-500"
           />
+
           <Icon v-else name="wpf:connected" size="40" />
         </template>
 
@@ -374,209 +533,326 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         </template>
       </CardDashboard>
 
-      <n-divider />
+      <div v-if="haveValidZenodoToken">
+        <n-divider />
 
-      <CardDashboard title="Select your Zenodo record">
-        <template #icon>
-          <Icon name="tabler:file-text" size="40" />
-        </template>
+        <CardDashboard title="Select your Zenodo record">
+          <template #icon>
+            <Icon name="tabler:file-text" size="40" />
+          </template>
 
-        <template #content>
-          <div class="flex w-full flex-col">
-            <h4 class="pb-2">
-              Do you want to publish this repository to a new Zenodo deposition
-              or to an existing one?
-            </h4>
+          <template #content>
+            <div class="flex w-full flex-col">
+              <h4 class="pb-2">
+                Do you want to publish this repository to a new Zenodo
+                deposition or to an existing one?
+              </h4>
 
-            <n-radio-group
-              v-model:value="selectedExistingDeposition"
-              name="selectedExistingDeposition"
-              @update:value="selectedDeposition = null"
-            >
-              <n-radio-button
-                key="existing"
-                value="existing"
-                label="Existing Zenodo Deposition"
-              />
-              <n-radio-button
-                key="new"
-                value="new"
-                label="New Zenodo Deposition"
-              />
-            </n-radio-group>
+              <n-radio-group
+                v-model:value="selectedExistingDeposition"
+                name="selectedExistingDeposition"
+                @update:value="selectedDeposition = null"
+              >
+                <n-radio-button
+                  key="existing"
+                  value="existing"
+                  label="Existing Zenodo Deposition"
+                />
 
-            <div class="mt-4" v-if="selectedExistingDeposition === 'existing'">
-              <h4 class="pb-2">Select your Zenodo record</h4>
+                <n-radio-button
+                  key="new"
+                  value="new"
+                  label="New Zenodo Deposition"
+                />
+              </n-radio-group>
 
-              <n-select
-                v-model:value="selectedDeposition"
-                size="large"
-                :options="selectableDepositions"
-              />
+              <div
+                v-if="selectedExistingDeposition === 'existing'"
+                class="mt-4"
+              >
+                <h4 class="pb-2">Select your Zenodo record</h4>
+
+                <n-select
+                  v-model:value="selectedDeposition"
+                  size="large"
+                  clearable
+                  :options="selectableDepositions"
+                />
+              </div>
             </div>
-          </div>
-        </template>
-      </CardDashboard>
+          </template>
+        </CardDashboard>
 
-      <n-divider />
+        <div v-if="selectedExistingDeposition === 'new' || selectedDeposition">
+          <n-divider />
 
-      <h2 class="pb-6">Zenodo metadata</h2>
+          <h2 class="pb-6">Zenodo metadata</h2>
 
-      <CardDashboard title="Add missing metadata">
-        <template #icon>
-          <Icon name="material-symbols:add-notes-outline" size="40" />
-        </template>
+          <CardDashboard title="Add missing metadata">
+            <template #icon>
+              <Icon name="material-symbols:add-notes-outline" size="40" />
+            </template>
 
-        <template #content>
-          <div class="flex w-full flex-col">
-            <n-form
-              ref="zenodoFormRef"
-              :label-width="80"
-              :model="zenodoFormValue"
-              :rules="zenodoFormRules"
-              size="large"
-            >
-              <n-form-item label="Access Right" path="accessRight">
-                <n-radio-group
-                  v-model:value="zenodoFormValue.accessRight"
-                  name="accessRight"
+            <template #content>
+              <div class="flex w-full flex-col space-y-4">
+                <n-alert type="warning" class="w-full">
+                  Your <code> codemeta.json </code> file is used to generate the
+                  title, description, and metadata of your Zenodo deposition.
+                  Please make sure that the content of this file is correct and
+                  up-to-date.
+                </n-alert>
+
+                <n-form
+                  ref="zenodoFormRef"
+                  :label-width="80"
+                  :model="zenodoFormValue"
+                  :rules="zenodoFormRules"
+                  size="large"
                 >
-                  <n-flex vertical>
-                    <n-radio value="open"> Open Access </n-radio>
+                  <n-form-item label="Access Right" path="accessRight">
+                    <n-radio-group
+                      v-model:value="zenodoFormValue.accessRight"
+                      name="accessRight"
+                    >
+                      <n-flex vertical>
+                        <n-radio value="open"> Open Access </n-radio>
 
-                    <n-radio value="embargoed" disabled>
-                      Embargoed Access
-                    </n-radio>
+                        <n-radio value="embargoed" disabled>
+                          Embargoed Access
+                        </n-radio>
 
-                    <n-radio value="restricted" disabled>
-                      Restricted Access
-                    </n-radio>
+                        <n-radio value="restricted" disabled>
+                          Restricted Access
+                        </n-radio>
 
-                    <n-radio value="closed" disabled> Closed Access </n-radio>
+                        <n-radio value="closed" disabled>
+                          Closed Access
+                        </n-radio>
+                      </n-flex>
+                    </n-radio-group>
+                  </n-form-item>
+
+                  <n-button @click="validateZenodoForm">
+                    Validate metadata
+                  </n-button>
+                </n-form>
+              </div>
+            </template>
+          </CardDashboard>
+
+          <div v-if="zenodoFormIsValid">
+            <n-divider />
+
+            <h2 class="pb-6">GitHub release</h2>
+
+            <CardDashboard title="Draft a GitHub release">
+              <template #icon>
+                <Icon name="lucide:folder-git-2" size="40" />
+              </template>
+
+              <template #header-extra>
+                <div v-if="showGithubReleaseIsDraftStausBadge">
+                  <n-tag
+                    v-if="githubReleaseIsDraft"
+                    type="success"
+                    size="small"
+                  >
+                    Github release is in draft state
+                    <template #icon>
+                      <Icon
+                        v-if="checkGithubReleaseSpinner"
+                        name="icon-park-twotone:loading-three"
+                        size="16"
+                      />
+
+                      <Icon
+                        v-else
+                        name="icon-park-twotone:check-one"
+                        size="16"
+                      />
+                    </template>
+                  </n-tag>
+
+                  <n-tag v-else type="error" size="small">
+                    Github release is not in draft state
+                    <template #icon>
+                      <Icon
+                        v-if="checkGithubReleaseSpinner"
+                        name="icon-park-twotone:loading-three"
+                        size="16"
+                      />
+
+                      <Icon v-else name="ic:round-warning" size="16" />
+                    </template>
+                  </n-tag>
+                </div>
+              </template>
+
+              <template #content>
+                <div class="flex w-full flex-col">
+                  <n-form
+                    ref="githubFormRef"
+                    :label-width="80"
+                    :model="githubFormValue"
+                    :rules="githubFormRules"
+                    size="large"
+                  >
+                    <n-form-item label="Github tag" path="tag">
+                      <n-select
+                        v-model:value="githubFormValue.tag"
+                        :options="githubTagOptions"
+                        tag
+                        filterable
+                        clearable
+                        placeholder="Type or select a tag"
+                        @update:value="handleGithubTagChange"
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      v-show="githubFormValue.tag === 'new'"
+                      label="Tag name"
+                      path="tagTitle"
+                      :rule="{
+                        message: 'Please enter a tag name',
+                        required: githubFormValue.tag === 'new',
+                        trigger: ['blur', 'input'],
+                      }"
+                    >
+                      <n-input
+                        v-model:value="githubFormValue.tagTitle"
+                        clearable
+                        placeholder="v1.0.0"
+                      />
+                    </n-form-item>
+
+                    <n-form-item label="Github release" path="release">
+                      <n-select
+                        v-model:value="githubFormValue.release"
+                        :options="githubReleaseOptions"
+                        placeholder="Select a release"
+                        clearable
+                        filterable
+                        :loading="checkGithubReleaseSpinner"
+                        @update:value="handleGithubReleaseChange"
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      v-show="githubFormValue.release === 'new'"
+                      label="Release title"
+                      path="title"
+                      :rule="{
+                        message: 'Please enter a title',
+                        required: githubFormValue.release === 'new',
+                        trigger: ['blur', 'input'],
+                      }"
+                    >
+                      <n-input
+                        v-model:value="githubFormValue.releaseTitle"
+                        clearable
+                        placeholder="My awesome release title"
+                      />
+                    </n-form-item>
+
+                    <div
+                      v-if="
+                        githubFormValue.release &&
+                        githubFormValue.tag &&
+                        githubFormValue.release !== 'new'
+                      "
+                      class="flex w-full flex-col space-y-4"
+                    >
+                      <n-alert type="info" class="w-full">
+                        Please add any additional executables to your GitHub
+                        release and also update the release notes. Once you are
+                        done, you can come back to this page.
+                      </n-alert>
+
+                      <n-alert type="warning" class="w-full">
+                        Do not publish your Github release yet. We will handle
+                        this step for you.
+                      </n-alert>
+                    </div>
+
+                    <div
+                      v-if="
+                        githubFormValue.release === 'new' &&
+                        githubFormValue.releaseTitle !== ''
+                      "
+                      class="flex w-full flex-col space-y-4"
+                    >
+                      <n-alert type="info" class="w-full">
+                        Your GitHub release will be created in a draft state.
+                        Please make sure to add any additional executables and
+                        update the release notes. Once you are done, you can
+                        come back to this page.
+                      </n-alert>
+
+                      <n-alert type="warning" class="w-full">
+                        Do not publish your Github release yet. We will handle
+                        this step for you.
+                      </n-alert>
+
+                      <n-button
+                        :loading="createDraftGithubReleaseSpinner"
+                        secondary
+                        type="primary"
+                        @click="createDraftGithubRelease"
+                      >
+                        <template #icon>
+                          <Icon name="fa:plus" size="16" />
+                        </template>
+                        Create draft GitHub release
+                      </n-button>
+                    </div>
+                  </n-form>
+                </div>
+              </template>
+            </CardDashboard>
+          </div>
+
+          <div v-if="githubFormIsValid || githubReleaseIsDraft">
+            <n-divider />
+
+            <h2 class="pb-6">Publish Zenodo release</h2>
+
+            <CardDashboard title="Publish Zenodo release">
+              <template #icon>
+                <Icon name="simple-icons:zenodo" size="40" />
+              </template>
+
+              <template #content>
+                <div class="flex w-full flex-col">
+                  <n-flex>
+                    <n-button
+                      :loading="zenodoDraftSpinner"
+                      @click="startZenodoPublishProcess(false)"
+                    >
+                      <template #icon>
+                        <Icon name="fa:save" size="16" />
+                      </template>
+
+                      Save draft
+                    </n-button>
+
+                    <n-button
+                      :loading="zenodoPublishSpinner"
+                      @click="startZenodoPublishProcess(true)"
+                    >
+                      <template #icon>
+                        <Icon name="raphael:start" size="16" />
+                      </template>
+
+                      Start Zenodo publish process
+                    </n-button>
                   </n-flex>
-                </n-radio-group>
-              </n-form-item>
-
-              <n-button @click="validateZenodoForm"> Continue </n-button>
-            </n-form>
+                </div>
+              </template>
+            </CardDashboard>
           </div>
-        </template>
-      </CardDashboard>
-
-      <n-divider />
-
-      <h2 class="pb-6">GitHub release</h2>
-
-      <CardDashboard title="Draft a GitHub release">
-        <template #icon>
-          <Icon name="lucide:folder-git-2" size="40" />
-        </template>
-
-        <template #content>
-          <div class="flex w-full flex-col">
-            <n-form
-              ref="githubFormRef"
-              :label-width="80"
-              :model="githubFormValue"
-              :rules="githubFormRules"
-              size="large"
-            >
-              <n-form-item label="Github Tag" path="tag">
-                <n-select
-                  v-model:value="githubFormValue.tag"
-                  :options="githubTagOptions"
-                  tag
-                  filterable
-                  clearable
-                  placeholder="Select a tag"
-                />
-              </n-form-item>
-
-              <n-form-item label="Github Release" path="release">
-                <n-select
-                  v-model:value="githubFormValue.release"
-                  :options="githubReleaseOptions"
-                  placeholder="Select a release"
-                  clearable
-                  filterable
-                />
-              </n-form-item>
-
-              <n-form-item
-                v-show="githubFormValue.release === 'new'"
-                label="Release Title"
-                path="title"
-                :rule="{
-                  message: 'Please enter a title',
-                  required: githubFormValue.release === 'new',
-                  trigger: ['blur', 'input'],
-                }"
-              >
-                <n-input
-                  v-model:value="githubFormValue.title"
-                  clearable
-                  placeholder="Enter release title"
-                />
-              </n-form-item>
-
-              <p>
-                Your github release will be created in a draft state. Please
-                make sure to add any additional executables and update the
-                release notes. Once you are done, you can come back to this page
-                and publish the release.
-              </p>
-
-              <n-button
-                :loading="createDraftGithubReleaseSpinner"
-                @click="createDraftGithubRelease"
-              >
-                <template #icon>
-                  <Icon name="fa:plus" size="16" />
-                </template>
-                Create draft GitHub release
-              </n-button>
-            </n-form>
-          </div>
-        </template>
-      </CardDashboard>
-
-      <n-divider />
-
-      <h2 class="pb-6">Publish Zenodo release</h2>
-
-      <CardDashboard title="Publish Zenodo release">
-        <template #icon>
-          <Icon name="simple-icons:zenodo" size="40" />
-        </template>
-
-        <template #content>
-          <div class="flex w-full flex-col">
-            <n-flex>
-              <n-button
-                :loading="zenodoDraftSpinner"
-                @click="startZenodoPublishProcess(false)"
-              >
-                <template #icon>
-                  <Icon name="fa:save" size="16" />
-                </template>
-
-                Save draft
-              </n-button>
-
-              <n-button
-                :loading="zenodoPublishSpinner"
-                @click="startZenodoPublishProcess(true)"
-              >
-                <template #icon>
-                  <Icon name="raphael:start" size="16" />
-                </template>
-
-                Start Zenodo publish process
-              </n-button>
-            </n-flex>
-          </div>
-        </template>
-      </CardDashboard>
+        </div>
+      </div>
     </div>
 
     <n-alert v-else type="warning" class="w-full">
@@ -584,7 +860,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
       license and code metadata files above to continue.
     </n-alert>
 
-    <n-collapse v-if="devMode" class="mt-8" :default-expanded-names="['data']">
+    <n-collapse v-if="devMode" class="mt-8" :default-expanded-names="[]">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
       </n-collapse-item>
