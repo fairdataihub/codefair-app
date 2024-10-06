@@ -4,7 +4,6 @@ import {
   type SelectOption,
   type SelectGroupOption,
 } from "naive-ui";
-import { faker } from "@faker-js/faker";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 const route = useRoute();
@@ -57,13 +56,15 @@ const zenodoFormRules = ref({
 const githubFormIsValid = ref(false);
 const githubFormRef = ref<FormInst | null>(null);
 const githubFormValue = ref<{
-  title: string;
   release: string | null;
+  releaseTitle: string;
   tag: string | null;
+  tagTitle: string;
 }>({
-  title: "",
   release: null,
+  releaseTitle: "",
   tag: null,
+  tagTitle: "",
 });
 const githubFormRules = ref({
   release: {
@@ -136,22 +137,32 @@ if (data.value) {
     });
   }
 
+  // Remove duplicates in the githubTagOptions array
+  githubTagOptions.value = githubTagOptions.value.filter(
+    (option, index, self) =>
+      index === self.findIndex((t) => t.value === option.value),
+  );
+
   // Add 'new' option to the top of the list
+  githubTagOptions.value.unshift({
+    label: "I want to create a new tag",
+    value: "new",
+  });
   githubReleaseOptions.value.unshift({
-    label: "new",
+    label: "I want to create a new release",
     value: "new",
   });
 
   // dev
-  githubFormValue.value.tag = `v${faker.system.semver()}`;
-  githubTagOptions.value.push({
-    disabled: false,
-    label: githubFormValue.value.tag || "",
-    value: githubFormValue.value.tag,
-  });
+  // githubFormValue.value.tag = `v${faker.system.semver()}`;
+  // githubTagOptions.value.push({
+  //   disabled: false,
+  //   label: githubFormValue.value.tag || "",
+  //   value: githubFormValue.value.tag,
+  // });
 
-  githubFormValue.value.release = "new";
-  githubFormValue.value.title = faker.lorem.sentence();
+  // githubFormValue.value.release = "new";
+  // githubFormValue.value.title = faker.lorem.sentence();
 }
 
 const createDraftGithubReleaseSpinner = ref(false);
@@ -162,7 +173,7 @@ const createDraftGithubRelease = () => {
       createDraftGithubReleaseSpinner.value = true;
       await $fetch(`/api/${owner}/${repo}/release/github`, {
         body: JSON.stringify({
-          title: githubFormValue.value.title,
+          title: githubFormValue.value.releaseTitle,
           release: githubFormValue.value.release,
           tag: githubFormValue.value.tag,
         }),
@@ -178,12 +189,21 @@ const createDraftGithubRelease = () => {
           // Add the releaseid to the options
           githubReleaseOptions.value.push({
             disabled: false,
-            label: githubFormValue.value.title,
+            label: githubFormValue.value.releaseTitle,
             value: response.releaseId.toString(),
           });
 
+          if (githubFormValue.value.tag === "new") {
+            githubTagOptions.value.push({
+              disabled: false,
+              label: githubFormValue.value.tagTitle,
+              value: githubFormValue.value.tagTitle,
+            });
+          }
+
           // Select the new release
           githubFormValue.value.release = response.releaseId.toString();
+
           const htmlUrl = response.htmlUrl;
           const editUrl = htmlUrl.replace("/tag/", "/edit/");
 
@@ -249,7 +269,12 @@ const checkIfGithubReleaseIsDraft = async () => {
 };
 
 const handleGithubReleaseChange = () => {
-  githubFormValue.value.title = "";
+  githubFormValue.value.releaseTitle = "";
+  checkIfGithubReleaseIsDraft();
+};
+
+const handleGithubTagChange = () => {
+  githubFormValue.value.tagTitle = "";
   checkIfGithubReleaseIsDraft();
 };
 
@@ -268,7 +293,10 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
       metadata: zenodoFormValue.value,
       publish: shouldPublish,
       release: githubFormValue.value.release,
-      tag: githubFormValue.value.tag,
+      tag:
+        githubFormValue.value.tag !== "new"
+          ? githubFormValue.value.tag
+          : githubFormValue.value.tagTitle,
       useExistingDeposition: selectedExistingDeposition.value === "existing",
       zenodoDepositionId:
         selectedExistingDeposition.value === "existing"
@@ -366,6 +394,28 @@ onBeforeUnmount(() => {
     <h2 class="pb-6">Confirm required metadata files</h2>
 
     <n-flex vertical class="mb-4">
+      <n-alert type="info" class="w-full">
+        A zenodo release was last configured for this repoitory by
+        <NuxtLink
+          :to="`https://github.com/${data?.lastSelectedUser}`"
+          target="_blank"
+          class="text-blue-500 underline transition-all hover:text-blue-700"
+        >
+          {{ data?.lastSelectedUser }}</NuxtLink
+        >
+        The selected tag was
+        <code>{{ data?.lastSelectedGithubTag }}</code>
+        and the selected release was
+        <NuxtLink
+          :to="`https://github.com/${owner}/${repo}/releases/${data?.lastSelectedGithubRelease}`"
+          target="_blank"
+          class="text-blue-500 underline transition-all hover:text-blue-700"
+        >
+          {{ data?.lastSelectedGithubRelease }}
+        </NuxtLink>
+        .
+      </n-alert>
+
       <CardDashboard
         title="License"
         subheader="A license file is required for the repository to be released on Zenodo."
@@ -412,13 +462,21 @@ onBeforeUnmount(() => {
         </template>
 
         <template #content>
-          <n-checkbox v-model:checked="metadataChecked">
-            I have added and reviewed the <code> citation.CFF </code>
+          <div class="flex w-full flex-col space-y-4">
+            <n-alert type="warning" class="w-full">
+              Your <code> codemeta.json </code> file is used to generate the
+              title, description, and metadata of your Zenodo deposition. Please
+              make sure that the content of this file is correct and up-to-date.
+            </n-alert>
 
-            and <code> codemeta.json </code>
-            files. I have verified that the content of these files are correct
-            and up-to-date.
-          </n-checkbox>
+            <n-checkbox v-model:checked="metadataChecked">
+              I have added and reviewed the <code> citation.CFF </code>
+              and
+              <code> codemeta.json </code>
+              files. I have verified that the content of these files are correct
+              and up-to-date.
+            </n-checkbox>
+          </div>
         </template>
 
         <template #header-extra>
@@ -536,7 +594,14 @@ onBeforeUnmount(() => {
             </template>
 
             <template #content>
-              <div class="flex w-full flex-col">
+              <div class="flex w-full flex-col space-y-4">
+                <n-alert type="warning" class="w-full">
+                  Your <code> codemeta.json </code> file is used to generate the
+                  title, description, and metadata of your Zenodo deposition.
+                  Please make sure that the content of this file is correct and
+                  up-to-date.
+                </n-alert>
+
                 <n-form
                   ref="zenodoFormRef"
                   :label-width="80"
@@ -639,7 +704,25 @@ onBeforeUnmount(() => {
                         tag
                         filterable
                         clearable
-                        placeholder="Select a tag"
+                        placeholder="Type or select a tag"
+                        @update:value="handleGithubTagChange"
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      v-show="githubFormValue.tag === 'new'"
+                      label="Tag name"
+                      path="tagTitle"
+                      :rule="{
+                        message: 'Please enter a tag name',
+                        required: githubFormValue.tag === 'new',
+                        trigger: ['blur', 'input'],
+                      }"
+                    >
+                      <n-input
+                        v-model:value="githubFormValue.tagTitle"
+                        clearable
+                        placeholder="v1.0.0"
                       />
                     </n-form-item>
 
@@ -666,9 +749,9 @@ onBeforeUnmount(() => {
                       }"
                     >
                       <n-input
-                        v-model:value="githubFormValue.title"
+                        v-model:value="githubFormValue.releaseTitle"
                         clearable
-                        placeholder="Enter release title"
+                        placeholder="My awesome release title"
                       />
                     </n-form-item>
 
@@ -695,7 +778,7 @@ onBeforeUnmount(() => {
                     <div
                       v-if="
                         githubFormValue.release === 'new' &&
-                        githubFormValue.title !== ''
+                        githubFormValue.releaseTitle !== ''
                       "
                       class="flex w-full flex-col space-y-4"
                     >
@@ -777,7 +860,7 @@ onBeforeUnmount(() => {
       license and code metadata files above to continue.
     </n-alert>
 
-    <n-collapse v-if="devMode" class="mt-8" :default-expanded-names="['data']">
+    <n-collapse v-if="devMode" class="mt-8" :default-expanded-names="[]">
       <n-collapse-item title="data" name="data">
         <pre>{{ data }}</pre>
       </n-collapse-item>

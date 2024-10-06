@@ -112,6 +112,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const zenodoDeposition = await prisma.zenodoDeposition.findFirst({
+    include: {
+      user: true,
+    },
     where: {
       repository: {
         owner,
@@ -161,14 +164,14 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  console.log(licenseResponse);
-  console.log(metadataResponse);
-
   return {
     existingZenodoDepositionId:
       zenodoDeposition?.existing_zenodo_deposition_id || null,
     githubReleases,
     haveValidZenodoToken,
+    lastSelectedGithubRelease: zenodoDeposition?.github_release_id || null,
+    lastSelectedGithubTag: zenodoDeposition?.github_tag_name || null,
+    lastSelectedUser: zenodoDeposition?.user.username || null,
     license: {
       id: licenseResponse.license_id || "",
       identifier: licenseResponse.identifier || "",
