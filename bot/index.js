@@ -752,7 +752,7 @@ export default async (app, { getRouter }) => {
         throw new Error("Zenodo publish information not found in issue body.");
       }
 
-      const [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
+      let [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
 
       consola.info("Deposition ID:", depositionId);
       consola.info("Release ID:", releaseId);
@@ -791,18 +791,23 @@ export default async (app, { getRouter }) => {
       // 3. Create the Zenodo record or get the existing one
       let zenodoDepositionInfo = {}
       if (depositionId === "new") {
-        // Create new Zenodo deposition
-        const zenodoRecord = await fetch(`${ZENODO_API_ENDPOINT}/deposit/depositions`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${zenodoToken}`, 
-          },
-          body: JSON.stringify({}),
-        });
+        try {
+          // Create new Zenodo deposition
+          const zenodoRecord = await fetch(`${ZENODO_API_ENDPOINT}/deposit/depositions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${zenodoToken}`, 
+            },
+            body: JSON.stringify({}),
+          });
 
-        zenodoDepositionInfo = await zenodoRecord.json();
-        depositionId = zenodoDepositionInfo.id;
+          zenodoDepositionInfo = await zenodoRecord.json();
+          depositionId = zenodoDepositionInfo.id;
+        } catch (error) {
+          consola.error("Error creating new Zenodo deposition:", error);
+          return;
+        }
       } else {
         // Fetch and check if the deposition exists
         let zenodoDeposition;
@@ -934,18 +939,31 @@ export default async (app, { getRouter }) => {
       }
 
       // Find the release base on the tag version, if not create a new one
-      const draftRelease = await context.octokit.repos.getRelease({
-        owner,
-        repo: repository.name,
-        release_id: releaseId,
-      });
+      let draftRelease;
+      try {
+        draftRelease = await context.octokit.repos.getRelease({
+          owner,
+          repo: repository.name,
+          release_id: releaseId,
+        });
+        consola.warn(draftRelease);
+      } catch (error) {
+        consola.error("Error fetching the draft release:", error);
+        return;
+      }
 
-
-      const { data: repositoryArchive } = await context.octokit.repos.downloadZipballArchive({
-        owner,
-        repo: repository.name,
-        ref: tagVersion
-      });
+      let repositoryArchive;
+      try {
+        const { data } = await context.octokit.repos.downloadZipballArchive({
+          owner,
+          repo: repository.name,
+          ref: tagVersion,
+        });
+        repositoryArchive = data;
+      } catch (error) {
+        consola.error("Error downloading the repository archive:", error);
+        return;
+      }
       consola.success("Downloaded the repository archive successfully!");
       
       const { data: release } = await context.octokit.repos.getReleaseByTag({
