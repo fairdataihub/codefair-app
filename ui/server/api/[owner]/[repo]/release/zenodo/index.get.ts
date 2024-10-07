@@ -170,6 +170,10 @@ export default defineEventHandler(async (event) => {
     githubReleases,
     haveValidZenodoToken,
     lastSelectedGithubRelease: zenodoDeposition?.github_release_id || null,
+    lastSelectedGithubReleaseTitle:
+      githubReleases.find(
+        (release: any) => release.id === zenodoDeposition?.github_release_id,
+      )?.name || "",
     lastSelectedGithubTag: zenodoDeposition?.github_tag_name || null,
     lastSelectedUser: zenodoDeposition?.user.username || null,
     license: {
@@ -178,7 +182,7 @@ export default defineEventHandler(async (event) => {
     },
     // rawZenodoDepositions: rawData,
     metadataId: metadataResponse.identifier,
-    rawReleases: githubReleasesJson,
+    // rawReleases: githubReleasesJson,
     token: zenodoTokenInfo?.token || "",
     zenodoDepositionId: zenodoDeposition?.zenodo_id || null,
     zenodoDepositions: existingDepositions,
