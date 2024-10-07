@@ -428,10 +428,7 @@ const handleSettingsSelect = (key: any) => {
 
       <n-divider />
 
-      <h2 class="pb-6">
-        Software Archival
-        <Icon name="tabler:archive" size="30" class="ml-2"></Icon>
-      </h2>
+      <h2 class="pb-6">Software Archival</h2>
 
       <CardDashboard
         title="Zenodo"
@@ -441,7 +438,11 @@ const handleSettingsSelect = (key: any) => {
           <Icon name="simple-icons:zenodo" size="40" />
         </template>
 
-        <template #content> hello </template>
+        <template #content>
+          The FAIR-BioRS guidelines recommend that research software be archived
+          on a data repository such as Zenodo. This feature allows you to create
+          a GitHub release and archive your software on Zenodo.
+        </template>
 
         <template #action>
           <NuxtLink :to="`/dashboard/${owner}/${repo}/release/zenodo`">
@@ -458,14 +459,18 @@ const handleSettingsSelect = (key: any) => {
       <n-divider />
 
       <CardDashboard
-        title="Fighshare"
+        title="Figshare (Coming Soon)"
         subheader="Make a GitHub release and archive the software on Figshare."
+        class="cursor-not-allowed opacity-75"
       >
         <template #icon>
           <Icon name="simple-icons:figshare" size="40" />
         </template>
 
-        <template #content> hello</template>
+        <template #content>
+          The FAIR-BioRS guidelines recommend that research software be archived
+          on a data repository such as Figshare. This feature is coming soon.
+        </template>
 
         <template #action>
           <NuxtLink :to="`/dashboard/${owner}/${repo}/release/figshare`">
@@ -473,7 +478,7 @@ const handleSettingsSelect = (key: any) => {
               <template #icon>
                 <Icon name="material-symbols:package-2" size="16" />
               </template>
-              Release on Fighsare
+              Release on Figshare
             </n-button>
           </NuxtLink>
         </template>
