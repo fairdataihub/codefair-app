@@ -162,33 +162,31 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // TODO MIGHT NEED MORE WORK
-  // Check if the github tag is already attached to a published release
-  // const githubTag = await fetch(
-  //   `https://api.github.com/repos/${owner}/${repo}/git/matching-refs/tags/${tag}`,
-  //   {
-  //     headers: {
-  //       Authorization: `Bearer ${user?.access_token}`,
-  //     },
-  //     method: "GET",
-  //   },
-  // );
+  // Check if the tag_Name is the same as the last selected tag
+  const githubReleaseTagName = githubReleaseJson.tag_name;
 
-  // if (!githubTag.ok) {
-  //   throw createError({
-  //     statusCode: 500,
-  //     statusMessage: "GitHub tag not found",
-  //   });
-  // }
+  if (githubReleaseTagName !== tag) {
+    // Try and update the tag
+    const updatedGithubRelease = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/releases/${release}`,
+      {
+        body: JSON.stringify({
+          tag_name: tag,
+        }),
+        headers: {
+          Authorization: `Bearer ${user?.access_token}`,
+        },
+        method: "PATCH",
+      },
+    );
 
-  // const githubTagJson = await githubTag.json();
-
-  // if (githubTagJson.length > 0) {
-  //   throw createError({
-  //     statusCode: 500,
-  //     statusMessage: "GitHub tag already attached to a published release",
-  //   });
-  // }
+    if (!updatedGithubRelease.ok) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: "Failed to update GitHub release tag",
+      });
+    }
+  }
 
   // save to the database
   const zenodoDeposition = await prisma.zenodoDeposition.findFirst({
