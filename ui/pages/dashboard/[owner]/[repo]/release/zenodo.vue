@@ -7,7 +7,7 @@ import {
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 const route = useRoute();
-// const user = useUser();
+const user = useUser();
 const breadcrumbsStore = useBreadcrumbsStore();
 
 breadcrumbsStore.showBreadcrumbs();
@@ -408,7 +408,10 @@ onBeforeUnmount(() => {
     <h2 class="pb-6">Confirm required metadata files</h2>
 
     <n-flex vertical class="mb-4">
-      <n-alert type="info" class="w-full">
+      <n-alert
+        :type="user?.username === data?.lastSelectedUser ? 'info' : 'warning'"
+        class="w-full"
+      >
         A zenodo release was last configured for this repoitory by
         <NuxtLink
           :to="`https://github.com/${data?.lastSelectedUser}`"
@@ -419,14 +422,17 @@ onBeforeUnmount(() => {
         >
         The selected tag was
         <code>{{ data?.lastSelectedGithubTag }}</code>
-        and the selected release was
-        <NuxtLink
+
+        and the selected release was titled
+        <code>{{ data?.lastSelectedGithubReleaseTitle || "Untitled" }}</code>
+
+        <!-- <NuxtLink
           :to="`https://github.com/${owner}/${repo}/releases/${data?.lastSelectedGithubRelease}`"
           target="_blank"
           class="text-blue-500 underline transition-all hover:text-blue-700"
         >
           {{ data?.lastSelectedGithubRelease }}
-        </NuxtLink>
+        </NuxtLink> -->
         .
       </n-alert>
 
