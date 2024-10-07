@@ -307,6 +307,17 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     method: "POST",
   })
     .then((_response) => {
+      if (githubFormValue.value.tag === "new") {
+        githubTagOptions.value.push({
+          disabled: false,
+          label: githubFormValue.value.tagTitle,
+          value: githubFormValue.value.tagTitle,
+        });
+
+        githubFormValue.value.tag = githubFormValue.value.tagTitle;
+        githubFormValue.value.tagTitle = "";
+      }
+
       if (shouldPublish) {
         push.success({
           title: "Success",
