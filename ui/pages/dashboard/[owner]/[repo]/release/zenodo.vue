@@ -175,7 +175,10 @@ const createDraftGithubRelease = () => {
         body: JSON.stringify({
           title: githubFormValue.value.releaseTitle,
           release: githubFormValue.value.release,
-          tag: githubFormValue.value.tag,
+          tag:
+            githubFormValue.value.tag === "new"
+              ? githubFormValue.value.tagTitle
+              : githubFormValue.value.tag,
         }),
         headers: useRequestHeaders(["cookie"]),
         method: "POST",
