@@ -752,7 +752,7 @@ onBeforeUnmount(() => {
                     <n-form-item
                       v-show="githubFormValue.release === 'new'"
                       label="Release title"
-                      path="title"
+                      path="releaseTitle"
                       :rule="{
                         message: 'Please enter a title',
                         required: githubFormValue.release === 'new',
