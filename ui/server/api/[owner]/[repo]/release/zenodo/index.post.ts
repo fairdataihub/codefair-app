@@ -251,7 +251,9 @@ export default defineEventHandler(async (event) => {
         });
       }
 
+      console.log("Updating issue body");
       const updatedIssueBody = `${issue.body}<!-- @codefair-bot publish-zenodo ${zenodoDepositionId || "new"} ${release} ${tag} ${user?.username} -->`;
+      console.log(updatedIssueBody);
 
       await octokit.request(
         "PATCH /repos/{owner}/{repo}/issues/{issue_number}",

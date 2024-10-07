@@ -8,6 +8,7 @@ import {
   verifyInstallationAnalytics,
   intializeDatabase,
   verifyRepoName,
+  applyLastModifiedTemplate,
 } from "./utils/tools/index.js";
 import { checkForLicense } from "./license/index.js";
 import { checkForCitation } from "./citation/index.js";
@@ -954,10 +955,17 @@ export default async (app, { getRouter }) => {
 
       let repositoryArchive;
       try {
+
+        const defaultBranch = await context.octokit.repos.get({
+          owner,
+          repo: repository.name,
+        });
+
+        const mainBranch = defaultBranch.data.default_branch;
         const { data } = await context.octokit.repos.downloadZipballArchive({
           owner,
           repo: repository.name,
-          ref: tagVersion,
+          ref: mainBranch,
         });
         repositoryArchive = data;
       } catch (error) {
@@ -965,15 +973,9 @@ export default async (app, { getRouter }) => {
         return;
       }
       consola.success("Downloaded the repository archive successfully!");
-      
-      const { data: release } = await context.octokit.repos.getReleaseByTag({
-        owner,
-        repo: repository.name,
-        tag: tagVersion,
-      });
-      consola.success("Gathered release assets successfully!");
-      
-      for (const asset of release.assets) {
+
+      const startTime = performance.now();
+      for (const asset of draftRelease.data.assets) {
         // Download the raw file from GitHub
         const { data: assetData } = await context.octokit.repos.getReleaseAsset({
           owner,
@@ -1021,6 +1023,10 @@ export default async (app, { getRouter }) => {
         consola.success("Zip file successfully uploaded to Zenodo!");
       }
 
+      const endTime = performance.now;
+      const totalDuration = endTime - startTime;
+      consola.warn("Total duration:", totalDuration);
+
       await context.octokit.repos.updateRelease({
         owner,
         repo: repository.name,
@@ -1045,7 +1051,25 @@ export default async (app, { getRouter }) => {
         return;
       }
 
-      consola.success("Zenodo deposition published successfully!");
+      consola.success("Zenodo deposition published successfully at:", publishDeposition);
+
+      // 9. Append to the issueBody that the deposition has been published
+      // First remove everything inside the <!-- and --> tags
+      const updatedIssueBody = issueBody.replace(/<!--[\s\S]*?-->/g, "");
+      
+      const badge = `[![Zenodo](https://img.shields.io/badge/View_Deposition-0ea5e9.svg)](${process.env.NODE_ENV === 'development' ? 'https://sandbox.zenodo.org/records/' : 'https://zenodo.org/records/'}${depositionId})`;
+      const newIssueBody = `${updatedIssueBody}\n\n## Zenodo Deposition ✔️\nYour repository has successfully made a new release under version ${tagVersion}, which includes an archival of the release on Zenodo. This ensures your software is not only compliant with the FAIR principles but also securely store for future reference.\n\nYou can view and access the Zenodo archival by clicking the button below:\n\n${badge}`;
+      const finalTemplate = await applyLastModifiedTemplate(newIssueBody, repository, owner, context);
+
+      // Update the issue with the new body
+      await context.octokit.issues.update({
+        body: finalTemplate,
+        issue_number: context.payload.issue.number,
+        owner,
+        repo: repository.name,
+      });
+
+      consola.success("Updated the GitHub Issue!");
     }
   });
 

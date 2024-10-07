@@ -170,12 +170,13 @@ const createDraftGithubReleaseSpinner = ref(false);
 const createDraftGithubRelease = () => {
   githubFormRef.value?.validate(async (errors) => {
     if (!errors) {
+      const tag = githubFormValue.value.tag === "new" ? githubFormValue.value.tagTitle : githubFormValue.value.tag;
       createDraftGithubReleaseSpinner.value = true;
       await $fetch(`/api/${owner}/${repo}/release/github`, {
         body: JSON.stringify({
           title: githubFormValue.value.releaseTitle,
           release: githubFormValue.value.release,
-          tag: githubFormValue.value.tag,
+          tag: tag,
         }),
         headers: useRequestHeaders(["cookie"]),
         method: "POST",
@@ -752,7 +753,7 @@ onBeforeUnmount(() => {
                     <n-form-item
                       v-show="githubFormValue.release === 'new'"
                       label="Release title"
-                      path="title"
+                      path="releaseTitle"
                       :rule="{
                         message: 'Please enter a title',
                         required: githubFormValue.release === 'new',

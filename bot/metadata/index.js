@@ -340,7 +340,7 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   const citationSha = citationObj.sha;
   const updated_date = new Date().toISOString().split('T')[0];
 
-  citationFile.identifier = identifier;
+  citationFile.doi = identifier;
   citationFile["date-released"] = updated_date;
   citationFile.version = version;
   codeMetaFile.identifier = identifier;
