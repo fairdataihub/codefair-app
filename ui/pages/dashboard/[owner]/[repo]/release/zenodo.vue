@@ -3,6 +3,7 @@ import {
   type FormInst,
   type SelectOption,
   type SelectGroupOption,
+  NTag,
 } from "naive-ui";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
@@ -82,6 +83,11 @@ const githubFormRules = ref({
 const githubTagOptions = ref<Array<SelectOption | SelectGroupOption>>([]);
 const githubReleaseOptions = ref<Array<SelectOption | SelectGroupOption>>([]);
 
+const lastSelectedUser = ref<string | null>(null);
+const lastSelectedGithubTag = ref<string | null>(null);
+const lastSelectedGithubRelease = ref<number | null>(null);
+const lastSelectedGithubReleaseTitle = ref<string | null>(null);
+
 const { data, error } = await useFetch(`/api/${owner}/${repo}/release/zenodo`, {
   headers: useRequestHeaders(["cookie"]),
   method: "GET",
@@ -121,6 +127,12 @@ if (data.value) {
   zenodoFormValue.value.accessRight =
     data.value.zenodoMetadata.accessRight || null;
 
+  lastSelectedUser.value = data.value.lastSelectedUser;
+  lastSelectedGithubTag.value = data.value.lastSelectedGithubTag;
+  lastSelectedGithubRelease.value = data.value.lastSelectedGithubRelease;
+  lastSelectedGithubReleaseTitle.value =
+    data.value.lastSelectedGithubReleaseTitle;
+
   githubTagOptions.value = [];
   githubReleaseOptions.value = [];
 
@@ -133,6 +145,7 @@ if (data.value) {
     githubReleaseOptions.value.push({
       disabled: !release.draft,
       label: release.name || "Untitled release",
+      prerelease: release.prerelease,
       value: release.id.toString(),
     });
   }
@@ -276,6 +289,38 @@ const handleGithubReleaseChange = () => {
   checkIfGithubReleaseIsDraft();
 };
 
+const renderGithubReleaseLabel = (option: SelectOption): any => {
+  return [
+    option.prerelease &&
+      h(
+        NTag,
+        {
+          class: "mr-2",
+          round: true,
+          size: "small",
+          type: "warning",
+        },
+        {
+          default: () => "Prerelease",
+        },
+      ),
+    // option.value === "new" &&
+    //   h(
+    //     NTag,
+    //     {
+    //       class: "mr-2",
+    //       round: true,
+    //       size: "small",
+    //       type: "info",
+    //     },
+    //     {
+    //       default: () => "New",
+    //     },
+    //   ),
+    option.label as string,
+  ];
+};
+
 const handleGithubTagChange = () => {
   githubFormValue.value.tagTitle = "";
   checkIfGithubReleaseIsDraft();
@@ -410,26 +455,24 @@ onBeforeUnmount(() => {
     <n-flex vertical class="mb-4">
       <n-alert
         v-if="
-          data?.lastSelectedUser &&
-          data.lastSelectedGithubTag &&
-          data.lastSelectedGithubRelease
+          lastSelectedUser && lastSelectedGithubTag && lastSelectedGithubRelease
         "
-        :type="user?.username === data?.lastSelectedUser ? 'info' : 'warning'"
+        :type="user?.username === lastSelectedUser ? 'info' : 'warning'"
         class="w-full"
       >
-        A zenodo release was last configured for this repoitory by
+        A Zenodo release was last configured for this repository by
         <NuxtLink
-          :to="`https://github.com/${data?.lastSelectedUser}`"
+          :to="`https://github.com/${lastSelectedUser}`"
           target="_blank"
           class="text-blue-500 underline transition-all hover:text-blue-700"
         >
-          {{ data?.lastSelectedUser }}</NuxtLink
+          {{ lastSelectedUser }}</NuxtLink
         >
         The selected tag was
-        <code>{{ data?.lastSelectedGithubTag }}</code>
+        <code>{{ lastSelectedGithubTag }}</code>
 
         and the selected release was titled
-        <code>{{ data?.lastSelectedGithubReleaseTitle || "Untitled" }}</code>
+        <code>{{ lastSelectedGithubReleaseTitle || "Untitled" }}</code>
 
         <!-- <NuxtLink
           :to="`https://github.com/${owner}/${repo}/releases/${data?.lastSelectedGithubRelease}`"
@@ -759,6 +802,7 @@ onBeforeUnmount(() => {
                         clearable
                         filterable
                         :loading="checkGithubReleaseSpinner"
+                        :render-label="renderGithubReleaseLabel"
                         @update:value="handleGithubReleaseChange"
                       />
                     </n-form-item>
@@ -848,10 +892,17 @@ onBeforeUnmount(() => {
               </template>
 
               <template #content>
-                <div class="flex w-full flex-col">
-                  <n-flex>
+                <div class="flex w-full flex-col space-y-4">
+                  <p>
+                    You may save the current configuration as a draft and come
+                    back to it later.
+                  </p>
+
+                  <n-flex justify="space-between">
                     <n-button
                       :loading="zenodoDraftSpinner"
+                      secondary
+                      type="primary"
                       @click="startZenodoPublishProcess(false)"
                     >
                       <template #icon>
@@ -863,13 +914,15 @@ onBeforeUnmount(() => {
 
                     <n-button
                       :loading="zenodoPublishSpinner"
+                      type="primary"
+                      color="black"
                       @click="startZenodoPublishProcess(true)"
                     >
                       <template #icon>
                         <Icon name="raphael:start" size="16" />
                       </template>
 
-                      Start Zenodo publish process
+                      Start the Zenodo publish process
                     </n-button>
                   </n-flex>
                 </div>
