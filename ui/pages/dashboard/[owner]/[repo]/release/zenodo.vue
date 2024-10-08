@@ -409,6 +409,11 @@ onBeforeUnmount(() => {
 
     <n-flex vertical class="mb-4">
       <n-alert
+        v-if="
+          data?.lastSelectedUser &&
+          data.lastSelectedGithubTag &&
+          data.lastSelectedGithubRelease
+        "
         :type="user?.username === data?.lastSelectedUser ? 'info' : 'warning'"
         class="w-full"
       >
