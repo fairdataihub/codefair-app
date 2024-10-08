@@ -5,9 +5,9 @@ export default defineEventHandler(async (event) => {
   protectRoute(event);
 
   const bodySchema = z.object({
-    tag: z.string(),
-    release: z.literal("new"),
     title: z.string(),
+    release: z.literal("new"),
+    tag: z.string(),
   });
 
   const { owner, repo } = event.context.params as {
@@ -28,12 +28,12 @@ export default defineEventHandler(async (event) => {
 
   if (!parsedBody.success) {
     throw createError({
-      statusMessage: "The provided parameters are invalid",
       statusCode: 400,
+      statusMessage: "The provided parameters are invalid",
     });
   }
 
-  const { tag, title } = parsedBody.data;
+  const { title, tag } = parsedBody.data;
 
   // Check if the user has write permissions to the repository
   await repoWritePermissions(event, owner, repo);
@@ -55,35 +55,32 @@ export default defineEventHandler(async (event) => {
 
   const app = new App({
     appId: process.env.GITHUB_APP_ID!,
-    privateKey: process.env.GITHUB_APP_PRIVATE_KEY!,
     oauth: {
       clientId: null as unknown as string,
       clientSecret: null as unknown as string,
     },
+    privateKey: process.env.GITHUB_APP_PRIVATE_KEY!,
   });
 
   const octokit = await app.getInstallationOctokit(
     installation.installation_id,
   );
 
-  // Create a release draft
-  console.log("Creating GitHub release draft");
-  console.log(tag, title);
   const { data: releaseData } = await octokit.request(
     "POST /repos/{owner}/{repo}/releases",
     {
+      name: title,
+      draft: true,
+      generate_release_notes: true,
       owner,
       repo,
       tag_name: tag,
-      name: title,
-      generate_release_notes: true,
-      draft: true,
     },
   );
 
   return {
+    htmlUrl: releaseData.html_url,
     message: "GitHub release draft created",
     releaseId: releaseData.id,
-    htmlUrl: releaseData.html_url,
   };
 });
