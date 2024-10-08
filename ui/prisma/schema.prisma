@@ -83,6 +83,7 @@ model CwlValidation {
   id                 String       @id @default(cuid())
   identifier         String       @unique
   repository_id      Int          @unique
+  hello_world        Boolean      @default(false)
   contains_cwl_files Boolean      @default(false)
   overall_status     String       @default("")
   files              Json         @default("[]")
@@ -93,6 +94,7 @@ model CwlValidation {
 
 model Analytics {
   id                       Int      @id
+  testing                  Int      @default(0)
   cwl_validated_file_count Int      @default(0)
   cwl_rerun_validation     Int      @default(0)
   license_created          Int      @default(0)
