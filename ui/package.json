@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "tunnel": "lt --port 3000 --subdomain codefair",
-    "migrate:baseline": "tsx ./prisma/prismas-baseline-migration.ts",
-    "build": "nuxt build && yarn migrate:baseline && yarn prisma:migrate:deploy && yarn prisma:generate",
+    "prisma:migrate:baseline": "tsx ./prisma/prismas-baseline-migration.ts",
+    "prisma:migrate": "yarn prisma:migrate:baseline && yarn prisma:migrate:deploy",
+    "build": "nuxt build && yarn prisma:migrate && yarn prisma:generate",
     "dev": "nuxt dev -p 3000",
     "start": "node .output/server/index.mjs",
     "generate": "nuxt generate",
