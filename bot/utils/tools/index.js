@@ -54,17 +54,14 @@ export function checkEnvVariable(varName) {
  * @param {string} repo - The name of the repository
  * @returns {string} - The default branch of the repository
  */
-export async function getDefaultBranch(context, owner, repo) {
-  let defaultBranch;
-
+export async function getDefaultBranch(context, owner, repositoryName) {
   try {
-    defaultBranch = await context.octokit.repos.getBranch({
-      branch: context.payload.repository.default_branch,
+    const defaultBranch = await context.octokit.repos.get({
       owner,
-      repo,
+      repo: repositoryName,
     });
 
-    return defaultBranch;
+    return defaultBranch.data.default_branch;
   } catch (error) {
     consola.error("Error getting the default branch:", error);
   }

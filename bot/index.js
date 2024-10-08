@@ -9,14 +9,15 @@ import {
   intializeDatabase,
   verifyRepoName,
   applyLastModifiedTemplate,
+  getDefaultBranch,
 } from "./utils/tools/index.js";
 import { checkForLicense } from "./license/index.js";
 import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
+import { getZenodoDepositionInfo, getZenodoMetadata, updateZenodoMetadata } from "./archival/index.js";
 import fs from 'fs';
 import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier } from "./metadata/index.js";
-import { title } from "process";
 
 checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
@@ -566,49 +567,48 @@ export default async (app, { getRouter }) => {
     const { repository } = context.payload;
     const owner = context.payload.repository.owner.login;
 
-    if (issueTitle === ISSUE_TITLE) {
-      const installationCollection = db.installation;
-      const installation = await db.installation.findUnique({
-        where: {
-          id: context.payload.repository.id,
-        },
-      });
-
-      if (installation) {
-        verifyRepoName(
-          installation.repo,
-          context.payload.repository,
-          context.payload.repository.owner.login,
-          db.installation,
-        );
-
-        if (installation?.action_count > 0) {
-          db.installation.update({
-            data: {
-              action_count: {
-                set:
-                  installation.action_count - 1 < 0
-                    ? 0
-                    : installation.action_count - 1,
-              },
-            },
-            where: { id: context.payload.repository.id },
-          });
-
-          return;
-        }
-
-        if (installation?.action_count === 0) {
-          db.installation.update({
-            data: {
-              action_count: 0,
-            },
-            where: { id: context.payload.repository.id },
-          });
-        }
-      }
-    } else {
+    if (!issueTitle === ISSUE_TITLE) {
       return;
+    }
+
+    const installation = await db.installation.findUnique({
+      where: {
+        id: context.payload.repository.id,
+      },
+    });
+
+    if (installation) {
+      verifyRepoName(
+        installation.repo,
+        context.payload.repository,
+        context.payload.repository.owner.login,
+        db.installation,
+      );
+
+      if (installation?.action_count > 0) {
+        db.installation.update({
+          data: {
+            action_count: {
+              set:
+                installation.action_count - 1 < 0
+                  ? 0
+                  : installation.action_count - 1,
+            },
+          },
+          where: { id: context.payload.repository.id },
+        });
+
+        return;
+      }
+
+      if (installation?.action_count === 0) {
+        db.installation.update({
+          data: {
+            action_count: 0,
+          },
+          where: { id: context.payload.repository.id },
+        });
+      }
     }
 
     if (
@@ -746,8 +746,6 @@ export default async (app, { getRouter }) => {
         return;
       }
 
-      
-      // Extract the content between <!-- @codefair-bot publish-zenodo and -->
       // Gather the information for the Zenodo deposition provided in the issue body
       const match = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
       if (!match) {
@@ -791,89 +789,7 @@ export default async (app, { getRouter }) => {
       }
 
       // 3. Create the Zenodo record or get the existing one
-      let zenodoDepositionInfo = {}
-      if (depositionId === "new") {
-        try {
-          // Create new Zenodo deposition
-          const zenodoRecord = await fetch(`${ZENODO_API_ENDPOINT}/deposit/depositions`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${zenodoToken}`, 
-            },
-            body: JSON.stringify({}),
-          });
-
-          zenodoDepositionInfo = await zenodoRecord.json();
-          depositionId = zenodoDepositionInfo.id;
-        } catch (error) {
-          consola.error("Error creating new Zenodo deposition:", error);
-          return;
-        }
-      } else {
-        // Fetch and check if the deposition exists
-        let zenodoDeposition;
-        try {
-          zenodoDeposition = await fetch(
-            `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
-            {
-              method: "GET",
-              params: { 'access_token': zenodoToken },
-              headers: {
-          "Content-Type": "application/json",
-              },
-            },
-          );
-        } catch (error) {
-          consola.error("Error fetching the Zenodo deposition:", error);
-          return;
-        }
-
-        if (!zenodoDeposition.ok) {
-          throw new Error("Deposition not found");
-        }
-
-        const zenodoDepositionInfo = await zenodoDeposition.json();
-
-        // Check if the deposition is published
-        if (zenodoDepositionInfo.submitted === false){
-          // Delete the draft
-            try {
-            await fetch(
-              `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
-              {
-              method: "DELETE",
-              params: { 'access_token': zenodoToken },
-              headers: {
-                "Content-Type": "application/json",
-              },
-              },
-            );
-            } catch (error) {
-            consola.error("Error deleting the draft deposition:", error);
-            return;
-            }
-        }
-
-        // Create a new version of an existing Zenodo deposition
-        try {
-          const zenodoRecord = await fetch(
-            `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
-            {
-              method: "POST",
-              params: { 'access_token': zenodoToken },
-              headers: {
-                "Content-Type": "application/json",
-              },
-            },
-          );
-        } catch (error) {
-          consola.error("Error creating new version of Zenodo deposition:", error);
-          return;
-        }
-
-        zenodoDepositionInfo = await zenodoRecord.json();
-      }
+      let zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
 
       // 4. Set the bucket URL and DOI
       const bucket_url = zenodoDepositionInfo.links.bucket;
@@ -883,64 +799,12 @@ export default async (app, { getRouter }) => {
       await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
 
       // Gather metadata for Zenodo deposition
-      const new_date = new Date().toISOString().split("T")[0];
-      const codeMetaContent = JSON.parse(codemeta.content);
-      const zenodoCreators = codeMetaContent.author.map((author) => {
-        let tempObj = {};
-        tempObj.name = `${author.familyName}, ${author.givenName}`;
+      const newZenodoMetadata = getZenodoMetadata(codemeta.content);
       
-        if (author.affiliation) {
-          tempObj.affiliation = author.affiliation;
-        }
-      
-        if (author.orcid && author.orcid !== "") {
-          tempObj.orcid = author.orcid;
-        }
-      
-        return tempObj;
-      });
-      const license = licensesJson.find((license) => license.detailsUrl === `${codeMetaContent.license}.json`);
-      const licenseId = license ? license.licenseId : null;
-      
-      if (!licenseId) {
-        throw new Error(`License not found for URL: ${codeMetaContent.license}`);
-      }
-
       // 6. Update the zenodo deposition metadata
-      const newZenodoMetadata = {
-        metadata: {
-          title: codeMetaContent?.name,           // Now accessing "name" from the parsed object
-          description: codeMetaContent?.description,
-          upload_type: "software",
-          creators: zenodoCreators,
-          access_right: "open",
-          publication_date: new_date,
-          license: licenseId,
-        }
-      }
+      let zenodoDeposition = await updateZenodoMetadata(depositionId, zenodoToken, newZenodoMetadata);
 
-      let zenodoDeposition;
-      consola.warn("THIS IS THE the DEPOSITIONID", depositionId);
-      try {
-        consola.start("Updating Zenodo deposition with new metadata...", depositionId);
-        await fetch(`${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${zenodoToken}`,
-            },
-            body: JSON.stringify(newZenodoMetadata),
-          },
-        );
-
-        consola.success("Zenodo deposition metadata updated successfully!");
-      } catch (error) {
-        consola.error("Error updating Zenodo deposition:", error);
-        return;
-      }
-
-      // Find the release base on the tag version, if not create a new one
+      // Find the release base on the release ID
       let draftRelease;
       try {
         draftRelease = await context.octokit.repos.getRelease({
@@ -956,25 +820,22 @@ export default async (app, { getRouter }) => {
 
       let repositoryArchive;
       try {
-
-        const defaultBranch = await context.octokit.repos.get({
-          owner,
-          repo: repository.name,
-        });
-
-        const mainBranch = defaultBranch.data.default_branch;
+        // Download the repository archive from draft release
+        const mainBranch = await getDefaultBranch(context, owner, repository.name);
         const { data } = await context.octokit.repos.downloadZipballArchive({
           owner,
           repo: repository.name,
           ref: mainBranch,
         });
+
+        consola.success("Downloaded the repository archive successfully!");
         repositoryArchive = data;
       } catch (error) {
         consola.error("Error downloading the repository archive:", error);
         return;
       }
-      consola.success("Downloaded the repository archive successfully!");
 
+      // TODO: KEEP EXTRACTING UPLOAD SECTION
       const startTime = performance.now();
       for (const asset of draftRelease.data.assets) {
         // Download the raw file from GitHub

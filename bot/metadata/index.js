@@ -287,8 +287,6 @@ export async function getCitationContent(context, owner, repository) {
     content: Buffer.from(citationFile.data.content, "base64").toString(),
     sha: citationFile.data.sha,
   }
-
-  // return yaml.load(Buffer.from(citationFile.data.content, "base64").toString());
  } catch (error) {
     consola.error("Error getting CITATION.cff file", error);
     return null;
