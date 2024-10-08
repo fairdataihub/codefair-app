@@ -3,16 +3,6 @@ import dbInstance from '../db.js';
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT } = process.env;
 
-export async function releaseGitHubDraft(context, owner, repository, tagVersion) {
-  const release = await context.octokit.repos.createRelease({
-    owner,
-    repo: repository.name,
-    tag_name: tagVersion,
-    name: tagVersion,
-    draft: false,
-  })
-}
-
 /**
  * 
  * @param {Object} subjects - Subjects of the repository
@@ -43,17 +33,17 @@ export async function applyArchivalTemplate(
 
   if (!existingZenodoDep) {
     // Entry does not exist in db, create a new one
-    await zenDepositionCollection.create({
-      data: {
-        repository_id: repository.id,
-        existing_zenodo_deposition_id: false,
-        zenodo_id: null,
-        zenodo_metadata: {},
-        github_release_id: null,
-        github_tag_name: null,
-        user_id: "",
-      }
-    })
+    // await zenDepositionCollection.create({
+    //   data: {
+    //     repository_id: repository.id,
+    //     existing_zenodo_deposition_id: null,
+    //     zenodo_id: null,
+    //     zenodo_metadata: {},
+    //     github_release_id: null,
+    //     github_tag_name: null,
+    //     user_id: "",
+    //   }
+    // });
     baseTemplate += `${archiveTitle}${newReleaseText}\n\n${releaseBadgeButton}`;
   } else {
     // entry does exist, update the existing one
@@ -235,6 +225,16 @@ export async function updateZenodoMetadata(depositionId, zenodoToken, metadata) 
   }
 }
 
+/**
+ * 
+ * @param {String} depositionId - 
+ * @param {String} zenodoToken 
+ * @param {Object} draftReleaseAssets 
+ * @param {*} repositoryArchive 
+ * @param {*} owner 
+ * @param {*} context 
+ * @param {*} bucket_url 
+ */
 export async function uploadReleaseAssetsToZenodo(
   depositionId,
   zenodoToken,
@@ -273,5 +273,22 @@ export async function uploadReleaseAssetsToZenodo(
       consola.success(`${asset.name} successfully uploaded to Zenodo!`);
       consola.success(uploadAsset);
     }
+  }
+
+  const uploadZip = await fetch(
+    `${bucket_url}/${repository.name}-${tagVersion}.zip`,
+    {
+      method: "PUT",
+      body: repositoryArchive,
+      headers: {
+        Authorization: `Bearer ${zenodoToken}`,
+      },
+    }
+  );
+  
+  if (!uploadZip.ok) {
+    consola.error(`Failed to upload zip file. Status: ${uploadZip.statusText}`);
+  } else {
+    consola.success("Zip file successfully uploaded to Zenodo!");
   }
 }

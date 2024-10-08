@@ -837,54 +837,7 @@ export default async (app, { getRouter }) => {
 
       // TODO: KEEP EXTRACTING UPLOAD SECTION
       const startTime = performance.now();
-      for (const asset of draftRelease.data.assets) {
-        // Download the raw file from GitHub
-        const { data: assetData } = await context.octokit.repos.getReleaseAsset({
-          owner,
-          repo: repository.name,
-          asset_id: asset.id,
-          headers: {
-        accept: 'application/octet-stream'
-          }
-        });
-
-        // Upload the file to Zenodo
-        consola.start(`Uploading ${asset.name} to Zenodo...`);
-        const uploadAsset = await fetch(`${bucket_url}/${asset.name}`,
-          {
-            method: "PUT",
-            body: assetData,  // Upload the raw file directly
-            headers: {
-              Authorization: `Bearer ${zenodoToken}`, // Specify the correct content type
-            },
-          }
-        );
-
-        if (!uploadAsset.ok) {
-          consola.error(`Failed to upload ${asset.name}. Status: ${uploadAsset.statusText}. Error: ${uploadAsset}`);
-        } else {
-          consola.success(`${asset.name} successfully uploaded to Zenodo!`);
-          consola.success(uploadAsset);
-        }
-      }
-      
-      const uploadZip = await fetch(
-        `${bucket_url}/${repository.name}-${tagVersion}.zip`,
-        {
-          method: "PUT",
-          body: repositoryArchive,
-          headers: {
-            Authorization: `Bearer ${zenodoToken}`,
-          },
-        }
-      );
-      
-      if (!uploadZip.ok) {
-        consola.error(`Failed to upload zip file. Status: ${uploadZip.statusText}`);
-      } else {
-        consola.success("Zip file successfully uploaded to Zenodo!");
-      }
-
+      await uploadReleaseAssetsToZenodo(depositionId, zenodoToken, draftRelease.data.assets, repositoryArchive, owner, context, bucket_url);
       const endTime = performance.now;
       const totalDuration = endTime - startTime;
       consola.warn("Total duration:", totalDuration);
@@ -915,7 +868,7 @@ export default async (app, { getRouter }) => {
       }
 
       consola.success("Zenodo deposition published successfully at:", publishDeposition);
-
+      // Update the database with the Zenodo ID and the status
       await db.zenodoDeposition.update({
         data: {
           published: "published",

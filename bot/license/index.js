@@ -180,7 +180,7 @@ export async function applyLicenseTemplate(
   });
   let licenseId = null;
   let licenseContent = "";
-  let licenseContentNotEmpty = null;
+  let licenseContentEmpty = false;
 
   if (subjects.license) {
     // Get the license identifier
@@ -194,6 +194,7 @@ export async function applyLicenseTemplate(
       licenseRequest.data.content,
       "base64",
     ).toString("utf-8");
+    consola.info(licenseId, licenseContent)
 
     if (
       licenseRequest.data.license.spdx_id === "no-license" ||
@@ -202,46 +203,36 @@ export async function applyLicenseTemplate(
       consola.info("Resetting license id and content back to null");
       licenseId = null;
       licenseContent = "";
+      licenseContentEmpty = true;
     }
-
-    licenseContentNotEmpty = licenseContent && licenseContent.trim().length > 0;
   }
 
+  consola.warn("Existing license:", existingLicense);
+  consola.warn("License id:", licenseId);
+  // consola.warn("License content:", licenseContent);
+  consola.warn("License content empty:", licenseContentEmpty);
+  
   if (existingLicense) {
-    // Determine if the existing license is still valid
-    const isExistingLicenseValid =
-      existingLicense?.licenseContent && existingLicense.licenseId;
-
-    // Use the new license data if the existing license is invalid or the license has changed
-    const finalLicenseId =
-      isExistingLicenseValid && licenseId === "" && !subjects.license
-        ? existingLicense?.licenseId
-        : licenseId;
-    const finalLicenseContent =
-      isExistingLicenseValid && licenseContent === "" && !subjects.license
-        ? existingLicense?.licenseContent
-        : licenseContent;
-
+    consola.warn("Updating existing license request...");
     badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     await dbInstance.licenseRequest.update({
       data: {
         contains_license: subjects.license,
         license_status:
-          finalLicenseContent &&
-          finalLicenseContent.trim().length > 0 &&
-          subjects.license
-            ? "valid"
-            : "invalid",
-        license_id: finalLicenseId,
-        license_content: finalLicenseContent,
+        licenseContentEmpty
+            ? "invalid"
+            : "valid",
+        license_id: licenseId,
+        license_content: licenseContent,
       },
       where: { repository_id: repository.id },
     });
   } else {
+    consola.warn("Creating new license request...");
     await dbInstance.licenseRequest.create({
       data: {
         contains_license: subjects.license,
-        license_status: licenseContentNotEmpty ? "valid" : "invalid",
+        license_status: licenseContentEmpty ? "invalid" : "valid",
         license_id: licenseId,
         license_content: licenseContent,
         identifier,
