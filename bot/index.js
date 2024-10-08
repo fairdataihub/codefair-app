@@ -22,6 +22,7 @@ checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
 const ZENODO_API_ENDPOINT = process.env.ZENODO_API_ENDPOINT;
+const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const licensesJson = JSON.parse(fs.readFileSync('./public/assets/data/licenses.json', 'utf8'));
 
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
@@ -1033,7 +1034,8 @@ export default async (app, { getRouter }) => {
         release_id: releaseId,
         draft: false,
       });
-
+      consola.success("Updated release to not be a draft!");
+      
       // 8. Publish the Zenodo deposition
       consola.start("Publishing the Zenodo deposition...");
       const publishDeposition = await fetch(
@@ -1053,12 +1055,28 @@ export default async (app, { getRouter }) => {
 
       consola.success("Zenodo deposition published successfully at:", publishDeposition);
 
+      await db.zenodoDeposition.update({
+        data: {
+          published: "published",
+          zenodo_id: depositionId,
+        },
+        where: {
+          repository_id: repository.id,
+        }
+      });
+
+      consola.success("Updated the Zenodo deposition in the database!");
+
       // 9. Append to the issueBody that the deposition has been published
       // First remove everything inside the <!-- and --> tags
       const updatedIssueBody = issueBody.replace(/<!--[\s\S]*?-->/g, "");
       
-      const badge = `[![Zenodo](https://img.shields.io/badge/View_Deposition-0ea5e9.svg)](${process.env.NODE_ENV === 'development' ? 'https://sandbox.zenodo.org/records/' : 'https://zenodo.org/records/'}${depositionId})`;
-      const newIssueBody = `${updatedIssueBody}\n\n## Zenodo Deposition ✔️\nYour repository has successfully made a new release under version ${tagVersion}, which includes an archival of the release on Zenodo. This ensures your software is not only compliant with the FAIR principles but also securely store for future reference.\n\nYou can view and access the Zenodo archival by clicking the button below:\n\n${badge}`;
+      consola.warn(process.env.NODE_ENV);
+      // const badge = `[![DOI](https://sandbox.zenodo.org/badge/DOI/10.5072/zenodo.114954.svg)](https://handle.stage.datacite.org/10.5072/zenodo.114954)`
+      const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
+      const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
+      const badge = `[![DOI](https://img.shields.io/badge/${zenodoDoi})](${zenodoDoi})`;
+      const newIssueBody = `${updatedIssueBody}\n\n## Zenodo Deposition ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
       const finalTemplate = await applyLastModifiedTemplate(newIssueBody, repository, owner, context);
 
       // Update the issue with the new body
