@@ -8,15 +8,13 @@ datasource db {
 }
 
 model User {
-  id               String             @id
-  username         String
-  access_token     String             @default("")
-  github_id        Int                @unique
-  created_at       DateTime           @default(now())
-  last_login       DateTime
-  sessions         Session[]
-  ZenodoDeposition ZenodoDeposition[]
-  ZenodoToken      ZenodoToken?
+  id           String    @id
+  username     String
+  access_token String    @default("")
+  github_id    Int       @unique
+  created_at   DateTime  @default(now())
+  last_login   DateTime
+  sessions     Session[]
 }
 
 model Session {
@@ -27,24 +25,23 @@ model Session {
 }
 
 model Installation {
-  id                    Int               @id
+  id                    Int             @id
   owner                 String
   repo                  String
   installation_id       Int
-  latest_commit_date    String            @default("")
-  latest_commit_message String            @default("")
-  latest_commit_sha     String            @default("")
-  latest_commit_url     String            @default("")
-  disabled              Boolean           @default(false)
-  issue_number          Int               @default(0)
-  owner_is_organization Boolean           @default(false)
-  action_count          Int               @default(0)
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
+  latest_commit_date    String          @default("")
+  latest_commit_message String          @default("")
+  latest_commit_sha     String          @default("")
+  latest_commit_url     String          @default("")
+  disabled              Boolean         @default(false)
+  issue_number          Int             @default(0)
+  owner_is_organization Boolean         @default(false)
+  action_count          Int             @default(0)
+  created_at            DateTime        @default(now())
+  updated_at            DateTime        @updatedAt
   CodeMetadata          CodeMetadata?
   CwlValidation         CwlValidation?
   LicenseRequest        LicenseRequest?
-  ZenodoDeposition      ZenodoDeposition?
 }
 
 model LicenseRequest {
@@ -92,29 +89,6 @@ model CwlValidation {
   created_at         DateTime     @default(now())
   updated_at         DateTime     @updatedAt
   repository         Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
-}
-
-model ZenodoToken {
-  id            String   @id @default(cuid())
-  token         String
-  expires_at    DateTime
-  refresh_token String
-  user_id       String   @unique
-  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-}
-
-model ZenodoDeposition {
-  id                            String       @id @default(cuid())
-  repository_id                 Int          @unique
-  existing_zenodo_deposition_id Boolean?
-  zenodo_id                     Int?
-  zenodo_metadata               Json         @default("{}")
-  github_release_id             Int?
-  github_tag_name               String?
-  user_id                       String
-  status                        String       @default("unpublished")
-  repository                    Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
-  user                          User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model Analytics {
