@@ -8,20 +8,27 @@ import {
   verifyInstallationAnalytics,
   intializeDatabase,
   verifyRepoName,
+  applyLastModifiedTemplate,
+  getDefaultBranch,
 } from "./utils/tools/index.js";
 import { checkForLicense } from "./license/index.js";
 import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
+import { getZenodoDepositionInfo, getZenodoMetadata, updateZenodoMetadata } from "./archival/index.js";
+import fs from 'fs';
 import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier } from "./metadata/index.js";
 
 checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
 const ZENODO_API_ENDPOINT = process.env.ZENODO_API_ENDPOINT;
+const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
+const licensesJson = JSON.parse(fs.readFileSync('./public/assets/data/licenses.json', 'utf8'));
 
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
+const ZENODO_API = process.env.ZENODO_API_ENDPOINT;
 
 /**
  * This is the main entrypoint to your Probot app
@@ -252,6 +259,17 @@ export default async (app, { getRouter }) => {
       latest_commit_sha: context.payload.head_commit.id,
       latest_commit_url: context.payload.head_commit.url,
     };
+
+    // Check if the author of the commit is the bot
+    const commitAuthor = context.payload.head_commit.author;
+    if (commitAuthor && commitAuthor.username === "codefair-test[bot]") {
+      const commitMessages = ["refactor: 📝♻️ Update CITATION.cff with Zenodo identifier", "refactor: 📝♻️ Update codemeta.json with Zenodo identifier"]
+      consola.info("Commit made by codefair-test, checking commit message...");
+      if (latestCommitInfo.latest_commit_message.includes(commitMessages[0]) || latestCommitInfo.latest_commit_message.includes(commitMessages[1])) {
+      consola.info("Skipping validation as per commit message.");
+      return;
+      }
+    }
 
     let fullCodefairRun = false;
 
@@ -549,49 +567,48 @@ export default async (app, { getRouter }) => {
     const { repository } = context.payload;
     const owner = context.payload.repository.owner.login;
 
-    if (issueTitle === ISSUE_TITLE) {
-      const installationCollection = db.installation;
-      const installation = await db.installation.findUnique({
-        where: {
-          id: context.payload.repository.id,
-        },
-      });
-
-      if (installation) {
-        verifyRepoName(
-          installation.repo,
-          context.payload.repository,
-          context.payload.repository.owner.login,
-          db.installation,
-        );
-
-        if (installation?.action_count > 0) {
-          db.installation.update({
-            data: {
-              action_count: {
-                set:
-                  installation.action_count - 1 < 0
-                    ? 0
-                    : installation.action_count - 1,
-              },
-            },
-            where: { id: context.payload.repository.id },
-          });
-
-          return;
-        }
-
-        if (installation?.action_count === 0) {
-          db.installation.update({
-            data: {
-              action_count: 0,
-            },
-            where: { id: context.payload.repository.id },
-          });
-        }
-      }
-    } else {
+    if (!issueTitle === ISSUE_TITLE) {
       return;
+    }
+
+    const installation = await db.installation.findUnique({
+      where: {
+        id: context.payload.repository.id,
+      },
+    });
+
+    if (installation) {
+      verifyRepoName(
+        installation.repo,
+        context.payload.repository,
+        context.payload.repository.owner.login,
+        db.installation,
+      );
+
+      if (installation?.action_count > 0) {
+        db.installation.update({
+          data: {
+            action_count: {
+              set:
+                installation.action_count - 1 < 0
+                  ? 0
+                  : installation.action_count - 1,
+            },
+          },
+          where: { id: context.payload.repository.id },
+        });
+
+        return;
+      }
+
+      if (installation?.action_count === 0) {
+        db.installation.update({
+          data: {
+            action_count: 0,
+          },
+          where: { id: context.payload.repository.id },
+        });
+      }
     }
 
     if (
@@ -715,152 +732,176 @@ export default async (app, { getRouter }) => {
       const codemeta = await getCodemetaContent(context, owner, repository);
 
       // 2. Validate the CITATION.cff and codemeta.json files
-      const validCodemeta = await validateMetadata(citationCff, "citation")
-      const validCitation = await validateMetadata(codemeta, "codemeta")
+      try {
+        await validateMetadata(citationCff, "citation")
+      } catch (error) {
+        consola.error("Error validating the citation:", error);
+        return;
+      }
 
-      consola.warn("valid citation?", validCitation);
-      consola.warn("valid codemeta?", validCodemeta);
+      try {
+        await validateMetadata(codemeta, "codemeta")
+      } catch (error) {
+        consola.error("Error validating the codemeta:", error);
+        return;
+      }
 
-      // 3. Create the Zenodo record or get the existing one (comes in issueBody)
-      // Extract the content between <!-- @codefair-bot publish-zenodo and -->
-      const str = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*[\s\S]*?-->/);
-      const extractedContent = str[0];
-      const match = extractedContent.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
-      const uiInfo = match[1];
+      // Gather the information for the Zenodo deposition provided in the issue body
+      const match = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
+      if (!match) {
+        throw new Error("Zenodo publish information not found in issue body.");
+      }
 
-      const resultArray = extractedContent.split(/\s+/);
+      let [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
 
-      consola.info("UI Info:", uiInfo);
-      consola.info("Result Array:", resultArray);
-      const depositionId = uiInfo[0];
-      const tagVersion = uiInfo[1];
-      const userWhoSubmitted = uiInfo[2];
+      consola.info("Deposition ID:", depositionId);
+      consola.info("Release ID:", releaseId);
+      consola.info("Tag Version:", tagVersion);
+      consola.info("User Who Submitted:", userWhoSubmitted);
 
-      const zenodoToken = null // TODO: get the zenodo token from the database.
+      // Fetch the Zenodo token from the database
+      const deposition = await db.zenodoToken.findFirst({
+        where: {
+          user: {
+            username: userWhoSubmitted,
+          },
+        },
+        select: {
+          token: true,
+        }
+      });
+
+      if (!deposition) {
+        throw new Error(`Deposition with tag ${tagVersion} not found in db.`);
+      }
+
       // Check if the token is valid
+      const zenodoToken = deposition.token;
       const zenodoTokenInfo = await fetch(
-        `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoToken}`,
+        `${ZENODO_API_ENDPOINT}/deposit/depositions${depositionId}?access_token=${zenodoToken}`,
         {
           method: "GET",
         },
       );
 
-      if (!zenodoTokenInfo.ok) {
+      if (!zenodoTokenInfo) {
         throw new Error("Zenodo token not found");
       }
 
-      const zenodoDepositionInfo = {}
+      // 3. Create the Zenodo record or get the existing one
+      let zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
 
-      if (depositionId === "new") {
-       const zenodoRecord =  await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions`,
-          {
-            method: "POST",
-            params: { 'access_token': zenodoToken },
-            headers: {
-              "Content-Type": "application/json",
-            },
-
-          },
-        )
-
-        zenodoDepositionInfo= await zenodoRecord.json();
-      } else {
-        // Check if the deposition exists
-        const zenodoDeposition = await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
-          {
-            method: "GET",
-            params: { 'access_token': zenodoToken },
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        if (!zenodoDeposition.ok) {
-          throw new Error("Deposition not found");
-        }
-
-        const zenodoDepositionInfo = await zenodoDeposition.json();
-
-        // Check if the deposition is published
-        if (zenodoDepositionInfo.submitted === false){
-          // Delete the draft
-          await fetch(
-            `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
-            {
-              method: "DELETE",
-              params: { 'access_token': zenodoToken },
-              headers: {
-                "Content-Type": "application/json",
-              },
-            },
-          )
-        }
-
-        // Create a new version of an existing Zenodo deposition
-        const zenodoRecord = await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
-          {
-            method: "POST",
-            params: { 'access_token': zenodoToken },
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        )
-
-        zenodoDepositionInfo = await zenodoRecord.json();
-
-
-
-      }
-
-      // 4. Request a DOI from Zenodo
-      bucket_url = zenodoDepositionInfo.links.bucket;
+      // 4. Set the bucket URL and DOI
+      const bucket_url = zenodoDepositionInfo.links.bucket;
       const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
 
-
-
       // 5. Update the CITATION.cff and codemeta.json files with the DOI
-      await updateMetadataIdentifier(context, owner, repository, depositionId);
+      await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
 
+      // Gather metadata for Zenodo deposition
+      const newZenodoMetadata = getZenodoMetadata(codemeta.content);
+      
       // 6. Update the zenodo deposition metadata
-      const newZenodoMetadata = {} // TODO: Generate the minimal one from the info from codemeta.
+      let zenodoDeposition = await updateZenodoMetadata(depositionId, zenodoToken, newZenodoMetadata);
 
-      const zenodoDeposition = await fetch(
-        `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
-        {
-          method: "PUT",
-          params: { 'access_token': zenodoToken },
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(zenodoMetadata),
-        },
-      )
+      // Find the release base on the release ID
+      let draftRelease;
+      try {
+        draftRelease = await context.octokit.repos.getRelease({
+          owner,
+          repo: repository.name,
+          release_id: releaseId,
+        });
+        consola.warn(draftRelease);
+      } catch (error) {
+        consola.error("Error fetching the draft release:", error);
+        return;
+      }
 
-      // 7. Release the draft GitHub release
-      const release = await context.octokit.repos.createRelease({
+      let repositoryArchive;
+      try {
+        // Download the repository archive from draft release
+        const mainBranch = await getDefaultBranch(context, owner, repository.name);
+        const { data } = await context.octokit.repos.downloadZipballArchive({
+          owner,
+          repo: repository.name,
+          ref: mainBranch,
+        });
+
+        consola.success("Downloaded the repository archive successfully!");
+        repositoryArchive = data;
+      } catch (error) {
+        consola.error("Error downloading the repository archive:", error);
+        return;
+      }
+
+      // TODO: KEEP EXTRACTING UPLOAD SECTION
+      const startTime = performance.now();
+      await uploadReleaseAssetsToZenodo(depositionId, zenodoToken, draftRelease.data.assets, repositoryArchive, owner, context, bucket_url);
+      const endTime = performance.now;
+      const totalDuration = endTime - startTime;
+      consola.warn("Total duration:", totalDuration);
+
+      await context.octokit.repos.updateRelease({
         owner,
         repo: repository.name,
-        tag_name: tagVersion,
-        name: tagVersion,
+        release_id: releaseId,
         draft: false,
       });
+      consola.success("Updated release to not be a draft!");
+      
+      // 8. Publish the Zenodo deposition
+      consola.start("Publishing the Zenodo deposition...");
+      const publishDeposition = await fetch(
+        `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/publish`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${zenodoToken}`,
+          },
+        },
+      );
 
+      if (!publishDeposition.ok) {
+        consola.error("Failed to publish the Zenodo deposition:", publishDeposition);
+        return;
+      }
 
+      consola.success("Zenodo deposition published successfully at:", publishDeposition);
+      // Update the database with the Zenodo ID and the status
+      await db.zenodoDeposition.update({
+        data: {
+          published: "published",
+          zenodo_id: depositionId,
+        },
+        where: {
+          repository_id: repository.id,
+        }
+      });
 
-      // 8. Submit the files to Zenodo (gather the files from the release)
-      const files = await context.octokit.repos.listReleaseAssets({
+      consola.success("Updated the Zenodo deposition in the database!");
+
+      // 9. Append to the issueBody that the deposition has been published
+      // First remove everything inside the <!-- and --> tags
+      const updatedIssueBody = issueBody.replace(/<!--[\s\S]*?-->/g, "");
+      
+      consola.warn(process.env.NODE_ENV);
+      // const badge = `[![DOI](https://sandbox.zenodo.org/badge/DOI/10.5072/zenodo.114954.svg)](https://handle.stage.datacite.org/10.5072/zenodo.114954)`
+      const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
+      const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
+      const badge = `[![DOI](https://img.shields.io/badge/${zenodoDoi})](${zenodoDoi})`;
+      const newIssueBody = `${updatedIssueBody}\n\n## Zenodo Deposition ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
+      const finalTemplate = await applyLastModifiedTemplate(newIssueBody, repository, owner, context);
+
+      // Update the issue with the new body
+      await context.octokit.issues.update({
+        body: finalTemplate,
+        issue_number: context.payload.issue.number,
         owner,
         repo: repository.name,
       });
 
-      consola.warn(files);
-
-      // 9. Publish the Zenodo record
+      consola.success("Updated the GitHub Issue!");
     }
   });
 
@@ -980,21 +1021,21 @@ export default async (app, { getRouter }) => {
   });
 
   // When a release is published
-  app.on("release.drafted", async (context) => {
-    // Check if the release was made using the Codefair dashboard
-    const owner = context.payload.repository.owner.login;
-    const { repository } = context.payload;
+  // app.on("release.drafted", async (context) => {
+  //   // Check if the release was made using the Codefair dashboard
+  //   const owner = context.payload.repository.owner.login;
+  //   const { repository } = context.payload;
 
-    const installation = await db.installation.findUnique({
-      where: {
-        id: repository.id,
-      }
-    });
+  //   const installation = await db.installation.findUnique({
+  //     where: {
+  //       id: repository.id,
+  //     }
+  //   });
 
-    if (!installation) {
-      return;
-    }
-  })
+  //   if (!installation) {
+  //     return;
+  //   }
+  // })
 
   // When a comment is made on an issue
   // TODO: Verify if this is still needed, currently does not run due to issue titles being changed

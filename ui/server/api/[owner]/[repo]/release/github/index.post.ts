@@ -67,6 +67,8 @@ export default defineEventHandler(async (event) => {
   );
 
   // Create a release draft
+  console.log("Creating GitHub release draft");
+  console.log(tag, title);
   const { data: releaseData } = await octokit.request(
     "POST /repos/{owner}/{repo}/releases",
     {
