@@ -1,16 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the column `testing` on the `Analytics` table. All the data in the column will be lost.
-  - You are about to drop the column `hello_world` on the `CwlValidation` table. All the data in the column will be lost.
-
-*/
--- AlterTable
-ALTER TABLE "Analytics" DROP COLUMN "testing";
-
--- AlterTable
-ALTER TABLE "CwlValidation" DROP COLUMN "hello_world";
-
 -- CreateTable
 CREATE TABLE "ZenodoToken" (
     "id" TEXT NOT NULL,

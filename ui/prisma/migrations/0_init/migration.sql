@@ -86,7 +86,6 @@ CREATE TABLE "CwlValidation" (
     "id" TEXT NOT NULL,
     "identifier" TEXT NOT NULL,
     "repository_id" INTEGER NOT NULL,
-    "hello_world" BOOLEAN NOT NULL DEFAULT false,
     "contains_cwl_files" BOOLEAN NOT NULL DEFAULT false,
     "overall_status" TEXT NOT NULL DEFAULT '',
     "files" JSONB NOT NULL DEFAULT '[]',
@@ -99,7 +98,6 @@ CREATE TABLE "CwlValidation" (
 -- CreateTable
 CREATE TABLE "Analytics" (
     "id" INTEGER NOT NULL,
-    "testing" INTEGER NOT NULL DEFAULT 0,
     "cwl_validated_file_count" INTEGER NOT NULL DEFAULT 0,
     "cwl_rerun_validation" INTEGER NOT NULL DEFAULT 0,
     "license_created" INTEGER NOT NULL DEFAULT 0,

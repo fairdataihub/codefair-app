@@ -19,13 +19,12 @@ function runCommand(command: string): void {
 
 // Step 1: Check and create baseline migration folder
 console.log("Verifying baseline migration folder...", initMigrationFolder);
-if (fs.existsSync(initMigrationFolder)) {
-  console.log("Baseline migration folder already exists, skipping...");
-  process.exit(0);
+if (!fs.existsSync(initMigrationFolder)) {
+  // console.log("Baseline migration folder already exists, skipping...");
+  // process.exit(0);
+  console.log("Creating baseline migration folder...");
+  fs.mkdirSync(initMigrationFolder, { recursive: true });
 }
-
-console.log("Creating baseline migration folder...");
-fs.mkdirSync(initMigrationFolder, { recursive: true });
 
 // Step 2: Generate baseline migration with prisma migrate diff
 const diffCommand: string = `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > ${path.join(initMigrationFolder, "migration.sql")}`;
