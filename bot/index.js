@@ -15,7 +15,7 @@ import { checkForLicense } from "./license/index.js";
 import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
-import { getZenodoDepositionInfo, getZenodoMetadata, updateZenodoMetadata } from "./archival/index.js";
+import { getZenodoDepositionInfo, getZenodoMetadata, updateZenodoMetadata, uploadReleaseAssetsToZenodo } from "./archival/index.js";
 import fs from 'fs';
 import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier } from "./metadata/index.js";
 
@@ -790,8 +790,10 @@ export default async (app, { getRouter }) => {
 
       // 3. Create the Zenodo record or get the existing one
       let zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
-
+      
+      // consola.warn(zenodoDepositionInfo);
       // 4. Set the bucket URL and DOI
+      depositionId = zenodoDepositionInfo.id;
       const bucket_url = zenodoDepositionInfo.links.bucket;
       const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
 
@@ -802,7 +804,7 @@ export default async (app, { getRouter }) => {
       const newZenodoMetadata = getZenodoMetadata(codemeta.content);
       
       // 6. Update the zenodo deposition metadata
-      let zenodoDeposition = await updateZenodoMetadata(depositionId, zenodoToken, newZenodoMetadata);
+      await updateZenodoMetadata(depositionId, zenodoToken, newZenodoMetadata);
 
       // Find the release base on the release ID
       let draftRelease;
@@ -812,7 +814,8 @@ export default async (app, { getRouter }) => {
           repo: repository.name,
           release_id: releaseId,
         });
-        consola.warn(draftRelease);
+        // consola.warn(draftRelease);
+        consola.success("Fetched the draft release successfully!");
       } catch (error) {
         consola.error("Error fetching the draft release:", error);
         return;
@@ -837,7 +840,9 @@ export default async (app, { getRouter }) => {
 
       // TODO: KEEP EXTRACTING UPLOAD SECTION
       const startTime = performance.now();
-      await uploadReleaseAssetsToZenodo(depositionId, zenodoToken, draftRelease.data.assets, repositoryArchive, owner, context, bucket_url);
+      const draftAssets = draftRelease.data.assets;
+      consola.warn("draftRelease:", draftRelease.data);
+      await uploadReleaseAssetsToZenodo(zenodoToken, draftAssets, repositoryArchive, owner, context, bucket_url, repository, tagVersion);
       const endTime = performance.now;
       const totalDuration = endTime - startTime;
       consola.warn("Total duration:", totalDuration);
@@ -851,16 +856,23 @@ export default async (app, { getRouter }) => {
       consola.success("Updated release to not be a draft!");
       
       // 8. Publish the Zenodo deposition
-      consola.start("Publishing the Zenodo deposition...");
+      consola.start("Publishing the Zenodo deposition...", depositionId);
       const publishDeposition = await fetch(
         `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/publish`,
         {
           method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${zenodoToken}`,
           },
         },
       );
+
+      if (!publishDeposition.ok) {
+        const errorDetails = await publishDeposition.json();
+        consola.error("Failed to publish the Zenodo deposition:", errorDetails);
+        return;
+      }
 
       if (!publishDeposition.ok) {
         consola.error("Failed to publish the Zenodo deposition:", publishDeposition);
@@ -880,6 +892,7 @@ export default async (app, { getRouter }) => {
       });
 
       consola.success("Updated the Zenodo deposition in the database!");
+      consola.warn(publishDeposition);
 
       // 9. Append to the issueBody that the deposition has been published
       // First remove everything inside the <!-- and --> tags
@@ -889,7 +902,7 @@ export default async (app, { getRouter }) => {
       // const badge = `[![DOI](https://sandbox.zenodo.org/badge/DOI/10.5072/zenodo.114954.svg)](https://handle.stage.datacite.org/10.5072/zenodo.114954)`
       const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
       const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
-      const badge = `[![DOI](https://img.shields.io/badge/${zenodoDoi})](${zenodoDoi})`;
+      const badge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${zenodoDoi})`;
       const newIssueBody = `${updatedIssueBody}\n\n## Zenodo Deposition ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
       const finalTemplate = await applyLastModifiedTemplate(newIssueBody, repository, owner, context);
 
