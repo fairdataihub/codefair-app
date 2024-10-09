@@ -142,7 +142,7 @@ model ZenodoDeposition {
   zenodo_id       Int?
   zenodo_metadata Json @default("{}")
 
-  last_published_zenodo_deposition_id Int?
+  last_published_zenodo_doi String?
 
   github_release_id Int?
   github_tag_name   String?
