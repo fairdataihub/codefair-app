@@ -62,8 +62,10 @@ export async function applyArchivalTemplate(
 
     const lastVersion = existingZenodoDep.github_tag_name;
     const zenodoId = existingZenodoDep.zenodo_id;
-    const zenodoUrl = `${ZENODO_ENDPOINT}/record/${zenodoId}`;
-    const zenodoDOIBadge = `[![DOI](https://zenodo.org/badge/${zenodoId}.svg)](${zenodoUrl})`;
+    // Fetch the DOI from Zenodo
+    // const zenodoDepositionInfo = await getZenodoDepositionInfo(zenodoId, );
+    // const zenodoUrl = `${ZENODO_ENDPOINT}/record/${zenodoId}`;
+    const zenodoDOIBadge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoId}-blue)](${ZENODO_ENDPOINT}/records/${zenodoId})`;
     baseTemplate += `${archiveTitle}\n\n***${lastVersion}***${alreadyReleaseText}\n\n${zenodoDOIBadge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadgeButton} `;
   }
 
@@ -115,6 +117,7 @@ export async function getZenodoDepositionInfo(
       const zenodoDepositionInfo = await zenodoDeposition.json();
 
       // Check if the deposition is published
+      // TODO: CURRENTLY THIS IS JUST CHECKING THE RELEASED DEPOSITION, NOT THE DRAFT (FIGURE OUT A WAY TO CHECK IF A DRAFT EXISTS)
       consola.info("Zenodo deposition info before new draft:", zenodoDepositionInfo);
       if (zenodoDepositionInfo.submitted === false){
         // Delete the files in the draft
@@ -128,19 +131,22 @@ export async function getZenodoDepositionInfo(
       // Create a new version of an existing Zenodo deposition
       try {
         const zenodoRecord = await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion?access_token=${zenodoToken}`,
+          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${zenodoToken}`,  // Use Authorization header instead of query parameter
             },
-            body: JSON.stringify({
-              files: {
-                enabled: true, // or false, depending on your use case
-              },
-            }),
-          },
+          }
         );
+        
+        const responseText = await zenodoRecord.text();
+        consola.warn(`Response: ${responseText}`);
+        if (!zenodoRecord.ok) {
+          throw new Error(`Failed to create new version of Zenodo deposition. Status: ${zenodoRecord.statusText}`);
+        }
+
         const zenodoInfo = await zenodoRecord.json();
         const newdepositionId = zenodoInfo.id;
 
@@ -211,6 +217,7 @@ export async function getZenodoMetadata(codemetadata) {
 
 export async function updateZenodoMetadata(depositionId, zenodoToken, metadata) {
   try {
+    consola.warn("Metadata to update:", metadata);
     const updatedMetadata = await fetch(
       `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
       {
@@ -218,6 +225,7 @@ export async function updateZenodoMetadata(depositionId, zenodoToken, metadata) 
         params: { 'access_token': zenodoToken },
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${zenodoToken}`,
         },
         body: JSON.stringify(metadata),
       },
@@ -279,7 +287,7 @@ export async function uploadReleaseAssetsToZenodo(
       consola.error(`Failed to upload ${asset.name}. Status: ${uploadAsset.statusText}. Error: ${uploadAsset}`);
     } else {
       consola.success(`${asset.name} successfully uploaded to Zenodo!`);
-      consola.success(uploadAsset);
+      // consola.success(uploadAsset);
     }
   }
 
