@@ -37,20 +37,15 @@ export default defineEventHandler(async (event) => {
     encodeURIComponent("deposit:write deposit:actions"),
   );
 
-  console.log(urlEncoded);
-
   const oauthToken = await fetch(`${ZENODO_ENDPOINT}/oauth/token`, {
-    method: "POST",
+    body: urlEncoded,
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: urlEncoded,
+    method: "POST",
   });
 
   if (!oauthToken.ok) {
-    console.log(oauthToken.status);
-    console.log(oauthToken.statusText);
-    // console.log(oauthToken.json());
     throw createError({
       status: 500,
       statusMessage: "Failed to fetch OAuth token",
@@ -72,9 +67,9 @@ export default defineEventHandler(async (event) => {
     // update the token
     await prisma.zenodoToken.update({
       data: {
-        token: accessToken,
         expires_at: new Date(Date.now() + 3600 * 1000),
         refresh_token: refreshToken,
+        token: accessToken,
       },
       where: {
         user_id: userId,
@@ -83,10 +78,10 @@ export default defineEventHandler(async (event) => {
   } else {
     await prisma.zenodoToken.create({
       data: {
-        user_id: userId,
-        token: accessToken,
         expires_at: new Date(Date.now() + 3600 * 1000),
         refresh_token: refreshToken,
+        token: accessToken,
+        user_id: userId,
       },
     });
   }
