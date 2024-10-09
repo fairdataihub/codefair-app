@@ -264,10 +264,10 @@ export default async (app, { getRouter }) => {
     // Check if the author of the commit is the bot
     const commitAuthor = context.payload.head_commit.author;
     if (commitAuthor && commitAuthor.username === "codefair-test[bot]") {
-      const commitMessages = ["refactor: 📝♻️ Update CITATION.cff with Zenodo identifier", "refactor: 📝♻️ Update codemeta.json with Zenodo identifier"]
-      consola.info("Commit made by codefair-test, checking commit message...");
+      const commitMessages = ["chore: 📝 Update CITATION.cff with Zenodo identifier", "chore: 📝 Update codemeta.json with Zenodo identifier"]
+      // consola.info("Commit made by codefair-test, checking commit message...");
       if (latestCommitInfo.latest_commit_message.includes(commitMessages[0]) || latestCommitInfo.latest_commit_message.includes(commitMessages[1])) {
-      consola.info("Skipping validation as per commit message.");
+      // consola.info("Skipping validation as per commit message.");
       return;
       }
     }
@@ -816,7 +816,7 @@ export default async (app, { getRouter }) => {
       await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
 
       // Gather metadata for Zenodo deposition
-      const newZenodoMetadata = await getZenodoMetadata(codemeta.content);
+      const newZenodoMetadata = await getZenodoMetadata(codemeta.content, repository);
       
       // 6. Update the zenodo deposition metadata
       const depositionWithMetadata = await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);

@@ -24,7 +24,7 @@ export async function applyArchivalTemplate(
 ) {
   const zenDepositionCollection = dbInstance.zenodoDeposition;
   const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
-  const archiveTitle = `\n\n## FAIR Software Release\n\n`;
+  const archiveTitle = `\n\n## FAIR Software Release`;
   const existingZenodoDep = await zenDepositionCollection.findUnique({
     where: {
       repository_id: repository.id,
@@ -47,7 +47,7 @@ export async function applyArchivalTemplate(
     //     user_id: "",
     //   }
     // });
-    baseTemplate += `${archiveTitle}${newReleaseText}\n\n${releaseBadgeButton}`;
+    baseTemplate += `${archiveTitle} ❌\n\n${newReleaseText}\n\n${releaseBadgeButton}`;
   } else {
     // entry does exist, update the existing one
     await zenDepositionCollection.update({
@@ -65,7 +65,7 @@ export async function applyArchivalTemplate(
     const zenodoId = existingZenodoDep.zenodo_id;
     const zenodoDoi = existingZenodoDep.last_published_zenodo_doi;
     const zenodoDOIBadge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${zenodoId})`;
-    baseTemplate += `${archiveTitle}\n\n***${lastVersion}***${alreadyReleaseText}\n\n${zenodoDOIBadge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadgeButton} `;
+    baseTemplate += `${archiveTitle} ✔️\n\n***${lastVersion}***${alreadyReleaseText}\n\n${zenodoDOIBadge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadgeButton} `;
   }
 
   // baseTemplate = `${archiveTitle}${newReleaseText}\n\n${alreadyReleaseText}`;
@@ -129,34 +129,45 @@ export async function getZenodoDepositionInfo(
 
       // Create a new version of an existing Zenodo deposition
       try {
+        consola.warn(depositionId);
+        consola.warn(zenodoToken);
+        consola.warn(ZENODO_API_ENDPOINT);
         const zenodoRecord = await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
+          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion?access_token=${zenodoToken}`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${zenodoToken}`,  // Use Authorization header instead of query parameter
             },
-          }
+            body: JSON.stringify({
+              files: {
+                enabled: false,
+              }
+            }),
+          },
         );
+
+        // Delete all the files in the deposition draft
+        const zenodoInfo = await zenodoRecord.json();
+        consola.warn("Zenodo info:", zenodoInfo);
+        for (const file of zenodoInfo.files) {
+          consola.warn("Deleting file:", file.links.download);
+          await deleteFileFromZenodo(newdepositionId, zenodoToken, file.id);
+        }
         
         const responseText = await zenodoRecord.text();
         consola.warn(`Response: ${responseText}`);
-        if (!zenodoRecord.ok) {
+        if (zenodoRecord.status === 400) {
           throw new Error(`Failed to create new version of Zenodo deposition. Status: ${zenodoRecord.statusText}`);
         }
 
-        const zenodoInfo = await zenodoRecord.json();
         const newdepositionId = zenodoInfo.id;
 
         consola.success("New version of Zenodo deposition created successfully!");
         consola.warn("Zenodo deposition info:", zenodoInfo);
 
-        // Delete all the files in the deposition draft
-        for (const file of zenodoInfo.files) {
-          consola.warn("Deleting file:", file.links.download);
-          await deleteFileFromZenodo(newdepositionId, zenodoToken, file.id);
-        }
+
         return zenodoInfo;
       } catch (error) {
         consola.error("Error creating new version of Zenodo deposition:", error);
@@ -174,7 +185,7 @@ export async function getZenodoDepositionInfo(
  * @param {String} codemetadata - Code metadata JSON string (parse with JSON.parse) 
  * @returns {Object} Object of Zenodo metadata
  */
-export async function getZenodoMetadata(codemetadata) {
+export async function getZenodoMetadata(codemetadata, repository) {
   const new_date = new Date().toISOString().split('T')[0];
   const codeMetaContent = JSON.parse(codemetadata);
   const zenodoCreators = codeMetaContent.author.map((author) => {
@@ -192,7 +203,20 @@ export async function getZenodoMetadata(codemetadata) {
     return tempObj;
   });
 
+  consola.info("Fetching license information from licensesJson...");
+  consola.warn(codeMetaContent);
+  if (!codeMetaContent.license) {
+    // fetch from the db
+    const response = await dbInstance.licenseRequest.findUnique({
+      where: {
+        repository_id: repository.id,
+      }
+    });
+    codeMetaContent.license = `https://spdx.org/licenses/${response.license_id}`;
+  }
+  consola.info("CodeMeta license:", codeMetaContent.license);
   const license = licensesJson.find((license) => license.detailsUrl === `${codeMetaContent.license}.json`);
+  consola.info("License information fetched:", license);
   const licenseId = license ? license.licenseId : null;
 
   if (!licenseId) {
