@@ -16,6 +16,7 @@ CREATE TABLE "ZenodoDeposition" (
     "existing_zenodo_deposition_id" BOOLEAN,
     "zenodo_id" INTEGER,
     "zenodo_metadata" JSONB NOT NULL DEFAULT '{}',
+    "last_published_zenodo_doi" TEXT,
     "github_release_id" INTEGER,
     "github_tag_name" TEXT,
     "status" TEXT NOT NULL DEFAULT 'unpublished',
