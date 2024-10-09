@@ -760,6 +760,20 @@ export default async (app, { getRouter }) => {
       consola.info("Tag Version:", tagVersion);
       consola.info("User Who Submitted:", userWhoSubmitted);
 
+      // Update the issue body with everything except passed <!-- @codefair-bot publish-zenodo
+      const quickTemplate = issueBody.substring(0, issueBody.indexOf("<!-- @codefair-bot publish-zenodo"));
+      consola.warn(quickTemplate);
+
+      // Update the github issue with the removed command
+      // Update the issue with the new body
+      await context.octokit.issues.update({
+        body: quickTemplate,
+        issue_number: context.payload.issue.number,
+        owner,
+        repo: repository.name,
+      });
+      consola.success("Updated the GitHub Issue!");
+
       // Fetch the Zenodo token from the database
       const deposition = await db.zenodoToken.findFirst({
         where: {
@@ -912,6 +926,7 @@ export default async (app, { getRouter }) => {
           zenodo_id: newDepositionId,
           zenodo_metadata: JSON.stringify(newZenodoMetadata),
           existing_zenodo_deposition_id: true,
+          last_published_zenodo_doi: zenodoDoi,
         },
         where: {
           repository_id: repository.id,

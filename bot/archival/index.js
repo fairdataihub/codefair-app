@@ -60,12 +60,11 @@ export async function applyArchivalTemplate(
       }
     });
 
+    // Fetch the DOI content
     const lastVersion = existingZenodoDep.github_tag_name;
     const zenodoId = existingZenodoDep.zenodo_id;
-    // Fetch the DOI from Zenodo
-    // const zenodoDepositionInfo = await getZenodoDepositionInfo(zenodoId, );
-    // const zenodoUrl = `${ZENODO_ENDPOINT}/record/${zenodoId}`;
-    const zenodoDOIBadge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoId}-blue)](${ZENODO_ENDPOINT}/records/${zenodoId})`;
+    const zenodoDoi = existingZenodoDep.last_published_zenodo_doi;
+    const zenodoDOIBadge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${zenodoId})`;
     baseTemplate += `${archiveTitle}\n\n***${lastVersion}***${alreadyReleaseText}\n\n${zenodoDOIBadge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadgeButton} `;
   }
 
