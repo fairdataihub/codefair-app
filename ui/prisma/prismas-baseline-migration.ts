@@ -24,15 +24,14 @@ if (!fs.existsSync(initMigrationFolder)) {
   // process.exit(0);
   console.log("Creating baseline migration folder...");
   fs.mkdirSync(initMigrationFolder, { recursive: true });
+  // Step 2: Generate baseline migration with prisma migrate diff
+  const diffCommand: string = `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > ${path.join(initMigrationFolder, "migration.sql")}`;
+  runCommand(diffCommand);
+
+  // Step 3: Mark baseline migration as applied
+  const resolveCommand: string = `npx prisma migrate resolve --applied 0_init`;
+  runCommand(resolveCommand);
 }
-
-// Step 2: Generate baseline migration with prisma migrate diff
-const diffCommand: string = `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > ${path.join(initMigrationFolder, "migration.sql")}`;
-runCommand(diffCommand);
-
-// Step 3: Mark baseline migration as applied
-const resolveCommand: string = `npx prisma migrate resolve --applied 0_init`;
-runCommand(resolveCommand);
 
 console.log("Baseline migration created and marked as applied.");
 
