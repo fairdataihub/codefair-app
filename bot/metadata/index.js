@@ -314,8 +314,6 @@ export async function validateMetadata(content, fileType) {
     try {
       JSON.parse(content);
       // Verify the required fields are present
-      consola.warn("codemeta content");
-      consola.warn(content);
       if (!content.name || !content.authors || !content.description) {
         return false;
       }
@@ -328,8 +326,6 @@ export async function validateMetadata(content, fileType) {
   if (fileType === "citation") {
     try {
       yaml.load(content);
-      // consola.warn("citation content");
-      // consola.warn(content);
       // Verify the required fields are present
       if (!content.title || !content.authors) {
         return false;

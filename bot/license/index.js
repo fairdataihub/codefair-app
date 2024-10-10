@@ -194,7 +194,6 @@ export async function applyLicenseTemplate(
       licenseRequest.data.content,
       "base64",
     ).toString("utf-8");
-    consola.info(licenseId, licenseContent)
 
     if (
       licenseRequest.data.license.spdx_id === "no-license" ||
@@ -206,11 +205,6 @@ export async function applyLicenseTemplate(
       licenseContentEmpty = true;
     }
   }
-
-  consola.warn("Existing license:", existingLicense);
-  consola.warn("License id:", licenseId);
-  // consola.warn("License content:", licenseContent);
-  consola.warn("License content empty:", licenseContentEmpty);
   
   if (existingLicense) {
     consola.warn("Updating existing license request...");

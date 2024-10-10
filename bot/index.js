@@ -728,209 +728,204 @@ export default async (app, { getRouter }) => {
 
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
       consola.log("Publishing to Zenodo...");
-      // 1. Get the metadata from the repository
-      const citationCff = await getCitationContent(context, owner, repository);
-      const codemeta = await getCodemetaContent(context, owner, repository);
-
-      // 2. Validate the CITATION.cff and codemeta.json files
-      try {
-        await validateMetadata(citationCff, "citation")
-      } catch (error) {
-        throw new Error("Error validating the citation:", error);
-      }
-
-      try {
-        await validateMetadata(codemeta, "codemeta")
-      } catch (error) {
-        throw new Error("Error validating the codemeta:", error);
-      }
-
-      // Gather the information for the Zenodo deposition provided in the issue body
-      const match = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
-      if (!match) {
-        throw new Error("Zenodo publish information not found in issue body.");
-      }
-
-      let [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
-
-      consola.info("Deposition ID:", depositionId);
-      consola.info("Release ID:", releaseId);
-      consola.info("Tag Version:", tagVersion);
-      consola.info("User Who Submitted:", userWhoSubmitted);
-
-      // Update the issue body with everything except passed <!-- @codefair-bot publish-zenodo
       const quickTemplate = issueBody.substring(0, issueBody.indexOf("<!-- @codefair-bot publish-zenodo"));
-      consola.warn(quickTemplate);
-
-      // Update the github issue with the removed command
-      // Update the issue with the new body
-      const updatedBody = await context.octokit.issues.update({
-        body: quickTemplate,
-        issue_number: context.payload.issue.number,
-        owner,
-        repo: repository.name,
-      });
-      consola.success("Updated the GitHub Issue!");
-
-      // Fetch the Zenodo token from the database
-      const deposition = await db.zenodoToken.findFirst({
-        where: {
-          user: {
-            username: userWhoSubmitted,
-          },
-        },
-        select: {
-          token: true,
-        }
-      });
-
-      if (!deposition) {
-        throw new Error(`Deposition with tag ${tagVersion} not found in db.`);
-      }
-
-      // Check if the token is valid
-      const zenodoToken = deposition.token;
-      const zenodoTokenInfo = await fetch(
-        `${ZENODO_API_ENDPOINT}/deposit/depositions${depositionId}?access_token=${zenodoToken}`,
-        {
-          method: "GET",
-        },
-      );
-
-      if (!zenodoTokenInfo) {
-        throw new Error("Zenodo token not found");
-      }
-
-      // 3. Create the Zenodo record or get the existing one
-      let zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
-      
-      // consola.warn(zenodoDepositionInfo);
-      // 4. Set the bucket URL and DOI
-      const newDepositionId = zenodoDepositionInfo.id;
-      const bucket_url = zenodoDepositionInfo.links.bucket;
-      const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
-
-      // 5. Update the CITATION.cff and codemeta.json files with the DOI
-      await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
-
-      // Gather metadata for Zenodo deposition
-      const newZenodoMetadata = await getZenodoMetadata(codemeta.content, repository);
-      
-      // 6. Update the zenodo deposition metadata
-      const depositionWithMetadata = await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
-      consola.warn("Updated the Zenodo deposition metadata:", depositionWithMetadata);
-
-      // Find the release base on the release ID
-      let draftRelease;
       try {
-        draftRelease = await context.octokit.repos.getRelease({
+        // 1. Get the metadata from the repository
+        const citationCff = await getCitationContent(context, owner, repository);
+        const codemeta = await getCodemetaContent(context, owner, repository);
+  
+        // 2. Validate the CITATION.cff and codemeta.json files
+        try {
+          await validateMetadata(citationCff, "citation")
+        } catch (error) {
+          throw new Error("Error validating the citation:", error);
+        }
+  
+        try {
+          await validateMetadata(codemeta, "codemeta")
+        } catch (error) {
+          throw new Error("Error validating the codemeta:", error);
+        }
+
+        // Gather the information for the Zenodo deposition provided in the issue body
+        const match = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
+        if (!match) {
+          throw new Error("Zenodo publish information not found in issue body.");
+        }
+  
+        let [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
+  
+        consola.info("Deposition ID:", depositionId);
+        consola.info("Release ID:", releaseId);
+        consola.info("Tag Version:", tagVersion);
+        consola.info("User Who Submitted:", userWhoSubmitted);
+
+        // Update the issue body with everything except passed <!-- @codefair-bot publish-zenodo
+  
+        // Update the github issue with the removed command
+  
+        // Fetch the Zenodo token from the database
+        const deposition = await db.zenodoToken.findFirst({
+          where: {
+            user: {
+              username: userWhoSubmitted,
+            },
+          },
+          select: {
+            token: true,
+          }
+        });
+  
+        if (!deposition) {
+          throw new Error(`Deposition with tag ${tagVersion} not found in db.`);
+        }
+  
+        // Check if the token is valid
+        const zenodoToken = deposition.token;
+        const zenodoTokenInfo = await fetch(
+          `${ZENODO_API_ENDPOINT}/deposit/depositions${depositionId}?access_token=${zenodoToken}`,
+          {
+            method: "GET",
+          },
+        );
+  
+        if (!zenodoTokenInfo) {
+          throw new Error("Zenodo token not found");
+        }
+  
+        // 3. Create the Zenodo record or get the existing one
+        let zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
+  
+        // 4. Set the bucket URL and DOI
+        const newDepositionId = zenodoDepositionInfo.id;
+        const bucket_url = zenodoDepositionInfo.links.bucket;
+        const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
+  
+        // 5. Update the CITATION.cff and codemeta.json files with the DOI
+        await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
+  
+        // Gather metadata for Zenodo deposition
+        const newZenodoMetadata = await getZenodoMetadata(codemeta.content, repository);
+        
+        // 6. Update the zenodo deposition metadata
+        const depositionWithMetadata = await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
+        consola.warn("Updated the Zenodo deposition metadata:", depositionWithMetadata);
+  
+        // Find the release base on the release ID
+        let draftRelease;
+        try {
+          draftRelease = await context.octokit.repos.getRelease({
+            owner,
+            repo: repository.name,
+            release_id: releaseId,
+          });
+          // consola.warn(draftRelease);
+          consola.success("Fetched the draft release successfully!");
+        } catch (error) {
+          consola.error("Error fetching the draft release:", error);
+          return;
+        }
+  
+        let repositoryArchive;
+        try {
+          // Download the repository archive from draft release
+          const mainBranch = await getDefaultBranch(context, owner, repository.name);
+          const { data } = await context.octokit.repos.downloadZipballArchive({
+            owner,
+            repo: repository.name,
+            ref: mainBranch,
+          });
+  
+          consola.success("Downloaded the repository archive successfully!");
+          repositoryArchive = data;
+        } catch (error) {
+          consola.error("Error downloading the repository archive:", error);
+          return;
+        }
+  
+        const startTime = performance.now();
+        await uploadReleaseAssetsToZenodo(zenodoToken, draftRelease.data.assets, repositoryArchive, owner, context, bucket_url, repository, tagVersion);
+        const endTime = performance.now();
+        const totalDuration = endTime - startTime;
+        consola.warn("Total duration to upload assets and zip to Zenodo deposition:", totalDuration);
+        
+        // 8. Publish the Zenodo deposition
+        consola.start("Publishing the Zenodo deposition...", newDepositionId);
+        const publishDeposition = await fetch(
+          `${ZENODO_API_ENDPOINT}/deposit/depositions/${newDepositionId}/actions/publish`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${zenodoToken}`,
+            },
+          },
+        );
+  
+        if (!publishDeposition.ok) {
+          const errorDetails = await publishDeposition.json();
+          consola.error("Failed to publish the Zenodo deposition:", errorDetails);
+          return;
+        }
+  
+        consola.success("Zenodo deposition published successfully at:", publishDeposition);
+  
+        // Update the release to not be a draft
+        await context.octokit.repos.updateRelease({
           owner,
           repo: repository.name,
           release_id: releaseId,
+          draft: false,
         });
-        // consola.warn(draftRelease);
-        consola.success("Fetched the draft release successfully!");
-      } catch (error) {
-        consola.error("Error fetching the draft release:", error);
-        return;
-      }
-
-      let repositoryArchive;
-      try {
-        // Download the repository archive from draft release
-        const mainBranch = await getDefaultBranch(context, owner, repository.name);
-        const { data } = await context.octokit.repos.downloadZipballArchive({
+        consola.success("Updated release to not be a draft!");
+        
+        // 9. Append to the issueBody that the deposition has been published
+        // First remove everything after the ## Fair Software Release
+        // consola.warn(issueBody);
+        const updatedIssueBody = quickTemplate.substring(0, issueBody.indexOf("## FAIR Software Release"));
+  
+        const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
+        const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
+        const badge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${newDepositionId})`;
+        const newIssueBody = `${updatedIssueBody}\n\n## FAIR Software Release ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
+        const finalTemplate = await applyLastModifiedTemplate(newIssueBody, repository, owner, context);
+        
+        // Update the issue with the new body
+        await context.octokit.issues.update({
+          body: finalTemplate,
+          issue_number: context.payload.issue.number,
           owner,
           repo: repository.name,
-          ref: mainBranch,
         });
-
-        consola.success("Downloaded the repository archive successfully!");
-        repositoryArchive = data;
-      } catch (error) {
-        consola.error("Error downloading the repository archive:", error);
-        return;
-      }
-
-      const startTime = performance.now();
-      const draftAssets = draftRelease.data.assets;
-      // consola.warn("draftRelease:", draftRelease.data);
-      await uploadReleaseAssetsToZenodo(zenodoToken, draftAssets, repositoryArchive, owner, context, bucket_url, repository, tagVersion);
-      const endTime = performance.now();
-      const totalDuration = endTime - startTime;
-      consola.warn("Total duration:", totalDuration);
-      
-      // 8. Publish the Zenodo deposition
-      consola.start("Publishing the Zenodo deposition...", newDepositionId);
-      const publishDeposition = await fetch(
-        `${ZENODO_API_ENDPOINT}/deposit/depositions/${newDepositionId}/actions/publish`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${zenodoToken}`,
+        
+        consola.success("Updated the GitHub Issue!");
+        
+        // Update the database with the Zenodo ID and the status
+        await db.zenodoDeposition.update({
+          data: {
+            status: "published",
+            zenodo_id: newDepositionId,
+            zenodo_metadata: JSON.stringify(newZenodoMetadata),
+            existing_zenodo_deposition_id: true,
+            last_published_zenodo_doi: zenodoDoi,
           },
-        },
-      );
-
-      if (!publishDeposition.ok) {
-        const errorDetails = await publishDeposition.json();
-        consola.error("Failed to publish the Zenodo deposition:", errorDetails);
-        return;
+          where: {
+            repository_id: repository.id,
+          }
+        });
+        consola.success("Updated the Zenodo deposition in the database!");
+      } catch (error) {
+        // Update the issue with the new body
+        await context.octokit.issues.update({
+          body: quickTemplate,
+          issue_number: context.payload.issue.number,
+          owner,
+          repo: repository.name,
+        });
+        consola.error(`Error publishing to Zenodo: ${error}`);
       }
 
-      if (!publishDeposition.ok) {
-        consola.error("Failed to publish the Zenodo deposition:", publishDeposition);
-        return;
-      }
-      consola.success("Zenodo deposition published successfully at:", publishDeposition);
 
-      // Update the release to not be a draft
-      await context.octokit.repos.updateRelease({
-        owner,
-        repo: repository.name,
-        release_id: releaseId,
-        draft: false,
-      });
-      consola.success("Updated release to not be a draft!");
-      
-      // 9. Append to the issueBody that the deposition has been published
-      // First remove everything after the ## Fair Software Release
-      // consola.warn(issueBody);
-      const updatedIssueBody = quickTemplate.substring(0, issueBody.indexOf("## FAIR Software Release"));
-      
-      consola.warn(updatedIssueBody);
-      // const badge = `[![DOI](https://sandbox.zenodo.org/badge/DOI/10.5072/zenodo.114954.svg)](https://handle.stage.datacite.org/10.5072/zenodo.114954)`
-      const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
-      const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
-      const badge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${newDepositionId})`;
-      const newIssueBody = `${updatedIssueBody}\n\n## FAIR Software Release ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
-      const finalTemplate = await applyLastModifiedTemplate(newIssueBody, repository, owner, context);
-      
-      // Update the issue with the new body
-      await context.octokit.issues.update({
-        body: finalTemplate,
-        issue_number: context.payload.issue.number,
-        owner,
-        repo: repository.name,
-      });
-      
-      consola.success("Updated the GitHub Issue!");
-      
-      // Update the database with the Zenodo ID and the status
-      await db.zenodoDeposition.update({
-        data: {
-          status: "published",
-          zenodo_id: newDepositionId,
-          zenodo_metadata: JSON.stringify(newZenodoMetadata),
-          existing_zenodo_deposition_id: true,
-          last_published_zenodo_doi: zenodoDoi,
-        },
-        where: {
-          repository_id: repository.id,
-        }
-      });
-      consola.success("Updated the Zenodo deposition in the database!");
     }
   });
 
