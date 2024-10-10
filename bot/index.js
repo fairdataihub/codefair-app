@@ -76,12 +76,7 @@ export default async (app, { getRouter }) => {
         const latestCommitInfo = {};
         if (!emptyRepo) {
           // Get the name of the main branch
-          const defaultBranch = await context.octokit.repos.get({
-            owner,
-            repo: repository.name,
-          });
-
-          const mainBranch = defaultBranch.data.default_branch;
+          const mainBranch = await getDefaultBranch(context, owner, repository.name);
           // Gather the latest commit to main info
           const latestCommit = await context.octokit.repos.getCommit({
             owner,
@@ -257,17 +252,6 @@ export default async (app, { getRouter }) => {
       latest_commit_url: context.payload.head_commit.url,
     };
 
-    // Check if the author of the commit is the bot
-    const commitAuthor = context.payload.head_commit.author;
-    if (commitAuthor && commitAuthor.username === "codefair-test[bot]") {
-      const commitMessages = ["chore: 📝 Update CITATION.cff with Zenodo identifier", "chore: 📝 Update codemeta.json with Zenodo identifier"]
-      // consola.info("Commit made by codefair-test, checking commit message...");
-      if (latestCommitInfo.latest_commit_message.includes(commitMessages[0]) || latestCommitInfo.latest_commit_message.includes(commitMessages[1])) {
-      // consola.info("Skipping validation as per commit message.");
-      return;
-      }
-    }
-
     let fullCodefairRun = false;
 
     const installation = await db.installation.findUnique({
@@ -328,6 +312,17 @@ export default async (app, { getRouter }) => {
         });
 
         fullCodefairRun = true;
+      }
+    }
+
+    // Check if the author of the commit is the bot
+    const commitAuthor = context.payload.head_commit.author;
+    if (commitAuthor && commitAuthor.username === "codefair-test[bot]") {
+      const commitMessages = ["chore: 📝 Update CITATION.cff with Zenodo identifier", "chore: 📝 Update codemeta.json with Zenodo identifier"]
+      // consola.info("Commit made by codefair-test, checking commit message...");
+      if (latestCommitInfo.latest_commit_message.includes(commitMessages[0]) || latestCommitInfo.latest_commit_message.includes(commitMessages[1])) {
+      // consola.info("Skipping validation as per commit message.");
+      return;
       }
     }
 
