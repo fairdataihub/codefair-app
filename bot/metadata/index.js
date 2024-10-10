@@ -316,7 +316,7 @@ export async function validateMetadata(content, fileType) {
       // Verify the required fields are present
       consola.warn("codemeta content");
       consola.warn(content);
-      if (!content.name || !content.authors || !content.description || !content.license) {
+      if (!content.name || !content.authors || !content.description) {
         return false;
       }
       return true;
@@ -328,8 +328,8 @@ export async function validateMetadata(content, fileType) {
   if (fileType === "citation") {
     try {
       yaml.load(content);
-      consola.warn("citation content");
-      consola.warn(content);
+      // consola.warn("citation content");
+      // consola.warn(content);
       // Verify the required fields are present
       if (!content.title || !content.authors) {
         return false;
@@ -369,8 +369,8 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
       },
     });
 
-    if (!response.ok) {
-      throw new Error("Error fetching license details from database");
+    if (!response) {
+      throw new Error("Error fetching license details from database", response);
     }
 
     codeMetaFile.license = `https://spdx.org/licenses/${response.license_id}`;

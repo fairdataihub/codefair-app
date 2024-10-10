@@ -736,15 +736,13 @@ export default async (app, { getRouter }) => {
       try {
         await validateMetadata(citationCff, "citation")
       } catch (error) {
-        consola.error("Error validating the citation:", error);
-        return;
+        throw new Error("Error validating the citation:", error);
       }
 
       try {
         await validateMetadata(codemeta, "codemeta")
       } catch (error) {
-        consola.error("Error validating the codemeta:", error);
-        return;
+        throw new Error("Error validating the codemeta:", error);
       }
 
       // Gather the information for the Zenodo deposition provided in the issue body
@@ -898,15 +896,15 @@ export default async (app, { getRouter }) => {
       
       // 9. Append to the issueBody that the deposition has been published
       // First remove everything after the ## Fair Software Release
-      consola.warn(issueBody);
-      const updatedIssueBody = issueBody.substring(0, issueBody.indexOf("## Fair Software Release"));
+      // consola.warn(issueBody);
+      const updatedIssueBody = quickTemplate.substring(0, issueBody.indexOf("## Fair Software Release"));
       
-      consola.warn(updatedIssueBody);
+      // consola.warn(updatedIssueBody);
       // const badge = `[![DOI](https://sandbox.zenodo.org/badge/DOI/10.5072/zenodo.114954.svg)](https://handle.stage.datacite.org/10.5072/zenodo.114954)`
       const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
       const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
       const badge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${newDepositionId})`;
-      const newIssueBody = `${updatedIssueBody}\n\n## Zenodo Deposition ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
+      const newIssueBody = `${updatedIssueBody}\n\n## FAIR Software Release ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
       const finalTemplate = await applyLastModifiedTemplate(newIssueBody, repository, owner, context);
       
       // Update the issue with the new body

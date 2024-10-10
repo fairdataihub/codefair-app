@@ -114,14 +114,14 @@ export async function getZenodoDepositionInfo(
       );
 
       const zenodoDepositionInfo = await zenodoDeposition.json();
-
+      consola.info("Zenodo deposition info AFTER new draft:", zenodoDepositionInfo);
+      // consola.info("Zenodo deposition info before new draft:", zenodoDepositionInfo);
       // Check if the deposition is published
-      // TODO: CURRENTLY THIS IS JUST CHECKING THE RELEASED DEPOSITION, NOT THE DRAFT (FIGURE OUT A WAY TO CHECK IF A DRAFT EXISTS)
-      consola.info("Zenodo deposition info before new draft:", zenodoDepositionInfo);
+     
       if (zenodoDepositionInfo.submitted === false){
         // Delete the files in the draft
         for (const file of zenodoDepositionInfo.files) {
-          consola.warn("Deleting file:", file.links.download);
+          consola.warn("Deleting file due to draft existing already:", file.links.download);
           await deleteFileFromZenodo(depositionId, zenodoToken, file.id);
         }
         return zenodoDepositionInfo;
@@ -133,40 +133,50 @@ export async function getZenodoDepositionInfo(
         consola.warn(zenodoToken);
         consola.warn(ZENODO_API_ENDPOINT);
         const zenodoRecord = await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion?access_token=${zenodoToken}`,
+          `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${zenodoToken}`,  // Use Authorization header instead of query parameter
             },
-            body: JSON.stringify({
-              files: {
-                enabled: false,
-              }
-            }),
           },
         );
 
         // Delete all the files in the deposition draft
+        const responseText = await zenodoRecord.json();
+        consola.warn(`Response: ${responseText}`);
+        consola.warn(`Response string: ${JSON.stringify(responseText)}`);
+
+        // CHeck if there's an error that requires file deletion
+        if (responseText.errors[0].messages[0] === "Please remove all files first.") {
+          consola.warn("Deleting all files due to error:", responseText.errors[0].messages[0]);
+          for (const file of zenodoDepositionInfo.files) {
+            consola.warn("Deleting file:", file.links.download);
+            await deleteFileFromZenodo(depositionId, zenodoToken, file.id);
+          }
+          zenodoRecord = await fetch(
+            `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${zenodoToken}`,  // Use Authorization header instead of query parameter
+              },
+            },
+          );
+        }
+
         const zenodoInfo = await zenodoRecord.json();
+        const newdepositionId = zenodoInfo.id;
         consola.warn("Zenodo info:", zenodoInfo);
         for (const file of zenodoInfo.files) {
           consola.warn("Deleting file:", file.links.download);
           await deleteFileFromZenodo(newdepositionId, zenodoToken, file.id);
         }
-        
-        const responseText = await zenodoRecord.text();
-        consola.warn(`Response: ${responseText}`);
-        if (zenodoRecord.status === 400) {
-          throw new Error(`Failed to create new version of Zenodo deposition. Status: ${zenodoRecord.statusText}`);
-        }
-
-        const newdepositionId = zenodoInfo.id;
 
         consola.success("New version of Zenodo deposition created successfully!");
         consola.warn("Zenodo deposition info:", zenodoInfo);
-
 
         return zenodoInfo;
       } catch (error) {
@@ -344,6 +354,7 @@ export async function deleteFileFromZenodo(depositionId, zenodoToken, fileId) {
     );
 
     if (!deleteFile.ok) {
+      consola.error(deleteFile);
       throw new Error(`Failed to delete file from Zenodo. Status: ${deleteFile.statusText}`);
     }
 
