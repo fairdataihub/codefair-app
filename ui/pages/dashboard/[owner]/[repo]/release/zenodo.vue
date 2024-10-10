@@ -25,8 +25,8 @@ const devMode = process.env.NODE_ENV === "development";
 const zenodoLoginUrl = ref("");
 const haveValidZenodoToken = ref(false);
 
-const licenseChecked = ref(true);
-const metadataChecked = ref(true);
+const licenseChecked = ref(false);
+const metadataChecked = ref(false);
 const license = ref({
   id: "x",
   identifier: "x",
