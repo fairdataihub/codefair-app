@@ -428,20 +428,24 @@ const handleSettingsSelect = (key: any) => {
 
       <n-divider />
 
-      <h2 class="pb-6">Software Archival</h2>
+      <h2 class="pb-6">FAIR Software Release</h2>
 
       <CardDashboard
-        title="Zenodo"
-        subheader="Make a GitHub release and archive the software on Zenodo."
+        title="Make a FAIR Software Release"
+        subheader="Make a GitHub release and archive the software on a software archival repository."
       >
         <template #icon>
-          <Icon name="simple-icons:zenodo" size="40" />
+          <Icon name="mingcute:rocket-fill" size="40" />
         </template>
 
         <template #content>
-          The FAIR-BioRS guidelines recommend that research software be archived
-          on a data repository such as Zenodo. This feature allows you to create
-          a GitHub release and archive your software on Zenodo.
+          <div class="flex w-full flex-col">
+            <p>
+              To make your software FAIR, it is necessary to archive it in a
+              software archival repository like Zenodo every time you make a
+              release.
+            </p>
+          </div>
         </template>
 
         <template #action>
@@ -450,35 +454,7 @@ const handleSettingsSelect = (key: any) => {
               <template #icon>
                 <Icon name="material-symbols:package-2" size="16" />
               </template>
-              Release on Zenodo
-            </n-button>
-          </NuxtLink>
-        </template>
-      </CardDashboard>
-
-      <n-divider />
-
-      <CardDashboard
-        title="Figshare (Coming Soon)"
-        subheader="Make a GitHub release and archive the software on Figshare."
-        class="cursor-not-allowed opacity-75"
-      >
-        <template #icon>
-          <Icon name="simple-icons:figshare" size="40" />
-        </template>
-
-        <template #content>
-          The FAIR-BioRS guidelines recommend that research software be archived
-          on a data repository such as Figshare. This feature is coming soon.
-        </template>
-
-        <template #action>
-          <NuxtLink :to="`/dashboard/${owner}/${repo}/release/figshare`">
-            <n-button type="primary" :disabled="true">
-              <template #icon>
-                <Icon name="material-symbols:package-2" size="16" />
-              </template>
-              Release on Figshare
+              Create release
             </n-button>
           </NuxtLink>
         </template>
