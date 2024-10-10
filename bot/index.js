@@ -759,10 +759,6 @@ export default async (app, { getRouter }) => {
         consola.info("Release ID:", releaseId);
         consola.info("Tag Version:", tagVersion);
         consola.info("User Who Submitted:", userWhoSubmitted);
-
-        // Update the issue body with everything except passed <!-- @codefair-bot publish-zenodo
-  
-        // Update the github issue with the removed command
   
         // Fetch the Zenodo token from the database
         const deposition = await db.zenodoToken.findFirst({
@@ -883,20 +879,14 @@ export default async (app, { getRouter }) => {
         // First remove everything after the ## Fair Software Release
         // consola.warn(issueBody);
         const updatedIssueBody = quickTemplate.substring(0, issueBody.indexOf("## FAIR Software Release"));
-  
         const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
         const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
         const badge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${newDepositionId})`;
         const newIssueBody = `${updatedIssueBody}\n\n## FAIR Software Release ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
-        const finalTemplate = await applyLastModifiedTemplate(newIssueBody, repository, owner, context);
+        const finalTemplate = await applyLastModifiedTemplate(newIssueBody);
         
         // Update the issue with the new body
-        await context.octokit.issues.update({
-          body: finalTemplate,
-          issue_number: context.payload.issue.number,
-          owner,
-          repo: repository.name,
-        });
+        await createIssue(context, owner, repository, ISSUE_TITLE, finalTemplate);
         
         consola.success("Updated the GitHub Issue!");
         
@@ -916,12 +906,7 @@ export default async (app, { getRouter }) => {
         consola.success("Updated the Zenodo deposition in the database!");
       } catch (error) {
         // Update the issue with the new body
-        await context.octokit.issues.update({
-          body: quickTemplate,
-          issue_number: context.payload.issue.number,
-          owner,
-          repo: repository.name,
-        });
+        await createIssue(context, owner, repository, ISSUE_TITLE, quickTemplate);
         consola.error(`Error publishing to Zenodo: ${error}`);
       }
 

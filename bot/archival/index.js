@@ -16,16 +16,13 @@ const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT } = process.env;
  * @returns {String} String of updated base template with archival information
  */
 export async function applyArchivalTemplate(
-  subjects,
   baseTemplate,
   repository,
   owner,
-  context,
 ) {
-  const zenDepositionCollection = dbInstance.zenodoDeposition;
   const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
   const archiveTitle = `\n\n## FAIR Software Release`;
-  const existingZenodoDep = await zenDepositionCollection.findUnique({
+  const existingZenodoDep = await dbInstance.zenodoDeposition.findUnique({
     where: {
       repository_id: repository.id,
     }
@@ -50,7 +47,7 @@ export async function applyArchivalTemplate(
     baseTemplate += `${archiveTitle} ❌\n\n${newReleaseText}\n\n${releaseBadgeButton}`;
   } else {
     // entry does exist, update the existing one
-    await zenDepositionCollection.update({
+    await dbInstance.zenodoDeposition.update({
       data: {
         existing_zenodo_deposition_id: true,
         zenodo_id: existingZenodoDep.zenodo_id,

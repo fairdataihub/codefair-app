@@ -79,11 +79,9 @@ export async function renderIssues(
   );
 
   baseTemplate = await applyArchivalTemplate(
-    subjects,
     baseTemplate,
     repository,
     owner,
-    context,
   );
 
   baseTemplate = applyLastModifiedTemplate(baseTemplate);

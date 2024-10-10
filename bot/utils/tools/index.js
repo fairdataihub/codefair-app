@@ -474,6 +474,11 @@ export function replaceRawGithubUrl(inputString, oldUrl, newUrl) {
   return [modifiedString, firstLineNumber, secondLineNumber];
 }
 
+/**
+ * * Apply the last modified date to the GitHub issue body
+ * @param {String} baseTemplate - The base template for the GitHub Issue body
+ * @returns - The updated base template with the last modified date
+ */
 export function applyLastModifiedTemplate(baseTemplate) {
   const lastModified = dayjs()
     .tz("America/Los_Angeles")
