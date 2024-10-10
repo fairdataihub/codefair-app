@@ -7,7 +7,7 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT } = process.env;
 
 /**
- * 
+ * * Apply the archival template to the base template
  * @param {Object} subjects - Subjects of the repository
  * @param {String} baseTemplate - Base template for the issue
  * @param {Object} repository - GitHub repository information
@@ -65,7 +65,6 @@ export async function applyArchivalTemplate(
     baseTemplate += `${archiveTitle} ✔️\n\n***${lastVersion}***${alreadyReleaseText}\n\n${zenodoDOIBadge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadgeButton} `;
   }
 
-  // baseTemplate = `${archiveTitle}${newReleaseText}\n\n${alreadyReleaseText}`;
   return baseTemplate;
 }
 
@@ -236,20 +235,18 @@ export async function getZenodoMetadata(codemetadata, repository) {
     return tempObj;
   });
 
-  consola.info("Fetching license information from licensesJson...");
-  consola.warn(codeMetaContent);
   if (!codeMetaContent.license) {
     // fetch from the db
+    consola.warn(`No license found in the codemeta.json file. Fetching from the database...`);
     const response = await dbInstance.licenseRequest.findUnique({
       where: {
         repository_id: repository.id,
       }
     });
-    codeMetaContent.license = `https://spdx.org/licenses/${response.license_id}`;
+    consola.info(`License found in the database: ${response?.license_id}`);
+    codeMetaContent.license = `https://spdx.org/licenses/${response?.license_id}`;
   }
-  consola.info("CodeMeta license:", codeMetaContent.license);
   const license = licensesJson.find((license) => license.detailsUrl === `${codeMetaContent.license}.json`);
-  consola.info("License information fetched:", license);
   const licenseId = license ? license.licenseId : null;
 
   if (!licenseId) {
@@ -258,7 +255,7 @@ export async function getZenodoMetadata(codemetadata, repository) {
 
   return {
     metadata: {
-      title: codeMetaContent?.name,           // Now accessing "name" from the parsed object
+      title: codeMetaContent?.name,
       description: codeMetaContent?.description,
       upload_type: "software",
       creators: zenodoCreators,
@@ -278,7 +275,6 @@ export async function getZenodoMetadata(codemetadata, repository) {
  */
 export async function updateZenodoMetadata(depositionId, zenodoToken, metadata) {
   try {
-    consola.warn("Metadata to update:", metadata);
     const updatedMetadata = await fetch(
       `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
       {
@@ -302,14 +298,14 @@ export async function updateZenodoMetadata(depositionId, zenodoToken, metadata) 
 }
 
 /**
- * 
- * @param {String} depositionId - 
- * @param {String} zenodoToken 
- * @param {Object} draftReleaseAssets 
- * @param {*} repositoryArchive 
- * @param {*} owner 
- * @param {*} context 
- * @param {*} bucket_url 
+ * * Uploads the release assets to Zenodo deposition
+ * @param {String} depositionId - Zenodo deposition ID
+ * @param {String} zenodoToken - Access token for Zenodo API
+ * @param {Array} draftReleaseAssets - List of objects containing the release assets information
+ * @param {*} repositoryArchive - The repository archive file
+ * @param {String} owner - GitHub owner
+ * @param {Object} context - GitHub context
+ * @param {String} bucket_url - Zenodo bucket URL
  */
 export async function uploadReleaseAssetsToZenodo(
   zenodoToken,
@@ -321,6 +317,7 @@ export async function uploadReleaseAssetsToZenodo(
   repository,
   tagVersion,
 ) {
+  const startTime = performance.now();
   for (const asset of draftReleaseAssets) {
     // Download the raw file from GitHub
     const { data: assetData } = await context.octokit.repos.getReleaseAsset({
@@ -364,9 +361,12 @@ export async function uploadReleaseAssetsToZenodo(
   
   if (!uploadZip.ok) {
     consola.error(`Failed to upload zip file. Status: ${uploadZip.statusText}`);
-  } else {
-    consola.success("Zip file successfully uploaded to Zenodo!");
+    throw new Error(`Failed to upload zip file. Status: ${uploadZip.statusText}`);
   }
+  const endTime = performance.now();
+  const totalDuration = endTime - startTime;
+  consola.info("Total duration to upload assets and zip to Zenodo deposition:", totalDuration);
+  consola.success("Zip file successfully uploaded to Zenodo!");
 }
 
 /**

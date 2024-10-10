@@ -753,7 +753,7 @@ export default async (app, { getRouter }) => {
           throw new Error("Zenodo publish information not found in issue body.");
         }
   
-        let [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
+        const [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
   
         consola.info("Deposition ID:", depositionId);
         consola.info("Release ID:", releaseId);
@@ -805,7 +805,7 @@ export default async (app, { getRouter }) => {
         
         // 6. Update the zenodo deposition metadata
         const depositionWithMetadata = await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
-        consola.warn("Updated the Zenodo deposition metadata:", depositionWithMetadata);
+        consola.success(`Updated the Zenodo deposition metadata: ${depositionWithMetadata}`);
   
         // Find the release base on the release ID
         let draftRelease;
@@ -815,11 +815,10 @@ export default async (app, { getRouter }) => {
             repo: repository.name,
             release_id: releaseId,
           });
-          // consola.warn(draftRelease);
+
           consola.success("Fetched the draft release successfully!");
         } catch (error) {
-          consola.error("Error fetching the draft release:", error);
-          return;
+          throw new Error("Error fetching the draft release:", error);
         }
   
         let repositoryArchive;
@@ -839,11 +838,7 @@ export default async (app, { getRouter }) => {
           return;
         }
   
-        const startTime = performance.now();
         await uploadReleaseAssetsToZenodo(zenodoToken, draftRelease.data.assets, repositoryArchive, owner, context, bucket_url, repository, tagVersion);
-        const endTime = performance.now();
-        const totalDuration = endTime - startTime;
-        consola.warn("Total duration to upload assets and zip to Zenodo deposition:", totalDuration);
         
         // 8. Publish the Zenodo deposition
         consola.start("Publishing the Zenodo deposition...", newDepositionId);
