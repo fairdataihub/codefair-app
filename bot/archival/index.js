@@ -69,6 +69,11 @@ export async function applyArchivalTemplate(
   return baseTemplate;
 }
 
+/**
+ * * Create a new Zenodo deposition (no metadata) and return the deposition information
+ * @param {String} zenodoToken - Access token for Zenodo API
+ * @returns - Object of new Zenodo deposition information
+ */
 export async function createNewZenodoDeposition(zenodoToken) {
   // Create new Zenodo deposition
   const zenodoRecord = await fetch(`${ZENODO_API_ENDPOINT}/deposit/depositions`, {
@@ -84,6 +89,12 @@ export async function createNewZenodoDeposition(zenodoToken) {
   return zenodoDepositionInfo;
 }
 
+/**
+ * * Fetches an existing Zenodo deposition by the deposition ID
+ * @param {String} zenodoToken - Access token for Zenodo API
+ * @param {String} depositionId - Zenodo deposition ID
+ * @returns - Object of Zenodo deposition information
+ */
 export async function fetchExistingZenodoDeposition(zenodoToken, depositionId) {
   const zenodoDeposition = await fetch(
     `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}?access_token=${zenodoToken}`,
@@ -104,6 +115,12 @@ export async function fetchExistingZenodoDeposition(zenodoToken, depositionId) {
   return zenodoDepositionInfo;
 }
 
+/**
+ * * Creates a new version of an existing Zenodo deposition
+ * @param {String} zenodoToken - Access token for Zenodo API
+ * @param {String} depositionId - Zenodo deposition ID
+ * @returns - Object of the new Zenodo deposition version
+ */
 export async function createNewVersionOfDeposition(zenodoToken, depositionId) {
   const zenodoRecord = await fetch(
     `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
@@ -252,6 +269,13 @@ export async function getZenodoMetadata(codemetadata, repository) {
   }
 }
 
+/**
+ * * Updates the Zenodo metadata for the deposition
+ * @param {String} depositionId - Zenodo deposition ID
+ * @param {String} zenodoToken - Access token for Zenodo API
+ * @param {Object} metadata - Zenodo metadata object
+ * @returns - Object of updated Zenodo metadata
+ */
 export async function updateZenodoMetadata(depositionId, zenodoToken, metadata) {
   try {
     consola.warn("Metadata to update:", metadata);
@@ -345,6 +369,12 @@ export async function uploadReleaseAssetsToZenodo(
   }
 }
 
+/**
+ * * Deletes a file from a Zenodo deposition
+ * @param {String} depositionId - Zenodo deposition ID
+ * @param {String} zenodoToken - Access token for Zenodo API
+ * @param {String} fileId - Zenodo file ID
+ */
 export async function deleteFileFromZenodo(depositionId, zenodoToken, fileId) {
   try {
     const deleteFile = await fetch(
@@ -362,7 +392,6 @@ export async function deleteFileFromZenodo(depositionId, zenodoToken, fileId) {
     }
 
     consola.success("File successfully deleted from Zenodo!");
-    return deleteFile;
   } catch (error) {
     throw new Error(`Error deleting file from Zenodo: ${error}`);
   }
