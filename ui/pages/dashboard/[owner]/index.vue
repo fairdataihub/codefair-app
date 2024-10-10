@@ -16,7 +16,7 @@ const { owner } = route.params as { owner: string };
 
 const botNotInstalled = ref(false);
 
-const { data, error } = await useFetch(`/api/dashboard/${owner}`, {
+const { data, error } = await useFetch(`/api/${owner}/dashboard`, {
   headers: useRequestHeaders(["cookie"]),
 });
 

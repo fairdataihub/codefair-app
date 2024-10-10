@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FormInst, FormRules, FormItemRule } from "naive-ui";
+import doiRegex from "doi-regex";
 import codeMetadataJSON from "@/assets/data/codeMetadata.json";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
@@ -112,7 +113,7 @@ const rules = ref<FormRules>({
     trigger: "blur",
     validator: (_rule, value) => {
       if (value && !isURL(value)) {
-        return false;
+        return new Error("Please input a valid URL");
       }
       return true;
     },
@@ -128,6 +129,16 @@ const rules = ref<FormRules>({
     required: true,
     trigger: "blur",
     type: "array",
+  },
+  uniqueIdentifier: {
+    message: "Please input a valid DOI",
+    trigger: ["blur", "input"],
+    validator: (_rule, value) => {
+      if (value && !doiRegex().test(value)) {
+        return new Error("Please input a valid DOI");
+      }
+      return true;
+    },
   },
 });
 
@@ -876,7 +887,10 @@ const navigateToPR = () => {
 
           <template #form>
             <n-card class="rounded-lg bg-[#f9fafb]">
-              <n-form-item label="Unique Identifier" path="uniqueIdentifier">
+              <n-form-item
+                label="Unique Identifier (DOI)"
+                path="uniqueIdentifier"
+              >
                 <n-input
                   v-model:value="formValue.uniqueIdentifier"
                   placeholder="10.60775/fairhub.1"

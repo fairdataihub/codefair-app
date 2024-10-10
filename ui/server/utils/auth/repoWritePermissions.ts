@@ -27,6 +27,13 @@ const repoWritePermissions = async (
   );
 
   if (!permissions.ok) {
+    if (permissions.status === 401) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: "unauthorized-repo-access",
+      });
+    }
+
     if (permissions.status === 404) {
       throw createError({
         statusCode: 404,

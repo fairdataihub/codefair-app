@@ -1,15 +1,14 @@
 import { consola } from "consola";
 import {
   applyGitHubIssueToDatabase,
-  createId,
   applyLastModifiedTemplate,
 } from "../tools/index.js";
 import { applyCWLTemplate } from "../../cwl/index.js";
 import { applyMetadataTemplate } from "../../metadata/index.js";
 import { applyLicenseTemplate } from "../../license/index.js";
+import { applyArchivalTemplate } from "../../archival/index.js";
 
 const { GITHUB_APP_NAME } = process.env;
-const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
 /**
  * * Renders the body of the dashboard issue message
@@ -77,6 +76,12 @@ export async function renderIssues(
     repository,
     owner,
     context,
+  );
+
+  baseTemplate = await applyArchivalTemplate(
+    baseTemplate,
+    repository,
+    owner,
   );
 
   baseTemplate = applyLastModifiedTemplate(baseTemplate);
@@ -154,161 +159,4 @@ export async function createIssue(context, owner, repository, title, body) {
 
     await applyGitHubIssueToDatabase(response.data.number, repository.id);
   }
-}
-
-// TODO: Functions below are temporarily being unused (metadata section was combined. Seperate sections might come back though)
-
-/**
- * * Applies the codemeta template to the base template
- *
- * @param {object} subjects - The subjects to check for
- * @param {string} baseTemplate - The base template to add to
- * @param {*} db - The database
- * @param {object} repository - The GitHub repository information
- * @param {string} owner - The owner of the repository
- *
- * @returns {string} - The updated base template
- */
-export async function applyCodemetaTemplate(
-  subjects,
-  baseTemplate,
-  db,
-  repository,
-  owner,
-) {
-  if (!subjects.codemeta && subjects.license) {
-    // License was found but no codemeta.json exists
-    const identifier = createId();
-
-    let badgeURL = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
-
-    const codemetaCollection = db.codeMetadata;
-    const existingCodemeta = await codemetaCollection.findUnique({
-      repository_id: repository.id,
-    });
-
-    if (!existingCodemeta) {
-      // Entry does not exist in db, create a new one
-      const newDate = new Date();
-      await codemetaCollection.create({
-        created_at: newDate,
-        identifier,
-        owner,
-        repo: repository.name,
-        repository_id: repository.id,
-        updated_at: newDate,
-      });
-    } else {
-      // Get the identifier of the existing codemeta request
-      await codemetaCollection.update({
-        data: { updated_at: new Date() },
-        where: { repository_id: repository.id },
-      });
-      badgeURL = `${CODEFAIR_DOMAIN}/add/codemeta/${existingCodemeta.identifier}`;
-    }
-
-    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Add_Codemeta-dc2626.svg)](${badgeURL})`;
-    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file was not found in the repository. To make your software reusable a codemeta.json is expected at the root level of your repository.\n\n${codemetaBadge}`;
-  } else if (subjects.codemeta && subjects.license) {
-    // License was found and codemetata.json also exists
-    // Then add codemeta section mentioning it will be checked after license is added
-
-    if (!existingLicense) {
-      // Entry does not exist in db, create a new one
-      const newDate = new Date();
-      await licenseCollection.create({
-        data: {
-          created_at: newDate,
-          identifier,
-          owner,
-          repo: repository.name,
-          repository_id: repository.id,
-          updated_at: newDate,
-        },
-      });
-    } else {
-      // Get the identifier of the existing license request
-      // Update the database
-      await licenseCollection.update({
-        data: { updated_at: new Date() },
-        where: { repository_id: repository.id },
-      });
-      badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
-    }
-    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Edit_Codemeta-dc2626.svg)](${badgeURL})`;
-    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file found in the repository.\n\n${codemetaBadge}`;
-  } else {
-    // codemeta and license does not exist
-    const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/Codemeta_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file will be checked after a license file is added. To make your software reusable a codemeta.json is expected at the root level of your repository.\n\n${codemetaBadge}`;
-  }
-
-  return baseTemplate;
-}
-
-/**
- * * Applies the citation template to the base template
- *
- * @param {object} subjects - The subjects to check for
- * @param {string} baseTemplate - The base template to add to
- * @param {*} db - The database
- * @param {object} repository - The GitHub repository information
- * @param {string} owner - The owner of the repository
- *
- * @returns {string} - The updated base template
- */
-export async function applyCitationTemplate(
-  subjects,
-  baseTemplate,
-  db,
-  repository,
-  owner,
-) {
-  if (!subjects.citation && subjects.license) {
-    // License was found but no citation file was found
-    const identifier = createId();
-
-    let badgeURL = `${CODEFAIR_DOMAIN}/add/citation/${identifier}`;
-    const citationCollection = db.citationRequests;
-    const existingCitation = await citationCollection.fineUnique({
-      where: {
-        repository_id: repository.id,
-      },
-    });
-
-    if (!existingCitation) {
-      // Entry does not exist in db, create a new one
-      const newDate = new Date();
-      await citationCollection.create({
-        data: {
-          created_at: newDate,
-          identifier,
-          owner,
-          repo: repository.name,
-          repository_id: repository.id,
-          updated_at: newDate,
-        },
-      });
-    } else {
-      // Get the identifier of the existing citation request
-      await citationCollection.updateOne({
-        data: { updated_at: new Date() },
-        where: { repository_id: repository.id },
-      });
-      badgeURL = `${CODEFAIR_DOMAIN}/add/citation/${existingCitation.identifier}`;
-    }
-
-    const citationBadge = `[![Citation](https://img.shields.io/badge/Add_Citation-dc2626.svg)](${badgeURL})`;
-    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file was not found in the repository. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.\n\n${citationBadge}`;
-  } else if (subjects.citation && subjects.license) {
-    // Citation file was found and license was found
-    const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Added-6366f1.svg)`;
-    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file found in the repository.\n\n${citationBadge}`;
-  } else {
-    // Citation file was not found and license was not found
-    const citationBadge = `![Citation](https://img.shields.io/badge/Citation_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## CITATION.cff\n\nA CITATION.cff file will be checked after a license file is added. The [FAIR-BioRS guidelines](https://fair-biors.org/docs/guidelines) suggests to include that file for providing metadata about your software and make it FAIR.\n\n${citationBadge}`;
-  }
-
-  return baseTemplate;
 }

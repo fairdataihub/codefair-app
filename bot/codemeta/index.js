@@ -166,3 +166,92 @@ export async function createCodeMetaFile(context, owner, repo, codeMetaText) {
     repo,
   });
 }
+
+
+/**
+ * * Applies the codemeta template to the base template
+ *
+ * @param {object} subjects - The subjects to check for
+ * @param {string} baseTemplate - The base template to add to
+ * @param {*} db - The database
+ * @param {object} repository - The GitHub repository information
+ * @param {string} owner - The owner of the repository
+ *
+ * @returns {string} - The updated base template
+ */
+export async function applyCodemetaTemplate(
+  subjects,
+  baseTemplate,
+  db,
+  repository,
+  owner,
+) {
+  if (!subjects.codemeta && subjects.license) {
+    // License was found but no codemeta.json exists
+    const identifier = createId();
+
+    let badgeURL = `${CODEFAIR_DOMAIN}/add/codemeta/${identifier}`;
+
+    const codemetaCollection = db.codeMetadata;
+    const existingCodemeta = await codemetaCollection.findUnique({
+      repository_id: repository.id,
+    });
+
+    if (!existingCodemeta) {
+      // Entry does not exist in db, create a new one
+      const newDate = new Date();
+      await codemetaCollection.create({
+        created_at: newDate,
+        identifier,
+        owner,
+        repo: repository.name,
+        repository_id: repository.id,
+        updated_at: newDate,
+      });
+    } else {
+      // Get the identifier of the existing codemeta request
+      await codemetaCollection.update({
+        data: { updated_at: new Date() },
+        where: { repository_id: repository.id },
+      });
+      badgeURL = `${CODEFAIR_DOMAIN}/add/codemeta/${existingCodemeta.identifier}`;
+    }
+
+    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Add_Codemeta-dc2626.svg)](${badgeURL})`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file was not found in the repository. To make your software reusable a codemeta.json is expected at the root level of your repository.\n\n${codemetaBadge}`;
+  } else if (subjects.codemeta && subjects.license) {
+    // License was found and codemetata.json also exists
+    // Then add codemeta section mentioning it will be checked after license is added
+
+    if (!existingLicense) {
+      // Entry does not exist in db, create a new one
+      const newDate = new Date();
+      await licenseCollection.create({
+        data: {
+          created_at: newDate,
+          identifier,
+          owner,
+          repo: repository.name,
+          repository_id: repository.id,
+          updated_at: newDate,
+        },
+      });
+    } else {
+      // Get the identifier of the existing license request
+      // Update the database
+      await licenseCollection.update({
+        data: { updated_at: new Date() },
+        where: { repository_id: repository.id },
+      });
+      badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
+    }
+    const codemetaBadge = `[![Citation](https://img.shields.io/badge/Edit_Codemeta-dc2626.svg)](${badgeURL})`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file found in the repository.\n\n${codemetaBadge}`;
+  } else {
+    // codemeta and license does not exist
+    const codemetaBadge = `![CodeMeta](https://img.shields.io/badge/Codemeta_Not_Checked-fbbf24)`;
+    baseTemplate += `\n\n## codemeta.json\n\nA codemeta.json file will be checked after a license file is added. To make your software reusable a codemeta.json is expected at the root level of your repository.\n\n${codemetaBadge}`;
+  }
+
+  return baseTemplate;
+}

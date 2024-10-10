@@ -11,7 +11,7 @@ const props = defineProps({
 
 const statusCode = props.error?.statusCode ?? 500;
 
-console.error(props.error);
+// console.error(props.error);
 console.error(props.error.statusMessage);
 
 const showNotAuthorizedError = ref(false);

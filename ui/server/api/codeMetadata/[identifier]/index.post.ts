@@ -376,12 +376,17 @@ export default defineEventHandler(async (event) => {
       "If you use this software, please cite it using the metadata from this file.",
     type: "software",
     ...(codeMetadataRecord.uniqueIdentifier && {
-      identifiers: [
-        {
-          type: "doi",
-          value: codeMetadataRecord.uniqueIdentifier,
-        },
-      ],
+      /**
+       * * Using the DOI as the identifier for the citation.cff file
+       * * This is not ideal but it is a good way to maintain consistency
+       */
+      // identifiers: [
+      //   {
+      //     type: "doi",
+      //     value: codeMetadataRecord.uniqueIdentifier,
+      //   },
+      // ],
+      doi: codeMetadataRecord.uniqueIdentifier,
     }),
     ...(codeMetadataRecord.description && {
       abstract: codeMetadataRecord.description,
