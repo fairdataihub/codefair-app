@@ -231,6 +231,7 @@ const toggleMobileMenu = () => {
                 breadcrumbsStore.repo &&
                 breadcrumbsStore.feature.id === 'release-zenodo'
               "
+              :clickable="false"
             >
               <Icon name="material-symbols:package-2" />
               Release

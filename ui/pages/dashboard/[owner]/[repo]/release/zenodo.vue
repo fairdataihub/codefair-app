@@ -439,7 +439,7 @@ onBeforeUnmount(() => {
 <template>
   <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
     <n-flex vertical>
-      <h1>Zenodo Release</h1>
+      <h1>FAIR Software Release</h1>
 
       <p>
         Create a release of your repository on Zenodo. We will also create a
