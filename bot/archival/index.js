@@ -144,41 +144,43 @@ export async function getZenodoDepositionInfo(
         );
 
         // Delete all the files in the deposition draft
+        if (!zenodoRecord.ok) {
+          consola.error("Error creating new version of Zenodo deposition:", zenodoRecord);
+          throw new Error(`Failed to create new version of Zenodo deposition. Status: ${zenodoRecord.statusText}`);
+        }
         const responseText = await zenodoRecord.json();
+        const latestDraftLink = responseText.links.latest_draft;
         consola.warn(`Response: ${responseText}`);
         consola.warn(`Response string: ${JSON.stringify(responseText)}`);
 
-        // CHeck if there's an error that requires file deletion
-        if (responseText.errors[0].messages[0] === "Please remove all files first.") {
-          consola.warn("Deleting all files due to error:", responseText.errors[0].messages[0]);
-          for (const file of zenodoDepositionInfo.files) {
-            consola.warn("Deleting file:", file.links.download);
-            await deleteFileFromZenodo(depositionId, zenodoToken, file.id);
-          }
-          zenodoRecord = await fetch(
-            `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${zenodoToken}`,  // Use Authorization header instead of query parameter
-              },
-            },
-          );
+        // Fetch the latest draft
+        const draftZenodoRecord = await fetch(latestDraftLink, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${zenodoToken}`,
+          },
+        });
+
+        if (!draftZenodoRecord.ok) {
+          consola.error("Error fetching the latest draft of Zenodo deposition:", draftZenodoRecord);
+          throw new Error(`Failed to fetch the latest draft of Zenodo deposition. Status: ${draftZenodoRecord.statusText}`);
         }
 
-        const zenodoInfo = await zenodoRecord.json();
-        const newdepositionId = zenodoInfo.id;
-        consola.warn("Zenodo info:", zenodoInfo);
-        for (const file of zenodoInfo.files) {
-          consola.warn("Deleting file:", file.links.download);
-          await deleteFileFromZenodo(newdepositionId, zenodoToken, file.id);
+        const newZenodoVersion = await draftZenodoRecord.json();
+        const draftDepositionId = newZenodoVersion.id;
+        consola.warn("Zenodo info:", newZenodoVersion);
+        if (newZenodoVersion.files.length > 0) {
+          for (const file of newZenodoVersion.files) {
+            consola.warn("Deleting file:", file.links.download);
+            await deleteFileFromZenodo(draftDepositionId, zenodoToken, file.id);
+          }
         }
 
         consola.success("New version of Zenodo deposition created successfully!");
-        consola.warn("Zenodo deposition info:", zenodoInfo);
+        // consola.warn("Zenodo deposition info:", zenodoInfo);
 
-        return zenodoInfo;
+        return newZenodoVersion;
       } catch (error) {
         consola.error("Error creating new version of Zenodo deposition:", error);
         return;

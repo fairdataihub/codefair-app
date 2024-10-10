@@ -764,7 +764,7 @@ export default async (app, { getRouter }) => {
 
       // Update the github issue with the removed command
       // Update the issue with the new body
-      await context.octokit.issues.update({
+      const updatedBody = await context.octokit.issues.update({
         body: quickTemplate,
         issue_number: context.payload.issue.number,
         owner,
@@ -897,9 +897,9 @@ export default async (app, { getRouter }) => {
       // 9. Append to the issueBody that the deposition has been published
       // First remove everything after the ## Fair Software Release
       // consola.warn(issueBody);
-      const updatedIssueBody = quickTemplate.substring(0, issueBody.indexOf("## Fair Software Release"));
+      const updatedIssueBody = quickTemplate.substring(0, issueBody.indexOf("## FAIR Software Release"));
       
-      // consola.warn(updatedIssueBody);
+      consola.warn(updatedIssueBody);
       // const badge = `[![DOI](https://sandbox.zenodo.org/badge/DOI/10.5072/zenodo.114954.svg)](https://handle.stage.datacite.org/10.5072/zenodo.114954)`
       const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
       const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
