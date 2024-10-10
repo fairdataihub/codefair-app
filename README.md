@@ -98,7 +98,7 @@ This work is licensed under
 
 ## How to cite
 
-If you are using this package or reusing the source code from this repository for any purpose, please cite the corresponding Zenodo record. If you are using the latest version, you can see the citation instruction in the GitHub Citation panel or in the CITATION.cff file. You can also find the citation instruction on the Zenodo page 10.5281/zenodo.13376616 (especially if you would like to cite an older version). 
+If you are using this package or reusing the source code from this repository for any purpose, please cite the corresponding Zenodo record. If you are using the latest version, you can see the citation instruction in the GitHub Citation panel or in the CITATION.cff file. You can also find the citation instruction on the Zenodo page https://doi.org/10.5281/zenodo.13376616 (especially if you would like to cite an older version). 
 
 <br />
 
