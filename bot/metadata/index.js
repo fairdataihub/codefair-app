@@ -30,7 +30,7 @@ export function convertDateToUnix(date) {
  * @param {JSON} codemetaContent - The codemeta.json file content
  * @returns {JSON} - The metadata object for the database
  */
-export function convertMetadataForDB(codemetaContent) {
+export async function convertMetadataForDB(codemetaContent, repository) {
   // eslint-disable-next-line prefer-const
   let sortedAuthors = [];
   // eslint-disable-next-line prefer-const
@@ -131,6 +131,22 @@ export function convertMetadataForDB(codemetaContent) {
 
     if (match) {
       licenseId = match[1];
+    }
+  }
+
+  if (licenseId === null) {
+    // Fetch license details from database
+    const license = await dbInstance.licenseRequest.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
+    });
+    
+    consola.warn("ASDKJASL:DKJA:SLJKDAL:SJD")
+    consola.warn(license);
+    consola.warn("ASDKJASL:DKJA:SLJKDAL:SJD") 
+    if (license?.license_id) {
+      licenseId = `https://spdx.org/licenses/${license.license_id}`
     }
   }
 
@@ -312,8 +328,8 @@ export async function validateMetadata(content, fileType) {
   if (fileType === "citation") {
     try {
       yaml.load(content);
-      consola.warn("citation content");
-      consola.warn(content);
+      // consola.warn("citation content");
+      // consola.warn(content);
       // Verify the required fields are present
       if (!content.title || !content.authors) {
         return false;
@@ -346,12 +362,26 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   codeMetaFile.dateModified = updated_date;
   codeMetaFile.datePublished = updated_date;
 
+  if (codeMetaFile?.license) {
+    const response = await dbInstance.licenseRequest.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
+    });
+
+    if (!response) {
+      throw new Error("Error fetching license details from database", response);
+    }
+
+    codeMetaFile.license = `https://spdx.org/licenses/${response.license_id}`;
+  }
+
   // Update the citation file
   await context.octokit.repos.createOrUpdateFileContents({
     owner,
     repo: repository.name,
     path: "CITATION.cff",
-    message: "refactor: 📝♻️ Update CITATION.cff with Zenodo identifier",
+    message: "chore: 📝 Update CITATION.cff with Zenodo identifier",
     content: Buffer.from(yaml.dump(citationFile, { noRefs: true, indent: 2 })).toString("base64"),
     sha: citationSha,
   });
@@ -363,7 +393,7 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
     owner,
     repo: repository.name,
     path: "codemeta.json",
-    message: "refactor: 📝♻️ Update codemeta.json with Zenodo identifier",
+    message: "chore: 📝 Update codemeta.json with Zenodo identifier",
     content: Buffer.from(JSON.stringify(codeMetaFile, null, 2)).toString("base64"),
     sha: codeMetaSha,
   });
@@ -484,7 +514,18 @@ export async function applyMetadataTemplate(
     const validCitation = true;
 
     // Convert the content to the structure we use for code metadata
-    const metadata = convertMetadataForDB(codemetaContent);
+    const metadata = await convertMetadataForDB(JSON.parse(codemetaContent.content), repository);
+
+    // Fetch license details from database
+    const license = await dbInstance.licenseRequest.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
+    });
+
+    if (license?.license_id) {
+      
+    }
 
     // License, codemeta.json and CITATION.cff files were found
     const identifier = createId();
