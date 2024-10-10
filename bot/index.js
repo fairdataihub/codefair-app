@@ -881,7 +881,6 @@ export default async (app, { getRouter }) => {
           data: {
             status: "published",
             zenodo_id: newDepositionId,
-            zenodo_metadata: JSON.stringify(newZenodoMetadata),
             existing_zenodo_deposition_id: true,
             last_published_zenodo_doi: zenodoDoi,
           },
