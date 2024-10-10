@@ -207,7 +207,7 @@ export async function applyLicenseTemplate(
   }
   
   if (existingLicense) {
-    consola.warn("Updating existing license request...");
+    consola.info("Updating existing license request...");
     badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
     await dbInstance.licenseRequest.update({
       data: {
@@ -222,7 +222,7 @@ export async function applyLicenseTemplate(
       where: { repository_id: repository.id },
     });
   } else {
-    consola.warn("Creating new license request...");
+    consola.info("Creating new license request...");
     await dbInstance.licenseRequest.create({
       data: {
         contains_license: subjects.license,
