@@ -22,14 +22,10 @@ import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadat
 checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
-const ZENODO_API_ENDPOINT = process.env.ZENODO_API_ENDPOINT;
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
-const licensesJson = JSON.parse(fs.readFileSync('./public/assets/data/licenses.json', 'utf8'));
-
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
-const ZENODO_API = process.env.ZENODO_API_ENDPOINT;
-const { ZENODO_ENDPOINT } = process.env;
+const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT } = process.env;
 
 /**
  * This is the main entrypoint to your Probot app
