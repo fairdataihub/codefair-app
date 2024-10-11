@@ -353,13 +353,12 @@ const checkForZenodoPublishProgress = () => {
       headers: useRequestHeaders(["cookie"]),
       method: "GET",
     })
-      .then((response) => {
+      .then(async (response) => {
         if (response.zenodoWorkflowStatus !== "inProgress") {
           showZenodoPublishProgressModal.value = false;
           clearInterval(zenodoPublishProgressInterval.value);
 
-          // remoad the page
-          window.location.reload();
+          await navigateTo(`/dashboard/${owner}/${repo}/`);
         }
       })
       .catch((error) => {
@@ -491,6 +490,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearInterval(githubReleaseInterval.value);
+  clearInterval(zenodoPublishProgressInterval.value);
 });
 </script>
 
