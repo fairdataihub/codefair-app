@@ -154,12 +154,19 @@ model ZenodoDeposition {
 }
 
 model Analytics {
-  id                       Int      @id
-  cwl_validated_file_count Int      @default(0)
-  cwl_rerun_validation     Int      @default(0)
-  license_created          Int      @default(0)
-  update_codemeta          Int      @default(0)
-  update_citation          Int      @default(0)
-  created_at               DateTime @default(now())
-  updated_at               DateTime @updatedAt
+  id Int @id
+
+  cwl_validated_file_count Int @default(0)
+  cwl_rerun_validation     Int @default(0)
+
+  license_created Int @default(0)
+
+  update_codemeta Int @default(0)
+  update_citation Int @default(0)
+
+  create_release Int @default(0)
+  zenodo_release Int @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
