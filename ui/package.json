@@ -1,6 +1,6 @@
 {
-  "name": "codefair",
-  "version": "2.0.1",
+  "name": "codefair-app",
+  "version": "3.0.0",
   "private": true,
   "scripts": {
     "tunnel": "lt --port 3000 --subdomain codefair",
