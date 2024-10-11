@@ -119,7 +119,6 @@ export async function applyCWLTemplate(
   const identifier = createId();
   const overallSection = `\n\n## Language Specific Standards\n\nTo make your software FAIR is it important to follow language specific standards and best practices. Codefair will check below that your code complies with applicable standards,`;
   let url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${identifier}`;
-  consola.warn(subjects.cwl)
 
   // Delete file entries from db if they were removed from the repository
   if (subjects.cwl.removed_files.length > 0) {
@@ -148,7 +147,6 @@ export async function applyCWLTemplate(
   }
 
   // New/Modified CWL files were found, begin validation workflow
-  consola.start("Validating new/modified CWL files for", repository.name);
   const cwlFiles = [];
   let validOverall = true;
   let tableContent = "";
@@ -158,13 +156,14 @@ export async function applyCWLTemplate(
       repository_id: repository.id,
     },
   });
-
+  
   if (subjects.cwl.files.length === 0) {
     consola.warn(
       `No new/modified CWL files found in the repository, ${repository.name}`,
     );
   }
-
+  
+  consola.start("Validating CWL files for", repository.name);
   // Validate each CWL file from list
   for (const file of subjects.cwl.files) {
     const fileSplit = file.name.split(".");

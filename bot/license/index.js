@@ -16,7 +16,6 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  * @returns {boolean} - Returns true if a license is found in the repository, false otherwise
  */
 export async function checkForLicense(context, owner, repo) {
-  consola.info("Checking for license...");
   try {
     await context.octokit.rest.licenses.getForRepo({
       owner,

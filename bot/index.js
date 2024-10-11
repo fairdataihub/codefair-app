@@ -25,7 +25,7 @@ checkEnvVariable("CODEFAIR_APP_DOMAIN");
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
-const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT } = process.env;
+const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT, GITHUB_APP_NAME } = process.env;
 
 /**
  * This is the main entrypoint to your Probot app
@@ -271,12 +271,6 @@ export default async (app, { getRouter }) => {
       );
 
       if (installation?.action_count > 0) {
-        consola.warn(
-          "Action limit count down:",
-          installation.action_count,
-          "for",
-          repository.name,
-        );
         const result = await db.installation.update({
           data: {
             action_count: {
@@ -298,8 +292,7 @@ export default async (app, { getRouter }) => {
         return;
       }
 
-      if (installation?.action_count === 0) {
-        consola.warn("Removing action limit for", repository.name);
+      if (installation?.action_count === 1) {
         db.installation.update({
           data: {
             action_count: 0,
@@ -317,12 +310,11 @@ export default async (app, { getRouter }) => {
 
     // Check if the author of the commit is the bot
     const commitAuthor = context.payload.head_commit.author;
-    if (commitAuthor && commitAuthor.username === "codefair-test[bot]") {
+    if (commitAuthor?.name === `${GITHUB_APP_NAME}[bot]`) {
       const commitMessages = ["chore: 📝 Update CITATION.cff with Zenodo identifier", "chore: 📝 Update codemeta.json with Zenodo identifier"]
       // consola.info("Commit made by codefair-test, checking commit message...");
-      if (latestCommitInfo.latest_commit_message.includes(commitMessages[0]) || latestCommitInfo.latest_commit_message.includes(commitMessages[1])) {
-      // consola.info("Skipping validation as per commit message.");
-      return;
+      if (latestCommitInfo.latest_commit_message === commitMessages[0] || latestCommitInfo.latest_commit_message === commitMessages[1]) {
+        return;
       }
     }
 
@@ -558,8 +550,9 @@ export default async (app, { getRouter }) => {
     const issueTitle = context.payload.issue.title;
     const { repository } = context.payload;
     const owner = context.payload.repository.owner.login;
+    const potentialBot = context.payload.sender.login;
 
-    if (!issueTitle === ISSUE_TITLE) {
+    if (!issueTitle === ISSUE_TITLE && potentialBot === `${GITHUB_APP_NAME}[bot]`) {
       return;
     }
 
@@ -719,7 +712,20 @@ export default async (app, { getRouter }) => {
 
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
       consola.log("Publishing to Zenodo...");
-      const quickTemplate = issueBody.substring(0, issueBody.indexOf("<!-- @codefair-bot publish-zenodo"));
+      const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf("<!-- @codefair-bot publish-zenodo"));
+      const issueBodyNoArchiveSection = issueBodyRemovedCommand.substring(0, issueBody.indexOf("## FAIR Software Release"));
+      const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
+      const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
+      // Gather the information for the Zenodo deposition provided in the issue body
+      const match = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
+      if (!match) {
+        throw new Error("Zenodo publish information not found in issue body.");
+      }
+      const [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
+      // consola.info("Deposition ID:", depositionId);
+      // consola.info("Release ID:", releaseId);
+      // consola.info("Tag Version:", tagVersion);
+      // consola.info("User Who Submitted:", userWhoSubmitted);
       try {
         // 1. Get the metadata from the repository
         const citationCff = await getCitationContent(context, owner, repository);
@@ -737,19 +743,6 @@ export default async (app, { getRouter }) => {
         } catch (error) {
           throw new Error("Error validating the codemeta:", error);
         }
-
-        // Gather the information for the Zenodo deposition provided in the issue body
-        const match = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
-        if (!match) {
-          throw new Error("Zenodo publish information not found in issue body.");
-        }
-
-        const [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
-
-        consola.info("Deposition ID:", depositionId);
-        consola.info("Release ID:", releaseId);
-        consola.info("Tag Version:", tagVersion);
-        consola.info("User Who Submitted:", userWhoSubmitted);
 
         // Fetch the Zenodo token from the database
         const deposition = await db.zenodoToken.findFirst({
@@ -782,11 +775,16 @@ export default async (app, { getRouter }) => {
 
         // 3. Create the Zenodo record or get the existing one
         let zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
-
+        
         // 4. Set the bucket URL and DOI
         const newDepositionId = zenodoDepositionInfo.id;
         const bucket_url = zenodoDepositionInfo.links.bucket;
         const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
+        
+        // Update the GitHub issue with a status report
+        const tempString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. A draft deposition was created and will be adding the necessary files and metadata.`;
+        const finalTempString = await applyLastModifiedTemplate(tempString);
+        await createIssue(context, owner, repository, ISSUE_TITLE, finalTempString);
 
         // 5. Update the CITATION.cff and codemeta.json files with the DOI
         await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
@@ -831,6 +829,11 @@ export default async (app, { getRouter }) => {
 
         await uploadReleaseAssetsToZenodo(zenodoToken, draftRelease.data.assets, repositoryArchive, owner, context, bucket_url, repository, tagVersion);
 
+        // Update the GitHub issue with a status report
+        const afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. All assets from the GitHub repository's draft release have been successfully uploaded to the Zenodo deposition draft.`;
+        const finalUploadString = await applyLastModifiedTemplate(afterUploadString);
+        await createIssue(context, owner, repository, ISSUE_TITLE, finalUploadString);
+
         // 8. Publish the Zenodo deposition
         consola.start("Publishing the Zenodo deposition...", newDepositionId);
         const publishDeposition = await fetch(
@@ -862,14 +865,9 @@ export default async (app, { getRouter }) => {
         consola.success("Updated release to not be a draft!");
 
         // 9. Append to the issueBody that the deposition has been published
-        // First remove everything after the ## Fair Software Release
-        // consola.warn(issueBody);
-        const updatedIssueBody = quickTemplate.substring(0, issueBody.indexOf("## FAIR Software Release"));
-        const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
-        const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
         const badge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${newDepositionId})`;
-        const newIssueBody = `${updatedIssueBody}\n\n## FAIR Software Release ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
-        const finalTemplate = await applyLastModifiedTemplate(newIssueBody);
+        const issueBodyArchiveSection = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
+        const finalTemplate = await applyLastModifiedTemplate(issueBodyArchiveSection);
 
         // Update the issue with the new body
         await createIssue(context, owner, repository, ISSUE_TITLE, finalTemplate);
@@ -891,7 +889,10 @@ export default async (app, { getRouter }) => {
         consola.success("Updated the Zenodo deposition in the database!");
       } catch (error) {
         // Update the issue with the new body
-        await createIssue(context, owner, repository, ISSUE_TITLE, quickTemplate);
+        // Update the GitHub issue with a status report
+        const afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ❌\n***${tagVersion}*** of your software was not successfully released on GitHub and archived on Zenodo. There was an error during the publication process. Please try again later or reach out to the Codefair team for additional help.`;
+        const finalUploadString = await applyLastModifiedTemplate(afterUploadString);
+        await createIssue(context, owner, repository, ISSUE_TITLE, finalUploadString);
         await db.zenodoDeposition.update({
           data: {
             status: "error",
@@ -902,8 +903,6 @@ export default async (app, { getRouter }) => {
         });
         consola.error(`Error publishing to Zenodo: ${error}`);
       }
-
-
     }
   });
 

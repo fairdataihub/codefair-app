@@ -30,7 +30,6 @@ export async function renderIssues(
   subjects,
   prInfo = { title: "", link: "" },
 ) {
-  consola.info("Is repository empty?", emptyRepo);
   if (emptyRepo) {
     consola.success(
       "Applying empty repo template for repository:",

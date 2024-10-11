@@ -520,7 +520,7 @@ export async function applyMetadataTemplate(
     });
 
     if (license?.license_id) {
-      
+      metadata.license = `https://spdx.org/licenses/${license.license_id}`;
     }
 
     // License, codemeta.json and CITATION.cff files were found

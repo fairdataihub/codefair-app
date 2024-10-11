@@ -175,7 +175,7 @@ export async function getZenodoDepositionInfo(
       }
 
       // Create a new version of an existing Zenodo deposition
-      consola.info(`Creating a new version of Zenodo deposition ${depositionId}...`);
+      // consola.info(`Creating a new version of Zenodo deposition ${depositionId}...`);
       const responseText = await createNewVersionOfDeposition(zenodoToken, depositionId);
       const latestDraftLink = responseText.links.latest_draft;
 
