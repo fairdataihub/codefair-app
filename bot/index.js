@@ -892,6 +892,14 @@ export default async (app, { getRouter }) => {
       } catch (error) {
         // Update the issue with the new body
         await createIssue(context, owner, repository, ISSUE_TITLE, quickTemplate);
+        await db.zenodoDeposition.update({
+          data: {
+            status: "error",
+          },
+          where: {
+            repository_id: repository.id,
+          }
+        });
         consola.error(`Error publishing to Zenodo: ${error}`);
       }
 
