@@ -9,6 +9,23 @@ const user = useUser();
 const breadcrumbsStore = useBreadcrumbsStore();
 
 breadcrumbsStore.hideBreadcrumbs();
+
+const purgeTokens = async () => {
+  await $fetch(`/api/user/tokens`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "DELETE",
+  });
+
+  push.success({
+    title: "Success",
+    message: "Your tokens has been purged.",
+  });
+
+  await $fetch("/api/logout", {
+    method: "POST",
+  });
+  window.location.href = "/";
+};
 </script>
 
 <template>
@@ -25,7 +42,13 @@ breadcrumbsStore.hideBreadcrumbs();
       <n-card title="GitHub Username">
         <NuxtLink :to="`https://github.com/${user?.username}`" target="_blank">
           <p>
+      <n-card title="GitHub Username">
+        <NuxtLink :to="`https://github.com/${user?.username}`" target="_blank">
+          <p>
             {{ user?.username }}
+          </p>
+        </NuxtLink>
+      </n-card>
           </p>
         </NuxtLink>
       </n-card>
@@ -33,6 +56,17 @@ breadcrumbsStore.hideBreadcrumbs();
       <n-card title="GitHub ID">
         <p class="m-0">
           {{ user?.github_id }}
+        </p>
+      </n-card>
+
+      <n-card title="Purge tokens">
+        <p class="m-0">
+          <n-button type="error" @click="purgeTokens">
+            <template #icon>
+              <Icon name="fa:trash" size="16" />
+            </template>
+            Purge tokens
+          </n-button>
         </p>
       </n-card>
     </n-flex>

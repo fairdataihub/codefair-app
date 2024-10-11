@@ -44,7 +44,7 @@ const settingsOptions = [
   },
 ];
 
-const { data, error } = await useFetch(`/api/dashboard/${owner}/${repo}`, {
+const { data, error } = await useFetch(`/api/${owner}/${repo}/dashboard`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
@@ -107,7 +107,7 @@ const rerunCodefairChecks = async () => {
       "Please wait while we submit a request to rerun the codefair checks on this repository.",
   });
 
-  await $fetch(`/api/dashboard/${owner}/${repo}/rerun`, {
+  await $fetch(`/api/${owner}/${repo}/rerun`, {
     headers: useRequestHeaders(["cookie"]),
     method: "POST",
   })
@@ -427,6 +427,38 @@ const handleSettingsSelect = (key: any) => {
       </CardDashboard>
 
       <n-divider />
+
+      <h2 class="pb-6">FAIR Software Release</h2>
+
+      <CardDashboard
+        title="Make a FAIR Software Release"
+        subheader="Make a GitHub release and archive the software on a software archival repository."
+      >
+        <template #icon>
+          <Icon name="mingcute:rocket-fill" size="40" />
+        </template>
+
+        <template #content>
+          <div class="flex w-full flex-col">
+            <p>
+              To make your software FAIR, it is necessary to archive it in a
+              software archival repository like Zenodo every time you make a
+              release.
+            </p>
+          </div>
+        </template>
+
+        <template #action>
+          <NuxtLink :to="`/dashboard/${owner}/${repo}/release/zenodo`">
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="material-symbols:package-2" size="16" />
+              </template>
+              Create release
+            </n-button>
+          </NuxtLink>
+        </template>
+      </CardDashboard>
     </div>
 
     <n-collapse v-if="devMode" class="mt-8">

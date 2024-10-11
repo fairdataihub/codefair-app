@@ -247,11 +247,7 @@ const navigateToPR = () => {
         </p>
       </div>
 
-      <n-form-item
-        class="mb-3 mt-5"
-        :show-feedback="false"
-        size="large"
-      >
+      <n-form-item class="mb-3 mt-5" :show-feedback="false" size="large">
         <template #label>
           <p class="pb-1 text-base">Select a license</p>
         </template>

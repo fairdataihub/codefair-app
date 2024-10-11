@@ -1,7 +1,7 @@
 <template>
   <n-config-provider :theme-overrides="themeOverrides">
     <Notivue v-slot="item">
-      <Notification :item="item" />
+      <Notification :item="item" :theme="pastelTheme" />
     </Notivue>
     <!-- <Notivue v-slot="item">
       <Notification :item="item" :theme="pastelTheme" />

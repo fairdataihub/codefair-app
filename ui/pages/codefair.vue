@@ -105,8 +105,7 @@ breadcrumbsStore.hideBreadcrumbs();
 
             <p class="font-onest text-lg text-slate-800">
               Currently, Codefair helps make software FAIR by following the FAIR
-              Biomedical Research Software (FAIR-BioRS) guidelines. Therefore,
-              it is designed mainly for biomedical research software. However,
+              Biomedical Research Software (FAIR-BioRS) guidelines. However,
               most of the steps in the FAIR-BioRS guidelines are applicable to
               any research software, regardless of the field. This means that
               anyone developing research software can use Codefair. Whether you
