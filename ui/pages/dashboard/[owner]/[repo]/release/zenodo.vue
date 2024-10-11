@@ -748,7 +748,8 @@ onBeforeUnmount(() => {
                   Your <code> codemeta.json </code> file is used to generate the
                   title, description, and metadata of your Zenodo deposition.
                   Please make sure that the content of this file is correct and
-                  up-to-date.
+                  up-to-date. Provide below metadata required by Zenodo but not
+                  available in codemeta.json.
                 </n-alert>
 
                 <n-form
