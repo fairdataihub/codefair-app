@@ -356,7 +356,8 @@ const checkForZenodoPublishProgress = () => {
           showZenodoPublishProgressModal.value = false;
           clearInterval(zenodoPublishProgressInterval.value);
 
-          await navigateTo(`/dashboard/${owner}/${repo}`);
+          // remoad the page
+          window.location.reload();
         }
       })
       .catch((error) => {
@@ -561,6 +562,15 @@ onBeforeUnmount(() => {
       >
         Zenodo is currently publishing this repository. You can check the status
         of the Zenodo deposition on the dashboard.
+      </n-alert>
+
+      <n-alert
+        v-if="data?.lastPublishedZenodoDoi === 'error'"
+        type="error"
+        class="w-full"
+      >
+        There was an error with publishing this repository to Zenodo. Please try
+        again later or contact the Codefair team for assistance.
       </n-alert>
     </n-flex>
 
