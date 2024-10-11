@@ -92,6 +92,8 @@ const lastSelectedGithubTag = ref<string | null>(null);
 const lastSelectedGithubRelease = ref<number | null>(null);
 const lastSelectedGithubReleaseTitle = ref<string | null>(null);
 
+const zenodoDraftIsReadyForRelease = ref(false);
+
 const { data, error } = await useFetch(`/api/${owner}/${repo}/release/zenodo`, {
   headers: useRequestHeaders(["cookie"]),
   method: "GET",
@@ -351,12 +353,13 @@ const checkForZenodoPublishProgress = () => {
       headers: useRequestHeaders(["cookie"]),
       method: "GET",
     })
-      .then(async (response) => {
+      .then((response) => {
         if (response.zenodoWorkflowStatus !== "inProgress") {
           showZenodoPublishProgressModal.value = false;
           clearInterval(zenodoPublishProgressInterval.value);
 
-          await navigateTo(`/dashboard/${owner}/${repo}`);
+          // remoad the page
+          window.location.reload();
         }
       })
       .catch((error) => {
@@ -562,13 +565,22 @@ onBeforeUnmount(() => {
         Zenodo is currently publishing this repository. You can check the status
         of the Zenodo deposition on the dashboard.
       </n-alert>
+
+      <n-alert
+        v-if="data?.lastPublishedZenodoDoi === 'error'"
+        type="error"
+        class="w-full"
+      >
+        There was an error with publishing this repository to Zenodo. Please try
+        again later or contact the Codefair team for assistance.
+      </n-alert>
     </n-flex>
 
-    <h2 class="py-6">Confirm required metadata files</h2>
+    <h2 class="py-6">Required metadata files</h2>
 
     <n-flex vertical class="mb-4">
       <CardDashboard
-        title="License"
+        title="Confirm License"
         subheader="A license file is required for the repository to be released on Zenodo."
       >
         <template #icon>
@@ -605,7 +617,7 @@ onBeforeUnmount(() => {
       </CardDashboard>
 
       <CardDashboard
-        title="Code metadata"
+        title="Confirm metadata"
         subheader="A code metadata file is required for the repository to be released on Zenodo."
       >
         <template #icon>
@@ -646,7 +658,7 @@ onBeforeUnmount(() => {
     <div v-if="allConfirmed">
       <n-divider />
 
-      <h2 class="pb-6">Select Zenodo deposition</h2>
+      <h2 class="pb-6">Zenodo deposition</h2>
 
       <CardDashboard title="Check Zenodo connection">
         <template #icon>
@@ -739,7 +751,7 @@ onBeforeUnmount(() => {
 
           <h2 class="pb-6">Zenodo metadata</h2>
 
-          <CardDashboard title="Add missing metadata">
+          <CardDashboard title="Provide repository-specific metadata">
             <template #icon>
               <Icon name="material-symbols:add-notes-outline" size="40" />
             </template>
@@ -785,7 +797,7 @@ onBeforeUnmount(() => {
                   </n-form-item>
 
                   <n-button @click="validateZenodoForm">
-                    Validate metadata
+                    Confirm metadata
                   </n-button>
                 </n-form>
               </div>
@@ -968,9 +980,9 @@ onBeforeUnmount(() => {
           <div v-if="githubFormIsValid || githubReleaseIsDraft">
             <n-divider />
 
-            <h2 class="pb-6">Publish Zenodo release</h2>
+            <h2 class="pb-6">Zenodo release</h2>
 
-            <CardDashboard title="Publish Zenodo release">
+            <CardDashboard title="Publish release on Zenodo">
               <template #icon>
                 <Icon name="simple-icons:zenodo" size="40" />
               </template>
@@ -983,31 +995,54 @@ onBeforeUnmount(() => {
                   </p>
 
                   <n-flex justify="space-between">
-                    <n-button
-                      :loading="zenodoDraftSpinner"
-                      secondary
-                      type="primary"
-                      @click="startZenodoPublishProcess(false)"
-                    >
-                      <template #icon>
-                        <Icon name="fa:save" size="16" />
-                      </template>
+                    <n-flex justify="start">
+                      <n-button
+                        :loading="zenodoDraftSpinner"
+                        secondary
+                        type="primary"
+                        @click="startZenodoPublishProcess(false)"
+                      >
+                        <template #icon>
+                          <Icon name="fa:save" size="16" />
+                        </template>
 
-                      Save draft
-                    </n-button>
+                        Save draft
+                      </n-button>
 
-                    <n-button
-                      :loading="zenodoPublishSpinner"
-                      type="primary"
-                      color="black"
-                      @click="startZenodoPublishProcess(true)"
-                    >
-                      <template #icon>
-                        <Icon name="raphael:start" size="16" />
-                      </template>
+                      <TransitionFade>
+                        <n-button
+                          v-if="!zenodoDraftIsReadyForRelease"
+                          secondary
+                          type="info"
+                          @click="zenodoDraftIsReadyForRelease = true"
+                        >
+                          <template #icon>
+                            <Icon name="basil:play-solid" size="16" />
+                          </template>
 
-                      Start the Zenodo publish process
-                    </n-button>
+                          My draft is ready for release
+                        </n-button>
+                      </TransitionFade>
+                    </n-flex>
+
+                    <TransitionFade>
+                      <n-button
+                        v-if="zenodoDraftIsReadyForRelease"
+                        :loading="zenodoPublishSpinner"
+                        type="primary"
+                        color="black"
+                        @click="startZenodoPublishProcess(true)"
+                      >
+                        <template #icon>
+                          <Icon
+                            name="material-symbols-light:play-circle"
+                            size="16"
+                          />
+                        </template>
+
+                        Start the Zenodo publish process
+                      </n-button>
+                    </TransitionFade>
                   </n-flex>
                 </div>
               </template>
