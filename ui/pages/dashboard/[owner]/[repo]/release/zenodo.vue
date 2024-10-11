@@ -344,6 +344,8 @@ const showZenodoPublishProgressModal = ref(false);
 const zenodoPublishProgressInterval = ref<any>(null);
 
 const checkForZenodoPublishProgress = () => {
+  showZenodoPublishProgressModal.value = true;
+
   zenodoPublishProgressInterval.value = setInterval(async () => {
     await $fetch(`/api/${owner}/${repo}/release/zenodo/status`, {
       headers: useRequestHeaders(["cookie"]),
