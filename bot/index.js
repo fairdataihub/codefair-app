@@ -552,7 +552,7 @@ export default async (app, { getRouter }) => {
     const owner = context.payload.repository.owner.login;
     const potentialBot = context.payload.sender.login;
 
-    if (!issueTitle === ISSUE_TITLE && potentialBot === `${GITHUB_APP_NAME}[bot]`) {
+    if (issueTitle != ISSUE_TITLE && potentialBot != `${GITHUB_APP_NAME}[bot]`) {
       return;
     }
 
@@ -781,7 +781,6 @@ export default async (app, { getRouter }) => {
         const bucket_url = zenodoDepositionInfo.links.bucket;
         const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
         
-        // Update the GitHub issue with a status report
         const tempString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. A draft deposition was created and will be adding the necessary files and metadata.`;
         const finalTempString = await applyLastModifiedTemplate(tempString);
         await createIssue(context, owner, repository, ISSUE_TITLE, finalTempString);
