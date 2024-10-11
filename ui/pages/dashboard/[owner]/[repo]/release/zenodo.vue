@@ -7,6 +7,10 @@ import {
 } from "naive-ui";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
+definePageMeta({
+  middleware: ["protected"],
+});
+
 const route = useRoute();
 const user = useUser();
 const breadcrumbsStore = useBreadcrumbsStore();
