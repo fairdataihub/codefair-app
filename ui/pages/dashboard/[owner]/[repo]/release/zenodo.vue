@@ -429,8 +429,8 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
 const validateZenodoForm = () => {
   zenodoFormRef.value?.validate((errors) => {
     if (!errors) {
-      // Check if the selected zenodo deposition is an actual option
-      if (selectedDeposition.value?.toString() !== "new") {
+      // Check if the selected zenodo deposition is an actual option'
+      if (selectedExistingDeposition.value !== "new") {
         if (
           selectableDepositions.value.find(
             (item) => item.value === selectedDeposition.value?.toString(),
