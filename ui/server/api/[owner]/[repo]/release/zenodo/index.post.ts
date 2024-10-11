@@ -205,6 +205,7 @@ export default defineEventHandler(async (event) => {
         github_release_id: parseInt(release) || null,
         github_tag_name: tag,
         repository_id: installation.id,
+        status: "draft",
         user_id: user?.id || "",
         zenodo_id: parseInt(zenodoDepositionId) || null,
         zenodo_metadata: metadata,
@@ -216,6 +217,7 @@ export default defineEventHandler(async (event) => {
         existing_zenodo_deposition_id: useExistingDeposition,
         github_release_id: parseInt(release) || null,
         github_tag_name: tag,
+        status: "draft",
         user_id: user?.id || "",
         zenodo_id: parseInt(zenodoDepositionId) || null,
         zenodo_metadata: metadata,
@@ -262,6 +264,15 @@ export default defineEventHandler(async (event) => {
           repo,
         },
       );
+
+      await prisma.zenodoDeposition.update({
+        data: {
+          status: "inProgress",
+        },
+        where: {
+          repository_id: installation.id,
+        },
+      });
 
       return {
         message: "Zenodo publish process started",
