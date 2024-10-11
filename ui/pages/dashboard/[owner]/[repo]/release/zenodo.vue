@@ -351,7 +351,7 @@ const checkForZenodoPublishProgress = () => {
       headers: useRequestHeaders(["cookie"]),
       method: "GET",
     })
-      .then(async (response) => {
+      .then((response) => {
         if (response.zenodoWorkflowStatus !== "inProgress") {
           showZenodoPublishProgressModal.value = false;
           clearInterval(zenodoPublishProgressInterval.value);
