@@ -110,6 +110,7 @@ if (data.value) {
   zenodoLoginUrl.value = data.value.zenodoLoginUrl;
   selectedDeposition.value = data.value.zenodoDepositionId?.toString() || null;
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
+
   license.value.id = data.value.license.id || "";
   license.value.identifier = data.value.license.identifier;
   metadataId.value = data.value.metadataId;
@@ -180,6 +181,12 @@ if (data.value) {
 
   // githubFormValue.value.release = "new";
   // githubFormValue.value.title = faker.lorem.sentence();
+
+  // slight hack but login step comes after the license and metadata checks
+  if (haveValidZenodoToken.value) {
+    licenseChecked.value = true;
+    metadataChecked.value = true;
+  }
 }
 
 const createDraftGithubReleaseSpinner = ref(false);
@@ -333,6 +340,29 @@ const handleGithubTagChange = () => {
 const zenodoPublishSpinner = ref(false);
 const zenodoDraftSpinner = ref(false);
 
+const showZenodoPublishProgressModal = ref(false);
+const zenodoPublishProgressInterval = ref<any>(null);
+
+const checkForZenodoPublishProgress = () => {
+  zenodoPublishProgressInterval.value = setInterval(async () => {
+    await $fetch(`/api/${owner}/${repo}/release/zenodo/status`, {
+      headers: useRequestHeaders(["cookie"]),
+      method: "GET",
+    })
+      .then(async (response) => {
+        if (response.zenodoWorkflowStatus !== "inProgress") {
+          showZenodoPublishProgressModal.value = false;
+          clearInterval(zenodoPublishProgressInterval.value);
+
+          await navigateTo(`/dashboard/${owner}/${repo}`);
+        }
+      })
+      .catch((error) => {
+        console.error("Error checking Zenodo publish progress:", error);
+      });
+  }, 3000);
+};
+
 const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
   if (shouldPublish) {
     zenodoPublishSpinner.value = true;
@@ -375,6 +405,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
           title: "Success",
           message: "Your Zenodo publish process has been started.",
         });
+        checkForZenodoPublishProgress();
       } else {
         push.success({
           title: "Success",
@@ -398,6 +429,24 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
 const validateZenodoForm = () => {
   zenodoFormRef.value?.validate((errors) => {
     if (!errors) {
+      // Check if the selected zenodo deposition is an actual option
+      if (selectedDeposition.value?.toString() !== "new") {
+        if (
+          selectableDepositions.value.find(
+            (item) => item.value === selectedDeposition.value?.toString(),
+          )
+        ) {
+          // do nothing
+        } else {
+          zenodoFormIsValid.value = false;
+          push.error({
+            title: "Error",
+            message: "Please select a valid Zenodo deposition.",
+          });
+          return;
+        }
+      }
+
       zenodoFormIsValid.value = true;
 
       push.success({
@@ -454,12 +503,13 @@ onBeforeUnmount(() => {
 
     <n-divider />
 
-    <h2 class="pb-6">Confirm required metadata files</h2>
-
-    <n-flex vertical class="mb-4">
+    <n-flex vertical>
       <n-alert
         v-if="
-          lastSelectedUser && lastSelectedGithubTag && lastSelectedGithubRelease
+          lastSelectedUser &&
+          lastSelectedGithubTag &&
+          lastSelectedGithubRelease &&
+          data?.zenodoWorkflowStatus !== 'published'
         "
         :type="user?.username === lastSelectedUser ? 'info' : 'warning'"
         class="w-full"
@@ -488,6 +538,33 @@ onBeforeUnmount(() => {
         .
       </n-alert>
 
+      <n-alert
+        v-if="data?.lastPublishedZenodoDoi"
+        type="success"
+        class="w-full"
+      >
+        This repository was last released on Zenodo at
+        <NuxtLink
+          :to="`https://doi.org/${data?.lastPublishedZenodoDoi}`"
+          target="_blank"
+          class="text-blue-500 underline transition-all hover:text-blue-700"
+          >{{ data?.lastPublishedZenodoDoi }}</NuxtLink
+        >.
+      </n-alert>
+
+      <n-alert
+        v-if="data?.lastPublishedZenodoDoi === 'inProgress'"
+        type="info"
+        class="w-full"
+      >
+        Zenodo is currently publishing this repository. You can check the status
+        of the Zenodo deposition on the dashboard.
+      </n-alert>
+    </n-flex>
+
+    <h2 class="py-6">Confirm required metadata files</h2>
+
+    <n-flex vertical class="mb-4">
       <CardDashboard
         title="License"
         subheader="A license file is required for the repository to be released on Zenodo."
@@ -498,7 +575,7 @@ onBeforeUnmount(() => {
 
         <template #content>
           <div class="flex w-full flex-col">
-            <n-flex class="mb-4 border p-2" align="center">
+            <n-flex v-if="license.id" class="mb-4 border p-2" align="center">
               <Icon name="tabler:license" size="24" />
 
               <p class="text-sm">
@@ -947,5 +1024,25 @@ onBeforeUnmount(() => {
         <pre>{{ data }}</pre>
       </n-collapse-item>
     </n-collapse>
+
+    <n-modal
+      v-model:show="showZenodoPublishProgressModal"
+      preset="card"
+      title="Zenodo publish in progress"
+      :bordered="false"
+      size="huge"
+      :mask-closable="false"
+      :close-on-esc="false"
+      style="width: 600px"
+    >
+      <n-flex vertical>
+        <p>
+          The workflow for publishing this repository to Zenodo is currently in
+          progress. You can check the status of this workflow on the dashboard.
+        </p>
+
+        <n-spin size="large" />
+      </n-flex>
+    </n-modal>
   </main>
 </template>

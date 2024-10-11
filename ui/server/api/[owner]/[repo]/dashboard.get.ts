@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
       CodeMetadata: true,
       CwlValidation: true,
       LicenseRequest: true,
+      ZenodoDeposition: true,
     },
     where: {
       owner,
@@ -34,6 +35,7 @@ export default defineEventHandler(async (event) => {
   const licenseRequest = installation.LicenseRequest;
   const codeMetadataRequest = installation.CodeMetadata;
   const cwlValidation = installation.CwlValidation;
+  const zenodoDeposition = installation.ZenodoDeposition;
 
   return {
     codeMetadataRequest: codeMetadataRequest
@@ -71,6 +73,14 @@ export default defineEventHandler(async (event) => {
           pullRequest: licenseRequest.pull_request_url || "",
           repo: installation.repo,
           timestamp: licenseRequest.updated_at || null,
+        }
+      : null,
+    zenodoDeposition: zenodoDeposition
+      ? {
+          lastPublishedZenodoDoi:
+            zenodoDeposition.last_published_zenodo_doi || null,
+          zenodoId: zenodoDeposition.zenodo_id || null,
+          zenodoStatus: zenodoDeposition.status || null,
         }
       : null,
   };

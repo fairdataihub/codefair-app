@@ -147,7 +147,7 @@ model ZenodoDeposition {
   github_release_id Int?
   github_tag_name   String?
 
-  status String @default("unpublished") // unpublished or published only
+  status String @default("unpublished") // inProgress, published, error, draft
 
   user_id String
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
