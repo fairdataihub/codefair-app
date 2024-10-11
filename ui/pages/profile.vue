@@ -42,7 +42,13 @@ const purgeTokens = async () => {
       <n-card title="GitHub Username">
         <NuxtLink :to="`https://github.com/${user?.username}`" target="_blank">
           <p>
+      <n-card title="GitHub Username">
+        <NuxtLink :to="`https://github.com/${user?.username}`" target="_blank">
+          <p>
             {{ user?.username }}
+          </p>
+        </NuxtLink>
+      </n-card>
           </p>
         </NuxtLink>
       </n-card>
