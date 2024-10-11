@@ -262,6 +262,7 @@ export async function getZenodoMetadata(codemetadata, repository) {
       access_right: "open",
       publication_date: new_date,
       license: licenseId,
+      version: codeMetaContent?.version,
     }
   }
 }
