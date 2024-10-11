@@ -885,7 +885,22 @@ export default async (app, { getRouter }) => {
             repository_id: repository.id,
           }
         });
+
         consola.success("Updated the Zenodo deposition in the database!");
+
+        await db.analytics.update({
+          data: {
+            zenodo_release: {
+              increment: 1
+            },
+            create_release: {
+              increment: 1
+            }
+          },
+          where: {
+            id: repository.id
+          }
+        });
       } catch (error) {
         // Update the issue with the new body
         // Update the GitHub issue with a status report
