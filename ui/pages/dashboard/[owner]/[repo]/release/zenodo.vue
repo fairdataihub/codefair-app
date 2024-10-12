@@ -48,8 +48,8 @@ const selectableDepositions = ref<Array<SelectOption | SelectGroupOption>>([]);
 const zenodoFormIsValid = ref(false);
 const zenodoFormRef = ref<FormInst | null>(null);
 const zenodoFormValue = ref<ZenodoMetadata>({
-  version: "",
   accessRight: null,
+  version: "",
 });
 const zenodoFormRules = ref({
   accessRight: {
@@ -305,6 +305,7 @@ const checkIfGithubReleaseIsDraft = async () => {
 };
 
 const handleGithubReleaseChange = () => {
+  zenodoDraftIsReadyForRelease.value = false;
   githubFormValue.value.releaseTitle = "";
   checkIfGithubReleaseIsDraft();
 };
@@ -342,6 +343,7 @@ const renderGithubReleaseLabel = (option: SelectOption): any => {
 };
 
 const handleGithubTagChange = () => {
+  zenodoDraftIsReadyForRelease.value = false;
   githubFormValue.value.tagTitle = "";
   checkIfGithubReleaseIsDraft();
 };
@@ -351,6 +353,8 @@ const zenodoDraftSpinner = ref(false);
 
 const showZenodoPublishProgressModal = ref(false);
 const zenodoPublishProgressInterval = ref<any>(null);
+const zenodoPublishStatus = ref<string>("");
+const zenodoPublishDOI = ref<string>("");
 
 const checkForZenodoPublishProgress = () => {
   showZenodoPublishProgressModal.value = true;
@@ -362,7 +366,9 @@ const checkForZenodoPublishProgress = () => {
     })
       .then(async (response) => {
         if (response.zenodoWorkflowStatus !== "inProgress") {
-          showZenodoPublishProgressModal.value = false;
+          zenodoPublishStatus.value = response.zenodoWorkflowStatus;
+          zenodoPublishDOI.value = response.zenodoDoi;
+
           clearInterval(zenodoPublishProgressInterval.value);
 
           await navigateTo(`/dashboard/${owner}/${repo}/`);
@@ -955,6 +961,19 @@ onBeforeUnmount(() => {
                         Do not publish your Github release yet. We will handle
                         this step for you.
                       </n-alert>
+
+                      <n-button
+                        v-if="!zenodoDraftIsReadyForRelease"
+                        secondary
+                        type="primary"
+                        @click="zenodoDraftIsReadyForRelease = true"
+                      >
+                        <template #icon>
+                          <Icon name="basil:play-solid" size="16" />
+                        </template>
+
+                        My draft is ready for release
+                      </n-button>
                     </div>
 
                     <div
@@ -994,7 +1013,12 @@ onBeforeUnmount(() => {
             </CardDashboard>
           </div>
 
-          <div v-if="githubFormIsValid || githubReleaseIsDraft">
+          <div
+            v-if="
+              (githubFormIsValid || githubReleaseIsDraft) &&
+              zenodoDraftIsReadyForRelease
+            "
+          >
             <n-divider />
 
             <h2 class="pb-6">Zenodo release</h2>
@@ -1012,54 +1036,34 @@ onBeforeUnmount(() => {
                   </p>
 
                   <n-flex justify="space-between">
-                    <n-flex justify="start">
-                      <n-button
-                        :loading="zenodoDraftSpinner"
-                        secondary
-                        type="primary"
-                        @click="startZenodoPublishProcess(false)"
-                      >
-                        <template #icon>
-                          <Icon name="fa:save" size="16" />
-                        </template>
+                    <n-button
+                      :loading="zenodoDraftSpinner"
+                      secondary
+                      type="primary"
+                      @click="startZenodoPublishProcess(false)"
+                    >
+                      <template #icon>
+                        <Icon name="fa:save" size="16" />
+                      </template>
 
-                        Save draft
-                      </n-button>
+                      Save draft
+                    </n-button>
 
-                      <TransitionFade>
-                        <n-button
-                          v-if="!zenodoDraftIsReadyForRelease"
-                          secondary
-                          type="info"
-                          @click="zenodoDraftIsReadyForRelease = true"
-                        >
-                          <template #icon>
-                            <Icon name="basil:play-solid" size="16" />
-                          </template>
+                    <n-button
+                      :loading="zenodoPublishSpinner"
+                      type="primary"
+                      color="black"
+                      @click="startZenodoPublishProcess(true)"
+                    >
+                      <template #icon>
+                        <Icon
+                          name="material-symbols-light:play-circle"
+                          size="16"
+                        />
+                      </template>
 
-                          My draft is ready for release
-                        </n-button>
-                      </TransitionFade>
-                    </n-flex>
-
-                    <TransitionFade>
-                      <n-button
-                        v-if="zenodoDraftIsReadyForRelease"
-                        :loading="zenodoPublishSpinner"
-                        type="primary"
-                        color="black"
-                        @click="startZenodoPublishProcess(true)"
-                      >
-                        <template #icon>
-                          <Icon
-                            name="material-symbols-light:play-circle"
-                            size="16"
-                          />
-                        </template>
-
-                        Start the Zenodo publish process
-                      </n-button>
-                    </TransitionFade>
+                      Start the Zenodo publish process
+                    </n-button>
                   </n-flex>
                 </div>
               </template>
@@ -1083,21 +1087,59 @@ onBeforeUnmount(() => {
     <n-modal
       v-model:show="showZenodoPublishProgressModal"
       preset="card"
-      title="Zenodo publish in progress"
+      :title="
+        zenodoPublishStatus === 'inProgress'
+          ? 'Zenodo publish in progress'
+          : 'Zenodo publish completed'
+      "
       :bordered="false"
       size="huge"
       :mask-closable="false"
       :close-on-esc="false"
       style="width: 600px"
     >
-      <n-flex vertical>
+      <n-flex v-if="zenodoPublishStatus === 'inProgress'" vertical>
         <p>
           The workflow for publishing this repository to Zenodo is currently in
-          progress. You can check the status of this workflow on the dashboard.
+          progress. You can check the status of this workflow on the dashboard
         </p>
 
         <n-spin size="large" />
       </n-flex>
+
+      <n-flex v-else-if="zenodoPublishStatus === 'error'" vertical>
+        <p>
+          There was an error with publishing this repository to Zenodo. Please
+          try again later or contact the Codefair team for assistance.
+        </p>
+      </n-flex>
+
+      <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
+        <p>
+          Your Zenodo deposition has been published. You can view the Zenodo
+          record on the dashboard.
+        </p>
+
+        <NuxtLink :to="`https://doi.org/${zenodoPublishDOI}`" target="_blank">
+          <n-button type="primary">
+            <template #icon>
+              <Icon name="simple-icons:zenodo" size="16" />
+            </template>
+            View Zenodo record
+          </n-button>
+        </NuxtLink>
+      </n-flex>
+
+      <template #footer>
+        <n-flex justify="end">
+          <n-button
+            type="success"
+            @click="showZenodoPublishProgressModal = false"
+          >
+            Okay
+          </n-button>
+        </n-flex>
+      </template>
     </n-modal>
   </main>
 </template>
