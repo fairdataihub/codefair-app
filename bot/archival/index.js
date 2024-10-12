@@ -270,7 +270,7 @@ export async function getZenodoMetadata(codemetadata, repository) {
       description: codeMetaContent?.description,
       upload_type: "software",
       creators: zenodoCreators,
-      access_right: zenodoMetadata.zenodo_metadata.access_right || "open",
+      access_right: zenodoMetadata.zenodo_metadata.access_right,
       publication_date: new_date,
       license: licenseId,
       version: zenodoMetadata.zenodo_metadata.version || codeMetaContent?.version,
