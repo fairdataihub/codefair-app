@@ -246,11 +246,14 @@ export default async (app, { getRouter }) => {
     const emptyRepo = await isRepoEmpty(context, owner, repository.name);
 
     const latestCommitInfo = {
-      latest_commit_date: context.payload.head_commit.timestamp,
-      latest_commit_message: context.payload.head_commit.message,
-      latest_commit_sha: context.payload.head_commit.id,
-      latest_commit_url: context.payload.head_commit.url,
+      latest_commit_date: context.payload.head_commit.timestamp || "",
+      latest_commit_message: context.payload.head_commit.message || "",
+      latest_commit_sha: context.payload.head_commit.id || "",
+      latest_commit_url: context.payload.head_commit.url || "",
     };
+
+    // consola.info("Latest commit info:", latestCommitInfo);
+    // consola.info("Context.payload.head_commit:", context.payload.head_commit);
 
     let fullCodefairRun = false;
 
@@ -271,7 +274,7 @@ export default async (app, { getRouter }) => {
       );
 
       if (installation?.action_count > 0) {
-        const result = await db.installation.update({
+        const response = await db.installation.update({
           data: {
             action_count: {
               set:
@@ -287,13 +290,16 @@ export default async (app, { getRouter }) => {
           where: { id: repository.id },
         });
 
-        console.log(result);
+        if (installation?.action_count === 0) {
+          fullCodefairRun = true;
+        }
+
+        // console.log(result);
+        console.log("Updated installation:", response);
 
         return;
-      }
-
-      if (installation?.action_count === 1) {
-        db.installation.update({
+      } else {
+        const response = await db.installation.update({
           data: {
             action_count: 0,
             latest_commit_date: latestCommitInfo.latest_commit_date,
@@ -303,8 +309,7 @@ export default async (app, { getRouter }) => {
           },
           where: { id: repository.id },
         });
-
-        fullCodefairRun = true;
+        console.log("Updated installation:", response);
       }
     }
 
@@ -459,12 +464,34 @@ export default async (app, { getRouter }) => {
     const prLink = context.payload.pull_request.html_url;
     const definedPRTitles = [
       "feat: ✨ LICENSE file added",
-      "feat: ✨ metadata files added",
+      "feat: ✨ Add code metadata files",
     ];
 
     const emptyRepo = await isRepoEmpty(context, owner, repository.name);
 
-    await verifyInstallationAnalytics(context, repository);
+    // Get the latest commit information if repo is not empty
+    const latestCommitInfo = {};
+    if (!emptyRepo) {
+      // Get the name of the main branch
+      const mainBranch = await getDefaultBranch(context, owner, repository.name);
+      // Gather the latest commit to main info
+      const latestCommit = await context.octokit.repos.getCommit({
+        owner,
+        ref: mainBranch,
+        repo: repository.name,
+      });
+
+      latestCommitInfo.latest_commit_sha = latestCommit.data.sha || "";
+      latestCommitInfo.latest_commit_message =
+        latestCommit.data.commit.message || "";
+      latestCommitInfo.latest_commit_url = latestCommit.data.html_url || "";
+      latestCommitInfo.latest_commit_date =
+        latestCommit.data.commit.committer.date || "";
+    }
+
+    consola.info("Latest commit info:", latestCommitInfo);
+
+    await verifyInstallationAnalytics(context, repository, 0, latestCommitInfo);
 
     const installation = await db.installation.findUnique({
       where: {
@@ -473,28 +500,7 @@ export default async (app, { getRouter }) => {
     });
 
     if (installation?.action_count > 0) {
-      db.installation.update({
-        data: {
-          action_count: {
-            set:
-              installation.action_count - 1 < 0
-                ? 0
-                : installation.action_count - 1,
-          },
-        },
-        where: { id: repository.id },
-      });
       return;
-    }
-
-    if (installation?.action_count === 0) {
-      consola.info("Removing action limit for", repository.name);
-      db.installation.update({
-        data: {
-          action_count: 0,
-        },
-        where: { id: repository.id },
-      });
     }
 
     if (definedPRTitles.includes(prTitle)) {
@@ -1034,6 +1040,33 @@ export default async (app, { getRouter }) => {
       await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
     }
   });
+
+  app.on("pull_request.closed", async (context) => {
+    // Remove the PR url from the database
+    if (context.payload.pull_request.title === "feat: ✨ LICENSE file added" && context.payload.pull_request.merged) {
+      await db.licenseRequest.update({
+        data: {
+          pull_request_url: "",
+        },
+        where: {
+          repository_id: context.payload.repository.id,
+        },
+      });
+    }
+
+    if (context.payload.pull_request.title === "feat: ✨ Add code metadata files" && context.payload.pull_request.merged) {
+      await db.codeMetadata.update({
+        data: {
+          pull_request_url: "",
+        },
+        where: {
+          repository_id: context.payload.repository.id,
+        },
+      });
+    }
+  }
+);
+
 
   // When a release is published
   // app.on("release.drafted", async (context) => {
