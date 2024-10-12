@@ -350,11 +350,22 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   const citationSha = citationObj.sha;
   const updated_date = new Date().toISOString().split('T')[0];
 
+  const zenodoMetadata = await dbInstance.zenodoDeposition.findUnique({
+    where: {
+      repository_id: repository.id,
+    }
+  })
+
+  if (!zenodoMetadata) {
+    consola.error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
+    throw new Error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
+  } 
+
   citationFile.doi = identifier;
   citationFile["date-released"] = updated_date;
-  citationFile.version = version;
+  citationFile.version = zenodoMetadata.zenodo_metadata.version;
   codeMetaFile.identifier = identifier;
-  codeMetaFile.version = version;
+  codeMetaFile.version = zenodoMetadata.zenodo_metadata.version;
   codeMetaFile.dateModified = updated_date;
   codeMetaFile.datePublished = updated_date;
 
