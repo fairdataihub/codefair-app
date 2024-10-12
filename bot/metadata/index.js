@@ -367,7 +367,6 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   codeMetaFile.identifier = identifier;
   codeMetaFile.version = zenodoMetadata?.zenodo_metadata?.version || version;
   codeMetaFile.dateModified = updated_date;
-  codeMetaFile.datePublished = updated_date;
 
   if (codeMetaFile?.license) {
     const response = await dbInstance.licenseRequest.findUnique({
