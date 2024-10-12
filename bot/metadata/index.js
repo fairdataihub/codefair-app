@@ -363,9 +363,9 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
 
   citationFile.doi = identifier;
   citationFile["date-released"] = updated_date;
-  citationFile.version = zenodoMetadata.zenodo_metadata.version;
+  citationFile.version = zenodoMetadata?.zenodo_metadata?.version || version;
   codeMetaFile.identifier = identifier;
-  codeMetaFile.version = zenodoMetadata.zenodo_metadata.version;
+  codeMetaFile.version = zenodoMetadata?.zenodo_metadata?.version || version;
   codeMetaFile.dateModified = updated_date;
   codeMetaFile.datePublished = updated_date;
 
