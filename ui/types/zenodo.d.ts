@@ -8,4 +8,5 @@ interface ZenodoDeposition {
 
 interface ZenodoMetadata {
   accessRight: string | null;
+  version: string;
 }

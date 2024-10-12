@@ -127,6 +127,7 @@ export default defineEventHandler(async (event) => {
 
   const zenodoMetadata: ZenodoMetadata = {
     accessRight: raw?.accessRight || null,
+    version: raw?.version || "",
   };
 
   // Get a list of github releases

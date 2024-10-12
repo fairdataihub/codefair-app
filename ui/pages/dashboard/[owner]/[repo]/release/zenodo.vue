@@ -48,11 +48,17 @@ const selectableDepositions = ref<Array<SelectOption | SelectGroupOption>>([]);
 const zenodoFormIsValid = ref(false);
 const zenodoFormRef = ref<FormInst | null>(null);
 const zenodoFormValue = ref<ZenodoMetadata>({
+  version: "",
   accessRight: null,
 });
 const zenodoFormRules = ref({
   accessRight: {
     message: "Please select an access right",
+    required: true,
+    trigger: ["blur", "input"],
+  },
+  version: {
+    message: "Please input a version",
     required: true,
     trigger: ["blur", "input"],
   },
@@ -133,6 +139,7 @@ if (data.value) {
 
   zenodoFormValue.value.accessRight =
     data.value.zenodoMetadata.accessRight || null;
+  zenodoFormValue.value.version = data.value.zenodoMetadata.version || "";
 
   lastSelectedUser.value = data.value.lastSelectedUser;
   lastSelectedGithubTag.value = data.value.lastSelectedGithubTag;
@@ -773,6 +780,16 @@ onBeforeUnmount(() => {
                   :rules="zenodoFormRules"
                   size="large"
                 >
+                  <n-form-item
+                    label="Version number for this release"
+                    path="version"
+                  >
+                    <n-input
+                      v-model:value="zenodoFormValue.version"
+                      placeholder="1.0.0"
+                    />
+                  </n-form-item>
+
                   <n-form-item label="Access Right" path="accessRight">
                     <n-radio-group
                       v-model:value="zenodoFormValue.accessRight"

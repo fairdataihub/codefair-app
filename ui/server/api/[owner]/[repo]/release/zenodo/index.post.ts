@@ -13,6 +13,7 @@ export default defineEventHandler(async (event) => {
     .object({
       metadata: z.object({
         accessRight: z.string(),
+        version: z.string(),
       }),
       publish: z.boolean(),
       release: z.string(),
