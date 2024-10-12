@@ -28,5 +28,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  return { zenodoWorkflowStatus: zenodoDeposition.status || "" };
+  return {
+    zenodoDoi: zenodoDeposition.last_published_zenodo_doi || "",
+    zenodoWorkflowStatus: zenodoDeposition.status || "",
+  };
 });
