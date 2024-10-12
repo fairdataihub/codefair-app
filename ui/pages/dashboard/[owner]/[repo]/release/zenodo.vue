@@ -370,14 +370,16 @@ const checkForZenodoPublishProgress = () => {
           zenodoPublishDOI.value = response.zenodoDoi;
 
           clearInterval(zenodoPublishProgressInterval.value);
-
-          await navigateTo(`/dashboard/${owner}/${repo}/`);
         }
       })
       .catch((error) => {
         console.error("Error checking Zenodo publish progress:", error);
       });
   }, 3000);
+};
+
+const navigateToDashboard = async () => {
+  await navigateTo(`/dashboard/${owner}/${repo}/`);
 };
 
 const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
@@ -1090,7 +1092,11 @@ onBeforeUnmount(() => {
       :title="
         zenodoPublishStatus === 'inProgress'
           ? 'Zenodo publish in progress'
-          : 'Zenodo publish completed'
+          : zenodoPublishStatus === 'error'
+            ? 'Zenodo publish error'
+            : zenodoPublishStatus === 'published'
+              ? 'Zenodo publish success'
+              : 'Something went wrong'
       "
       :bordered="false"
       size="huge"
@@ -1119,23 +1125,20 @@ onBeforeUnmount(() => {
           Your Zenodo deposition has been published. You can view the Zenodo
           record on the dashboard.
         </p>
-
-        <NuxtLink :to="`https://doi.org/${zenodoPublishDOI}`" target="_blank">
-          <n-button type="primary">
-            <template #icon>
-              <Icon name="simple-icons:zenodo" size="16" />
-            </template>
-            View Zenodo record
-          </n-button>
-        </NuxtLink>
       </n-flex>
 
       <template #footer>
-        <n-flex justify="end">
-          <n-button
-            type="success"
-            @click="showZenodoPublishProgressModal = false"
-          >
+        <n-flex justify="space-between">
+          <NuxtLink :to="`https://doi.org/${zenodoPublishDOI}`" target="_blank">
+            <n-button type="primary" v-if="zenodoPublishStatus === 'published'">
+              <template #icon>
+                <Icon name="simple-icons:zenodo" size="16" />
+              </template>
+              View Zenodo record
+            </n-button>
+          </NuxtLink>
+
+          <n-button type="success" @click="navigateToDashboard">
             Okay
           </n-button>
         </n-flex>
