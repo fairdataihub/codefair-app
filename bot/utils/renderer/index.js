@@ -7,6 +7,7 @@ import { applyCWLTemplate } from "../../cwl/index.js";
 import { applyMetadataTemplate } from "../../metadata/index.js";
 import { applyLicenseTemplate } from "../../license/index.js";
 import { applyArchivalTemplate } from "../../archival/index.js";
+import dbInstance from "../../db.js";
 
 const { GITHUB_APP_NAME } = process.env;
 
@@ -52,9 +53,14 @@ export async function renderIssues(
     context,
   );
 
+  // Check if pull request url exist in db
+  const prUrl = await dbInstance.licenseRequest.findUnique({
+    where: { repository_id: repository.id },
+  });
+
   // If License PR is open, add the PR number to the dashboard
-  if (prInfo.title === "feat: ✨ LICENSE file added") {
-    baseTemplate += `\n\nA pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prInfo.link})`;
+  if (prUrl?.pull_request_url) {
+    baseTemplate += `\n\nA pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prUrl.pull_request_url})`;
   }
 
   baseTemplate = await applyMetadataTemplate(
@@ -65,8 +71,12 @@ export async function renderIssues(
     context,
   );
 
-  if (prInfo.title === "feat: ✨ metadata files added") {
-    baseTemplate += `\n\nA pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prInfo.link})`;
+  const metadataPrUrl = await dbInstance.codeMetadata.findUnique({
+    where: { repository_id: repository.id },
+  });
+
+  if (metadataPrUrl?.pull_request_url) {
+    baseTemplate += `\n\nA pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${metadataPrUrl.pull_request_url})`;
   }
 
   baseTemplate = await applyCWLTemplate(
