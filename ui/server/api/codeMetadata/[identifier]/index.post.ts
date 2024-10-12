@@ -448,6 +448,16 @@ export default defineEventHandler(async (event) => {
     },
   );
 
+  // Save the PR URL to the database
+  await prisma.codeMetadata.update({
+    data: {
+      pull_request_url: pullRequestData.html_url,
+    },
+    where: {
+      id: codeMetadataRequest.id,
+    },
+  });
+
   // Update the analytics data for the repository
   const existingAnalytics = await prisma.analytics.findUnique({
     where: {
