@@ -364,7 +364,7 @@ const checkForZenodoPublishProgress = () => {
       headers: useRequestHeaders(["cookie"]),
       method: "GET",
     })
-      .then(async (response) => {
+      .then((response) => {
         if (response.zenodoWorkflowStatus !== "inProgress") {
           zenodoPublishStatus.value = response.zenodoWorkflowStatus;
           zenodoPublishDOI.value = response.zenodoDoi;
@@ -1130,7 +1130,7 @@ onBeforeUnmount(() => {
       <template #footer>
         <n-flex justify="space-between">
           <NuxtLink :to="`https://doi.org/${zenodoPublishDOI}`" target="_blank">
-            <n-button type="primary" v-if="zenodoPublishStatus === 'published'">
+            <n-button v-if="zenodoPublishStatus === 'published'" type="primary">
               <template #icon>
                 <Icon name="simple-icons:zenodo" size="16" />
               </template>
