@@ -190,6 +190,12 @@ export default async (app, { getRouter }) => {
           },
         });
 
+        const zenodoDeposition = await db.zenodoDeposition.findUnique({
+          where: {
+            repository_id: repository.id,
+          },
+        });
+
         if (license) {
           await db.licenseRequest.delete({
             where: {
@@ -208,6 +214,14 @@ export default async (app, { getRouter }) => {
 
         if (cwl) {
           await db.cwlValidation.delete({
+            where: {
+              repository_id: repository.id,
+            },
+          });
+        }
+
+        if (zenodoDeposition) {
+          await db.zenodoDeposition.delete({
             where: {
               repository_id: repository.id,
             },
@@ -832,7 +846,11 @@ export default async (app, { getRouter }) => {
           return;
         }
 
-        await uploadReleaseAssetsToZenodo(zenodoToken, draftRelease.data.assets, repositoryArchive, owner, context, bucket_url, repository, tagVersion);
+        try {
+          await uploadReleaseAssetsToZenodo(zenodoToken, draftRelease.data.assets, repositoryArchive, owner, context, bucket_url, repository, tagVersion);
+        } catch (error) {
+          throw new Error("Error uploading the release assets to Zenodo:", error);
+        }
 
         // Update the GitHub issue with a status report
         const afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. All assets from the GitHub repository's draft release have been successfully uploaded to the Zenodo deposition draft.`;
@@ -854,20 +872,24 @@ export default async (app, { getRouter }) => {
 
         if (!publishDeposition.ok) {
           const errorDetails = await publishDeposition.json();
-          consola.error("Failed to publish the Zenodo deposition:", errorDetails);
-          return;
+          // consola.error("Failed to publish the Zenodo deposition:", errorDetails);
+          throw new Error("Failed to publish the Zenodo deposition", errorDetails);
         }
 
         consola.success("Zenodo deposition published successfully at:", publishDeposition);
 
         // Update the release to not be a draft
-        await context.octokit.repos.updateRelease({
-          owner,
-          repo: repository.name,
-          release_id: releaseId,
-          draft: false,
-        });
-        consola.success("Updated release to not be a draft!");
+        try {
+          await context.octokit.repos.updateRelease({
+            owner,
+            repo: repository.name,
+            release_id: releaseId,
+            draft: false,
+          });
+          consola.success("Updated release to not be a draft!");
+        } catch (error) {
+          throw new Error("Error updating the release to not be a draft:", error);
+        }
 
         // 9. Append to the issueBody that the deposition has been published
         const badge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${newDepositionId})`;
@@ -921,7 +943,7 @@ export default async (app, { getRouter }) => {
             repository_id: repository.id,
           }
         });
-        consola.error(`Error publishing to Zenodo: ${error}`);
+        throw new Error(`Error publishing to Zenodo: ${error}`);
       }
     }
   });
