@@ -38,8 +38,29 @@ export default defineEventHandler(async (event) => {
     codeMetadataRequest.repository.repo,
   );
 
+  // Get the license details
+  const licenseDetails = await prisma.licenseRequest.findUnique({
+    select: {
+      license_id: true,
+    },
+    where: {
+      repository_id: codeMetadataRequest.repository.id,
+    },
+  });
+
+  if (!licenseDetails) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: "License not found",
+    });
+  }
+
   const codeMetadataRecord =
     codeMetadataRequest.metadata as unknown as CodeMetadataRequest;
+
+  if (licenseDetails.license_id) {
+    codeMetadataRecord.license = `https://spdx.org/licenses/${licenseDetails.license_id}`;
+  }
 
   // Create the codemeta file content
 
@@ -191,27 +212,32 @@ export default defineEventHandler(async (event) => {
     ...(codeMetadataRecord.issueTracker && {
       issueTracker: codeMetadataRecord.issueTracker,
     }),
-    ...(codeMetadataRecord.keywords && {
-      keywords: codeMetadataRecord.keywords,
-    }),
+    ...(codeMetadataRecord.keywords &&
+      codeMetadataRecord.keywords.length > 0 && {
+        keywords: codeMetadataRecord.keywords,
+      }),
     ...(codeMetadataRecord.license && {
       license: `https://spdx.org/licenses/${codeMetadataRecord.license}`,
     }),
-    ...(codeMetadataRecord.operatingSystem && {
-      operatingSystem: codeMetadataRecord.operatingSystem,
-    }),
-    ...(codeMetadataRecord.programmingLanguages && {
-      programmingLanguage: codeMetadataRecord.programmingLanguages,
-    }),
+    ...(codeMetadataRecord.operatingSystem &&
+      codeMetadataRecord.operatingSystem.length > 0 && {
+        operatingSystem: codeMetadataRecord.operatingSystem,
+      }),
+    ...(codeMetadataRecord.programmingLanguages &&
+      codeMetadataRecord.programmingLanguages.length > 0 && {
+        programmingLanguage: codeMetadataRecord.programmingLanguages,
+      }),
     ...(codeMetadataRecord.referencePublication && {
       referencePublication: codeMetadataRecord.referencePublication,
     }),
-    ...(codeMetadataRecord.relatedLinks && {
-      relatedLink: codeMetadataRecord.relatedLinks,
-    }),
-    ...(codeMetadataRecord.runtimePlatform && {
-      runtimePlatform: codeMetadataRecord.runtimePlatform,
-    }),
+    ...(codeMetadataRecord.relatedLinks &&
+      codeMetadataRecord.relatedLinks.length > 0 && {
+        relatedLink: codeMetadataRecord.relatedLinks,
+      }),
+    ...(codeMetadataRecord.runtimePlatform &&
+      codeMetadataRecord.runtimePlatform.length > 0 && {
+        runtimePlatform: codeMetadataRecord.runtimePlatform,
+      }),
     ...(codeMetadataRecord.currentVersionReleaseNotes && {
       "schema:releaseNotes": codeMetadataRecord.currentVersionReleaseNotes,
     }),
@@ -228,9 +254,10 @@ export default defineEventHandler(async (event) => {
           },
         }
       : {}),
-    ...(codeMetadataRecord.otherSoftwareRequirements && {
-      softwareRequirements: codeMetadataRecord.otherSoftwareRequirements,
-    }),
+    ...(codeMetadataRecord.otherSoftwareRequirements &&
+      codeMetadataRecord.otherSoftwareRequirements.length > 0 && {
+        softwareRequirements: codeMetadataRecord.otherSoftwareRequirements,
+      }),
     ...(codeMetadataRecord.currentVersion && {
       version: codeMetadataRecord.currentVersion,
     }),
@@ -391,22 +418,23 @@ export default defineEventHandler(async (event) => {
     ...(codeMetadataRecord.description && {
       abstract: codeMetadataRecord.description,
     }),
-    ...(codeMetadataRecord.keywords && {
-      keywords: codeMetadataRecord.keywords,
-    }),
+    ...(codeMetadataRecord.keywords &&
+      codeMetadataRecord.keywords.length > 0 && {
+        keywords: codeMetadataRecord.keywords,
+      }),
     ...(codeMetadataRecord.license && {
       license: codeMetadataRecord.license,
     }),
     ...(codeMetadataRecord.codeRepository && {
       "repository-code": codeMetadataRecord.codeRepository,
     }),
-    ...(codeMetadataRecord.currentVersion && {
-      version: codeMetadataRecord.currentVersion,
-    }),
     ...(codeMetadataRecord.currentVersionReleaseDate && {
       "date-released": dayjs(
         codeMetadataRecord.currentVersionReleaseDate,
       ).format("YYYY-MM-DD"),
+    }),
+    ...(codeMetadataRecord.currentVersion && {
+      version: codeMetadataRecord.currentVersion,
     }),
   };
 
@@ -426,7 +454,7 @@ export default defineEventHandler(async (event) => {
     ...(existingCitationCFFSHA && { sha: existingCitationCFFSHA }),
   });
 
-  // Create a pull request for the new branch with the license content
+  // Create a pull request for the new branch with the codemetadata content
   const { data: pullRequestData } = await octokit.request(
     "POST /repos/{owner}/{repo}/pulls",
     {
