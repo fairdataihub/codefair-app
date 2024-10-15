@@ -65,7 +65,6 @@ const formValue = ref<CodeMetadataRequest>({
   isSourceCodeOf: "",
   issueTracker: "",
   keywords: [],
-  license: null,
   operatingSystem: [],
   otherSoftwareRequirements: [],
   programmingLanguages: [],
@@ -119,16 +118,41 @@ const rules = ref<FormRules>({
     },
   },
   keywords: {
-    message: "Please input at least one keyword",
     required: true,
     trigger: "blur",
     type: "array",
+    validator: (_rule, value) => {
+      if (value.length === 0) {
+        return new Error("Please input at least one keyword");
+      }
+      // Check if empty strings are present in the array
+      const emptyStrings = value.filter((item: string) => item === "");
+      if (emptyStrings.length > 0) {
+        return new Error("Please remove empty strings from the keywords list");
+      }
+
+      return true;
+    },
   },
   programmingLanguages: {
     message: "Please select at least one programming language",
     required: true,
     trigger: "blur",
     type: "array",
+    validator: (_rule, value) => {
+      if (value.length === 0) {
+        return new Error("Please select at least one programming language");
+      }
+
+      // Check if empty strings are present in the array
+      const emptyStrings = value.filter((item: string) => item === "");
+      if (emptyStrings.length > 0) {
+        return new Error(
+          "Please remove empty strings from the programming language list",
+        );
+      }
+      return true;
+    },
   },
   uniqueIdentifier: {
     message: "Please input a valid DOI",
@@ -238,7 +262,8 @@ const saveCodeMetadataDraft = (e: MouseEvent) => {
       console.error(errors);
       push.error({
         title: "Invalid",
-        message: "Form is invalid",
+        message:
+          "There are errors in the input fields. Please correct them and try again.",
       });
     }
   });
@@ -670,7 +695,7 @@ const navigateToPR = () => {
                     :key="index"
                     :title="
                       contributor.givenName
-                        ? `${contributor.givenName} ${contributor.familyName}`
+                        ? `${contributor.givenName} ${contributor.familyName || ''}`
                         : `Contributor ${index + 1}`
                     "
                     bordered
@@ -999,7 +1024,7 @@ const navigateToPR = () => {
             <n-card class="rounded-lg bg-[#f9fafb]">
               <n-form-item
                 label="Programming Language"
-                path="programmingLanguage"
+                path="programmingLanguages"
               >
                 <n-select
                   v-model:value="formValue.programmingLanguages"
