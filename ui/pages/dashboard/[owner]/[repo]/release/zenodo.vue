@@ -648,11 +648,10 @@ onBeforeUnmount(() => {
               sure that the content of this file is correct and up-to-date.
             </p>
 
-            <n-alert type="info" class="w-full">
-              Codefair will automatically add/update the version number, last
-              modified date, and software identifier before the release so you
-              do not need to worry about them.
-            </n-alert>
+
+            <p class="w-full text-base">
+              Codefair will automatically add/update the version number, last modified date, and software identifier before the release so you do not need to worry about them.
+            </p>
 
             <n-checkbox v-model:checked="metadataChecked">
               I have added and reviewed the <code> citation.CFF </code>
