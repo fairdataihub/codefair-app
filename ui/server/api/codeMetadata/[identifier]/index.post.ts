@@ -103,20 +103,27 @@ export default defineEventHandler(async (event) => {
     }),
   );
 
-  const codeMetaContributorRoles = codeMetadataRecord.contributors.map(
-    (contributor, index) => ({
-      ...(contributor.roles[0].endDate && {
-        endDate: dayjs(contributor.roles[0].endDate).format("YYYY-MM-DD"),
-      }),
-      ...(contributor.roles[0].role && {
-        roleName: contributor.roles[0].role,
-      }),
-      ...(contributor.roles[0].startDate && {
-        startDate: dayjs(contributor.roles[0].startDate).format("YYYY-MM-DD"),
-      }),
-      "schema:contributor": contributor.uri || `_:contributor_${index + 1}`,
-    }),
-  );
+  const codeMetaContributorRoles = [];
+  for (const [
+    index,
+    contributor,
+  ] of codeMetadataRecord.contributors.entries()) {
+    for (const role of contributor.roles) {
+      codeMetaContributorRoles.push({
+        ...(role.endDate && {
+          endDate: dayjs(role.endDate).format("YYYY-MM-DD"),
+        }),
+        ...(role.role && {
+          roleName: role.role,
+        }),
+        ...(role.startDate && {
+          startDate: dayjs(role.startDate).format("YYYY-MM-DD"),
+        }),
+        "schema:contributor": contributor.uri || `_:contributor_${index + 1}`,
+        type: "Role",
+      });
+    }
+  }
 
   const codeMetaCombinedContributors = [
     ...codeMetaContributors,
