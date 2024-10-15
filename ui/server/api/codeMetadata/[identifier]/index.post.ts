@@ -58,10 +58,6 @@ export default defineEventHandler(async (event) => {
   const codeMetadataRecord =
     codeMetadataRequest.metadata as unknown as CodeMetadataRequest;
 
-  if (licenseDetails.license_id) {
-    codeMetadataRecord.license = `https://spdx.org/licenses/${licenseDetails.license_id}`;
-  }
-
   // Create the codemeta file content
 
   const codeMetaAuthors = codeMetadataRecord.authors.map((author, index) => ({
@@ -223,8 +219,8 @@ export default defineEventHandler(async (event) => {
       codeMetadataRecord.keywords.length > 0 && {
         keywords: codeMetadataRecord.keywords,
       }),
-    ...(codeMetadataRecord.license && {
-      license: codeMetadataRecord.license,
+    ...(licenseDetails.license_id && {
+      license: `https://spdx.org/licenses/${licenseDetails.license_id}`,
     }),
     ...(codeMetadataRecord.operatingSystem &&
       codeMetadataRecord.operatingSystem.length > 0 && {
@@ -429,8 +425,8 @@ export default defineEventHandler(async (event) => {
       codeMetadataRecord.keywords.length > 0 && {
         keywords: codeMetadataRecord.keywords,
       }),
-    ...(codeMetadataRecord.license && {
-      license: codeMetadataRecord.license,
+    ...(licenseDetails.license_id && {
+      license: licenseDetails.license_id,
     }),
     ...(codeMetadataRecord.codeRepository && {
       "repository-code": codeMetadataRecord.codeRepository,
