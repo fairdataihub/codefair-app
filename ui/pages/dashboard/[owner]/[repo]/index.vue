@@ -223,15 +223,20 @@ const handleSettingsSelect = (key: any) => {
               Contains a valid license
             </n-tag>
 
-            <n-tag
+            <n-tooltip
               v-else-if="data?.licenseRequest?.licenseStatus === 'invalid'"
-              type="error"
+              trigger="hover"
             >
-              <template #icon>
-                <Icon name="icon-park-solid:close-one" size="16" />
+              <template #trigger>
+                <n-tag type="warning">
+                  <template #icon>
+                    <Icon name="ic:round-warning" size="16" />
+                  </template>
+                  Might not contain a valid license
+                </n-tag>
               </template>
-              Does not contain a valid license
-            </n-tag>
+              We couldn't determine if the license for this repository is valid.
+            </n-tooltip>
           </div>
         </template>
 
@@ -436,6 +441,46 @@ const handleSettingsSelect = (key: any) => {
       >
         <template #icon>
           <Icon name="mingcute:rocket-fill" size="40" />
+        </template>
+
+        <template #header-extra>
+          <n-flex>
+            <NuxtLink
+              v-if="data?.zenodoDeposition?.lastPublishedZenodoDoi"
+              :to="`https://doi.org/${data?.zenodoDeposition?.lastPublishedZenodoDoi}`"
+              target="_blank"
+              class="cursor-pointer"
+            >
+              <n-tag type="success" class="cursor-pointer">
+                <template #icon>
+                  <Icon name="simple-icons:doi" size="16" />
+                </template>
+                {{ data?.zenodoDeposition?.lastPublishedZenodoDoi }}
+              </n-tag>
+            </NuxtLink>
+
+            <div v-if="data?.zenodoDeposition?.zenodoStatus">
+              <n-tag
+                v-if="data?.zenodoDeposition?.zenodoStatus === 'inProgress'"
+                type="info"
+              >
+                <template #icon>
+                  <Icon name="icon-park-solid:loading-three" size="16" />
+                </template>
+                Publish in progress
+              </n-tag>
+
+              <n-tag
+                v-else-if="data?.zenodoDeposition?.zenodoStatus === 'error'"
+                type="error"
+              >
+                <template #icon>
+                  <Icon name="icon-park-solid:close-one" size="16" />
+                </template>
+                There was an error publishing to Zenodo
+              </n-tag>
+            </div>
+          </n-flex>
         </template>
 
         <template #content>

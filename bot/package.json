@@ -1,6 +1,6 @@
 {
-  "name": "codefair",
-  "version": "2.0.1",
+  "name": "codefair-bot",
+  "version": "3.0.0",
   "private": true,
   "description": "Checks for License and Citation in a Github repo",
   "author": "slugb0t",

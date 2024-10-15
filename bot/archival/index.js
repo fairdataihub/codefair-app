@@ -175,7 +175,7 @@ export async function getZenodoDepositionInfo(
       }
 
       // Create a new version of an existing Zenodo deposition
-      consola.info(`Creating a new version of Zenodo deposition ${depositionId}...`);
+      // consola.info(`Creating a new version of Zenodo deposition ${depositionId}...`);
       const responseText = await createNewVersionOfDeposition(zenodoToken, depositionId);
       const latestDraftLink = responseText.links.latest_draft;
 
@@ -253,15 +253,27 @@ export async function getZenodoMetadata(codemetadata, repository) {
     throw new Error(`License not found for URL: ${codeMetaContent.license}`);
   }
 
+  const zenodoMetadata = await dbInstance.zenodoDeposition.findUnique({
+    where: {
+      repository_id: repository.id,
+    }
+  })
+
+  if (!zenodoMetadata) {
+    consola.error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
+    throw new Error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
+  } 
+
   return {
     metadata: {
       title: codeMetaContent?.name,
       description: codeMetaContent?.description,
       upload_type: "software",
       creators: zenodoCreators,
-      access_right: "open",
+      access_right: zenodoMetadata.zenodo_metadata.access_right,
       publication_date: new_date,
       license: licenseId,
+      version: zenodoMetadata.zenodo_metadata.version || codeMetaContent?.version,
     }
   }
 }

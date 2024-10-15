@@ -127,6 +127,7 @@ export default defineEventHandler(async (event) => {
 
   const zenodoMetadata: ZenodoMetadata = {
     accessRight: raw?.accessRight || null,
+    version: raw?.version || "",
   };
 
   // Get a list of github releases
@@ -169,6 +170,7 @@ export default defineEventHandler(async (event) => {
       zenodoDeposition?.existing_zenodo_deposition_id || null,
     githubReleases,
     haveValidZenodoToken,
+    lastPublishedZenodoDoi: zenodoDeposition?.last_published_zenodo_doi || "",
     lastSelectedGithubRelease: zenodoDeposition?.github_release_id || null,
     lastSelectedGithubReleaseTitle:
       githubReleases.find(
@@ -180,13 +182,12 @@ export default defineEventHandler(async (event) => {
       id: licenseResponse.license_id || "",
       identifier: licenseResponse.identifier || "",
     },
-    // rawZenodoDepositions: rawData,
     metadataId: metadataResponse.identifier,
-    // rawReleases: githubReleasesJson,
     token: zenodoTokenInfo?.token || "",
     zenodoDepositionId: zenodoDeposition?.zenodo_id || null,
     zenodoDepositions: existingDepositions,
     zenodoLoginUrl: zenodoLoginUrl || "",
     zenodoMetadata,
+    zenodoWorkflowStatus: zenodoDeposition?.status || "",
   };
 });

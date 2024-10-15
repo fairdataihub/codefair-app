@@ -147,19 +147,26 @@ model ZenodoDeposition {
   github_release_id Int?
   github_tag_name   String?
 
-  status String @default("unpublished") // unpublished or published only
+  status String @default("unpublished") // inProgress, published, error, draft
 
   user_id String
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model Analytics {
-  id                       Int      @id
-  cwl_validated_file_count Int      @default(0)
-  cwl_rerun_validation     Int      @default(0)
-  license_created          Int      @default(0)
-  update_codemeta          Int      @default(0)
-  update_citation          Int      @default(0)
-  created_at               DateTime @default(now())
-  updated_at               DateTime @updatedAt
+  id Int @id
+
+  cwl_validated_file_count Int @default(0)
+  cwl_rerun_validation     Int @default(0)
+
+  license_created Int @default(0)
+
+  update_codemeta Int @default(0)
+  update_citation Int @default(0)
+
+  create_release Int @default(0)
+  zenodo_release Int @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
