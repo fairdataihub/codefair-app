@@ -224,7 +224,7 @@ export default defineEventHandler(async (event) => {
         keywords: codeMetadataRecord.keywords,
       }),
     ...(codeMetadataRecord.license && {
-      license: `https://spdx.org/licenses/${codeMetadataRecord.license}`,
+      license: codeMetadataRecord.license,
     }),
     ...(codeMetadataRecord.operatingSystem &&
       codeMetadataRecord.operatingSystem.length > 0 && {
