@@ -523,6 +523,28 @@ export default async (app, { getRouter }) => {
         link: prLink,
       };
 
+      if (prTitle === "feat: ✨ LICENSE file added") {
+        await db.licenseRequest.update({
+          data: {
+            pull_request_url: prLink,
+          },
+          where: {
+            repository_id: repository.id,
+          },
+        });
+      }
+
+      if (prTitle === "feat: ✨ Add code metadata files") {
+        await db.codeMetadata.update({
+          data: {
+            pull_request_url: prLink,
+          },
+          where: {
+            repository_id: repository.id,
+          },
+        });
+      }
+
       const license = await checkForLicense(context, owner, repository.name);
       const citation = await checkForCitation(context, owner, repository.name);
       const codemeta = await checkForCodeMeta(context, owner, repository.name);

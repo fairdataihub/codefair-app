@@ -32,7 +32,7 @@ export async function applyArchivalTemplate(
   const releaseBadgeButton = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
   const newReleaseText = `To make your software FAIR, it is necessary to archive it in an archival repository like Zenodo every time you make a release. When you are ready to make your next release, click the "Create release" button below to easily create a FAIR release where your metadata files are updated (including with a DOI) before creating a GitHub release and archiving it.\n\n`
 
-  if (!existingZenodoDep && !existingZenodoDep.last_published_zenodo_doi) {
+  if (!existingZenodoDep && !existingZenodoDep?.last_published_zenodo_doi) {
     // Entry does not exist in db, create a new one
     // await zenDepositionCollection.create({
     //   data: {
