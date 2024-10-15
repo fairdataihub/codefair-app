@@ -945,7 +945,8 @@ export default async (app, { getRouter }) => {
             },
             create_release: {
               increment: 1
-            }
+            },
+            updated_at: new Date(),
           },
           where: {
             id: repository.id
@@ -959,7 +960,7 @@ export default async (app, { getRouter }) => {
         await createIssue(context, owner, repository, ISSUE_TITLE, finalUploadString);
         await db.zenodoDeposition.update({
           data: {
-            status: "error",
+            status: "error",  
           },
           where: {
             repository_id: repository.id,

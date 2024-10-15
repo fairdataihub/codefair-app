@@ -194,7 +194,7 @@ export async function applyLicenseTemplate(
       "base64",
     ).toString("utf-8");
 
-    // consola.info("License id:", licenseId);
+    consola.info("License id:", licenseId);
     // consola.info("License content:", licenseContent);
 
     if (

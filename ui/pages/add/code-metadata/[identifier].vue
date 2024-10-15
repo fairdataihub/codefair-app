@@ -92,6 +92,16 @@ const rules = ref<FormRules>({
       return true;
     },
   },
+  continuousIntegration: {
+    message: "Please input a valid URL for the continuous integration",
+    trigger: ["blur", "input"],
+    validator: (_rule, value) => {
+      if (value && !isURL(value)) {
+        return false;
+      }
+      return true;
+    }
+  },
   currentVersionDownloadURL: {
     message: "Please input a valid download URL for the current version",
     trigger: ["blur", "input"],
@@ -106,6 +116,16 @@ const rules = ref<FormRules>({
     message: "Please input the description or abstract for the software",
     required: true,
     trigger: "blur",
+  },
+  isPartOf: {
+    message: "Please input a valid URL",
+    trigger: ["blur", "input"],
+    validator: (_rule, value) => {
+      if (value && !isURL(value)) {
+        return false;
+      }
+      return true;
+    }
   },
   issueTracker: {
     message: "Please input a valid issue tracker URL",
@@ -153,6 +173,24 @@ const rules = ref<FormRules>({
       }
       return true;
     },
+  },
+  relatedLinks: {
+    trigger: ["blur", "input"],
+    type: "array",
+    validator: (_rule, value) => {
+      if (value.length === 0) {
+        return true;
+      }
+
+      // Check if strings are valid urls
+      const invalidURLs = value.filter((item: string) => !isURL(item));
+      if (invalidURLs.length > 0) {
+        return new Error("Please add valid URLs to the related links list")
+      }
+
+      return true;
+    }
+
   },
   uniqueIdentifier: {
     message: "Please input a valid DOI",

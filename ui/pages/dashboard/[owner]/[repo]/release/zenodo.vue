@@ -366,6 +366,7 @@ const checkForZenodoPublishProgress = () => {
     })
       .then((response) => {
         if (response.zenodoWorkflowStatus !== "inProgress") {
+          // console.error("Zenodo publish progress:", response.zenodoWorkflowStatus);
           zenodoPublishStatus.value = response.zenodoWorkflowStatus;
           zenodoPublishDOI.value = response.zenodoDoi;
 
