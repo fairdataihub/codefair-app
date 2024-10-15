@@ -641,10 +641,14 @@ onBeforeUnmount(() => {
 
         <template #content>
           <div class="flex w-full flex-col space-y-4">
-            <n-alert type="warning" class="w-full">
-              Your <code> codemeta.json </code> file is used to generate the
+            <p class="w-full text-base">
+              Your codemeta.json file is used to generate the
               title, description, and metadata of your Zenodo deposition. Please
-              make sure that the content of this file is correct and up-to-date.
+              make sure that the content of this file is correct and up-to-date. 
+            </p>
+
+            <n-alert type="info" class="w-full">
+              Codefair will automatically add/update the version number, last modified date, and software identifier before the release so you do not need to worry about them.
             </n-alert>
 
             <n-checkbox v-model:checked="metadataChecked">
