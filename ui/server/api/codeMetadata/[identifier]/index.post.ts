@@ -136,7 +136,7 @@ export default defineEventHandler(async (event) => {
         ...(role.startDate && {
           startDate: dayjs(role.startDate).format("YYYY-MM-DD"),
         }),
-        "schema:contributor": contributor.uri || `_:contributor_${index + 1}`,
+        contributor: contributor.uri || `_:contributor_${index + 1}`,
         type: "Role",
       });
     }
