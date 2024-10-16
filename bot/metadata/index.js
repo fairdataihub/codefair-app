@@ -49,7 +49,7 @@ export async function convertMetadataForDB(codemetaContent, repository) {
         });
       }
     });
-  
+
     // Loop through the authors again to handle roles
     codemetaContent?.author.forEach((author) => {
       if (author.type === "Role") {
@@ -87,7 +87,7 @@ export async function convertMetadataForDB(codemetaContent, repository) {
         });
       }
     });
-  
+
     // Loop through the contributors again to handle roles
     codemetaContent?.contributor.forEach((contributor) => {
       if (contributor.type === "Role") {
@@ -107,10 +107,10 @@ export async function convertMetadataForDB(codemetaContent, repository) {
       }
     });
   }
-  
+
 
   // Now search through sortedAuthors and sortedContributors and check if uri begins with '_:' and if so, delete the key
-  // consola.info("Sorted authors:", JSON.stringify(sortedAuthors, null, 2)); 
+  // consola.info("Sorted authors:", JSON.stringify(sortedAuthors, null, 2));
   // consola.info("Sorted contributors:", sortedContributors);
   for (let i = 0; i < sortedAuthors.length; i++) {
     if (sortedAuthors[i].uri.startsWith("_:")) {
@@ -142,10 +142,10 @@ export async function convertMetadataForDB(codemetaContent, repository) {
         repository_id: repository.id,
       },
     });
-    
+
     consola.warn("ASDKJASL:DKJA:SLJKDAL:SJD")
     consola.warn(license);
-    consola.warn("ASDKJASL:DKJA:SLJKDAL:SJD") 
+    consola.warn("ASDKJASL:DKJA:SLJKDAL:SJD")
     if (license?.license_id) {
       licenseId = `https://spdx.org/licenses/${license.license_id}`
     }
@@ -360,7 +360,7 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   if (!zenodoMetadata) {
     consola.error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
     throw new Error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
-  } 
+  }
 
   citationFile.doi = identifier;
   citationFile["date-released"] = updated_date;
@@ -380,7 +380,7 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
       throw new Error("Error fetching license details from database", response);
     }
 
-    codeMetaFile.license = `https://spdx.org/licenses/${response.license_id}`;
+    // codeMetaFile.license = `https://spdx.org/licenses/${response.license_id}`;
   }
 
   // Update the citation file
