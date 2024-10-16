@@ -59,8 +59,27 @@ export async function renderIssues(
   });
 
   // If License PR is open, add the PR number to the dashboard
-  if (prUrl?.pull_request_url) {
-    baseTemplate += `\n\nA pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prUrl.pull_request_url})`;
+  if (prUrl?.pull_request_url !== "") {
+    // Verify if the PR is still open
+    try {
+      const pr = await context.octokit.pulls.get({
+      owner,
+      repo: repository.name,
+      pull_number: prUrl.pull_request_url.split("/").pop(),
+      });
+
+      if (pr.data.state === "open") {
+      baseTemplate += `\n\nA pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prUrl.pull_request_url})`;
+      } else {
+      // If the PR is closed, remove the PR from the database
+      await dbInstance.licenseRequest.update({
+        where: { repository_id: repository.id },
+        date: { pull_request_url: "" },
+      });
+      }
+    } catch (error) {
+      consola.error("Error fetching pull request:", error);
+    }
   }
 
   baseTemplate = await applyMetadataTemplate(
@@ -76,7 +95,25 @@ export async function renderIssues(
   });
 
   if (metadataPrUrl?.pull_request_url) {
-    baseTemplate += `\n\nA pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${metadataPrUrl.pull_request_url})`;
+    try {
+      const pr = await context.octokit.pulls.get({
+        owner,
+        repo: repository.name,
+        pull_number: metadataPrUrl.pull_request_url.split("/").pop(),
+      });
+
+      if (pr.data.state === "open") {
+        baseTemplate += `\n\nA pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${metadataPrUrl.pull_request_url})`;
+      } else {
+        // If the PR is closed, remove the PR from the database
+        await dbInstance.codeMetadata.update({
+          where: { repository_id: repository.id },
+          data: { pull_request_url: "" },
+        });
+      }
+    } catch (error) {
+      consola.error("Error fetching metadata pull request:", error);
+    }
   }
 
   baseTemplate = await applyCWLTemplate(
