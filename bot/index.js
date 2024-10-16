@@ -1,3 +1,5 @@
+"use strict";
+
 import * as express from "express";
 import { consola } from "consola";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
@@ -266,9 +268,6 @@ export default async (app, { getRouter }) => {
       latest_commit_url: context.payload.head_commit.url || "",
     };
 
-    // consola.info("Latest commit info:", latestCommitInfo);
-    // consola.info("Context.payload.head_commit:", context.payload.head_commit);
-
     let fullCodefairRun = false;
 
     const installation = await db.installation.findUnique({
@@ -308,12 +307,10 @@ export default async (app, { getRouter }) => {
           fullCodefairRun = true;
         }
 
-        // console.log(result);
-        console.log("Updated installation:", response);
 
         return;
       } else {
-        const response = await db.installation.update({
+        await db.installation.update({
           data: {
             action_count: 0,
             latest_commit_date: latestCommitInfo.latest_commit_date,
@@ -323,7 +320,6 @@ export default async (app, { getRouter }) => {
           },
           where: { id: repository.id },
         });
-        console.log("Updated installation:", response);
       }
     }
 
@@ -331,7 +327,6 @@ export default async (app, { getRouter }) => {
     const commitAuthor = context.payload.head_commit.author;
     if (commitAuthor?.name === `${GITHUB_APP_NAME}[bot]`) {
       const commitMessages = ["chore: 📝 Update CITATION.cff with Zenodo identifier", "chore: 📝 Update codemeta.json with Zenodo identifier"]
-      // consola.info("Commit made by codefair-test, checking commit message...");
       if (latestCommitInfo.latest_commit_message === commitMessages[0] || latestCommitInfo.latest_commit_message === commitMessages[1]) {
         return;
       }
@@ -517,12 +512,26 @@ export default async (app, { getRouter }) => {
       return;
     }
 
-    if (definedPRTitles.includes(prTitle)) {
-      const prInfo = {
-        title: prTitle,
-        link: prLink,
-      };
+    // Seach for the issue with the title FAIR Compliance Dashboard and authored with the github bot
+    const issues = await context.octokit.issues.listForRepo({
+      creator: `${GITHUB_APP_NAME}[bot]`,
+      owner,
+      repo: repository.name,
+      state: "open",
+    });
 
+    // Find the issue with the exact title "FAIR Compliance Dashboard"
+    const dashboardIssue = issues.data.find(issue => issue.title === "FAIR Compliance Dashboard");
+
+    if (!dashboardIssue) {
+      consola.error("FAIR Compliance Dashboard issue not found");
+      return;
+    }
+
+    // Get the current body of the issue
+    let issueBody = dashboardIssue.body;
+
+    if (definedPRTitles.includes(prTitle)) {
       if (prTitle === "feat: ✨ LICENSE file added") {
         await db.licenseRequest.update({
           data: {
@@ -532,6 +541,15 @@ export default async (app, { getRouter }) => {
             repository_id: repository.id,
           },
         });
+
+        // Define the PR badge markdown for the LICENSE section
+        const licensePRBadge = `A pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
+
+        // Append the PR badge after the "LICENSE ❌" section
+        issueBody = issueBody.replace(
+          "## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the \"Add license\" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](https://staging.codefair.io/add/license/xq8a00ldgh)",
+          `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](https://staging.codefair.io/add/license/xq8a00ldgh)\n\n${licensePRBadge}`
+        );
       }
 
       if (prTitle === "feat: ✨ Add code metadata files") {
@@ -543,45 +561,17 @@ export default async (app, { getRouter }) => {
             repository_id: repository.id,
           },
         });
+        // append the PR link to the issue
+        const metadataPRBadge = `A pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
+
+        // Append the Metadata PR badge after the "Metadata" section
+        issueBody = issueBody.replace(
+          "## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)",
+          `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)\n\n${metadataPRBadge}`
+        );
       }
 
-      const license = await checkForLicense(context, owner, repository.name);
-      const citation = await checkForCitation(context, owner, repository.name);
-      const codemeta = await checkForCodeMeta(context, owner, repository.name);
-      const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
-
-      const cwlObject = {
-        contains_cwl: cwl.length > 0 || false,
-        files: cwl,
-        removed_files: [],
-      };
-
-      const cwlExists = await db.cwlValidation.findUnique({
-        where: {
-          repository_id: repository.id,
-        },
-      });
-
-      if (cwlExists) {
-        cwlObject.contains_cwl = cwlExists.contains_cwl_files;
-      }
-
-      const subjects = {
-        citation,
-        codemeta,
-        cwl: cwlObject,
-        license,
-      };
-      // Check if the pull request is for the LICENSE file
-      // If it is, close the issue that was opened for the license
-      const issueBody = await renderIssues(
-        context,
-        owner,
-        repository,
-        emptyRepo,
-        subjects,
-        prInfo,
-      );
+      // Update the issue with the new body
       await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
     }
   });
@@ -764,10 +754,7 @@ export default async (app, { getRouter }) => {
         throw new Error("Zenodo publish information not found in issue body.");
       }
       const [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
-      // consola.info("Deposition ID:", depositionId);
-      // consola.info("Release ID:", releaseId);
-      // consola.info("Tag Version:", tagVersion);
-      // consola.info("User Who Submitted:", userWhoSubmitted);
+
       try {
         // 1. Get the metadata from the repository
         const citationCff = await getCitationContent(context, owner, repository);
@@ -816,28 +803,49 @@ export default async (app, { getRouter }) => {
         }
 
         // 3. Create the Zenodo record or get the existing one
-        let zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
-        
+        let zenodoDepositionInfo = {};
+        try {
+          zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
+        } catch (error) {
+          throw new Error(`Error fetching Zenodo deposition info: ${error}`, { cause: error });
+        }
+
+
         // 4. Set the bucket URL and DOI
         const newDepositionId = zenodoDepositionInfo.id;
         const bucket_url = zenodoDepositionInfo.links.bucket;
         const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
-        
+
         const tempString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. A draft deposition was created and will be adding the necessary files and metadata.`;
         const finalTempString = await applyLastModifiedTemplate(tempString);
         await createIssue(context, owner, repository, ISSUE_TITLE, finalTempString);
 
         // 5. Update the CITATION.cff and codemeta.json files with the DOI
-        const updatedMetadataFile = await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
+        let updatedMetadataFile = {};
+        try {
+          updatedMetadataFile = await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
+        } catch (error) {
+          throw new Error(`Error updating metadata identifier: ${error}`, { cause: error });
+        }
 
-        // Gather metadata for Zenodo deposition
-        const newZenodoMetadata = await getZenodoMetadata(updatedMetadataFile, repository);
+        // 6. Gather metadata for Zenodo deposition
+        let newZenodoMetadata = {};
+        try {
+           newZenodoMetadata = await getZenodoMetadata(updatedMetadataFile, repository);
+        } catch (error) {
+          throw new Error(`Error getting Zenodo metadata: ${error}`, { cause: error });
+        }
 
-        // 6. Update the zenodo deposition metadata
-        const depositionWithMetadata = await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
-        consola.success(`Updated the Zenodo deposition metadata: ${depositionWithMetadata}`);
+        // 7. Update the zenodo deposition metadata
+        let depositionWithMetadata = {};
+        try {
+          depositionWithMetadata = await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
+          consola.success(`Updated the Zenodo deposition metadata: ${depositionWithMetadata}`);
+        } catch (error) {
+          throw new Error(`Error updating Zenodo metadata: ${error}`, { cause: error });
+        }
 
-        // Find the release base on the release ID
+        // Find the release based on the release ID
         let draftRelease;
         try {
           draftRelease = await context.octokit.repos.getRelease({
@@ -892,13 +900,13 @@ export default async (app, { getRouter }) => {
               },
             }
           );
-        
+
           if (!publishDeposition.ok) {
             const errorDetails = await publishDeposition.json();
             // Throwing an error while preserving the original details
             throw new Error(`Failed to publish the Zenodo deposition: ${JSON.stringify(errorDetails, null, 2)}`, { cause: errorDetails });
           }
-        
+
           consola.success("Zenodo deposition published successfully at:", publishDeposition);
         } catch (error) {
           // If there's an error, preserve the original error message and append additional context
@@ -964,7 +972,7 @@ export default async (app, { getRouter }) => {
         await createIssue(context, owner, repository, ISSUE_TITLE, finalUploadString);
         await db.zenodoDeposition.update({
           data: {
-            status: "error",  
+            status: "error",
           },
           where: {
             repository_id: repository.id,
@@ -1092,7 +1100,7 @@ export default async (app, { getRouter }) => {
 
   app.on("pull_request.closed", async (context) => {
     // Remove the PR url from the database
-    if (context.payload.pull_request.title === "feat: ✨ LICENSE file added" && context.payload.pull_request.merged) {
+    if (context.payload.pull_request.title === "feat: ✨ LICENSE file added") {
       await db.licenseRequest.update({
         data: {
           pull_request_url: "",
@@ -1103,7 +1111,7 @@ export default async (app, { getRouter }) => {
       });
     }
 
-    if (context.payload.pull_request.title === "feat: ✨ Add code metadata files" && context.payload.pull_request.merged) {
+    if (context.payload.pull_request.title === "feat: ✨ Add code metadata files") {
       await db.codeMetadata.update({
         data: {
           pull_request_url: "",

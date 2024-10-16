@@ -179,7 +179,7 @@ export async function applyLicenseTemplate(
   });
   let licenseId = null;
   let licenseContent = "";
-  let licenseContentEmpty = false;
+  let licenseContentEmpty = true;
 
   if (subjects.license) {
     // Get the license identifier
@@ -194,23 +194,27 @@ export async function applyLicenseTemplate(
       "base64",
     ).toString("utf-8");
 
-    consola.info("License id:", licenseId);
-    // consola.info("License content:", licenseContent);
-
     if (
       licenseRequest.data.license.spdx_id === "no-license" ||
       licenseRequest.data.license.spdx_id === "NOASSERTION"
     ) {
       consola.info("Resetting license id and content back to null");
       // Verify if a license id exists in the database, if so continue to use that license id and license content
-      if (existingLicense?.license_id != null && existingLicense?.license_content != "") {
+      consola.info("Existing license:", existingLicense.license_id);
+      consola.info("Existing license:", existingLicense.license_content);
+      consola.info("Existing license:", existingLicense.license_content !== "");
+      if (existingLicense.license_id && existingLicense.license_content !== "") {
         licenseId = existingLicense?.license_id;
         licenseContent = existingLicense?.license_content;
+        licenseContentEmpty = false;
       } else {
         licenseId = null;
         licenseContent = "";
-        licenseContentEmpty = true;
       }
+    }
+
+    if (licenseId){
+      licenseContentEmpty = false;
     }
   }
 

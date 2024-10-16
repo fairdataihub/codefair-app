@@ -143,9 +143,7 @@ export async function convertMetadataForDB(codemetaContent, repository) {
       },
     });
 
-    consola.warn("ASDKJASL:DKJA:SLJKDAL:SJD")
-    consola.warn(license);
-    consola.warn("ASDKJASL:DKJA:SLJKDAL:SJD")
+
     if (license?.license_id) {
       licenseId = `https://spdx.org/licenses/${license.license_id}`
     }
@@ -300,6 +298,8 @@ export async function getCitationContent(context, owner, repository) {
     repo: repository.name,
   });
 
+
+
   return {
     content: Buffer.from(citationFile.data.content, "base64").toString(),
     sha: citationFile.data.sha,
@@ -345,10 +345,10 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   const codeMetaObj = await getCodemetaContent(context, owner, repository);
 
   let codeMetaFile = JSON.parse(codeMetaObj.content);
-  const codeMetaSha = codeMetaObj.sha;
+  const codeMetaSha = codeMetaObj.sha || null;
 
   let citationFile = yaml.load(citationObj.content);
-  const citationSha = citationObj.sha;
+  const citationSha = citationObj.sha || null;
   const updated_date = new Date().toISOString().split('T')[0];
 
   const zenodoMetadata = await dbInstance.zenodoDeposition.findUnique({
@@ -369,19 +369,19 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   codeMetaFile.version = zenodoMetadata?.zenodo_metadata?.version || version;
   codeMetaFile.dateModified = updated_date;
 
-  if (codeMetaFile?.license) {
-    const response = await dbInstance.licenseRequest.findUnique({
-      where: {
-        repository_id: repository.id,
-      },
-    });
+  const response = await dbInstance.licenseRequest.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  });
 
-    if (!response) {
-      throw new Error("Error fetching license details from database", response);
-    }
-
-    // codeMetaFile.license = `https://spdx.org/licenses/${response.license_id}`;
+  if (!response) {
+    throw new Error("Error fetching license details from database", response);
   }
+
+  codeMetaFile.license = `https://spdx.org/licenses/${response.license_id}`;
+  citationFile.license = response.license_id;
+
 
   // Update the citation file
   await context.octokit.repos.createOrUpdateFileContents({

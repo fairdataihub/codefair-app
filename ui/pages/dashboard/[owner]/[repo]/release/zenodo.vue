@@ -34,6 +34,7 @@ const metadataChecked = ref(false);
 const license = ref({
   id: "x",
   identifier: "x",
+  status: "",
 });
 const metadataId = ref("");
 
@@ -121,6 +122,7 @@ if (data.value) {
 
   license.value.id = data.value.license.id || "";
   license.value.identifier = data.value.license.identifier;
+  license.value.status = data.value.license.status || "";
   metadataId.value = data.value.metadataId;
 
   selectedExistingDeposition.value = data.value.existingZenodoDepositionId
@@ -356,34 +358,36 @@ const zenodoPublishProgressInterval = ref<any>(null);
 const zenodoPublishStatus = ref<string>("");
 const zenodoPublishDOI = ref<string>("");
 
-const checkForZenodoPublishProgress = () => {
-  showZenodoPublishProgressModal.value = true;
+const checkForZenodoPublishProgress = async () => {
+  await $fetch(`/api/${owner}/${repo}/release/zenodo/status`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "GET",
+  })
+    .then((response) => {
+      if (
+        response.zenodoWorkflowStatus === "published" ||
+        response.zenodoWorkflowStatus === "error"
+      ) {
+        // console.error("Zenodo publish progress:", response.zenodoWorkflowStatus);
+        zenodoPublishStatus.value = response.zenodoWorkflowStatus;
+        zenodoPublishDOI.value = response.zenodoDoi;
 
-  zenodoPublishProgressInterval.value = setInterval(async () => {
-    await $fetch(`/api/${owner}/${repo}/release/zenodo/status`, {
-      headers: useRequestHeaders(["cookie"]),
-      method: "GET",
+        clearInterval(zenodoPublishProgressInterval.value);
+      }
+
+      if (response.zenodoWorkflowStatus === "inProgress") {
+        // console.error("Zenodo publish progress:", response.zenodoWorkflowStatus);
+        zenodoPublishStatus.value = response.zenodoWorkflowStatus;
+        zenodoPublishDOI.value = "";
+      }
     })
-      .then((response) => {
-        if (
-          response.zenodoWorkflowStatus === "published" ||
-          response.zenodoWorkflowStatus === "error"
-        ) {
-          // console.error("Zenodo publish progress:", response.zenodoWorkflowStatus);
-          zenodoPublishStatus.value = response.zenodoWorkflowStatus;
-          zenodoPublishDOI.value = response.zenodoDoi;
-
-          clearInterval(zenodoPublishProgressInterval.value);
-        }
-      })
-      .catch((error) => {
-        console.error("Error checking Zenodo publish progress:", error);
-      });
-  }, 3000);
+    .catch((error) => {
+      console.error("Error checking Zenodo publish progress:", error);
+    });
 };
 
 const navigateToDashboard = async () => {
-  await navigateTo(`/dashboard/${owner}/${repo}/`);
+  // await navigateTo(`/dashboard/${owner}/${repo}/`);
 };
 
 const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
@@ -428,7 +432,11 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
           title: "Success",
           message: "Your Zenodo publish process has been started.",
         });
-        checkForZenodoPublishProgress();
+        showZenodoPublishProgressModal.value = true;
+
+        zenodoPublishProgressInterval.value = setInterval(() => {
+          checkForZenodoPublishProgress();
+        }, 500);
       } else {
         push.success({
           title: "Success",
@@ -607,14 +615,23 @@ onBeforeUnmount(() => {
         </template>
 
         <template #content>
-          <div class="flex w-full flex-col">
-            <n-flex v-if="license.id" class="mb-4 border p-2" align="center">
+          <div class="flex w-full flex-col space-y-3">
+            <n-flex v-if="license.id" class="border p-2" align="center">
               <Icon name="tabler:license" size="24" />
 
               <p class="text-sm">
                 The license file was identified as `{{ license.id }}`
               </p>
             </n-flex>
+
+            <n-alert
+              v-if="license.status === 'invalid'"
+              type="warning"
+              class="mb-4 w-full"
+            >
+              Please verify that the license file is valid and contains the
+              required information.
+            </n-alert>
 
             <n-checkbox v-model:checked="licenseChecked">
               I have added and reviewed the license file that is required for
@@ -900,7 +917,6 @@ onBeforeUnmount(() => {
                       <n-select
                         v-model:value="githubFormValue.tag"
                         :options="githubTagOptions"
-                        tag
                         filterable
                         clearable
                         placeholder="Type or select a tag"
@@ -1097,65 +1113,78 @@ onBeforeUnmount(() => {
     </n-collapse>
 
     <n-modal
-  v-if="['inProgress', 'error', 'published'].includes(zenodoPublishStatus)"
-  v-model:show="showZenodoPublishProgressModal"
-  preset="card"
-  :title="
-    zenodoPublishStatus === 'inProgress'
-      ? 'Zenodo publish in progress'
-      : zenodoPublishStatus === 'error'
-        ? 'Zenodo publish error'
-        : zenodoPublishStatus === 'published'
-          ? 'Zenodo publish success'
-          : ''
-  "
-  :bordered="false"
-  size="huge"
-  :mask-closable="false"
-  :close-on-esc="false"
-  style="width: 600px"
->
-  <n-flex v-if="zenodoPublishStatus === 'inProgress'" vertical>
-    <p>
-      The workflow for publishing this repository to Zenodo is currently in
-      progress. You can check the status of this workflow on the dashboard.
-    </p>
+      v-model:show="showZenodoPublishProgressModal"
+      preset="card"
+      :title="
+        zenodoPublishStatus === 'inProgress'
+          ? 'Zenodo publish in progress'
+          : zenodoPublishStatus === 'error'
+            ? 'Zenodo publish error'
+            : zenodoPublishStatus === 'published'
+              ? 'Zenodo publish success'
+              : 'Loading...'
+      "
+      :bordered="false"
+      size="huge"
+      :mask-closable="false"
+      :close-on-esc="false"
+      style="width: 600px"
+    >
+      <n-flex v-if="zenodoPublishStatus === 'inProgress'" vertical>
+        <p>
+          The workflow for publishing this repository to Zenodo is currently in
+          progress. You can check the status of this workflow on the dashboard.
+        </p>
 
-    <n-spin size="large" />
-  </n-flex>
+        <n-spin size="large" />
+      </n-flex>
 
-  <n-flex v-else-if="zenodoPublishStatus === 'error'" vertical>
-    <p>
-      There was an error with publishing this repository to Zenodo. Please
-      try again later or contact the Codefair team for assistance.
-    </p>
-  </n-flex>
+      <n-flex v-else-if="zenodoPublishStatus === 'error'" vertical>
+        <p>
+          There was an error with publishing this repository to Zenodo. Please
+          try again later or contact the Codefair team for assistance.
+        </p>
+      </n-flex>
 
-  <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
-    <p>
-      Your software was successfully archived on Zenodo. We recommend
-      reviewing the deposition and adding additional metadata supported by
-      Zenodo to make your software more FAIR.
-    </p>
-  </n-flex>
+      <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
+        <p>
+          Your software was successfully archived on Zenodo. We recommend
+          reviewing the deposition and adding additional metadata supported by
+          Zenodo to make your software more FAIR.
+        </p>
+      </n-flex>
 
-  <template #footer>
-    <n-flex justify="space-between">
-      <NuxtLink v-if="zenodoPublishStatus === 'published'" :to="`https://doi.org/${zenodoPublishDOI}`" target="_blank">
-        <n-button type="primary">
-          <template #icon>
-            <Icon name="simple-icons:zenodo" size="16" />
-          </template>
-          View Zenodo deposition
-        </n-button>
-      </NuxtLink>
+      <n-flex v-else>
+        <p>Please wait while we get the status of your workflow.</p>
+      </n-flex>
 
-      <n-button type="success" @click="navigateToDashboard">
-        Okay
-      </n-button>
-    </n-flex>
-  </template>
-</n-modal>
+      <template #footer>
+        <n-flex justify="space-between">
+          <NuxtLink
+            v-if="zenodoPublishStatus === 'published'"
+            :to="`https://doi.org/${zenodoPublishDOI}`"
+            target="_blank"
+          >
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="simple-icons:zenodo" size="16" />
+              </template>
+              View Zenodo deposition
+            </n-button>
+          </NuxtLink>
 
+          <n-button
+            type="success"
+            @click="navigateToDashboard"
+            :disabled="
+              zenodoPublishStatus !== 'published' &&
+              zenodoPublishStatus !== 'error'
+            "
+          >
+            Okay
+          </n-button>
+        </n-flex>
+      </template>
+    </n-modal>
   </main>
 </template>

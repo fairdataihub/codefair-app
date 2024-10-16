@@ -41,7 +41,7 @@ interface CodeMetadataRequest {
   isSourceCodeOf?: string;
   issueTracker?: string;
   keywords: string[];
-  license: string | null;
+  license?: string | null;
   operatingSystem?: string[];
   otherSoftwareRequirements?: string[];
   programmingLanguages: string[];
