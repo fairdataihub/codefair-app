@@ -1101,7 +1101,26 @@ export default async (app, { getRouter }) => {
   app.on("pull_request.closed", async (context) => {
     // Remove the PR url from the database
     const prLink = context.payload.pull_request.html_url;
+
+    // Seach for the issue with the title FAIR Compliance Dashboard and authored with the github bot
+    const issues = await context.octokit.issues.listForRepo({
+      creator: `${GITHUB_APP_NAME}[bot]`,
+      owner,
+      repo: repository.name,
+      state: "open",
+    });
     
+    // Find the issue with the exact title "FAIR Compliance Dashboard"
+    const dashboardIssue = issues.data.find(issue => issue.title === "FAIR Compliance Dashboard");
+  
+    if (!dashboardIssue) {
+      consola.error("FAIR Compliance Dashboard issue not found");
+      return;
+    }
+  
+    // Get the current body of the issue
+    let issueBody = dashboardIssue.body;
+
     if (context.payload.pull_request.title === "feat: ✨ LICENSE file added") {
       await db.licenseRequest.update({
         data: {
@@ -1140,6 +1159,9 @@ export default async (app, { getRouter }) => {
         "## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the \"Add license\" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](https://staging.codefair.io/add/license/xq8a00ldgh)",
       );
     }
+
+    // Update the issue with the new body
+    await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
   }
 );
 
