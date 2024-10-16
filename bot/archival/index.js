@@ -219,22 +219,30 @@ export async function getZenodoDepositionInfo(
 export async function getZenodoMetadata(codemetadata, repository) {
   const new_date = new Date().toISOString().split('T')[0];
   const codeMetaContent = JSON.parse(codemetadata);
-  const zenodoCreators = codeMetaContent.author.map((author) => {
+  const zenodoCreators = codeMetaContent.author
+  .filter((author) => author?.type !== "Role") // Exclude authors with type "Role"
+  .map((author) => {
     const tempObj = {};
-    tempObj.name = author.familyName 
-      ? `${author.familyName}, ${author.givenName}` 
+
+    // Format the name as "Family name, Given names"
+    tempObj.name = author.familyName
+      ? `${author.familyName}, ${author.givenName}`
       : author.givenName;
-  
-    if (author.affiliation) {
-      tempObj.affiliation = author.affiliation;
+
+    // Add affiliation if present
+    if (author.affiliation && author.affiliation.name) {
+      tempObj.affiliation = author.affiliation.name;
     }
-  
+
+    // Add ORCID if present
     if (author.orcid) {
       tempObj.orcid = author.orcid;
     }
-  
+
     return tempObj;
   });
+
+console.log(zenodoCreators);
 
   if (!codeMetaContent.license) {
     // fetch from the db

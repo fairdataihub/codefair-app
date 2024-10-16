@@ -35,44 +35,6 @@ export async function convertMetadataForDB(codemetaContent, repository) {
   const sortedAuthors = [];
   // eslint-disable-next-line prefer-const
   const sortedContributors = [];
-
-  if (codemetaContent?.author) {
-    // Map the author to the metadata object
-    codemetaContent.author.forEach((author) => {
-      let rolesFound = [];
-      if (author?.type === "Role" && sortedAuthors.length > 0) {
-        for (let i = 0; i < sortedAuthors.length; i++) {
-          if (sortedAuthors[i].uri === author?.["schema:author"]) {
-            const roleObj = {};
-            if (author?.roleName) {
-              roleObj.role = author?.roleName;
-            }
-
-            if (author?.startDate) {
-              roleObj.startDate = convertDateToUnix(author?.startDate);
-            }
-
-            if (author?.endDate) {
-              roleObj.endDate = convertDateToUnix(author?.endDate);
-            }
-
-            rolesFound.push(roleObj);
-
-            return;
-          }
-        }
-      }
-      sortedAuthors.push({
-        affiliation: author?.affiliation?.name || "",
-        email: author?.email || "",
-        familyName: author?.familyName || "",
-        givenName: author?.givenName || "",
-        roles: rolesFound,
-        uri: author?.id || "",
-      });
-    });
-  }
-
   if (codemetaContent?.author) {
     codemetaContent?.author.forEach((author) => {
       // If the author is a Person or Organization, we need to add them
@@ -148,7 +110,7 @@ export async function convertMetadataForDB(codemetaContent, repository) {
   
 
   // Now search through sortedAuthors and sortedContributors and check if uri begins with '_:' and if so, delete the key
-  // consola.info("Sorted authors:", JSON.stringify(sortedAuthors, null, 2));
+  // consola.info("Sorted authors:", JSON.stringify(sortedAuthors, null, 2)); 
   // consola.info("Sorted contributors:", sortedContributors);
   for (let i = 0; i < sortedAuthors.length; i++) {
     if (sortedAuthors[i].uri.startsWith("_:")) {

@@ -880,25 +880,36 @@ export default async (app, { getRouter }) => {
         await createIssue(context, owner, repository, ISSUE_TITLE, finalUploadString);
 
         // 8. Publish the Zenodo deposition
-        consola.start("Publishing the Zenodo deposition...", newDepositionId);
-        const publishDeposition = await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions/${newDepositionId}/actions/publish`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${zenodoToken}`,
-            },
-          },
-        );
-
-        if (!publishDeposition.ok) {
-          const errorDetails = await publishDeposition.json();
-          // consola.error("Failed to publish the Zenodo deposition:", errorDetails);
-          throw new Error("Failed to publish the Zenodo deposition", errorDetails);
+        try {
+          consola.start("Publishing the Zenodo deposition...", newDepositionId);
+          const publishDeposition = await fetch(
+            `${ZENODO_API_ENDPOINT}/deposit/depositions/${newDepositionId}/actions/publish`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${zenodoToken}`,
+              },
+            }
+          );
+        
+          if (!publishDeposition.ok) {
+            const errorDetails = await publishDeposition.json();
+            // Throwing an error while preserving the original details
+            throw new Error(`Failed to publish the Zenodo deposition: ${JSON.stringify(errorDetails, null, 2)}`);
+          }
+        
+          consola.success("Zenodo deposition published successfully at:", publishDeposition);
+        } catch (error) {
+          // If there's an error, preserve the original error message and append additional context
+          const newError = new Error(`${error.message}`);
+          
+          // Optionally, append the original stack trace for debugging purposes
+          newError.stack += `\nCaused by: ${error.stack}`;
+          
+          // Rethrow the error with added context
+          throw newError;
         }
-
-        consola.success("Zenodo deposition published successfully at:", publishDeposition);
 
         // Update the release to not be a draft
         try {
