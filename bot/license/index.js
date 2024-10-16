@@ -194,9 +194,6 @@ export async function applyLicenseTemplate(
       "base64",
     ).toString("utf-8");
 
-    consola.info("License id:", licenseId);
-    // consola.info("License content:", licenseContent);
-
     if (
       licenseRequest.data.license.spdx_id === "no-license" ||
       licenseRequest.data.license.spdx_id === "NOASSERTION"
@@ -214,6 +211,10 @@ export async function applyLicenseTemplate(
         licenseId = null;
         licenseContent = "";
       }
+    }
+
+    if (licenseId){
+      licenseContentEmpty = false;
     }
   }
 

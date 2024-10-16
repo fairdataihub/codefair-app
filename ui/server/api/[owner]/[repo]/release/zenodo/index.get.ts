@@ -181,6 +181,7 @@ export default defineEventHandler(async (event) => {
     license: {
       id: licenseResponse.license_id || "",
       identifier: licenseResponse.identifier || "",
+      status: licenseResponse.license_status || "",
     },
     metadataId: metadataResponse.identifier,
     token: zenodoTokenInfo?.token || "",

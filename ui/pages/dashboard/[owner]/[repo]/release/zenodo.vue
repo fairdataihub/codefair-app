@@ -34,6 +34,7 @@ const metadataChecked = ref(false);
 const license = ref({
   id: "x",
   identifier: "x",
+  status: "",
 });
 const metadataId = ref("");
 
@@ -121,6 +122,7 @@ if (data.value) {
 
   license.value.id = data.value.license.id || "";
   license.value.identifier = data.value.license.identifier;
+  license.value.status = data.value.license.status || "";
   metadataId.value = data.value.metadataId;
 
   selectedExistingDeposition.value = data.value.existingZenodoDepositionId
@@ -613,14 +615,23 @@ onBeforeUnmount(() => {
         </template>
 
         <template #content>
-          <div class="flex w-full flex-col">
-            <n-flex v-if="license.id" class="mb-4 border p-2" align="center">
+          <div class="flex w-full flex-col space-y-3">
+            <n-flex v-if="license.id" class="border p-2" align="center">
               <Icon name="tabler:license" size="24" />
 
               <p class="text-sm">
                 The license file was identified as `{{ license.id }}`
               </p>
             </n-flex>
+
+            <n-alert
+              v-if="license.status === 'invalid'"
+              type="warning"
+              class="mb-4 w-full"
+            >
+              Please verify that the license file is valid and contains the
+              required information.
+            </n-alert>
 
             <n-checkbox v-model:checked="licenseChecked">
               I have added and reviewed the license file that is required for
