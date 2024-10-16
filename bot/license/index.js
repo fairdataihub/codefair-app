@@ -203,7 +203,10 @@ export async function applyLicenseTemplate(
     ) {
       consola.info("Resetting license id and content back to null");
       // Verify if a license id exists in the database, if so continue to use that license id and license content
-      if (existingLicense.license_id && existingLicense.license_content) {
+      consola.info("Existing license:", existingLicense.license_id);
+      consola.info("Existing license:", existingLicense.license_content);
+      consola.info("Existing license:", existingLicense.license_content !== "");
+      if (existingLicense.license_id && existingLicense.license_content !== "") {
         licenseId = existingLicense?.license_id;
         licenseContent = existingLicense?.license_content;
         licenseContentEmpty = false;
