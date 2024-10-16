@@ -179,7 +179,7 @@ export async function applyLicenseTemplate(
   });
   let licenseId = null;
   let licenseContent = "";
-  let licenseContentEmpty = false;
+  let licenseContentEmpty = true;
 
   if (subjects.license) {
     // Get the license identifier
@@ -206,10 +206,10 @@ export async function applyLicenseTemplate(
       if (existingLicense?.license_id != null && existingLicense?.license_content != "") {
         licenseId = existingLicense?.license_id;
         licenseContent = existingLicense?.license_content;
+        licenseContentEmpty = false;
       } else {
         licenseId = null;
         licenseContent = "";
-        licenseContentEmpty = true;
       }
     }
   }
