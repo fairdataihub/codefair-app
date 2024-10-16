@@ -1100,6 +1100,8 @@ export default async (app, { getRouter }) => {
 
   app.on("pull_request.closed", async (context) => {
     // Remove the PR url from the database
+    const prLink = context.payload.pull_request.html_url;
+    
     if (context.payload.pull_request.title === "feat: ✨ LICENSE file added") {
       await db.licenseRequest.update({
         data: {
@@ -1109,6 +1111,14 @@ export default async (app, { getRouter }) => {
           repository_id: context.payload.repository.id,
         },
       });
+
+      const metadataPRBadge = `A pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
+
+      // Append the Metadata PR badge after the "Metadata" section
+      issueBody = issueBody.replace(
+        `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)\n\n${metadataPRBadge}`,
+        "## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)",
+      );
     }
 
     if (context.payload.pull_request.title === "feat: ✨ Add code metadata files") {
@@ -1120,6 +1130,15 @@ export default async (app, { getRouter }) => {
           repository_id: context.payload.repository.id,
         },
       });
+
+      // Define the PR badge markdown for the LICENSE section
+      const licensePRBadge = `A pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
+
+      // Append the PR badge after the "LICENSE ❌" section
+      issueBody = issueBody.replace(
+        `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](https://staging.codefair.io/add/license/xq8a00ldgh)\n\n${licensePRBadge}`,
+        "## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the \"Add license\" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](https://staging.codefair.io/add/license/xq8a00ldgh)",
+      );
     }
   }
 );
