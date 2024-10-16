@@ -42,13 +42,7 @@ const purgeTokens = async () => {
       <n-card title="GitHub Username">
         <NuxtLink :to="`https://github.com/${user?.username}`" target="_blank">
           <p>
-      <n-card title="GitHub Username">
-        <NuxtLink :to="`https://github.com/${user?.username}`" target="_blank">
-          <p>
             {{ user?.username }}
-          </p>
-        </NuxtLink>
-      </n-card>
           </p>
         </NuxtLink>
       </n-card>
@@ -61,6 +55,8 @@ const purgeTokens = async () => {
 
       <n-card title="Purge tokens">
         <p class="m-0">
+          This will remove all tokens associated with your account.
+
           <n-button type="error" @click="purgeTokens">
             <template #icon>
               <Icon name="fa:trash" size="16" />
