@@ -148,7 +148,7 @@ export async function convertMetadataForDB(codemetaContent, repository) {
   
 
   // Now search through sortedAuthors and sortedContributors and check if uri begins with '_:' and if so, delete the key
-  consola.info("Sorted authors:", JSON.stringify(sortedAuthors, null, 2));
+  // consola.info("Sorted authors:", JSON.stringify(sortedAuthors, null, 2));
   // consola.info("Sorted contributors:", sortedContributors);
   for (let i = 0; i < sortedAuthors.length; i++) {
     if (sortedAuthors[i].uri.startsWith("_:")) {
@@ -212,7 +212,7 @@ export async function convertMetadataForDB(codemetaContent, repository) {
       ? convertDateToUnix(codemetaContent?.datePublished)
       : null,
     fundingCode: codemetaContent?.funding || "",
-    fundingOrganization: codemetaContent?.funding?.name || "",
+    fundingOrganization: codemetaContent?.funder?.name || "",
     isPartOf: codemetaContent?.isPartOf || "",
     isSourceCodeOf: codemetaContent?.["codemeta:isSourceCodeOf"]?.id || "",
     issueTracker: codemetaContent?.issueTracker || "",
@@ -222,7 +222,7 @@ export async function convertMetadataForDB(codemetaContent, repository) {
     otherSoftwareRequirements: codemetaContent?.softwareRequirements || [],
     programmingLanguages: codemetaContent?.programmingLanguage || [],
     referencePublication: codemetaContent?.referencePublication || "",
-    relatedLinks: codemetaContent?.relatedLinks || [],
+    relatedLinks: codemetaContent?.relatedLink || [],
     reviewAspect: codemetaContent?.reviewAspect || "",
     reviewBody: codemetaContent?.reviewBody || "",
     runtimePlatform: codemetaContent?.runtimePlatform || [],
