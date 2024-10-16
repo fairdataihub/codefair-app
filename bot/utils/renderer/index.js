@@ -74,7 +74,7 @@ export async function renderIssues(
       // If the PR is closed, remove the PR from the database
       await dbInstance.licenseRequest.update({
         where: { repository_id: repository.id },
-        date: { pull_request_url: "" },
+        data: { pull_request_url: "" },
       });
       }
     } catch (error) {
