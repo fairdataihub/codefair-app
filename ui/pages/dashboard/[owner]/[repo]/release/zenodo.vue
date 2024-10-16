@@ -365,7 +365,10 @@ const checkForZenodoPublishProgress = () => {
       method: "GET",
     })
       .then((response) => {
-        if (response.zenodoWorkflowStatus !== "inProgress") {
+        if (
+          response.zenodoWorkflowStatus === "published" ||
+          response.zenodoWorkflowStatus === "error"
+        ) {
           // console.error("Zenodo publish progress:", response.zenodoWorkflowStatus);
           zenodoPublishStatus.value = response.zenodoWorkflowStatus;
           zenodoPublishDOI.value = response.zenodoDoi;
@@ -648,9 +651,10 @@ onBeforeUnmount(() => {
               sure that the content of this file is correct and up-to-date.
             </p>
 
-
             <p class="w-full text-base">
-              Codefair will automatically add/update the version number, last modified date, and software identifier before the release so you do not need to worry about them.
+              Codefair will automatically add/update the version number, last
+              modified date, and software identifier before the release so you
+              do not need to worry about them.
             </p>
 
             <n-checkbox v-model:checked="metadataChecked">
@@ -1102,7 +1106,7 @@ onBeforeUnmount(() => {
             ? 'Zenodo publish error'
             : zenodoPublishStatus === 'published'
               ? 'Zenodo publish success'
-              : 'Something went wrong'
+              : ''
       "
       :bordered="false"
       size="huge"
