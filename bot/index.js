@@ -1101,6 +1101,7 @@ export default async (app, { getRouter }) => {
   app.on("pull_request.closed", async (context) => {
     // Remove the PR url from the database
     const prLink = context.payload.pull_request.html_url;
+    const owner = context.payload.repository.owner.login;
 
     // Seach for the issue with the title FAIR Compliance Dashboard and authored with the github bot
     const issues = await context.octokit.issues.listForRepo({
