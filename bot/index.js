@@ -1100,7 +1100,7 @@ export default async (app, { getRouter }) => {
 
   app.on("pull_request.closed", async (context) => {
     // Remove the PR url from the database
-    if (context.payload.pull_request.title === "feat: ✨ LICENSE file added" && context.payload.pull_request.merged) {
+    if (context.payload.pull_request.title === "feat: ✨ LICENSE file added") {
       await db.licenseRequest.update({
         data: {
           pull_request_url: "",
@@ -1111,7 +1111,7 @@ export default async (app, { getRouter }) => {
       });
     }
 
-    if (context.payload.pull_request.title === "feat: ✨ Add code metadata files" && context.payload.pull_request.merged) {
+    if (context.payload.pull_request.title === "feat: ✨ Add code metadata files") {
       await db.codeMetadata.update({
         data: {
           pull_request_url: "",
