@@ -59,8 +59,8 @@ export async function convertMetadataForDB(codemetaContent, repository) {
             // Create the role object
             const roleObj = {
               role: author.roleName || "",
-              startDate: author.startDate ? convertDateToUnix(author.startDate) : undefined,
-              endDate: author.endDate ? convertDateToUnix(author.endDate) : undefined,
+              startDate: author.startDate ? convertDateToUnix(author.startDate) : null,
+              endDate: author.endDate ? convertDateToUnix(author.endDate) : null,
             };
             // Add the role to the author's roles array
             sortedAuthor.roles.push(roleObj);
@@ -97,8 +97,8 @@ export async function convertMetadataForDB(codemetaContent, repository) {
             // Create the role object
             const roleObj = {
               role: contributor.roleName || "",
-              startDate: contributor.startDate ? convertDateToUnix(contributor.startDate) : undefined,
-              endDate: contributor.endDate ? convertDateToUnix(contributor.endDate) : undefined,
+              startDate: contributor.startDate ? convertDateToUnix(contributor.startDate) : null,
+              endDate: contributor.endDate ? convertDateToUnix(contributor.endDate) : null,
             };
             // Add the role to the contributor's roles array
             sortedContributor.roles.push(roleObj);
