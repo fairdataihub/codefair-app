@@ -1097,63 +1097,65 @@ onBeforeUnmount(() => {
     </n-collapse>
 
     <n-modal
-      v-model:show="showZenodoPublishProgressModal"
-      preset="card"
-      :title="
-        zenodoPublishStatus === 'inProgress'
-          ? 'Zenodo publish in progress'
-          : zenodoPublishStatus === 'error'
-            ? 'Zenodo publish error'
-            : zenodoPublishStatus === 'published'
-              ? 'Zenodo publish success'
-              : ''
-      "
-      :bordered="false"
-      size="huge"
-      :mask-closable="false"
-      :close-on-esc="false"
-      style="width: 600px"
-    >
-      <n-flex v-if="zenodoPublishStatus === 'inProgress'" vertical>
-        <p>
-          The workflow for publishing this repository to Zenodo is currently in
-          progress. You can check the status of this workflow on the dashboard
-        </p>
+  v-if="['inProgress', 'error', 'published'].includes(zenodoPublishStatus)"
+  v-model:show="showZenodoPublishProgressModal"
+  preset="card"
+  :title="
+    zenodoPublishStatus === 'inProgress'
+      ? 'Zenodo publish in progress'
+      : zenodoPublishStatus === 'error'
+        ? 'Zenodo publish error'
+        : zenodoPublishStatus === 'published'
+          ? 'Zenodo publish success'
+          : ''
+  "
+  :bordered="false"
+  size="huge"
+  :mask-closable="false"
+  :close-on-esc="false"
+  style="width: 600px"
+>
+  <n-flex v-if="zenodoPublishStatus === 'inProgress'" vertical>
+    <p>
+      The workflow for publishing this repository to Zenodo is currently in
+      progress. You can check the status of this workflow on the dashboard.
+    </p>
 
-        <n-spin size="large" />
-      </n-flex>
+    <n-spin size="large" />
+  </n-flex>
 
-      <n-flex v-else-if="zenodoPublishStatus === 'error'" vertical>
-        <p>
-          There was an error with publishing this repository to Zenodo. Please
-          try again later or contact the Codefair team for assistance.
-        </p>
-      </n-flex>
+  <n-flex v-else-if="zenodoPublishStatus === 'error'" vertical>
+    <p>
+      There was an error with publishing this repository to Zenodo. Please
+      try again later or contact the Codefair team for assistance.
+    </p>
+  </n-flex>
 
-      <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
-        <p>
-          Your software was successfully archived on Zenodo. We recommend
-          reviewing the deposition and adding additional metadata supported by
-          Zenodo to make your software more FAIR.
-        </p>
-      </n-flex>
+  <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
+    <p>
+      Your software was successfully archived on Zenodo. We recommend
+      reviewing the deposition and adding additional metadata supported by
+      Zenodo to make your software more FAIR.
+    </p>
+  </n-flex>
 
-      <template #footer>
-        <n-flex justify="space-between">
-          <NuxtLink :to="`https://doi.org/${zenodoPublishDOI}`" target="_blank">
-            <n-button v-if="zenodoPublishStatus === 'published'" type="primary">
-              <template #icon>
-                <Icon name="simple-icons:zenodo" size="16" />
-              </template>
-              View Zenodo deposition
-            </n-button>
-          </NuxtLink>
+  <template #footer>
+    <n-flex justify="space-between">
+      <NuxtLink v-if="zenodoPublishStatus === 'published'" :to="`https://doi.org/${zenodoPublishDOI}`" target="_blank">
+        <n-button type="primary">
+          <template #icon>
+            <Icon name="simple-icons:zenodo" size="16" />
+          </template>
+          View Zenodo deposition
+        </n-button>
+      </NuxtLink>
 
-          <n-button type="success" @click="navigateToDashboard">
-            Okay
-          </n-button>
-        </n-flex>
-      </template>
-    </n-modal>
+      <n-button type="success" @click="navigateToDashboard">
+        Okay
+      </n-button>
+    </n-flex>
+  </template>
+</n-modal>
+
   </main>
 </template>
