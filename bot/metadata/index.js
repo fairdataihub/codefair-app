@@ -406,6 +406,18 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   });
 
   consola.success("codemeta.json file updated with Zenodo identifier");
+
+  // Update the database with the latest metadata
+  await dbInstance.codeMetadata.update({
+    where: {
+      repository_id: repository.id,
+    },
+    data: {
+      metadata: codeMetaFile,
+    }
+  })
+
+  return codeMetaFile;
 }
 
 /**
