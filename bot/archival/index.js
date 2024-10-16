@@ -58,7 +58,7 @@ export async function applyArchivalTemplate(
       }
     });
 
-    // Fetch the DOI content 
+    // Fetch the DOI content
     const lastVersion = existingZenodoDep.github_tag_name;
     const zenodoId = existingZenodoDep.zenodo_id;
     const zenodoDoi = existingZenodoDep.last_published_zenodo_doi;
@@ -80,7 +80,7 @@ export async function createNewZenodoDeposition(zenodoToken) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${zenodoToken}`, 
+      Authorization: `Bearer ${zenodoToken}`,
     },
     body: JSON.stringify({}),
   });
@@ -126,7 +126,7 @@ export async function createNewVersionOfDeposition(zenodoToken, depositionId) {
     `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
     {
       method: "POST",
-      headers: {  
+      headers: {
         Authorization: `Bearer ${zenodoToken}`,  // Use Authorization header instead of query parameter
       },
     },
@@ -239,15 +239,14 @@ export async function getZenodoDepositionInfo(
 
 /**
  * * Creates metadata for Zenodo deposition - based on the codemeta.json file
- * @param {String} codemetadata - Code metadata JSON string (parse with JSON.parse) 
+ * @param {String} codemetadata - Code metadata JSON string (parse with JSON.parse)
  * @returns {Object} Object of Zenodo metadata
  */
 export async function getZenodoMetadata(codemetadata, repository) {
   const new_date = new Date().toISOString().split('T')[0];
-  const codeMetaContent = JSON.parse(codemetadata);
-  const zenodoCreators = codeMetaContent.author
-  .filter((author) => author?.type !== "Role") // Exclude authors with type "Role"
-  .map((author) => {
+  // const codeMetaContent = JSON.parse(codemetadata);
+  const codeMetaContent = codemetadata;
+  const zenodoCreators = codeMetaContent.author.filter((author) => author?.type !== "Role").map((author) => {
     const tempObj = {};
 
     // Format the name as "Family name, Given names"
@@ -297,7 +296,7 @@ export async function getZenodoMetadata(codemetadata, repository) {
   if (!zenodoMetadata) {
     consola.error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
     throw new Error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
-  } 
+  }
 
   return {
     metadata: {
@@ -405,7 +404,7 @@ export async function uploadReleaseAssetsToZenodo(
       },
     }
   );
-  
+
   if (!uploadZip.ok) {
     consola.error(`Failed to upload zip file. Status: ${uploadZip.statusText}`);
     throw new Error(`Failed to upload zip file. Status: ${uploadZip.statusText}`);

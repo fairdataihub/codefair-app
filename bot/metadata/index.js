@@ -300,6 +300,8 @@ export async function getCitationContent(context, owner, repository) {
     repo: repository.name,
   });
 
+
+
   return {
     content: Buffer.from(citationFile.data.content, "base64").toString(),
     sha: citationFile.data.sha,
@@ -345,10 +347,10 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   const codeMetaObj = await getCodemetaContent(context, owner, repository);
 
   let codeMetaFile = JSON.parse(codeMetaObj.content);
-  const codeMetaSha = codeMetaObj.sha;
+  const codeMetaSha = codeMetaObj.sha || null;
 
   let citationFile = yaml.load(citationObj.content);
-  const citationSha = citationObj.sha;
+  const citationSha = citationObj.sha || null;
   const updated_date = new Date().toISOString().split('T')[0];
 
   const zenodoMetadata = await dbInstance.zenodoDeposition.findUnique({

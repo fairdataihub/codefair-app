@@ -100,7 +100,7 @@ const rules = ref<FormRules>({
         return false;
       }
       return true;
-    }
+    },
   },
   currentVersionDownloadURL: {
     message: "Please input a valid download URL for the current version",
@@ -125,7 +125,7 @@ const rules = ref<FormRules>({
         return false;
       }
       return true;
-    }
+    },
   },
   issueTracker: {
     message: "Please input a valid issue tracker URL",
@@ -185,12 +185,11 @@ const rules = ref<FormRules>({
       // Check if strings are valid urls
       const invalidURLs = value.filter((item: string) => !isURL(item));
       if (invalidURLs.length > 0) {
-        return new Error("Please add valid URLs to the related links list")
+        return new Error("Please add valid URLs to the related links list");
       }
 
       return true;
-    }
-
+    },
   },
   uniqueIdentifier: {
     message: "Please input a valid DOI",

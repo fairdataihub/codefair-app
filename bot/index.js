@@ -1,3 +1,5 @@
+"use strict";
+
 import * as express from "express";
 import { consola } from "consola";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
@@ -266,9 +268,6 @@ export default async (app, { getRouter }) => {
       latest_commit_url: context.payload.head_commit.url || "",
     };
 
-    // consola.info("Latest commit info:", latestCommitInfo);
-    // consola.info("Context.payload.head_commit:", context.payload.head_commit);
-
     let fullCodefairRun = false;
 
     const installation = await db.installation.findUnique({
@@ -308,12 +307,10 @@ export default async (app, { getRouter }) => {
           fullCodefairRun = true;
         }
 
-        // console.log(result);
-        console.log("Updated installation:", response);
 
         return;
       } else {
-        const response = await db.installation.update({
+        await db.installation.update({
           data: {
             action_count: 0,
             latest_commit_date: latestCommitInfo.latest_commit_date,
@@ -323,7 +320,6 @@ export default async (app, { getRouter }) => {
           },
           where: { id: repository.id },
         });
-        console.log("Updated installation:", response);
       }
     }
 
@@ -331,7 +327,6 @@ export default async (app, { getRouter }) => {
     const commitAuthor = context.payload.head_commit.author;
     if (commitAuthor?.name === `${GITHUB_APP_NAME}[bot]`) {
       const commitMessages = ["chore: 📝 Update CITATION.cff with Zenodo identifier", "chore: 📝 Update codemeta.json with Zenodo identifier"]
-      // consola.info("Commit made by codefair-test, checking commit message...");
       if (latestCommitInfo.latest_commit_message === commitMessages[0] || latestCommitInfo.latest_commit_message === commitMessages[1]) {
         return;
       }
@@ -764,10 +759,7 @@ export default async (app, { getRouter }) => {
         throw new Error("Zenodo publish information not found in issue body.");
       }
       const [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
-      // consola.info("Deposition ID:", depositionId);
-      // consola.info("Release ID:", releaseId);
-      // consola.info("Tag Version:", tagVersion);
-      // consola.info("User Who Submitted:", userWhoSubmitted);
+
       try {
         // 1. Get the metadata from the repository
         const citationCff = await getCitationContent(context, owner, repository);
@@ -816,28 +808,49 @@ export default async (app, { getRouter }) => {
         }
 
         // 3. Create the Zenodo record or get the existing one
-        let zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
-        
+        let zenodoDepositionInfo = {};
+        try {
+          zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
+        } catch (error) {
+          throw new Error(`Error fetching Zenodo deposition info: ${error}`, { cause: error });
+        }
+
+
         // 4. Set the bucket URL and DOI
         const newDepositionId = zenodoDepositionInfo.id;
         const bucket_url = zenodoDepositionInfo.links.bucket;
         const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
-        
+
         const tempString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. A draft deposition was created and will be adding the necessary files and metadata.`;
         const finalTempString = await applyLastModifiedTemplate(tempString);
         await createIssue(context, owner, repository, ISSUE_TITLE, finalTempString);
 
         // 5. Update the CITATION.cff and codemeta.json files with the DOI
-        const updatedMetadataFile = await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
+        let updatedMetadataFile = {};
+        try {
+          updatedMetadataFile = await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
+        } catch (error) {
+          throw new Error(`Error updating metadata identifier: ${error}`, { cause: error });
+        }
 
-        // Gather metadata for Zenodo deposition
-        const newZenodoMetadata = await getZenodoMetadata(updatedMetadataFile, repository);
+        // 6. Gather metadata for Zenodo deposition
+        let newZenodoMetadata = {};
+        try {
+           newZenodoMetadata = await getZenodoMetadata(updatedMetadataFile, repository);
+        } catch (error) {
+          throw new Error(`Error getting Zenodo metadata: ${error}`, { cause: error });
+        }
 
-        // 6. Update the zenodo deposition metadata
-        const depositionWithMetadata = await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
-        consola.success(`Updated the Zenodo deposition metadata: ${depositionWithMetadata}`);
+        // 7. Update the zenodo deposition metadata
+        let depositionWithMetadata = {};
+        try {
+          depositionWithMetadata = await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
+          consola.success(`Updated the Zenodo deposition metadata: ${depositionWithMetadata}`);
+        } catch (error) {
+          throw new Error(`Error updating Zenodo metadata: ${error}`, { cause: error });
+        }
 
-        // Find the release base on the release ID
+        // Find the release based on the release ID
         let draftRelease;
         try {
           draftRelease = await context.octokit.repos.getRelease({
@@ -892,13 +905,13 @@ export default async (app, { getRouter }) => {
               },
             }
           );
-        
+
           if (!publishDeposition.ok) {
             const errorDetails = await publishDeposition.json();
             // Throwing an error while preserving the original details
             throw new Error(`Failed to publish the Zenodo deposition: ${JSON.stringify(errorDetails, null, 2)}`, { cause: errorDetails });
           }
-        
+
           consola.success("Zenodo deposition published successfully at:", publishDeposition);
         } catch (error) {
           // If there's an error, preserve the original error message and append additional context
@@ -964,7 +977,7 @@ export default async (app, { getRouter }) => {
         await createIssue(context, owner, repository, ISSUE_TITLE, finalUploadString);
         await db.zenodoDeposition.update({
           data: {
-            status: "error",  
+            status: "error",
           },
           where: {
             repository_id: repository.id,
