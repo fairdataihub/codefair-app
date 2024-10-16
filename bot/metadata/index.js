@@ -131,7 +131,7 @@ export async function convertMetadataForDB(codemetaContent, repository) {
       if (contributor.type === "Role") {
         // Find the contributor that matches the "contributor" field of the role
         sortedContributors.forEach((sortedContributor) => {
-          if (sortedContributor.uri === contributor?.contributor) {
+          if (sortedContributor.uri === contributor?.contributor || sortedContributor.uri === contributor?.["schema:contributor"]) {
             // Create the role object
             const roleObj = {
               role: contributor.roleName || "",
