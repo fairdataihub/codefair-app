@@ -309,7 +309,7 @@ export async function isRepoEmpty(context, owner, repoName) {
   }
 }
 
-/** *
+/**
  * * Verify the installation and analytics collections
  * @param {object} context - GitHub payload context
  * @param {object} repository - The repository object metadata

@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
       isSourceCodeOf: z.string().optional(),
       issueTracker: z.string().optional(),
       keywords: z.array(z.string()),
-      license: z.string().nullable(),
+      license: z.string().nullable().optional(),
       operatingSystem: z.array(z.string()).optional(),
       otherSoftwareRequirements: z.array(z.string()).optional(),
       programmingLanguages: z.array(z.string()),
@@ -97,6 +97,11 @@ export default defineEventHandler(async (event) => {
   const { metadata: rawMetadata } = parsedBody.data;
 
   const parsedMetadata = rawMetadata;
+
+  // remove license if it exists
+  if ("license" in parsedMetadata) {
+    delete parsedMetadata.license;
+  }
 
   const codeMetadataRequest = await prisma.codeMetadata.findFirst({
     include: {

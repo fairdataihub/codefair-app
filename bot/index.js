@@ -190,6 +190,12 @@ export default async (app, { getRouter }) => {
           },
         });
 
+        const zenodoDeposition = await db.zenodoDeposition.findUnique({
+          where: {
+            repository_id: repository.id,
+          },
+        });
+
         if (license) {
           await db.licenseRequest.delete({
             where: {
@@ -208,6 +214,14 @@ export default async (app, { getRouter }) => {
 
         if (cwl) {
           await db.cwlValidation.delete({
+            where: {
+              repository_id: repository.id,
+            },
+          });
+        }
+
+        if (zenodoDeposition) {
+          await db.zenodoDeposition.delete({
             where: {
               repository_id: repository.id,
             },
@@ -509,6 +523,28 @@ export default async (app, { getRouter }) => {
         link: prLink,
       };
 
+      if (prTitle === "feat: ✨ LICENSE file added") {
+        await db.licenseRequest.update({
+          data: {
+            pull_request_url: prLink,
+          },
+          where: {
+            repository_id: repository.id,
+          },
+        });
+      }
+
+      if (prTitle === "feat: ✨ Add code metadata files") {
+        await db.codeMetadata.update({
+          data: {
+            pull_request_url: prLink,
+          },
+          where: {
+            repository_id: repository.id,
+          },
+        });
+      }
+
       const license = await checkForLicense(context, owner, repository.name);
       const citation = await checkForCitation(context, owner, repository.name);
       const codemeta = await checkForCodeMeta(context, owner, repository.name);
@@ -741,13 +777,13 @@ export default async (app, { getRouter }) => {
         try {
           await validateMetadata(citationCff, "citation")
         } catch (error) {
-          throw new Error("Error validating the citation:", error);
+          throw new Error(`Error validating the citation: ${error}`, { cause: error });
         }
 
         try {
           await validateMetadata(codemeta, "codemeta")
         } catch (error) {
-          throw new Error("Error validating the codemeta:", error);
+          throw new Error(`Error validating the codemeta: ${error}`, { cause: error });
         }
 
         // Fetch the Zenodo token from the database
@@ -763,7 +799,7 @@ export default async (app, { getRouter }) => {
         });
 
         if (!deposition) {
-          throw new Error(`Deposition with tag ${tagVersion} not found in db.`);
+          throw new Error(`Deposition with tag ${tagVersion} not found in db.`, { cause: error });
         }
 
         // Check if the token is valid
@@ -776,7 +812,7 @@ export default async (app, { getRouter }) => {
         );
 
         if (!zenodoTokenInfo) {
-          throw new Error("Zenodo token not found");
+          throw new Error(`Zenodo token not found`, { cause: error });
         }
 
         // 3. Create the Zenodo record or get the existing one
@@ -792,10 +828,10 @@ export default async (app, { getRouter }) => {
         await createIssue(context, owner, repository, ISSUE_TITLE, finalTempString);
 
         // 5. Update the CITATION.cff and codemeta.json files with the DOI
-        await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
+        const updatedMetadataFile = await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
 
         // Gather metadata for Zenodo deposition
-        const newZenodoMetadata = await getZenodoMetadata(codemeta.content, repository);
+        const newZenodoMetadata = await getZenodoMetadata(updatedMetadataFile, repository);
 
         // 6. Update the zenodo deposition metadata
         const depositionWithMetadata = await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
@@ -832,7 +868,11 @@ export default async (app, { getRouter }) => {
           return;
         }
 
-        await uploadReleaseAssetsToZenodo(zenodoToken, draftRelease.data.assets, repositoryArchive, owner, context, bucket_url, repository, tagVersion);
+        try {
+          await uploadReleaseAssetsToZenodo(zenodoToken, draftRelease.data.assets, repositoryArchive, owner, context, bucket_url, repository, tagVersion);
+        } catch (error) {
+          throw new Error("Error uploading the release assets to Zenodo:", error, { cause: error });
+        }
 
         // Update the GitHub issue with a status report
         const afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. All assets from the GitHub repository's draft release have been successfully uploaded to the Zenodo deposition draft.`;
@@ -840,34 +880,43 @@ export default async (app, { getRouter }) => {
         await createIssue(context, owner, repository, ISSUE_TITLE, finalUploadString);
 
         // 8. Publish the Zenodo deposition
-        consola.start("Publishing the Zenodo deposition...", newDepositionId);
-        const publishDeposition = await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions/${newDepositionId}/actions/publish`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${zenodoToken}`,
-            },
-          },
-        );
-
-        if (!publishDeposition.ok) {
-          const errorDetails = await publishDeposition.json();
-          consola.error("Failed to publish the Zenodo deposition:", errorDetails);
-          return;
+        try {
+          consola.start("Publishing the Zenodo deposition...", newDepositionId);
+          const publishDeposition = await fetch(
+            `${ZENODO_API_ENDPOINT}/deposit/depositions/${newDepositionId}/actions/publish`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${zenodoToken}`,
+              },
+            }
+          );
+        
+          if (!publishDeposition.ok) {
+            const errorDetails = await publishDeposition.json();
+            // Throwing an error while preserving the original details
+            throw new Error(`Failed to publish the Zenodo deposition: ${JSON.stringify(errorDetails, null, 2)}`, { cause: errorDetails });
+          }
+        
+          consola.success("Zenodo deposition published successfully at:", publishDeposition);
+        } catch (error) {
+          // If there's an error, preserve the original error message and append additional context
+          throw new Error(`Error publishing the Zenodo deposition: ${error.message}`, { cause: error });
         }
 
-        consola.success("Zenodo deposition published successfully at:", publishDeposition);
-
         // Update the release to not be a draft
-        await context.octokit.repos.updateRelease({
-          owner,
-          repo: repository.name,
-          release_id: releaseId,
-          draft: false,
-        });
-        consola.success("Updated release to not be a draft!");
+        try {
+          await context.octokit.repos.updateRelease({
+            owner,
+            repo: repository.name,
+            release_id: releaseId,
+            draft: false,
+          });
+          consola.success("Updated release to not be a draft!");
+        } catch (error) {
+          throw new Error("Error updating the release to not be a draft:", error);
+        }
 
         // 9. Append to the issueBody that the deposition has been published
         const badge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${newDepositionId})`;
@@ -901,7 +950,7 @@ export default async (app, { getRouter }) => {
             },
             create_release: {
               increment: 1
-            }
+            },
           },
           where: {
             id: repository.id
@@ -915,13 +964,13 @@ export default async (app, { getRouter }) => {
         await createIssue(context, owner, repository, ISSUE_TITLE, finalUploadString);
         await db.zenodoDeposition.update({
           data: {
-            status: "error",
+            status: "error",  
           },
           where: {
             repository_id: repository.id,
           }
         });
-        consola.error(`Error publishing to Zenodo: ${error}`);
+        throw new Error(`Error publishing to Zenodo: ${error.message}`, { cause: error });
       }
     }
   });

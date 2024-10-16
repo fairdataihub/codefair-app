@@ -365,7 +365,11 @@ const checkForZenodoPublishProgress = () => {
       method: "GET",
     })
       .then((response) => {
-        if (response.zenodoWorkflowStatus !== "inProgress") {
+        if (
+          response.zenodoWorkflowStatus === "published" ||
+          response.zenodoWorkflowStatus === "error"
+        ) {
+          // console.error("Zenodo publish progress:", response.zenodoWorkflowStatus);
           zenodoPublishStatus.value = response.zenodoWorkflowStatus;
           zenodoPublishDOI.value = response.zenodoDoi;
 
@@ -641,11 +645,17 @@ onBeforeUnmount(() => {
 
         <template #content>
           <div class="flex w-full flex-col space-y-4">
-            <n-alert type="warning" class="w-full">
-              Your <code> codemeta.json </code> file is used to generate the
-              title, description, and metadata of your Zenodo deposition. Please
-              make sure that the content of this file is correct and up-to-date.
-            </n-alert>
+            <p class="w-full text-base">
+              Your codemeta.json file is used to generate the title,
+              description, and metadata of your Zenodo deposition. Please make
+              sure that the content of this file is correct and up-to-date.
+            </p>
+
+            <p class="w-full text-base">
+              Codefair will automatically add/update the version number, last
+              modified date, and software identifier before the release so you
+              do not need to worry about them.
+            </p>
 
             <n-checkbox v-model:checked="metadataChecked">
               I have added and reviewed the <code> citation.CFF </code>
@@ -1087,62 +1097,65 @@ onBeforeUnmount(() => {
     </n-collapse>
 
     <n-modal
-      v-model:show="showZenodoPublishProgressModal"
-      preset="card"
-      :title="
-        zenodoPublishStatus === 'inProgress'
-          ? 'Zenodo publish in progress'
-          : zenodoPublishStatus === 'error'
-            ? 'Zenodo publish error'
-            : zenodoPublishStatus === 'published'
-              ? 'Zenodo publish success'
-              : 'Something went wrong'
-      "
-      :bordered="false"
-      size="huge"
-      :mask-closable="false"
-      :close-on-esc="false"
-      style="width: 600px"
-    >
-      <n-flex v-if="zenodoPublishStatus === 'inProgress'" vertical>
-        <p>
-          The workflow for publishing this repository to Zenodo is currently in
-          progress. You can check the status of this workflow on the dashboard
-        </p>
+  v-if="['inProgress', 'error', 'published'].includes(zenodoPublishStatus)"
+  v-model:show="showZenodoPublishProgressModal"
+  preset="card"
+  :title="
+    zenodoPublishStatus === 'inProgress'
+      ? 'Zenodo publish in progress'
+      : zenodoPublishStatus === 'error'
+        ? 'Zenodo publish error'
+        : zenodoPublishStatus === 'published'
+          ? 'Zenodo publish success'
+          : ''
+  "
+  :bordered="false"
+  size="huge"
+  :mask-closable="false"
+  :close-on-esc="false"
+  style="width: 600px"
+>
+  <n-flex v-if="zenodoPublishStatus === 'inProgress'" vertical>
+    <p>
+      The workflow for publishing this repository to Zenodo is currently in
+      progress. You can check the status of this workflow on the dashboard.
+    </p>
 
-        <n-spin size="large" />
-      </n-flex>
+    <n-spin size="large" />
+  </n-flex>
 
-      <n-flex v-else-if="zenodoPublishStatus === 'error'" vertical>
-        <p>
-          There was an error with publishing this repository to Zenodo. Please
-          try again later or contact the Codefair team for assistance.
-        </p>
-      </n-flex>
+  <n-flex v-else-if="zenodoPublishStatus === 'error'" vertical>
+    <p>
+      There was an error with publishing this repository to Zenodo. Please
+      try again later or contact the Codefair team for assistance.
+    </p>
+  </n-flex>
 
-      <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
-        <p>
-          Your Zenodo deposition has been published. You can view the Zenodo
-          record on the dashboard.
-        </p>
-      </n-flex>
+  <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
+    <p>
+      Your software was successfully archived on Zenodo. We recommend
+      reviewing the deposition and adding additional metadata supported by
+      Zenodo to make your software more FAIR.
+    </p>
+  </n-flex>
 
-      <template #footer>
-        <n-flex justify="space-between">
-          <NuxtLink :to="`https://doi.org/${zenodoPublishDOI}`" target="_blank">
-            <n-button v-if="zenodoPublishStatus === 'published'" type="primary">
-              <template #icon>
-                <Icon name="simple-icons:zenodo" size="16" />
-              </template>
-              View Zenodo record
-            </n-button>
-          </NuxtLink>
+  <template #footer>
+    <n-flex justify="space-between">
+      <NuxtLink v-if="zenodoPublishStatus === 'published'" :to="`https://doi.org/${zenodoPublishDOI}`" target="_blank">
+        <n-button type="primary">
+          <template #icon>
+            <Icon name="simple-icons:zenodo" size="16" />
+          </template>
+          View Zenodo deposition
+        </n-button>
+      </NuxtLink>
 
-          <n-button type="success" @click="navigateToDashboard">
-            Okay
-          </n-button>
-        </n-flex>
-      </template>
-    </n-modal>
+      <n-button type="success" @click="navigateToDashboard">
+        Okay
+      </n-button>
+    </n-flex>
+  </template>
+</n-modal>
+
   </main>
 </template>

@@ -65,7 +65,6 @@ const formValue = ref<CodeMetadataRequest>({
   isSourceCodeOf: "",
   issueTracker: "",
   keywords: [],
-  license: null,
   operatingSystem: [],
   otherSoftwareRequirements: [],
   programmingLanguages: [],
@@ -93,6 +92,16 @@ const rules = ref<FormRules>({
       return true;
     },
   },
+  continuousIntegration: {
+    message: "Please input a valid URL for the continuous integration",
+    trigger: ["blur", "input"],
+    validator: (_rule, value) => {
+      if (value && !isURL(value)) {
+        return false;
+      }
+      return true;
+    }
+  },
   currentVersionDownloadURL: {
     message: "Please input a valid download URL for the current version",
     trigger: ["blur", "input"],
@@ -108,6 +117,16 @@ const rules = ref<FormRules>({
     required: true,
     trigger: "blur",
   },
+  isPartOf: {
+    message: "Please input a valid URL",
+    trigger: ["blur", "input"],
+    validator: (_rule, value) => {
+      if (value && !isURL(value)) {
+        return false;
+      }
+      return true;
+    }
+  },
   issueTracker: {
     message: "Please input a valid issue tracker URL",
     trigger: "blur",
@@ -119,16 +138,59 @@ const rules = ref<FormRules>({
     },
   },
   keywords: {
-    message: "Please input at least one keyword",
     required: true,
     trigger: "blur",
     type: "array",
+    validator: (_rule, value) => {
+      if (value.length === 0) {
+        return new Error("Please input at least one keyword");
+      }
+      // Check if empty strings are present in the array
+      const emptyStrings = value.filter((item: string) => item === "");
+      if (emptyStrings.length > 0) {
+        return new Error("Please remove empty strings from the keywords list");
+      }
+
+      return true;
+    },
   },
   programmingLanguages: {
     message: "Please select at least one programming language",
     required: true,
     trigger: "blur",
     type: "array",
+    validator: (_rule, value) => {
+      if (value.length === 0) {
+        return new Error("Please select at least one programming language");
+      }
+
+      // Check if empty strings are present in the array
+      const emptyStrings = value.filter((item: string) => item === "");
+      if (emptyStrings.length > 0) {
+        return new Error(
+          "Please remove empty strings from the programming language list",
+        );
+      }
+      return true;
+    },
+  },
+  relatedLinks: {
+    trigger: ["blur", "input"],
+    type: "array",
+    validator: (_rule, value) => {
+      if (value.length === 0) {
+        return true;
+      }
+
+      // Check if strings are valid urls
+      const invalidURLs = value.filter((item: string) => !isURL(item));
+      if (invalidURLs.length > 0) {
+        return new Error("Please add valid URLs to the related links list")
+      }
+
+      return true;
+    }
+
   },
   uniqueIdentifier: {
     message: "Please input a valid DOI",
@@ -238,7 +300,8 @@ const saveCodeMetadataDraft = (e: MouseEvent) => {
       console.error(errors);
       push.error({
         title: "Invalid",
-        message: "Form is invalid",
+        message:
+          "There are errors in the input fields. Please correct them and try again.",
       });
     }
   });
@@ -670,7 +733,7 @@ const navigateToPR = () => {
                     :key="index"
                     :title="
                       contributor.givenName
-                        ? `${contributor.givenName} ${contributor.familyName}`
+                        ? `${contributor.givenName} ${contributor.familyName || ''}`
                         : `Contributor ${index + 1}`
                     "
                     bordered
@@ -999,7 +1062,7 @@ const navigateToPR = () => {
             <n-card class="rounded-lg bg-[#f9fafb]">
               <n-form-item
                 label="Programming Language"
-                path="programmingLanguage"
+                path="programmingLanguages"
               >
                 <n-select
                   v-model:value="formValue.programmingLanguages"

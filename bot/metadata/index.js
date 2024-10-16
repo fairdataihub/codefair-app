@@ -32,85 +32,86 @@ export function convertDateToUnix(date) {
  */
 export async function convertMetadataForDB(codemetaContent, repository) {
   // eslint-disable-next-line prefer-const
-  let sortedAuthors = [];
+  const sortedAuthors = [];
   // eslint-disable-next-line prefer-const
-  let sortedContributors = [];
-
+  const sortedContributors = [];
   if (codemetaContent?.author) {
-    // Map the author to the metadata object
-    codemetaContent.author.forEach((author) => {
-      if (author?.type === "Role" && sortedAuthors.length > 0) {
-        for (let i = 0; i < sortedAuthors.length; i++) {
-          if (sortedAuthors[i].uri === author?.["schema:author"]) {
-            const roleObj = {};
-            if (author?.roleName) {
-              roleObj.role = author?.roleName;
-            }
-
-            if (author?.startDate) {
-              roleObj.startDate = convertDateToUnix(author?.startDate);
-            }
-
-            if (author?.endDate) {
-              roleObj.endDate = convertDateToUnix(author?.endDate);
-            }
-
-            sortedAuthors[i].roles.push(roleObj);
-
-            return;
-          }
-        }
+    codemetaContent?.author.forEach((author) => {
+      // If the author is a Person or Organization, we need to add them
+      if (author.type === "Person" || author.type === "Organization") {
+        sortedAuthors.push({
+          affiliation: author?.affiliation?.name || "",
+          email: author?.email || "",
+          familyName: author?.familyName || "",
+          givenName: author?.givenName || "",
+          roles: [], // Roles will be added later
+          uri: author?.id || "",
+        });
       }
-      sortedAuthors.push({
-        affiliation: author?.affiliation?.name || "",
-        email: author?.email || "",
-        familyName: author?.familyName || "",
-        givenName: author?.givenName || "",
-        roles: [],
-        uri: author?.id || "",
-      });
+    });
+  
+    // Loop through the authors again to handle roles
+    codemetaContent?.author.forEach((author) => {
+      if (author.type === "Role") {
+        // Find the author that matches the "schema:author" field of the role
+        sortedAuthors.forEach((sortedAuthor) => {
+          if (sortedAuthor.uri === author?.["schema:author"]) {
+            // Create the role object
+            const roleObj = {
+              role: author.roleName || "",
+              startDate: author.startDate ? convertDateToUnix(author.startDate) : null,
+              endDate: author.endDate ? convertDateToUnix(author.endDate) : null,
+            };
+            // Add the role to the author's roles array
+            sortedAuthor.roles.push(roleObj);
+          }
+        });
+      }
     });
   }
 
   if (codemetaContent?.contributor) {
-    // Map the author to the metadata object
-    codemetaContent.contributor.forEach((contributor) => {
-      if (contributor?.roleName && sortedContributors.length > 0) {
-        for (let i = 0; i < sortedContributors.length; i++) {
-          if (
-            sortedContributors[i].uri === contributor?.["schema:contributor"]
-          ) {
-            const roleObj = {};
-            if (contributor?.roleName) {
-              roleObj.role = contributor?.roleName;
-            }
+    // const sortedContributors = [];
 
-            if (contributor?.startDate) {
-              roleObj.startDate = convertDateToUnix(contributor?.startDate);
-            }
-
-            if (contributor?.endDate) {
-              roleObj.endDate = convertDateToUnix(contributor?.endDate);
-            }
-
-            sortedContributors[i].roles.push(roleObj);
-
-            return;
-          }
-        }
+    // Loop through all contributors
+    codemetaContent?.contributor.forEach((contributor) => {
+      // If the contributor is a Person or Organization, we need to add them
+      if (contributor.type === "Person" || contributor.type === "Organization") {
+        sortedContributors.push({
+          affiliation: contributor?.affiliation?.name || "",
+          email: contributor?.email || "",
+          familyName: contributor?.familyName || "",
+          givenName: contributor?.givenName || "",
+          roles: [], // Roles will be added later
+          uri: contributor?.id || "",
+        });
       }
-      sortedContributors.push({
-        affiliation: contributor?.affiliation?.name || "",
-        email: contributor?.email || "",
-        familyName: contributor?.familyName || "",
-        givenName: contributor?.givenName || "",
-        roles: [],
-        uri: contributor?.id || "",
-      });
+    });
+  
+    // Loop through the contributors again to handle roles
+    codemetaContent?.contributor.forEach((contributor) => {
+      if (contributor.type === "Role") {
+        // Find the contributor that matches the "contributor" field of the role
+        sortedContributors.forEach((sortedContributor) => {
+          if (sortedContributor.uri === contributor?.contributor || sortedContributor.uri === contributor["schema:contributor"]) {
+            // Create the role object
+            const roleObj = {
+              role: contributor.roleName || "",
+              startDate: contributor.startDate ? convertDateToUnix(contributor.startDate) : null,
+              endDate: contributor.endDate ? convertDateToUnix(contributor.endDate) : null,
+            };
+            // Add the role to the contributor's roles array
+            sortedContributor.roles.push(roleObj);
+          }
+        });
+      }
     });
   }
+  
 
   // Now search through sortedAuthors and sortedContributors and check if uri begins with '_:' and if so, delete the key
+  // consola.info("Sorted authors:", JSON.stringify(sortedAuthors, null, 2)); 
+  // consola.info("Sorted contributors:", sortedContributors);
   for (let i = 0; i < sortedAuthors.length; i++) {
     if (sortedAuthors[i].uri.startsWith("_:")) {
       delete sortedAuthors[i].uri;
@@ -173,7 +174,7 @@ export async function convertMetadataForDB(codemetaContent, repository) {
       ? convertDateToUnix(codemetaContent?.datePublished)
       : null,
     fundingCode: codemetaContent?.funding || "",
-    fundingOrganization: codemetaContent?.funding?.name || "",
+    fundingOrganization: codemetaContent?.funder?.name || "",
     isPartOf: codemetaContent?.isPartOf || "",
     isSourceCodeOf: codemetaContent?.["codemeta:isSourceCodeOf"]?.id || "",
     issueTracker: codemetaContent?.issueTracker || "",
@@ -183,7 +184,7 @@ export async function convertMetadataForDB(codemetaContent, repository) {
     otherSoftwareRequirements: codemetaContent?.softwareRequirements || [],
     programmingLanguages: codemetaContent?.programmingLanguage || [],
     referencePublication: codemetaContent?.referencePublication || "",
-    relatedLinks: codemetaContent?.relatedLinks || [],
+    relatedLinks: codemetaContent?.relatedLink || [],
     reviewAspect: codemetaContent?.reviewAspect || "",
     reviewBody: codemetaContent?.reviewBody || "",
     runtimePlatform: codemetaContent?.runtimePlatform || [],
@@ -405,6 +406,18 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   });
 
   consola.success("codemeta.json file updated with Zenodo identifier");
+
+  // Update the database with the latest metadata
+  await dbInstance.codeMetadata.update({
+    where: {
+      repository_id: repository.id,
+    },
+    data: {
+      metadata: codeMetaFile,
+    }
+  })
+
+  return codeMetaFile;
 }
 
 /**

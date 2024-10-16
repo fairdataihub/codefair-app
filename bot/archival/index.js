@@ -32,7 +32,7 @@ export async function applyArchivalTemplate(
   const releaseBadgeButton = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
   const newReleaseText = `To make your software FAIR, it is necessary to archive it in an archival repository like Zenodo every time you make a release. When you are ready to make your next release, click the "Create release" button below to easily create a FAIR release where your metadata files are updated (including with a DOI) before creating a GitHub release and archiving it.\n\n`
 
-  if (!existingZenodoDep) {
+  if (!existingZenodoDep && !existingZenodoDep?.last_published_zenodo_doi) {
     // Entry does not exist in db, create a new one
     // await zenDepositionCollection.create({
     //   data: {
@@ -58,7 +58,7 @@ export async function applyArchivalTemplate(
       }
     });
 
-    // Fetch the DOI content
+    // Fetch the DOI content 
     const lastVersion = existingZenodoDep.github_tag_name;
     const zenodoId = existingZenodoDep.zenodo_id;
     const zenodoDoi = existingZenodoDep.last_published_zenodo_doi;
@@ -97,18 +97,18 @@ export async function createNewZenodoDeposition(zenodoToken) {
  */
 export async function fetchExistingZenodoDeposition(zenodoToken, depositionId) {
   const zenodoDeposition = await fetch(
-    `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}?access_token=${zenodoToken}`,
+    `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
     {
       method: "GET",
       headers: {
-        "Content-Type": "application/json",
+        "Authorization": `Bearer ${zenodoToken}`,
       },
     },
   );
 
   if (!zenodoDeposition.ok) {
-    consola.error("Error fetching the Zenodo deposition:", zenodoDeposition);
-    throw new Error(`Failed to fetch the Zenodo deposition. Status: ${zenodoDeposition.statusText}`);
+    const errorText = await zenodoDeposition.text();
+    throw new Error(`Failed to fetch the Zenodo deposition. Status: ${zenodoDeposition.status}: ${zenodoDeposition.statusText}. Error: ${errorText}`);
   }
 
   const zenodoDepositionInfo = await zenodoDeposition.json();
@@ -126,17 +126,15 @@ export async function createNewVersionOfDeposition(zenodoToken, depositionId) {
     `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+      headers: {  
         Authorization: `Bearer ${zenodoToken}`,  // Use Authorization header instead of query parameter
       },
     },
   );
 
-  // Delete all the files in the deposition draft
   if (!zenodoRecord.ok) {
-    consola.error("Error creating new version of Zenodo deposition:", zenodoRecord);
-    throw new Error(`Failed to create new version of Zenodo deposition. Status: ${zenodoRecord.statusText}`);
+    const errorText = await zenodoRecord.text();
+    throw new Error(`Failed to create a new version of Zenodo deposition. Status: ${zenodoRecord.status}: ${zenodoRecord.statusText}. Error: ${errorText}`, { cause: errorText });
   }
 
   const responseText = await zenodoRecord.json();
@@ -158,14 +156,15 @@ export async function getZenodoDepositionInfo(
       const newZenodoDeposition = await createNewZenodoDeposition(zenodoToken);
       return newZenodoDeposition;
     } catch (error) {
-      throw new Error ("Error creating new Zenodo deposition:", error);
+      throw new Error (`Error creating new Zenodo deposition: ${error}`, { cause: error });
     }
   } else {
     try {
       // Fetch existing Zenodo deposition
       const zenodoDepositionInfo = await fetchExistingZenodoDeposition(zenodoToken, depositionId);
 
-      // Check if the deposition is published
+      // Check if the deposition is a draft or contains a draft
+
       if (zenodoDepositionInfo.submitted === false){
         // Delete the files in the draft
         for (const file of zenodoDepositionInfo.files) {
@@ -175,8 +174,34 @@ export async function getZenodoDepositionInfo(
         return zenodoDepositionInfo;
       }
 
+      // TODO: Check if the deposition is a draft or contains a draft
+      // consola.info("DONT LOST IT")
+      // consola.info(zenodoDepositionInfo.links)
+      // consola.info(zenodoDepositionInfo.links.latest_draft)
+      // if (zenodoDepositionInfo.links && zenodoDepositionInfo.links.latest_draft) {
+      //   // Fetch the draft, delete the files and then return deposition info
+      //   const draftZenodoRecord = await fetch(zenodoDepositionInfo.links.latest_draft, {
+      //     method: "GET",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${zenodoToken}`,
+      //     },
+      //   });
+
+      //   if (!draftZenodoRecord.ok) {
+      //     consola.error("Error fetching the latest draft of Zenodo deposition:", draftZenodoRecord);
+      //     const errorText = await draftZenodoRecord.text();
+      //     throw new Error(`Failed to fetch the latest draft of Zenodo deposition. Status: ${draftZenodoRecord.status}: ${draftZenodoRecord.statusText}. Error: ${errorText}`, { cause: errorText });
+      //   }
+
+      //   const draftZenodoVersion = await draftZenodoRecord.json();
+      //   consola.info("HEHEHEHEHE")
+      //   consola.warn(draftZenodoVersion);
+      //   return draftZenodoVersion;
+      // }
+
       // Create a new version of an existing Zenodo deposition
-      // consola.info(`Creating a new version of Zenodo deposition ${depositionId}...`);
+      consola.info(`Creating a new version of Zenodo deposition ${depositionId}...`);
       const responseText = await createNewVersionOfDeposition(zenodoToken, depositionId);
       const latestDraftLink = responseText.links.latest_draft;
 
@@ -191,7 +216,8 @@ export async function getZenodoDepositionInfo(
 
       if (!draftZenodoRecord.ok) {
         consola.error("Error fetching the latest draft of Zenodo deposition:", draftZenodoRecord);
-        throw new Error(`Failed to fetch the latest draft of Zenodo deposition. Status: ${draftZenodoRecord.statusText}`);
+        const errorText = await draftZenodoRecord.text();
+        throw new Error(`Failed to fetch the latest draft of Zenodo deposition. Status: ${draftZenodoRecord.status}: ${draftZenodoRecord.statusText}. Error: ${errorText}`, { cause: errorText });
       }
 
       const newZenodoVersion = await draftZenodoRecord.json();
@@ -202,7 +228,7 @@ export async function getZenodoDepositionInfo(
         }
       }
 
-      consola.success("New version of Zenodo deposition created successfully!");
+      consola.success("New draft version of Zenodo deposition created successfully!");
       return newZenodoVersion;
     } catch (error) {
       consola.error("Error fetching the Zenodo deposition:", error);
@@ -219,22 +245,30 @@ export async function getZenodoDepositionInfo(
 export async function getZenodoMetadata(codemetadata, repository) {
   const new_date = new Date().toISOString().split('T')[0];
   const codeMetaContent = JSON.parse(codemetadata);
-  const zenodoCreators = codeMetaContent.author.map((author) => {
+  const zenodoCreators = codeMetaContent.author
+  .filter((author) => author?.type !== "Role") // Exclude authors with type "Role"
+  .map((author) => {
     const tempObj = {};
-    tempObj.name = author.familyName 
-      ? `${author.familyName}, ${author.givenName}` 
+
+    // Format the name as "Family name, Given names"
+    tempObj.name = author.familyName
+      ? `${author.familyName}, ${author.givenName}`
       : author.givenName;
-  
-    if (author.affiliation) {
-      tempObj.affiliation = author.affiliation;
+
+    // Add affiliation if present
+    if (author.affiliation && author.affiliation.name) {
+      tempObj.affiliation = author.affiliation.name;
     }
-  
+
+    // Add ORCID if present
     if (author.orcid) {
       tempObj.orcid = author.orcid;
     }
-  
+
     return tempObj;
   });
+
+  console.log(zenodoCreators);
 
   if (!codeMetaContent.license) {
     // fetch from the db
@@ -389,23 +423,20 @@ export async function uploadReleaseAssetsToZenodo(
  * @param {String} fileId - Zenodo file ID
  */
 export async function deleteFileFromZenodo(depositionId, zenodoToken, fileId) {
-  try {
-    const deleteFile = await fetch(
-      `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/files/${fileId}?access_token=${zenodoToken}`,
-      {
-        method: "DELETE",
-        headers: {},
-        body: JSON.stringify({}),
-      },
-    );
+  const deleteFile = await fetch(
+    `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/files/${fileId}?access_token=${zenodoToken}`,
+    {
+      method: "DELETE",
+      headers: {},
+      body: JSON.stringify({}),
+    },
+  );
 
-    if (!deleteFile.ok) {
-      consola.error(deleteFile);
-      throw new Error(`Failed to delete file from Zenodo. Status: ${deleteFile.statusText}`);
-    }
-
-    consola.success("File successfully deleted from Zenodo!");
-  } catch (error) {
-    throw new Error(`Error deleting file from Zenodo: ${error}`);
+  if (!deleteFile.ok) {
+    consola.error(deleteFile);
+    const errorText = await deleteFile.text();
+    throw new Error(`Failed to delete file from Zenodo. Status: ${deleteFile.status}: ${deleteFile.statusText}. Error: ${errorText}`);
   }
+
+  consola.success("File successfully deleted from Zenodo!");
 }
