@@ -951,7 +951,6 @@ export default async (app, { getRouter }) => {
             create_release: {
               increment: 1
             },
-            updated_at: new Date(),
           },
           where: {
             id: repository.id
