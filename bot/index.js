@@ -920,7 +920,8 @@ export default async (app, { getRouter }) => {
             throw new Error(`Failed to publish the Zenodo deposition: ${JSON.stringify(errorDetails, null, 2)}`, { cause: errorDetails });
           }
 
-          consola.success("Zenodo deposition published successfully at:", publishDeposition);
+          const publishedDeposition = await publishDeposition.json();
+          consola.success("Zenodo deposition published successfully at:", publishedDeposition.links.latest_html);
         } catch (error) {
           // If there's an error, preserve the original error message and append additional context
           throw new Error(`Error publishing the Zenodo deposition: ${error.message}`, { cause: error });
