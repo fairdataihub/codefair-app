@@ -498,8 +498,6 @@ export default async (app, { getRouter }) => {
         latestCommit.data.commit.committer.date || "";
     }
 
-    consola.info("Latest commit info:", latestCommitInfo);
-
     await verifyInstallationAnalytics(context, repository, 0, latestCommitInfo);
 
     const installation = await db.installation.findUnique({
@@ -548,7 +546,6 @@ export default async (app, { getRouter }) => {
           return;
         }
 
-        consola.info("License PR badge added to the issue body", response);
         // Define the PR badge markdown for the LICENSE section
         const licensePRBadge = `A pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
 
@@ -759,7 +756,7 @@ export default async (app, { getRouter }) => {
     }
 
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
-      consola.log("Publishing to Zenodo...");
+      consola.start("Publishing to Zenodo...");
       const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf("<!-- @codefair-bot publish-zenodo"));
       const issueBodyNoArchiveSection = issueBodyRemovedCommand.substring(0, issueBody.indexOf("## FAIR Software Release"));
       const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
@@ -1158,8 +1155,8 @@ export default async (app, { getRouter }) => {
 
       // Append the Metadata PR badge after the "Metadata" section
       issueBody = issueBody.replace(
-        `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${CODEFAIR_DOMAIN}/add/code-metadata/${response.identifier})\n\n${metadataPRBadge}`
-        `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${CODEFAIR_DOMAIN}/add/code-metadata/${response.identifier})`,
+        `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${CODEFAIR_DOMAIN}/add/code-metadata/${response.identifier})\n\n${metadataPRBadge}`,
+        `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${CODEFAIR_DOMAIN}/add/code-metadata/${response.identifier})`
       );
     }
 
