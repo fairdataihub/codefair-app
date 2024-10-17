@@ -1118,6 +1118,7 @@ export default async (app, { getRouter }) => {
     // Remove the PR url from the database
     const prLink = context.payload.pull_request.html_url;
     const owner = context.payload.repository.owner.login;
+    const { repository } = context.payload;
 
     // Seach for the issue with the title FAIR Compliance Dashboard and authored with the github bot
     const issues = await context.octokit.issues.listForRepo({
@@ -1177,8 +1178,8 @@ export default async (app, { getRouter }) => {
 
       // Append the PR badge after the "LICENSE ❌" section
       issueBody = issueBody.replace(
-        `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](https://staging.codefair.io/add/license/xq8a00ldgh)\n\n${licensePRBadge}`,
-        "## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the \"Add license\" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](https://staging.codefair.io/add/license/xq8a00ldgh)",
+        `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/add/license/${response.identifier})\n\n${licensePRBadge}`,
+        `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the \"Add license\" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/add/license/${response.identifier})`,
       );
     }
 
