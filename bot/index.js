@@ -575,10 +575,10 @@ export default async (app, { getRouter }) => {
         }
         // Use a regular expression to match the "Metadata ❌" section
         const metadataSectionRegex = /## Metadata ❌\n\nTo make your software FAIR, a CITATION\.cff and codemeta\.json are expected at the root level of your repository\. These files are not found in the repository\. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files\.\n\n\[!\[Metadata\]\(https:\/\/img\.shields\.io\/badge\/Add_Metadata-dc2626\.svg\)\]\(([^)]+)\)/;
-              
+
         // Define the replacement string with the new metadata PR badge
         const metadataPRBadge = `A pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
-              
+
         // Perform the replacement while preserving the identifier
         issueBody = issueBody.replace(
           metadataSectionRegex,
@@ -767,9 +767,10 @@ export default async (app, { getRouter }) => {
       // Gather the information for the Zenodo deposition provided in the issue body
       const match = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
       if (!match) {
-        throw new Error("Zenodo publish information not found in issue body.");
+        throw new Error("Zenodo publish information not found in issue body.", { cause: error });
       }
       const [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
+      consola.info(`Deposition ID: ${depositionId}, Release ID: ${releaseId}, Tag Version: ${tagVersion}, User Who Submitted: ${userWhoSubmitted}`);
 
       try {
         // 1. Get the metadata from the repository
@@ -822,6 +823,7 @@ export default async (app, { getRouter }) => {
         let zenodoDepositionInfo = {};
         try {
           zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
+          consola.warn(`Zenodo deposition info: ${JSON.stringify(zenodoDepositionInfo)}`);
         } catch (error) {
           throw new Error(`Error fetching Zenodo deposition info: ${error}`, { cause: error });
         }
@@ -939,7 +941,7 @@ export default async (app, { getRouter }) => {
           });
           consola.success("Updated release to not be a draft!");
         } catch (error) {
-          throw new Error("Error updating the release to not be a draft:", error);
+          throw new Error("Error updating the release to not be a draft:", error, { cause: error });
         }
 
         // 9. Append to the issueBody that the deposition has been published
