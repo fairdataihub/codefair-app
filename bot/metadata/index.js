@@ -407,13 +407,29 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
 
   consola.success("codemeta.json file updated with Zenodo identifier");
 
+  // Get the codemetadata content from the database
+  const existingCodemeta = await dbInstance.codeMetadata.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  });
+
+  if (!existingCodemeta) {
+    throw new Error("Error fetching codemeta.json from the database");
+  }
+
+  // Update the codemetadata content with the new Zenodo identifier
+  existingCodemeta.metadata.uniqueIdentifier = zenodoDoi;
+  existingCodemeta.metadata.firstReleaseDate = updated_date;
+  existingCodemeta.metadata.currentVersion = zenodoMetadata?.zenodo_metadata?.version || version
+
   // Update the database with the latest metadata
   await dbInstance.codeMetadata.update({
     where: {
       repository_id: repository.id,
     },
     data: {
-      metadata: codeMetaFile,
+      metadata: existingCodemeta.metadata,
     }
   })
 
