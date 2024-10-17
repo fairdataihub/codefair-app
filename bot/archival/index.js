@@ -164,6 +164,7 @@ export async function getZenodoDepositionInfo(
       const zenodoDepositionInfo = await fetchExistingZenodoDeposition(zenodoToken, depositionId);
 
       // Check if the deposition is a draft or contains a draft
+      consola.info("Existing Zenodo deposition:", zenodoDepositionInfo);
 
       if (zenodoDepositionInfo.submitted === false){
         // Delete the files in the draft

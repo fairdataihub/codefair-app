@@ -4,6 +4,8 @@ import doiRegex from "doi-regex";
 import codeMetadataJSON from "@/assets/data/codeMetadata.json";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
+const devMode = process.env.NODE_ENV === "development";
+
 definePageMeta({
   middleware: ["protected"],
 });
@@ -232,7 +234,9 @@ if (error.value) {
 }
 
 if (data.value) {
-  formValue.value = data.value.metadata;
+  if (Object.keys(data.value.metadata).length > 0) {
+    formValue.value = data.value.metadata;
+  }
 
   breadcrumbsStore.setOwner(data.value.owner);
   breadcrumbsStore.setRepo(data.value.repo);
@@ -1275,6 +1279,12 @@ const navigateToPR = () => {
         </n-flex>
       </n-form>
     </div>
+
+    <n-collapse v-if="devMode" class="mt-8" :default-expanded-names="[]">
+      <n-collapse-item title="data" name="data">
+        <pre>{{ data }}</pre>
+      </n-collapse-item>
+    </n-collapse>
 
     <n-modal v-model:show="showSuccessModal" transform-origin="center">
       <n-card
