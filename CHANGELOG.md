@@ -5,6 +5,11 @@ All notable changes the Codefair App will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v.3.0.0 - 2024-10-17
+
+### Added
+
+- A new workflow has been implemented to streamline the integration of the GitHub release process with Zenodo archiving. This enhancement ensures that metadata is updated prior to each GitHub release, allowing for a more accurate and up-to-date archived version of the repository on Zenodo. This change simplifies the release process and enhances the accessibility of our project's data.
 
 ## v.2.0.1 - 2024-09-03
 
