@@ -1122,8 +1122,8 @@ export default async (app, { getRouter }) => {
     // Get the current body of the issue
     let issueBody = dashboardIssue.body;
 
-    if (context.payload.pull_request.title === "feat: ✨ LICENSE file added") {
-      await db.licenseRequest.update({
+    if (context.payload.pull_request.title === "feat: ✨ Add code metadata files") {
+      const response = await db.codeMetadata.update({
         data: {
           pull_request_url: "",
         },
@@ -1132,17 +1132,22 @@ export default async (app, { getRouter }) => {
         },
       });
 
+      if (!response) {
+        consola.error("Error updating the license request PR URL");
+        return;
+      }
+
       const metadataPRBadge = `A pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
 
       // Append the Metadata PR badge after the "Metadata" section
       issueBody = issueBody.replace(
-        `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)\n\n${metadataPRBadge}`,
-        "## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)",
+        `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${CODEFAIR_DOMAIN}/add/code-metadata/${response.identifier})\n\n${metadataPRBadge}`
+        `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${CODEFAIR_DOMAIN}/add/code-metadata/${response.identifier})`,
       );
     }
 
-    if (context.payload.pull_request.title === "feat: ✨ Add code metadata files") {
-      await db.codeMetadata.update({
+    if (context.payload.pull_request.title === "feat: ✨ LICENSE file added") {
+      await db.licenseRequest.update({
         data: {
           pull_request_url: "",
         },
