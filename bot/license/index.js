@@ -188,34 +188,38 @@ export async function applyLicenseTemplate(
       repo: repository.name,
     });
 
-    licenseId = licenseRequest.data.license.spdx_id;
+    consola.info("License request:", licenseRequest.data);
+
+    licenseId = licenseRequest.data?.license?.spdx_id;
     licenseContent = Buffer.from(
-      licenseRequest.data.content,
+      licenseRequest.data?.content,
       "base64",
     ).toString("utf-8");
 
-    if (
-      licenseRequest.data.license.spdx_id === "no-license" ||
-      licenseRequest.data.license.spdx_id === "NOASSERTION"
-    ) {
-      // Verify if a license id exists in the database, if so continue to use that license id and license content
-      consola.info("Existing license:", existingLicense.license_id);
-      // consola.info("Existing license:", existingLicense.license_content);
-      consola.info("Existing license content?:", existingLicense.license_content !== "");
-      if (existingLicense.license_id && existingLicense.license_content !== "") {
-        consola.info("Using existing license id and content from the db");
-        licenseId = existingLicense?.license_id;
-        licenseContent = existingLicense?.license_content;
-        licenseContentEmpty = false;
-      } else {
-        consola.info("Resetting license id and content back to null");
-        licenseId = null;
-        licenseContent = "";
+    if (licenseId) {
+      if (
+        licenseRequest.data.license.spdx_id === "no-license" ||
+        licenseRequest.data.license.spdx_id === "NOASSERTION"
+      ) {
+        // Verify if a license id exists in the database, if so continue to use that license id and license content
+        consola.info("Existing license:", existingLicense);
+        if (existingLicense && existingLicense.license_id && existingLicense?.license_content !== "") {
+          consola.info("Using existing license id and content from the db, as the license id is no-license or NOASSERTION");
+          consola.info("Existing license:", existingLicense?.license_id);
+          consola.info("Existing license content?:", existingLicense?.license_content !== "");
+          licenseId = existingLicense?.license_id;
+          licenseContent = existingLicense?.license_content;
+          licenseContentEmpty = false;
+        } else {
+          consola.info("Resetting license id and content back to null");
+          licenseId = null;
+          licenseContent = "";
+        }
       }
-    }
-
-    if (licenseId){
-      licenseContentEmpty = false;
+  
+      if (licenseId){
+        licenseContentEmpty = false;
+      }
     }
   }
 
