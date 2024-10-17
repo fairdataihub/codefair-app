@@ -6,6 +6,7 @@ import {
   NTag,
 } from "naive-ui";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+// import { faker } from "@faker-js/faker";
 
 definePageMeta({
   middleware: ["protected"],
@@ -183,7 +184,9 @@ if (data.value) {
   });
 
   // dev
-  // githubFormValue.value.tag = `v${faker.system.semver()}`;
+  // githubFormValue.value.tag = "new";
+  // githubFormValue.value.tagTitle = `v${faker.system.semver()}`;
+  // zenodoFormValue.value.version = githubFormValue.value.tagTitle;
   // githubTagOptions.value.push({
   //   disabled: false,
   //   label: githubFormValue.value.tag || "",
@@ -191,7 +194,7 @@ if (data.value) {
   // });
 
   // githubFormValue.value.release = "new";
-  // githubFormValue.value.title = faker.lorem.sentence();
+  // githubFormValue.value.releaseTitle = faker.lorem.sentence();
 
   // slight hack but login step comes after the license and metadata checks
   if (haveValidZenodoToken.value) {
