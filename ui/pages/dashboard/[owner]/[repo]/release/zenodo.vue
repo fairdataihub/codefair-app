@@ -387,7 +387,7 @@ const checkForZenodoPublishProgress = async () => {
 };
 
 const navigateToDashboard = async () => {
-  // await navigateTo(`/dashboard/${owner}/${repo}/`);
+  await navigateTo(`/dashboard/${owner}/${repo}/`);
 };
 
 const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
