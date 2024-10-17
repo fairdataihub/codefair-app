@@ -164,7 +164,7 @@ export async function getZenodoDepositionInfo(
       const zenodoDepositionInfo = await fetchExistingZenodoDeposition(zenodoToken, depositionId);
 
       // Check if the deposition is a draft or contains a draft
-      consola.info("Existing Zenodo deposition:", zenodoDepositionInfo);
+      // consola.info("Existing Zenodo deposition:", zenodoDepositionInfo);
 
       if (zenodoDepositionInfo.submitted === false){
         // Delete the files in the draft
@@ -285,7 +285,7 @@ export async function getZenodoMetadata(codemetadata, repository) {
   const licenseId = license ? license.licenseId : null;
 
   if (!licenseId) {
-    throw new Error(`License not found for URL: ${codeMetaContent.license}`);
+    throw new Error(`License not found for URL: ${codeMetaContent.license}`, { cause: JSON.stringify(licenseId)});
   }
 
   const zenodoMetadata = await dbInstance.zenodoDeposition.findUnique({

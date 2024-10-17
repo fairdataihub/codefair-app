@@ -420,7 +420,6 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
 
   // Update the codemetadata content with the new Zenodo identifier
   existingCodemeta.metadata.uniqueIdentifier = identifier;
-  existingCodemeta.metadata.firstReleaseDate = updated_date;
   existingCodemeta.metadata.currentVersion = zenodoMetadata?.zenodo_metadata?.version || version
 
   // Update the database with the latest metadata

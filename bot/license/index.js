@@ -198,16 +198,17 @@ export async function applyLicenseTemplate(
       licenseRequest.data.license.spdx_id === "no-license" ||
       licenseRequest.data.license.spdx_id === "NOASSERTION"
     ) {
-      consola.info("Resetting license id and content back to null");
       // Verify if a license id exists in the database, if so continue to use that license id and license content
       consola.info("Existing license:", existingLicense.license_id);
-      consola.info("Existing license:", existingLicense.license_content);
-      consola.info("Existing license:", existingLicense.license_content !== "");
+      // consola.info("Existing license:", existingLicense.license_content);
+      consola.info("Existing license content?:", existingLicense.license_content !== "");
       if (existingLicense.license_id && existingLicense.license_content !== "") {
+        consola.info("Using existing license id and content from the db");
         licenseId = existingLicense?.license_id;
         licenseContent = existingLicense?.license_content;
         licenseContentEmpty = false;
       } else {
+        consola.info("Resetting license id and content back to null");
         licenseId = null;
         licenseContent = "";
       }
