@@ -7,6 +7,59 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT } = process.env;
 
 /**
+ * * Update the GitHub release to not be a draft
+ * @param {String} repositoryName - GitHub repository name
+ * @param {String} owner - GitHub owner
+ * @param {String} releaseId - GitHub release ID 
+ */
+export async function updateGitHubRelease(repositoryName, owner, releaseId) {
+  try {
+    await context.octokit.repos.updateRelease({
+      owner,
+      repo: repositoryName,
+      release_id: releaseId,
+      draft: false,
+    });
+    consola.success("Updated release to not be a draft!");
+  } catch (error) {
+    throw new Error("Error updating the release to not be a draft:", error);
+  }
+}
+
+/**
+ * * Publishes a Zenodo deposition
+ * @param {String} depositionId - Zenodo deposition ID
+ * @param {String} zenodoToken - Access token for Zenodo API 
+ */
+export async function publisheZenodoDeposition(depositionId, zenodoToken) {
+  try {
+    consola.start("Publishing the Zenodo deposition...", depositionId);
+    const publishDeposition = await fetch(
+      `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/publish`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${zenodoToken}`,
+        },
+      }
+    );
+
+    if (!publishDeposition.ok) {
+      const errorDetails = await publishDeposition.json();
+      // Throwing an error while preserving the original details
+      throw new Error(`Failed to publish the Zenodo deposition: ${JSON.stringify(errorDetails, null, 2)}`, { cause: errorDetails });
+    }
+
+    const publishedDeposition = await publishDeposition.json();
+    consola.success("Zenodo deposition published successfully at:", publishedDeposition.links.latest_html);
+  } catch (error) {
+    // If there's an error, preserve the original error message and append additional context
+    throw new Error(`Error publishing the Zenodo deposition: ${error.message}`, { cause: error });
+  }
+}
+
+/**
  * * Fetch the Zenodo API token from the db
  * @param {String} user - User who submitted the Zenodo publication request 
  * @returns {String} Zenodo API token
@@ -416,6 +469,7 @@ export async function uploadReleaseAssetsToZenodo(
   repository,
   tagVersion,
 ) {
+  // TODO: Add try catches for each fetch
   const startTime = performance.now();
   for (const asset of draftReleaseAssets) {
     // Download the raw file from GitHub

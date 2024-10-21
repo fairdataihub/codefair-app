@@ -871,52 +871,19 @@ export default async (app, { getRouter }) => {
         await createIssue(context, owner, repository, ISSUE_TITLE, finalUploadString);
 
         // 8. Publish the Zenodo deposition
-        try {
-          consola.start("Publishing the Zenodo deposition...", newDepositionId);
-          const publishDeposition = await fetch(
-            `${ZENODO_API_ENDPOINT}/deposit/depositions/${newDepositionId}/actions/publish`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${zenodoToken}`,
-              },
-            }
-          );
-
-          if (!publishDeposition.ok) {
-            const errorDetails = await publishDeposition.json();
-            // Throwing an error while preserving the original details
-            throw new Error(`Failed to publish the Zenodo deposition: ${JSON.stringify(errorDetails, null, 2)}`, { cause: errorDetails });
-          }
-
-          const publishedDeposition = await publishDeposition.json();
-          consola.success("Zenodo deposition published successfully at:", publishedDeposition.links.latest_html);
-        } catch (error) {
-          // If there's an error, preserve the original error message and append additional context
-          throw new Error(`Error publishing the Zenodo deposition: ${error.message}`, { cause: error });
-        }
+        await publishZenodoDeposition(zenodoToken, newDepositionId);
+        
 
         // Update the release to not be a draft
-        try {
-          await context.octokit.repos.updateRelease({
-            owner,
-            repo: repository.name,
-            release_id: releaseId,
-            draft: false,
-          });
-          consola.success("Updated release to not be a draft!");
-        } catch (error) {
-          throw new Error("Error updating the release to not be a draft:", error);
-        }
+        await updateGitHubRelease(repository.name, owner, releaseId);
 
         // 9. Append to the issueBody that the deposition has been published
+        // Update the issue with the new body
         const badge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${newDepositionId})`;
         const issueBodyArchiveSection = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
         const finalTemplate = await applyLastModifiedTemplate(issueBodyArchiveSection);
-
-        // Update the issue with the new body
         await createIssue(context, owner, repository, ISSUE_TITLE, finalTemplate);
+
 
         consola.success("Updated the GitHub Issue!");
 
@@ -948,6 +915,8 @@ export default async (app, { getRouter }) => {
             id: repository.id
           }
         });
+
+        consola.success("Updated the analytics in the database!");
       } catch (error) {
         // Update the issue with the new body
         // Update the GitHub issue with a status report
@@ -962,6 +931,9 @@ export default async (app, { getRouter }) => {
             repository_id: repository.id,
           }
         });
+        if (error.cause) {
+          consola.error(`Error publishing to Zenodo: ${error.message}`, { cause: error.cause });
+        }
         throw new Error(`Error publishing to Zenodo: ${error.message}`, { cause: error });
       }
     }
