@@ -17,7 +17,7 @@ import { checkForLicense } from "./license/index.js";
 import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
-import { getZenodoDepositionInfo, getZenodoMetadata, updateZenodoMetadata, uploadReleaseAssetsToZenodo } from "./archival/index.js";
+import { getZenodoDepositionInfo, getZenodoMetadata, updateZenodoMetadata, uploadReleaseAssetsToZenodo, parseZenodoInfo, getZenodoToken } from "./archival/index.js";
 import fs from 'fs';
 import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier } from "./metadata/index.js";
 
@@ -761,12 +761,8 @@ export default async (app, { getRouter }) => {
       const issueBodyNoArchiveSection = issueBodyRemovedCommand.substring(0, issueBody.indexOf("## FAIR Software Release"));
       const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
       const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
-      // Gather the information for the Zenodo deposition provided in the issue body
-      const match = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
-      if (!match) {
-        throw new Error("Zenodo publish information not found in issue body.");
-      }
-      const [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
+      const { depositionId, releaseId, tagVersion, userWhoSubmitted } = parseZenodoInfo(issueBody);
+      consola.info("Parsed Zenodo info:", depositionId, releaseId, tagVersion, userWhoSubmitted);
 
       try {
         // 1. Get the metadata from the repository
@@ -787,33 +783,8 @@ export default async (app, { getRouter }) => {
         }
 
         // Fetch the Zenodo token from the database
-        const deposition = await db.zenodoToken.findFirst({
-          where: {
-            user: {
-              username: userWhoSubmitted,
-            },
-          },
-          select: {
-            token: true,
-          }
-        });
-
-        if (!deposition) {
-          throw new Error(`Deposition with tag ${tagVersion} not found in db.`, { cause: error });
-        }
-
-        // Check if the token is valid
-        const zenodoToken = deposition.token;
-        const zenodoTokenInfo = await fetch(
-          `${ZENODO_API_ENDPOINT}/deposit/depositions${depositionId}?access_token=${zenodoToken}`,
-          {
-            method: "GET",
-          },
-        );
-
-        if (!zenodoTokenInfo) {
-          throw new Error(`Zenodo token not found`, { cause: error });
-        }
+        const zenodoToken = await getZenodoToken(userWhoSubmitted);
+        consola.warn("Zenodo token:", zenodoToken);
 
         // 3. Create the Zenodo record or get the existing one
         let zenodoDepositionInfo = {};
@@ -822,7 +793,6 @@ export default async (app, { getRouter }) => {
         } catch (error) {
           throw new Error(`Error fetching Zenodo deposition info: ${error}`, { cause: error });
         }
-
 
         // 4. Set the bucket URL and DOI
         const newDepositionId = zenodoDepositionInfo.id;

@@ -7,6 +7,58 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT } = process.env;
 
 /**
+ * * Fetch the Zenodo API token from the db
+ * @param {String} user - User who submitted the Zenodo publication request 
+ * @returns {String} Zenodo API token
+ */
+export async function getZenodoToken(user) {
+  // Fetch the Zenodo token from the database
+  const deposition = await dbInstance.zenodoToken.findFirst({
+    where: {
+      user: {
+        username: user,
+      },
+    },
+    select: {
+      token: true,
+    }
+  });
+  
+  if (!deposition || !deposition.token) {
+    throw new Error(`Deposition with tag ${tagVersion} not found in db.`, { cause: error });
+  }
+  
+  const zenodoTokenInfo = await fetch(
+    `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${deposition.token}`,
+    {
+      method: "GET",
+    },
+  );
+
+  if (!zenodoTokenInfo) {
+    throw new Error(`Zenodo token not found`, { cause: error });
+  }
+
+  return deposition.token;
+}
+
+/**
+ * * Parse the Zenodo information from the GitHub issue body
+ * @param {String} issueBody - GitHub issue body 
+ * @returns {Object} Object of Zenodo deposition information
+ */
+export function parseZenodoInfo(issueBody) {
+  // Gather the information for the Zenodo deposition provided in the issue body
+  const match = issueBody.match(/<!--\s*@codefair-bot\s*publish-zenodo\s*([\s\S]*?)-->/);
+  if (!match) {
+    throw new Error("Zenodo publish information not found in issue body.");
+  }
+  const [depositionId, releaseId, tagVersion, userWhoSubmitted] = match[1].trim().split(/\s+/);
+
+  return { depositionId, releaseId, tagVersion, userWhoSubmitted };
+}
+
+/**
  * * Apply the archival template to the base template
  * @param {Object} subjects - Subjects of the repository
  * @param {String} baseTemplate - Base template for the issue
