@@ -527,7 +527,15 @@ onBeforeUnmount(() => {
 <template>
   <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
     <n-flex vertical>
+    <div class="flex flex-row justify-between items-center">
       <h1>FAIR Software Release</h1>
+
+      <NuxtLink
+      to="https://docs.codefair.io/docs/archive.html"
+      target="_blank"
+      class="text-blue-400 underline transition-all hover:text-blue-500"
+      >Need help?</NuxtLink>
+    </div>
 
       <p>
         Create a release of your repository on Zenodo. We will also create a
