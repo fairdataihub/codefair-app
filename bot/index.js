@@ -12,13 +12,14 @@ import {
   verifyRepoName,
   applyLastModifiedTemplate,
   getDefaultBranch,
+  getReleaseById,
+  downloadRepositoryZip,
 } from "./utils/tools/index.js";
 import { checkForLicense } from "./license/index.js";
 import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
-import { getZenodoDepositionInfo, getZenodoMetadata, updateZenodoMetadata, uploadReleaseAssetsToZenodo, parseZenodoInfo, getZenodoToken } from "./archival/index.js";
-import fs from 'fs';
+import { getZenodoDepositionInfo, getZenodoMetadata, updateZenodoMetadata, uploadReleaseAssetsToZenodo, parseZenodoInfo, getZenodoToken, publishZenodoDeposition, updateGitHubRelease } from "./archival/index.js";
 import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier } from "./metadata/index.js";
 
 checkEnvVariable("GITHUB_APP_NAME");
@@ -770,100 +771,41 @@ export default async (app, { getRouter }) => {
         const codemeta = await getCodemetaContent(context, owner, repository);
 
         // 2. Validate the CITATION.cff and codemeta.json files
-        try {
-          await validateMetadata(citationCff, "citation")
-        } catch (error) {
-          throw new Error(`Error validating the citation: ${error}`, { cause: error });
-        }
+        await validateMetadata(citationCff, "citation")
+        await validateMetadata(codemeta, "codemeta")
 
-        try {
-          await validateMetadata(codemeta, "codemeta")
-        } catch (error) {
-          throw new Error(`Error validating the codemeta: ${error}`, { cause: error });
-        }
-
-        // Fetch the Zenodo token from the database
+        // 3. Fetch the Zenodo token from the database and verify it is valid
         const zenodoToken = await getZenodoToken(userWhoSubmitted);
-        consola.warn("Zenodo token:", zenodoToken);
 
-        // 3. Create the Zenodo record or get the existing one
-        let zenodoDepositionInfo = {};
-        try {
-          zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
-        } catch (error) {
-          throw new Error(`Error fetching Zenodo deposition info: ${error}`, { cause: error });
-        }
+        // 4. Create the Zenodo record or get the existing one and create a new draft deposition if none exist
+        const zenodoDepositionInfo = await getZenodoDepositionInfo(depositionId, zenodoToken);
 
-        // 4. Set the bucket URL and DOI
+        // 4.5 Set the bucket URL and DOI
         const newDepositionId = zenodoDepositionInfo.id;
         const bucket_url = zenodoDepositionInfo.links.bucket;
         const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
 
+        // Update progress in the GitHub issue
         const tempString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. A draft deposition was created and will be adding the necessary files and metadata.`;
         const finalTempString = await applyLastModifiedTemplate(tempString);
         await createIssue(context, owner, repository, ISSUE_TITLE, finalTempString);
-
-        // 5. Update the CITATION.cff and codemeta.json files with the DOI
-        let updatedMetadataFile = {};
-        try {
-          updatedMetadataFile = await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
-        } catch (error) {
-          throw new Error(`Error updating metadata identifier: ${error}`, { cause: error });
-        }
+        
+        // 5. Update the CITATION.cff and codemeta.json files with the DOI provided by Zenodo
+        const updatedMetadataFile = await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
 
         // 6. Gather metadata for Zenodo deposition
-        let newZenodoMetadata = {};
-        try {
-           newZenodoMetadata = await getZenodoMetadata(updatedMetadataFile, repository);
-        } catch (error) {
-          throw new Error(`Error getting Zenodo metadata: ${error}`, { cause: error });
-        }
+        const newZenodoMetadata = await getZenodoMetadata(updatedMetadataFile, repository);
 
-        // 7. Update the zenodo deposition metadata
-        let depositionWithMetadata = {};
-        try {
-          depositionWithMetadata = await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
-          consola.success(`Updated the Zenodo deposition metadata: ${depositionWithMetadata}`);
-        } catch (error) {
-          throw new Error(`Error updating Zenodo metadata: ${error}`, { cause: error });
-        }
+        // 7. Update the Zenodo deposition's metadata
+        await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
 
-        // Find the release based on the release ID
-        let draftRelease;
-        try {
-          draftRelease = await context.octokit.repos.getRelease({
-            owner,
-            repo: repository.name,
-            release_id: releaseId,
-          });
+        // 7.5 Get the GitHub draft release from the repository
+        const draftRelease = await getReleaseById(context, repository.name, owner, releaseId);
+        const mainBranch = await getDefaultBranch(context, owner, repository.name);
 
-          consola.success("Fetched the draft release successfully!");
-        } catch (error) {
-          throw new Error("Error fetching the draft release:", error);
-        }
+        const repositoryArchive = await downloadRepositoryZip(context, owner, repository.name);
 
-        let repositoryArchive;
-        try {
-          // Download the repository archive from draft release
-          const mainBranch = await getDefaultBranch(context, owner, repository.name);
-          const { data } = await context.octokit.repos.downloadZipballArchive({
-            owner,
-            repo: repository.name,
-            ref: mainBranch,
-          });
-
-          consola.success("Downloaded the repository archive successfully!");
-          repositoryArchive = data;
-        } catch (error) {
-          consola.error("Error downloading the repository archive:", error);
-          return;
-        }
-
-        try {
-          await uploadReleaseAssetsToZenodo(zenodoToken, draftRelease.data.assets, repositoryArchive, owner, context, bucket_url, repository, tagVersion);
-        } catch (error) {
-          throw new Error("Error uploading the release assets to Zenodo:", error, { cause: error });
-        }
+        await uploadReleaseAssetsToZenodo(zenodoToken, draftRelease.data.assets, repositoryArchive, owner, context, bucket_url, repository, tagVersion);
 
         // Update the GitHub issue with a status report
         const afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. All assets from the GitHub repository's draft release have been successfully uploaded to the Zenodo deposition draft.`;
@@ -872,10 +814,9 @@ export default async (app, { getRouter }) => {
 
         // 8. Publish the Zenodo deposition
         await publishZenodoDeposition(zenodoToken, newDepositionId);
-        
 
         // Update the release to not be a draft
-        await updateGitHubRelease(repository.name, owner, releaseId);
+        await updateGitHubRelease(context, repository.name, owner, releaseId);
 
         // 9. Append to the issueBody that the deposition has been published
         // Update the issue with the new body
@@ -932,7 +873,7 @@ export default async (app, { getRouter }) => {
           }
         });
         if (error.cause) {
-          consola.error(`Error publishing to Zenodo: ${error.message}`, { cause: error.cause });
+          consola.error(`Error causes:`, { cause: error.cause });
         }
         throw new Error(`Error publishing to Zenodo: ${error.message}`, { cause: error });
       }
@@ -1127,70 +1068,4 @@ export default async (app, { getRouter }) => {
     await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
   }
 );
-
-
-  // When a release is published
-  // app.on("release.drafted", async (context) => {
-  //   // Check if the release was made using the Codefair dashboard
-  //   const owner = context.payload.repository.owner.login;
-  //   const { repository } = context.payload;
-
-  //   const installation = await db.installation.findUnique({
-  //     where: {
-  //       id: repository.id,
-  //     }
-  //   });
-
-  //   if (!installation) {
-  //     return;
-  //   }
-  // })
-
-  // When a comment is made on an issue
-  // TODO: Verify if this is still needed, currently does not run due to issue titles being changed
-  // app.on("issue_comment.created", async (context) => {
-  //   const owner = context.payload.repository.owner.login;
-  //   const repoName = context.payload.repository.name;
-  //   const userComment = context.payload.comment.body;
-  //   const authorAssociation = context.payload.comment.author_association;
-
-  //   if (
-  //     context.payload.issue.title ===
-  //       `No license file found [${GITHUB_APP_NAME}]` &&
-  //     ["MEMBER", "OWNER"].includes(authorAssociation) &&
-  //     userComment.includes(GITHUB_APP_NAME)
-  //   ) {
-  //     // Check the comment to see if the user has replied with a license
-  //     const splitComment = userComment.split(" ");
-  //     const selection =
-  //       splitComment[splitComment.indexOf(`@${GITHUB_APP_NAME} license`) + 1];
-
-  //     // Create a new file with the license on the new branch and open pull request
-  //     await createLicense(context, owner, repoName, selection);
-  //   }
-
-  //   if (
-  //     context.payload.issue.title ===
-  //       `No citation file found [${GITHUB_APP_NAME}]` &&
-  //     ["MEMBER", "OWNER"].includes(authorAssociation) &&
-  //     userComment.includes(GITHUB_APP_NAME)
-  //   ) {
-  //     if (userComment.includes("Yes")) {
-  //       // Gather the information for the CITATION.cff file
-  //       await gatherCitationInfo(context, owner, repoName);
-  //     }
-  //   }
-
-  //   if (
-  //     context.payload.issue.title ===
-  //       `No codemeta.json file found [${GITHUB_APP_NAME}]` &&
-  //     ["MEMBER", "OWNER"].includes(authorAssociation) &&
-  //     userComment.includes(GITHUB_APP_NAME)
-  //   ) {
-  //     if (userComment.includes("Yes")) {
-  //       // Gather the information for the codemeta.json file
-  //       await gatherCodeMetaInfo(context, owner, repoName);
-  //     }
-  //   }
-  // });
 };
