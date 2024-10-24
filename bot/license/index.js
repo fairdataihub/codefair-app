@@ -169,7 +169,7 @@ function validateLicense(licenseRequest, existingLicense) {
   // NOASSERTION and custom license content
   if (licenseId === "NOASSERTION" && licenseContent !== "") {
     licenseId = "Custom";
-    licenseContentEmpty = true;
+    licenseContentEmpty = false;
   }
 
   // NOASSERTION and empty license content
