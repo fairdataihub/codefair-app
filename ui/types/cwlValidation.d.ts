@@ -11,9 +11,6 @@ interface CWLValidationResults extends Array<CWLValidationResult> {}
 
 interface CWLValidationGetResponse {
   createdAt: number;
-  identifier: string;
   files: CWLValidationResults;
-  owner: string;
-  repo: string;
   updatedAt: number;
 }

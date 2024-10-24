@@ -6,14 +6,20 @@ import YAML from "yaml";
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 
-  const { identifier } = event.context.params as { identifier: string };
+  const { owner, repo } = event.context.params as {
+    owner: string;
+    repo: string;
+  };
 
   const codeMetadataRequest = await prisma.codeMetadata.findFirst({
     include: {
       repository: true,
     },
     where: {
-      identifier,
+      repository: {
+        owner,
+        repo,
+      },
     },
   });
 
@@ -32,11 +38,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if the user is authorized to access the request
-  await repoWritePermissions(
-    event,
-    codeMetadataRequest.repository.owner,
-    codeMetadataRequest.repository.repo,
-  );
+  await repoWritePermissions(event, owner, repo);
 
   // Get the license details
   const licenseDetails = await prisma.licenseRequest.findUnique({
@@ -291,8 +293,8 @@ export default defineEventHandler(async (event) => {
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
-      owner: codeMetadataRequest.repository.owner,
-      repo: codeMetadataRequest.repository.repo,
+      owner,
+      repo,
     },
   );
 
@@ -305,9 +307,9 @@ export default defineEventHandler(async (event) => {
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
-      owner: codeMetadataRequest.repository.owner,
+      owner,
       ref: `heads/${defaultBranch}`,
-      repo: codeMetadataRequest.repository.repo,
+      repo,
     },
   );
 
@@ -319,9 +321,9 @@ export default defineEventHandler(async (event) => {
     headers: {
       "X-GitHub-Api-Version": "2022-11-28",
     },
-    owner: codeMetadataRequest.repository.owner,
+    owner,
     ref: `refs/heads/${newBranchName}`,
-    repo: codeMetadataRequest.repository.repo,
+    repo,
     sha: refData.object.sha,
   });
 
@@ -335,10 +337,10 @@ export default defineEventHandler(async (event) => {
         headers: {
           "X-GitHub-Api-Version": "2022-11-28",
         },
-        owner: codeMetadataRequest.repository.owner,
+        owner,
         path: "codemeta.json",
         ref: newBranchName,
-        repo: codeMetadataRequest.repository.repo,
+        repo,
       },
     );
 
@@ -356,9 +358,9 @@ export default defineEventHandler(async (event) => {
       "X-GitHub-Api-Version": "2022-11-28",
     },
     message: `feat: ✨ ${existingCodeMetaSHA ? "update" : "add"} codemeta file`,
-    owner: codeMetadataRequest.repository.owner,
+    owner,
     path: "codemeta.json",
-    repo: codeMetadataRequest.repository.repo,
+    repo,
     ...(existingCodeMetaSHA && { sha: existingCodeMetaSHA }),
   });
 
@@ -372,10 +374,10 @@ export default defineEventHandler(async (event) => {
         headers: {
           "X-GitHub-Api-Version": "2022-11-28",
         },
-        owner: codeMetadataRequest.repository.owner,
+        owner,
         path: "CITATION.cff",
         ref: newBranchName,
-        repo: codeMetadataRequest.repository.repo,
+        repo,
       },
     );
 
@@ -454,9 +456,9 @@ export default defineEventHandler(async (event) => {
     message: `feat: ✨ ${
       existingCitationCFFSHA ? "update" : "add"
     } citation file`,
-    owner: codeMetadataRequest.repository.owner,
+    owner,
     path: "CITATION.cff",
-    repo: codeMetadataRequest.repository.repo,
+    repo,
     ...(existingCitationCFFSHA && { sha: existingCitationCFFSHA }),
   });
 
@@ -477,8 +479,8 @@ export default defineEventHandler(async (event) => {
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
-      owner: codeMetadataRequest.repository.owner,
-      repo: codeMetadataRequest.repository.repo,
+      owner,
+      repo,
     },
   );
 

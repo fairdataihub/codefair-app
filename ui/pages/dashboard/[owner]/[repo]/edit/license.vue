@@ -37,9 +37,7 @@ const licenseOptions = licensesJSON.map((option) => ({
 
 const route = useRoute();
 
-const { identifier } = route.params as { identifier: string };
-
-const githubRepo = ref<string | null>(null);
+const { owner, repo } = route.params as { owner: string; repo: string };
 
 const licenseId = ref<string | null>(null);
 const licenseContent = ref<string>("");
@@ -51,7 +49,7 @@ const submitLoading = ref(false);
 const showSuccessModal = ref(false);
 const pullRequestURL = ref<string>("");
 
-const { data, error } = await useFetch(`/api/license/${identifier}`, {
+const { data, error } = await useFetch(`/api/${owner}/${repo}/license`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
@@ -73,16 +71,12 @@ if (error.value) {
 }
 
 if (data.value) {
-  githubRepo.value = `${data.value.owner}/${data.value.repo}`;
   licenseId.value = data.value.licenseId || null;
   licenseContent.value = data.value.licenseContent ?? "";
 
   if (licenseContent.value) {
     displayLicenseEditor.value = true;
   }
-
-  breadcrumbsStore.setOwner(data.value.owner);
-  breadcrumbsStore.setRepo(data.value.repo);
 }
 
 const sanitize = (html: string) => sanitizeHtml(html);
@@ -115,7 +109,7 @@ const updateLicenseContent = async (value: string) => {
       "Please wait while we fetch the license details...",
     );
 
-    await $fetch(`/api/license/request/${license.licenseId}`, {
+    await $fetch(`/api/request/${license.licenseId}`, {
       headers: useRequestHeaders(["cookie"]),
     })
       .then((response) => {
@@ -149,7 +143,7 @@ const saveLicenseDraft = async () => {
     licenseContent: licenseContent.value,
   };
 
-  await $fetch(`/api/license/${identifier}`, {
+  await $fetch(`/api/${owner}/${repo}/license`, {
     method: "PUT",
     headers: useRequestHeaders(["cookie"]),
     body: JSON.stringify(body),
@@ -180,7 +174,7 @@ const saveLicenseAndPush = async () => {
     licenseContent: licenseContent.value,
   };
 
-  await $fetch(`/api/license/${identifier}`, {
+  await $fetch(`/api/${owner}/${repo}/license`, {
     method: "POST",
     headers: useRequestHeaders(["cookie"]),
     body: JSON.stringify(body),
@@ -226,11 +220,11 @@ const navigateToPR = () => {
         <h1 class="text-2xl font-bold">
           Edit LICENSE for
           <NuxtLink
-            :to="`https://github.com/${githubRepo}`"
+            :to="`https://github.com/${owner}/${repo}`"
             target="_blank"
             class="text-blue-500 underline transition-all hover:text-blue-600"
           >
-            {{ data?.repo }}
+            {{ repo }}
           </NuxtLink>
         </h1>
 

@@ -5,7 +5,5 @@ interface LicenseRequest {
 
 interface LicenseRequestGetResponse extends LicenseRequest {
   identifier: string;
-  owner: string;
-  repo: string;
   timestamp: number;
 }
