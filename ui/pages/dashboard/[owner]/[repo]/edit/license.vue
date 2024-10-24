@@ -109,7 +109,7 @@ const updateLicenseContent = async (value: string) => {
       "Please wait while we fetch the license details...",
     );
 
-    await $fetch(`/api/request/${license.licenseId}`, {
+    await $fetch(`/api/request/license/${license.licenseId}`, {
       headers: useRequestHeaders(["cookie"]),
     })
       .then((response) => {
