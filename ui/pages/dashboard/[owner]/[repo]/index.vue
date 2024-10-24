@@ -212,7 +212,10 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #header-extra>
-          <div v-if="data?.licenseRequest?.containsLicense">
+          <div
+            v-if="data?.licenseRequest?.containsLicense"
+            class="flex flex-wrap space-x-2"
+          >
             <n-tag
               v-if="data?.licenseRequest?.licenseStatus === 'valid'"
               type="success"
@@ -237,6 +240,16 @@ const handleSettingsSelect = (key: any) => {
               </template>
               We couldn't determine if the license for this repository is valid.
             </n-tooltip>
+
+            <n-tag
+              v-if="data?.licenseRequest?.licenseId === 'Custom'"
+              type="warning"
+            >
+              <template #icon>
+                <Icon name="ic:round-warning" size="16" />
+              </template>
+              This repository uses a custom license.
+            </n-tag>
           </div>
         </template>
 
@@ -484,7 +497,7 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #content>
-          <div class="flex w-full flex-col">
+          <div class="flex w-full flex-col space-y-2">
             <p>
               To make your software FAIR, it is necessary to archive it in a
               software archival repository like Zenodo every time you make a
@@ -494,14 +507,31 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #action>
-          <NuxtLink :to="`/dashboard/${owner}/${repo}/release/zenodo`">
-            <n-button type="primary">
-              <template #icon>
-                <Icon name="material-symbols:package-2" size="16" />
-              </template>
-              Create release
-            </n-button>
-          </NuxtLink>
+          <n-tooltip
+            trigger="hover"
+            placement="bottom-end"
+            :disabled="data?.licenseRequest?.licenseId !== 'Custom'"
+          >
+            <template #trigger>
+              <NuxtLink :to="`/dashboard/${owner}/${repo}/release/zenodo`">
+                <n-button
+                  type="primary"
+                  :disabled="data?.licenseRequest?.licenseId === 'Custom'"
+                >
+                  <template #icon>
+                    <Icon name="material-symbols:package-2" size="16" />
+                  </template>
+                  Create release
+                </n-button>
+              </NuxtLink>
+            </template>
+
+            <span>
+              We do not currently support archiving repositories with custom
+              licenses. Please make sure your repository is published with a
+              license that is within the list of allowed licenses.</span
+            >
+          </n-tooltip>
         </template>
       </CardDashboard>
     </div>

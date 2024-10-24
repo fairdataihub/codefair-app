@@ -129,11 +129,11 @@ breadcrumbsStore.hideBreadcrumbs();
           </h2>
 
           <p class="font-onest text-lg text-slate-800">
-            Codefair is developed using Probot and is deployed on our own
+            Codefair is developed using <NuxtLink class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700" to="https://probot.github.io/">Probot</NuxtLink> and is deployed on our own
             servers. The GitHub app is configured to receive webhooks for
             important actions such as pushing code, opening or closing issues,
             opening or merging pull requests, and commenting on discussions. The
-            app is written in Node.js and utilizes the Octokit library to
+            app is written in <NuxtLink class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700" to="https://nodejs.org/">Node.js</NuxtLink> and utilizes the <NuxtLink class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700" to="https://octokit.github.io/">Octokit library</NuxtLink> to
             interact with the GitHub API, enabling seamless integration with
             GitHub's features and functionality.
           </p>

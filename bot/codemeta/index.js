@@ -14,7 +14,6 @@ export async function checkForCodeMeta(context, owner, repo) {
   }
 }
 
-// TODO: Verify if this is still needed
 export async function gatherCodeMetaInfo(context, owner, repo) {
   // Gather metadata from the repo to create a codemeta.json file
   const repoData = await context.octokit.repos.get({
@@ -34,7 +33,6 @@ export async function gatherCodeMetaInfo(context, owner, repo) {
   const identifier = repoData.data.id;
   const name = repoData.data.full_name;
   let issueTracker = repoData.data.issues_url;
-  // TODO: See if those two api calls are needed
 
   let metadata = {
     "@context": "https://w3id.org/codemeta/3.0",

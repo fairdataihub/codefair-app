@@ -490,3 +490,51 @@ export function applyLastModifiedTemplate(baseTemplate) {
 
   return `${baseTemplate}\n\n<sub><span style="color: grey;">Last updated ${lastModified} (timezone: America/Los_Angeles)</span></sub>`;
 }
+
+/**
+ * * Get a GitHub release based on ID of release
+ * @param {String} repositoryName - Name of the GitHub repository
+ * @param {String} owner - Owner of repository
+ * @param {String} releaseId - ID of the release being requested
+ * @returns {Object} - Release information
+ */
+export async function getReleaseById(context, repositoryName, owner, releaseId) {
+  try {
+    const draftRelease = await context.octokit.repos.getRelease({
+      owner,
+      repo: repositoryName,
+      release_id: releaseId,
+    });
+
+    consola.success(`Fetched the draft release for: ${repositoryName}`);
+
+    return draftRelease;
+  } catch (error) {
+    throw new Error(`Error fetching the draft release: ${error}`, { cause: error });
+  }
+}
+
+/**
+ * * Downloads and returns the Zipball Archive of a repository's specified branch
+ * @param {String} owner - Owner of repository
+ * @param {String} repositoryName - Name of the GitHub repository
+ * @param {String} branch - Branch to download from (optional)
+ * @returns {Object} - Data of the Zipball archive
+ */
+export async function downloadRepositoryZip(context, owner, repositoryName, branch="") {
+  try {
+    if (!branch) {
+      branch = await getDefaultBranch(context, owner, repositoryName);
+    }
+    const { data } = await context.octokit.repos.downloadZipballArchive({
+      owner,
+      repo: repositoryName,
+      ref: branch
+    });
+
+    consola.success(`Downloaded the repository archive successfully for: ${repositoryName}`);
+    return data;
+  } catch (error) {
+    throw new Error(`Error download the repository archive for ${repositoryName}: ${error}`, { cause: error });
+  }
+}

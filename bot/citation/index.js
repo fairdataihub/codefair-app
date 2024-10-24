@@ -14,8 +14,8 @@ export async function checkForCitation(context, owner, repo) {
   }
 }
 
-// TODO: Verify if this is still needed
-export async function gatherCitationInfo(context, owner, repo) {
+// Currently not being used
+async function gatherCitationInfo(context, owner, repo) {
   // Verify there is no PR open already for the CITATION.cff file
   const openPR = await context.octokit.pulls.list({
     owner,

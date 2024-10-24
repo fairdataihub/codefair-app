@@ -155,6 +155,39 @@ export async function createLicense(context, owner, repo, license) {
   }
 }
 
+function validateLicense(licenseRequest, existingLicense) {
+  let licenseId = licenseRequest.data?.license?.spdx_id;
+  let licenseContent = Buffer.from(licenseRequest.data?.content, "base64").toString("utf-8");
+  let licenseContentEmpty = true;
+
+  // No license found
+  if (licenseId === "no-license" || !licenseId) {
+    licenseId = null;
+    licenseContent = "";
+  }
+
+  // NOASSERTION and custom license content
+  if (licenseId === "NOASSERTION" && licenseContent !== "") {
+    licenseId = "Custom";
+    licenseContentEmpty = false;
+  }
+
+  // NOASSERTION and empty license content
+  if (licenseId === "NOASSERTION" && licenseContent === "") {
+    // Check if there is an existing license in the database
+    if (existingLicense?.license_id && existingLicense?.license_content !== "") {
+      licenseId = existingLicense.license_id;
+      licenseContent = existingLicense.license_content;
+      licenseContentEmpty = false;
+    } else {
+      licenseId = null;
+      licenseContent = "";
+    }
+  }
+
+  return { licenseId, licenseContent, licenseContentEmpty };
+}
+
 /**
  * * Applies the license template to the base template
  *
@@ -188,34 +221,11 @@ export async function applyLicenseTemplate(
       repo: repository.name,
     });
 
-    licenseId = licenseRequest.data.license.spdx_id;
-    licenseContent = Buffer.from(
-      licenseRequest.data.content,
-      "base64",
-    ).toString("utf-8");
+    ({ licenseId, licenseContent, licenseContentEmpty } = validateLicense(licenseRequest, existingLicense));
 
-    if (
-      licenseRequest.data.license.spdx_id === "no-license" ||
-      licenseRequest.data.license.spdx_id === "NOASSERTION"
-    ) {
-      consola.info("Resetting license id and content back to null");
-      // Verify if a license id exists in the database, if so continue to use that license id and license content
-      consola.info("Existing license:", existingLicense.license_id);
-      consola.info("Existing license:", existingLicense.license_content);
-      consola.info("Existing license:", existingLicense.license_content !== "");
-      if (existingLicense.license_id && existingLicense.license_content !== "") {
-        licenseId = existingLicense?.license_id;
-        licenseContent = existingLicense?.license_content;
-        licenseContentEmpty = false;
-      } else {
-        licenseId = null;
-        licenseContent = "";
-      }
-    }
-
-    if (licenseId){
-      licenseContentEmpty = false;
-    }
+    consola.info("License ID:", licenseId);
+    // consola.info("License Content:", licenseContent);
+    consola.info("License Content Empty:", licenseContentEmpty);
   }
 
   if (existingLicense) {
@@ -253,10 +263,12 @@ export async function applyLicenseTemplate(
 
   const licenseBadge = `[![License](https://img.shields.io/badge/${subjects.license ? "Edit_License-0ea5e9" : "Add_License-dc2626"}.svg)](${badgeURL})`;
 
-  if (subjects.license) {
+  if (subjects.license && licenseId && licenseId !== "Custom") {
     baseTemplate += `## LICENSE ✔️\n\nA LICENSE file is found at the root level of the repository.\n\n${licenseBadge}`;
+  } else if (subjects.license && licenseId === "Custom") {
+    baseTemplate += `## LICENSE ❗\n\nA custom LICENSE file has been found at the root level of this repository. While using a custom license is acceptable for now, please note that if you wish to archive this repository (e.g., on platforms like Zenodo), you'll need to select a license from the [SPDX license list](https://spdx.org/licenses/) to ensure proper archival and compliance.\n\n${licenseBadge}`;
   } else {
-    baseTemplate += `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE ❌\n\nTo make your software reusable, a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself, and Codefair will update the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
   }
 
   return baseTemplate;

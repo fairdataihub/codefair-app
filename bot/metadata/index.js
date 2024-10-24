@@ -285,8 +285,7 @@ export async function getCodemetaContent(context, owner, repository) {
 
     // return JSON.parse(Buffer.from(codemetaFile.data.content, "base64").toString());
   } catch (error) {
-    consola.error("Error getting codemeta.json file", error);
-    return null;
+    throw new Error("Error getting codemeta.json file", error);
   }
 }
 
@@ -298,15 +297,12 @@ export async function getCitationContent(context, owner, repository) {
     repo: repository.name,
   });
 
-
-
   return {
     content: Buffer.from(citationFile.data.content, "base64").toString(),
     sha: citationFile.data.sha,
   }
  } catch (error) {
-    consola.error("Error getting CITATION.cff file", error);
-    return null;
+    throw new Error("Error getting CITATION.cff file", error);
  }
 }
 
@@ -323,7 +319,7 @@ export async function validateMetadata(content, fileType) {
       return false;
     }
   }
-
+  
   if (fileType === "citation") {
     try {
       yaml.load(content);
@@ -340,6 +336,7 @@ export async function validateMetadata(content, fileType) {
 }
 
 export async function updateMetadataIdentifier(context, owner, repository, identifier, version) {
+  try {
   // Get the citation file
   const citationObj = await getCitationContent(context, owner, repository);
   const codeMetaObj = await getCodemetaContent(context, owner, repository);
@@ -358,7 +355,6 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   })
 
   if (!zenodoMetadata) {
-    consola.error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
     throw new Error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
   }
 
@@ -420,7 +416,6 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
 
   // Update the codemetadata content with the new Zenodo identifier
   existingCodemeta.metadata.uniqueIdentifier = identifier;
-  existingCodemeta.metadata.firstReleaseDate = updated_date;
   existingCodemeta.metadata.currentVersion = zenodoMetadata?.zenodo_metadata?.version || version
 
   // Update the database with the latest metadata
@@ -434,6 +429,10 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   })
 
   return codeMetaFile;
+  } catch (error) {
+    throw new Error(`Error on updating the GitHub metadata files: ${error}`, { cause: error })
+  }
+
 }
 
 /**
