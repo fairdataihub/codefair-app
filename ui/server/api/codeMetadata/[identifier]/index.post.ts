@@ -220,7 +220,10 @@ export default defineEventHandler(async (event) => {
         keywords: codeMetadataRecord.keywords,
       }),
     ...(licenseDetails.license_id && {
-      license: `https://spdx.org/licenses/${licenseDetails.license_id}`,
+      license:
+        licenseDetails.license_id !== "Custom"
+          ? `https://spdx.org/licenses/${licenseDetails.license_id}`
+          : "Custom",
     }),
     ...(codeMetadataRecord.operatingSystem &&
       codeMetadataRecord.operatingSystem.length > 0 && {
@@ -426,7 +429,10 @@ export default defineEventHandler(async (event) => {
         keywords: codeMetadataRecord.keywords,
       }),
     ...(licenseDetails.license_id && {
-      license: licenseDetails.license_id,
+      license:
+        licenseDetails.license_id !== "Custom"
+          ? `https://spdx.org/licenses/${licenseDetails.license_id}`
+          : "Custom",
     }),
     ...(codeMetadataRecord.codeRepository && {
       "repository-code": codeMetadataRecord.codeRepository,
