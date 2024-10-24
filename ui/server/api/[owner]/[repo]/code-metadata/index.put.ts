@@ -71,7 +71,10 @@ export default defineEventHandler(async (event) => {
     }),
   });
 
-  const { identifier } = event.context.params as { identifier: string };
+  const { owner, repo } = event.context.params as {
+    owner: string;
+    repo: string;
+  };
 
   const body = await readBody(event);
 
@@ -104,11 +107,11 @@ export default defineEventHandler(async (event) => {
   }
 
   const codeMetadataRequest = await prisma.codeMetadata.findFirst({
-    include: {
-      repository: true,
-    },
     where: {
-      identifier,
+      repository: {
+        owner,
+        repo,
+      },
     },
   });
 
@@ -120,18 +123,14 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if the user is authorized to access the request
-  await repoWritePermissions(
-    event,
-    codeMetadataRequest.repository.owner,
-    codeMetadataRequest.repository.repo,
-  );
+  await repoWritePermissions(event, owner, repo);
 
   const updatedRecord = await prisma.codeMetadata.update({
     data: {
       metadata: parsedMetadata,
     },
     where: {
-      identifier,
+      id: codeMetadataRequest.id,
     },
   });
 
@@ -143,9 +142,6 @@ export default defineEventHandler(async (event) => {
   }
 
   return {
-    identifier,
-    owner: codeMetadataRequest.repository.owner,
-    repo: codeMetadataRequest.repository.repo,
     timestamp: updatedRecord.updated_at,
   };
 });

@@ -1,15 +1,18 @@
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 
-  const { identifier } = event.context.params as { identifier: string };
+  const { owner, repo } = event.context.params as {
+    owner: string;
+    repo: string;
+  };
 
   // Check if the request identifier exists in the database
   const codeMetadataRequest = await prisma.codeMetadata.findFirst({
-    include: {
-      repository: true,
-    },
     where: {
-      identifier,
+      repository: {
+        owner,
+        repo,
+      },
     },
   });
 
@@ -21,11 +24,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if the user is authorized to access the codeMetadata request
-  await repoWritePermissions(
-    event,
-    codeMetadataRequest.repository.owner,
-    codeMetadataRequest.repository.repo,
-  );
+  await repoWritePermissions(event, owner, repo);
 
   const rawMetadata = codeMetadataRequest.metadata;
 
@@ -38,8 +37,6 @@ export default defineEventHandler(async (event) => {
     createdAt: Date.parse(codeMetadataRequest.created_at.toString()),
     identifier: codeMetadataRequest.identifier,
     metadata: parsedMetadata,
-    owner: codeMetadataRequest.repository.owner,
-    repo: codeMetadataRequest.repository.repo,
     updatedAt: Date.parse(codeMetadataRequest.updated_at.toString()),
   };
 

@@ -3,14 +3,20 @@ import { App } from "octokit";
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 
-  const { identifier } = event.context.params as { identifier: string };
+  const { owner, repo } = event.context.params as {
+    owner: string;
+    repo: string;
+  };
 
   const cwlValidationRequest = await prisma.cwlValidation.findFirst({
     include: {
       repository: true,
     },
     where: {
-      identifier,
+      repository: {
+        owner,
+        repo,
+      },
     },
   });
 
@@ -38,11 +44,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if the user is authorized to access the repo to request the validation
-  await repoWritePermissions(
-    event,
-    cwlValidationRequest.repository.owner,
-    cwlValidationRequest.repository.repo,
-  );
+  await repoWritePermissions(event, owner, repo);
 
   // Create an octokit app instance
   const app = new App({
@@ -66,8 +68,8 @@ export default defineEventHandler(async (event) => {
       "GET /repos/{owner}/{repo}/issues/{issue_number}",
       {
         issue_number: cwlValidationRequest.repository.issue_number,
-        owner: cwlValidationRequest.repository.owner,
-        repo: cwlValidationRequest.repository.repo,
+        owner,
+        repo,
       },
     );
 
@@ -95,8 +97,8 @@ export default defineEventHandler(async (event) => {
     await octokit.request("PATCH /repos/{owner}/{repo}/issues/{issue_number}", {
       body: updatedIssueBody,
       issue_number: cwlValidationRequest.repository.issue_number,
-      owner: cwlValidationRequest.repository.owner,
-      repo: cwlValidationRequest.repository.repo,
+      owner,
+      repo,
     });
   } catch (error: any) {
     console.error("Failed to update issue body", error);

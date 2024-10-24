@@ -10,7 +10,10 @@ export default defineEventHandler(async (event) => {
     licenseContent: z.string(),
   });
 
-  const { identifier } = event.context.params as { identifier: string };
+  const { owner, repo } = event.context.params as {
+    owner: string;
+    repo: string;
+  };
 
   const body = await readBody(event);
 
@@ -32,9 +35,12 @@ export default defineEventHandler(async (event) => {
 
   const { licenseId, licenseContent } = parsedBody.data;
 
-  const licenseRequest = await prisma.licenseRequest.findUnique({
+  const licenseRequest = await prisma.licenseRequest.findFirst({
     where: {
-      identifier,
+      repository: {
+        owner,
+        repo,
+      },
     },
     include: {
       repository: true,
@@ -56,11 +62,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if the user is authorized to access the license request
-  await repoWritePermissions(
-    event,
-    licenseRequest.repository.owner,
-    licenseRequest.repository.repo,
-  );
+  await repoWritePermissions(event, owner, repo);
 
   // Create an octokit app instance
   const app = new App({
@@ -81,8 +83,8 @@ export default defineEventHandler(async (event) => {
   const { data: repoData } = await octokit.request(
     "GET /repos/{owner}/{repo}",
     {
-      owner: licenseRequest.repository.owner,
-      repo: licenseRequest.repository.repo,
+      owner,
+      repo,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
@@ -95,8 +97,8 @@ export default defineEventHandler(async (event) => {
   const { data: refData } = await octokit.request(
     "GET /repos/{owner}/{repo}/git/ref/{ref}",
     {
-      owner: licenseRequest.repository.owner,
-      repo: licenseRequest.repository.repo,
+      owner,
+      repo,
       ref: `heads/${defaultBranch}`,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
@@ -109,8 +111,8 @@ export default defineEventHandler(async (event) => {
 
   // Create a new branch from the default branch
   await octokit.request("POST /repos/{owner}/{repo}/git/refs", {
-    owner: licenseRequest.repository.owner,
-    repo: licenseRequest.repository.repo,
+    owner,
+    repo,
     ref: `refs/heads/${newBranchName}`,
     sha: refData.object.sha,
     headers: {
@@ -125,8 +127,8 @@ export default defineEventHandler(async (event) => {
     const { data: licenseData } = await octokit.request(
       "GET /repos/{owner}/{repo}/contents/{path}",
       {
-        owner: licenseRequest.repository.owner,
-        repo: licenseRequest.repository.repo,
+        owner,
+        repo,
         path: "LICENSE",
         ref: newBranchName,
         headers: {
@@ -143,8 +145,8 @@ export default defineEventHandler(async (event) => {
 
   // Create a new file with the license content
   await octokit.request("PUT /repos/{owner}/{repo}/contents/{path}", {
-    owner: licenseRequest.repository.owner,
-    repo: licenseRequest.repository.repo,
+    owner,
+    repo,
     path: "LICENSE",
     message: `feat: ✨ add LICENSE file with ${licenseId} license terms`,
     content: Buffer.from(licenseContent).toString("base64"),
@@ -159,8 +161,8 @@ export default defineEventHandler(async (event) => {
   const { data: pullRequestData } = await octokit.request(
     "POST /repos/{owner}/{repo}/pulls",
     {
-      owner: licenseRequest.repository.owner,
-      repo: licenseRequest.repository.repo,
+      owner,
+      repo,
       title: "feat: ✨ LICENSE file added",
       head: newBranchName,
       base: defaultBranch,
@@ -184,7 +186,7 @@ export default defineEventHandler(async (event) => {
       pull_request_url: pullRequestData.html_url,
     },
     where: {
-      identifier,
+      id: licenseRequest.id,
     },
   });
 

@@ -66,13 +66,10 @@ if (error.value) {
 const rerunCwlValidation = async () => {
   cwlValidationRerunRequestLoading.value = true;
 
-  await $fetch(
-    `/api/cwlValidation/${data.value?.cwlValidation?.identifier}/rerun`,
-    {
-      headers: useRequestHeaders(["cookie"]),
-      method: "POST",
-    },
-  )
+  await $fetch(`/api/${owner}/${repo}/cwl-validation/rerun`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "POST",
+  })
     .then(() => {
       push.success({
         title: "Success",
@@ -258,7 +255,7 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #action>
-          <a :href="`/add/license/${data?.licenseRequest?.identifier}`">
+          <a :href="`/dashboard/${owner}/${repo}/edit/license`">
             <n-button type="primary">
               <template #icon>
                 <Icon name="akar-icons:edit" size="16" />
@@ -350,7 +347,7 @@ const handleSettingsSelect = (key: any) => {
         <template #action>
           <a
             v-if="data?.licenseRequest?.containsLicense"
-            :href="`/add/code-metadata/${data?.codeMetadataRequest?.identifier}`"
+            :href="`/dashboard/${owner}/${repo}/edit/code-metadata`"
           >
             <n-button type="primary">
               <template #icon>
@@ -432,9 +429,7 @@ const handleSettingsSelect = (key: any) => {
               This may take a few minutes to complete.
             </n-tooltip>
 
-            <NuxtLink
-              :to="`/view/cwl-validation/${data?.cwlValidation?.identifier}`"
-            >
+            <NuxtLink :to="`/dashboard/${owner}/${repo}/view/cwl-validation`">
               <n-button type="primary">
                 <template #icon> <Icon name="mdi:eye" size="16" /> </template>
                 View CWL Validation Results
