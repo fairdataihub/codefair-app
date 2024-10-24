@@ -88,8 +88,20 @@ if (data.value) {
 const sanitize = (html: string) => sanitizeHtml(html);
 
 const updateLicenseContent = async (value: string) => {
-  console.log(value);
   if (!value) {
+    return;
+  }
+
+  if (value === "Custom") {
+    licenseContent.value = data.value?.licenseContent || "";
+    push.warning({
+      title: "Custom license",
+      message:
+        "Your license content was reset to the original terms. Please be aware that this license may not be publishable on some archival repositories.",
+    });
+
+    displayLicenseEditor.value = true;
+
     return;
   }
 
@@ -249,7 +261,7 @@ const navigateToPR = () => {
 
       <n-form-item class="mb-3 mt-5" :show-feedback="false" size="large">
         <template #label>
-          <p class="pb-1 text-base">Select a license</p>
+          <p class="pb-1 text-base font-bold">Select a license</p>
         </template>
 
         <n-select
@@ -262,6 +274,14 @@ const navigateToPR = () => {
           :options="licenseOptions"
         />
       </n-form-item>
+
+      <n-alert v-if="licenseId === 'Custom'" type="warning" class="w-full">
+        <p class="text-base">
+          This repository uses a custom license. We recommend using a license
+          that is within the list of allowed licenses as custom licenses may not
+          be publishable on some archival repositories.
+        </p>
+      </n-alert>
 
       <TransitionFade>
         <n-form-item
