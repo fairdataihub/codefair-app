@@ -160,7 +160,21 @@ function validateLicense(licenseRequest, existingLicense) {
   let licenseContent = Buffer.from(licenseRequest.data?.content, "base64").toString("utf-8");
   let licenseContentEmpty = true;
 
-  if (licenseId === "no-license" || licenseId === "NOASSERTION") {
+  // No license found
+  if (licenseId === "no-license" || !licenseId) {
+    licenseId = null;
+    licenseContent = "";
+  }
+
+  // NOASSERTION and custom license content
+  if (licenseId === "NOASSERTION" && licenseContent !== "") {
+    licenseId = "Custom";
+    licenseContentEmpty = true;
+  }
+
+  // NOASSERTION and empty license content
+  if (licenseId === "NOASSERTION" && licenseContent === "") {
+    // Check if there is an existing license in the database
     if (existingLicense?.license_id && existingLicense?.license_content !== "") {
       licenseId = existingLicense.license_id;
       licenseContent = existingLicense.license_content;
@@ -169,8 +183,6 @@ function validateLicense(licenseRequest, existingLicense) {
       licenseId = null;
       licenseContent = "";
     }
-  } else if (licenseId) {
-    licenseContentEmpty = false;
   }
 
   return { licenseId, licenseContent, licenseContentEmpty };
