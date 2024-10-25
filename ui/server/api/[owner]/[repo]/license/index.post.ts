@@ -8,6 +8,7 @@ export default defineEventHandler(async (event) => {
   const bodySchema = z.object({
     licenseId: z.string(),
     licenseContent: z.string(),
+    customLicenseTitle: z.string().optional(),
   });
 
   const { owner, repo } = event.context.params as {
@@ -33,7 +34,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { licenseId, licenseContent } = parsedBody.data;
+  const { licenseId, licenseContent, customLicenseTitle } = parsedBody.data;
 
   const licenseRequest = await prisma.licenseRequest.findFirst({
     where: {
@@ -183,6 +184,7 @@ export default defineEventHandler(async (event) => {
     data: {
       license_content: licenseContent,
       license_id: licenseId,
+      custom_license_title: customLicenseTitle,
       pull_request_url: pullRequestData.html_url,
     },
     where: {

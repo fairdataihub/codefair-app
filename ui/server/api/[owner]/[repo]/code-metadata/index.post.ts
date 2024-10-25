@@ -221,12 +221,10 @@ export default defineEventHandler(async (event) => {
       codeMetadataRecord.keywords.length > 0 && {
         keywords: codeMetadataRecord.keywords,
       }),
-    ...(licenseDetails.license_id && {
-      license:
-        licenseDetails.license_id !== "Custom"
-          ? `https://spdx.org/licenses/${licenseDetails.license_id}`
-          : "Custom",
-    }),
+    ...(licenseDetails.license_id &&
+      licenseDetails.license_id !== "Custom" && {
+        license: `https://spdx.org/licenses/${licenseDetails.license_id}`,
+      }),
     ...(codeMetadataRecord.operatingSystem &&
       codeMetadataRecord.operatingSystem.length > 0 && {
         operatingSystem: codeMetadataRecord.operatingSystem,
@@ -430,9 +428,10 @@ export default defineEventHandler(async (event) => {
       codeMetadataRecord.keywords.length > 0 && {
         keywords: codeMetadataRecord.keywords,
       }),
-    ...(licenseDetails.license_id && {
-      license: licenseDetails.license_id, // Both custom and regular licenses should be okay here
-    }),
+    ...(licenseDetails.license_id &&
+      licenseDetails.license_id !== "Custom" && {
+        license: licenseDetails.license_id,
+      }),
     ...(codeMetadataRecord.codeRepository && {
       "repository-code": codeMetadataRecord.codeRepository,
     }),

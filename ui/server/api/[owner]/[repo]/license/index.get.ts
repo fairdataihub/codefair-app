@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   const response: LicenseRequestGetResponse = {
     licenseId: licenseRequest.license_id,
     licenseContent: licenseRequest.license_content,
-    identifier: licenseRequest.identifier,
+    customLicenseTitle: licenseRequest.custom_license_title,
     timestamp: Date.parse(licenseRequest.updated_at.toString()),
   };
 
