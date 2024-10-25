@@ -502,31 +502,14 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #action>
-          <n-tooltip
-            trigger="hover"
-            placement="bottom-end"
-            :disabled="data?.licenseRequest?.licenseId !== 'Custom'"
-          >
-            <template #trigger>
-              <NuxtLink :to="`/dashboard/${owner}/${repo}/release/zenodo`">
-                <n-button
-                  type="primary"
-                  :disabled="data?.licenseRequest?.licenseId === 'Custom'"
-                >
-                  <template #icon>
-                    <Icon name="material-symbols:package-2" size="16" />
-                  </template>
-                  Create release
-                </n-button>
-              </NuxtLink>
-            </template>
-
-            <span>
-              We do not currently support archiving repositories with custom
-              licenses. Please make sure your repository is published with a
-              license that is within the list of allowed licenses.</span
-            >
-          </n-tooltip>
+          <NuxtLink :to="`/dashboard/${owner}/${repo}/release/zenodo`">
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="material-symbols:package-2" size="16" />
+              </template>
+              Create release
+            </n-button>
+          </NuxtLink>
         </template>
       </CardDashboard>
     </div>

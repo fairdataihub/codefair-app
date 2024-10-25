@@ -40,14 +40,15 @@ const route = useRoute();
 const { owner, repo } = route.params as { owner: string; repo: string };
 
 const licenseId = ref<string | null>(null);
-const licenseContent = ref<string>("");
+const licenseContent = ref("");
+const customLicenseTitle = ref("");
 
 const displayLicenseEditor = ref(false);
 const getLicenseLoading = ref(false);
 const submitLoading = ref(false);
 
 const showSuccessModal = ref(false);
-const pullRequestURL = ref<string>("");
+const pullRequestURL = ref("");
 
 const { data, error } = await useFetch(`/api/${owner}/${repo}/license`, {
   headers: useRequestHeaders(["cookie"]),
@@ -73,6 +74,7 @@ if (error.value) {
 if (data.value) {
   licenseId.value = data.value.licenseId || null;
   licenseContent.value = data.value.licenseContent ?? "";
+  customLicenseTitle.value = data.value.customLicenseTitle ?? "";
 
   if (licenseContent.value) {
     displayLicenseEditor.value = true;
@@ -88,6 +90,7 @@ const updateLicenseContent = async (value: string) => {
 
   if (value === "Custom") {
     licenseContent.value = data.value?.licenseContent || "";
+    customLicenseTitle.value = data.value?.customLicenseTitle || "";
     push.warning({
       title: "Custom license",
       message:
@@ -136,11 +139,20 @@ const updateLicenseContent = async (value: string) => {
 };
 
 const saveLicenseDraft = async () => {
+  if (licenseId.value === "Custom" && !customLicenseTitle.value.trim()) {
+    push.error({
+      title: "Custom license title required",
+      message: "Please enter a custom license title",
+    });
+    return;
+  }
+
   submitLoading.value = true;
 
   const body = {
     licenseId: licenseId.value,
     licenseContent: licenseContent.value,
+    customLicenseTitle: customLicenseTitle.value,
   };
 
   await $fetch(`/api/${owner}/${repo}/license`, {
@@ -167,11 +179,20 @@ const saveLicenseDraft = async () => {
 };
 
 const saveLicenseAndPush = async () => {
+  if (licenseId.value === "Custom" && !customLicenseTitle.value.trim()) {
+    push.error({
+      title: "Custom license title required",
+      message: "Please enter a custom license title",
+    });
+    return;
+  }
+
   submitLoading.value = true;
 
   const body = {
     licenseId: licenseId.value,
     licenseContent: licenseContent.value,
+    customLicenseTitle: customLicenseTitle.value,
   };
 
   await $fetch(`/api/${owner}/${repo}/license`, {
@@ -276,6 +297,19 @@ const navigateToPR = () => {
           be publishable on some archival repositories.
         </p>
       </n-alert>
+
+      <n-form-item v-show="licenseId === 'Custom'" show-require-mark>
+        <template #label>
+          <p class="pb-1 text-base font-bold">Custom license title</p>
+        </template>
+
+        <n-input
+          v-model:value="customLicenseTitle"
+          size="large"
+          placeholder="My custom license title"
+          clearable
+        />
+      </n-form-item>
 
       <TransitionFade>
         <n-form-item
