@@ -206,7 +206,7 @@ export async function applyLicenseTemplate(
   context,
 ) {
   const identifier = createId();
-  let badgeURL = `${CODEFAIR_DOMAIN}/add/license/${identifier}`;
+  let badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/license`;
   const existingLicense = await dbInstance.licenseRequest.findUnique({
     where: { repository_id: repository.id },
   });
@@ -230,7 +230,9 @@ export async function applyLicenseTemplate(
 
   if (existingLicense) {
     consola.info("Updating existing license request...");
-    badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
+    if (existingLicense?.identifier) {
+      badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
+    }
     await dbInstance.licenseRequest.update({
       data: {
         contains_license: subjects.license,
