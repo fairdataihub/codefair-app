@@ -33,11 +33,10 @@ const haveValidZenodoToken = ref(false);
 const licenseChecked = ref(false);
 const metadataChecked = ref(false);
 const license = ref({
-  id: "x",
-  identifier: "x",
+  id: "",
+  customLicenseTitle: "",
   status: "",
 });
-const metadataId = ref("");
 
 const allConfirmed = computed(
   () => licenseChecked.value && metadataChecked.value,
@@ -122,9 +121,9 @@ if (data.value) {
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
 
   license.value.id = data.value.license.id || "";
-  license.value.identifier = data.value.license.identifier;
   license.value.status = data.value.license.status || "";
-  metadataId.value = data.value.metadataId;
+  license.value.customLicenseTitle =
+    data.value.license.customLicenseTitle || "";
 
   selectedExistingDeposition.value = data.value.existingZenodoDepositionId
     ? "existing"
@@ -572,13 +571,6 @@ onBeforeUnmount(() => {
         and the selected release was titled
         <code>{{ lastSelectedGithubReleaseTitle || "Untitled" }}</code>
 
-        <!-- <NuxtLink
-          :to="`https://github.com/${owner}/${repo}/releases/${data?.lastSelectedGithubRelease}`"
-          target="_blank"
-          class="text-blue-500 underline transition-all hover:text-blue-700"
-        >
-          {{ data?.lastSelectedGithubRelease }}
-        </NuxtLink> -->
         .
       </n-alert>
 
@@ -632,18 +624,18 @@ onBeforeUnmount(() => {
               <Icon name="tabler:license" size="24" />
 
               <p class="text-sm">
-                The license file was identified as `{{ license.id }}`
+                The license file was identified as `{{ license.id }}` with a
+                title of `{{ license.customLicenseTitle }}`
               </p>
             </n-flex>
 
             <n-alert
-              v-if="license.id === 'Custom'"
+              v-if="license.id === 'Custom' && !license.customLicenseTitle"
               type="error"
               class="mb-4 w-full"
             >
-              This workflow is not currently supported for custom licenses. We
-              recommend using a license that is within the list of allowed
-              licenses.
+              Zenodo requires a license title for custom licenses. Please enter
+              a custom license title in the License section.
             </n-alert>
 
             <n-alert
@@ -657,7 +649,7 @@ onBeforeUnmount(() => {
 
             <n-checkbox
               v-model:checked="licenseChecked"
-              :disabled="license.id === 'Custom'"
+              :disabled="license.id === 'Custom' && !license.customLicenseTitle"
             >
               I have added and reviewed the license file that is required for
               the repository to be released on Zenodo.
@@ -666,7 +658,7 @@ onBeforeUnmount(() => {
         </template>
 
         <template #header-extra>
-          <a :href="`/add/license/${license.identifier}`">
+          <a :href="`/dashboard/${owner}/${repo}/edit/license`">
             <n-button type="primary">
               <template #icon>
                 <Icon name="akar-icons:edit" size="16" />
@@ -710,7 +702,7 @@ onBeforeUnmount(() => {
         </template>
 
         <template #header-extra>
-          <a :href="`/add/code-metadata/${metadataId}`">
+          <a :href="`/dashboard/${owner}/${repo}/edit/code-metadata`">
             <n-button type="primary">
               <template #icon>
                 <Icon name="akar-icons:edit" size="16" />

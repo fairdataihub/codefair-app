@@ -1,11 +1,9 @@
 interface LicenseRequest {
   licenseId?: string | null;
   licenseContent?: string;
+  customLicenseTitle?: string;
 }
 
 interface LicenseRequestGetResponse extends LicenseRequest {
-  identifier: string;
-  owner: string;
-  repo: string;
   timestamp: number;
 }

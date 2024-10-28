@@ -10,11 +10,9 @@ const breadcrumbsStore = useBreadcrumbsStore();
 
 breadcrumbsStore.showBreadcrumbs();
 
-const { identifier } = route.params as { identifier: string };
+const { owner, repo } = route.params as { owner: string; repo: string };
 
-const githubRepo = ref<string | null>(null);
-
-const { data, error } = await useFetch(`/api/cwlValidation/${identifier}`, {
+const { data, error } = await useFetch(`/api/${owner}/${repo}/cwl-validation`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
@@ -26,20 +24,11 @@ breadcrumbsStore.setFeature({
 
 if (error.value) {
   push.error({
-    title: "Failed to fetch license details",
+    title: "Failed to fetch CWL validation details",
     message: "Please try again later",
   });
 
-  // console.error("Failed to fetch license details:", error.value);
-
   throw createError(error.value);
-}
-
-if (data.value) {
-  githubRepo.value = `${data.value.owner}/${data.value.repo}`;
-
-  breadcrumbsStore.setOwner(data.value.owner);
-  breadcrumbsStore.setRepo(data.value.repo);
 }
 </script>
 
@@ -50,11 +39,11 @@ if (data.value) {
         <h1 class="text-2xl font-bold">
           View CWL Validation for
           <NuxtLink
-            :to="`https://github.com/${githubRepo}`"
+            :to="`https://github.com/${owner}/${repo}`"
             target="_blank"
             class="text-blue-500 underline transition-all hover:text-blue-600"
           >
-            {{ data?.repo }}
+            {{ repo }}
           </NuxtLink>
         </h1>
 

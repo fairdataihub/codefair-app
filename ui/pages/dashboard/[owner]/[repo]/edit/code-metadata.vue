@@ -210,9 +210,9 @@ const submitLoading = ref(false);
 const showSuccessModal = ref(false);
 const pullRequestURL = ref<string>("");
 
-const { identifier } = route.params as { identifier: string };
+const { owner, repo } = route.params as { owner: string; repo: string };
 
-const { data, error } = await useFetch(`/api/codeMetadata/${identifier}`, {
+const { data, error } = await useFetch(`/api/${owner}/${repo}/code-metadata`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
@@ -237,9 +237,6 @@ if (data.value) {
   if (Object.keys(data.value.metadata).length > 0) {
     formValue.value = data.value.metadata;
   }
-
-  breadcrumbsStore.setOwner(data.value.owner);
-  breadcrumbsStore.setRepo(data.value.repo);
 }
 
 const applicationCategoryOptions =
@@ -278,7 +275,7 @@ const saveCodeMetadataDraft = (e: MouseEvent) => {
 
       submitLoading.value = true;
 
-      await $fetch(`/api/codeMetadata/${identifier}`, {
+      await $fetch(`/api/${owner}/${repo}/code-metadata`, {
         body: JSON.stringify(body),
         headers: useRequestHeaders(["cookie"]),
         method: "PUT",
@@ -324,7 +321,7 @@ const pushToRepository = (e: MouseEvent) => {
 
       // Save the code metadata via PUT request and push to the repository via POST request
 
-      await $fetch(`/api/codeMetadata/${identifier}`, {
+      await $fetch(`/api/${owner}/${repo}/code-metadata`, {
         body: JSON.stringify(body),
         headers: useRequestHeaders(["cookie"]),
         method: "PUT",
@@ -336,7 +333,7 @@ const pushToRepository = (e: MouseEvent) => {
               "Please wait while we push the code metadata to the repository. This may take a few seconds.",
           });
 
-          await $fetch(`/api/codeMetadata/${identifier}`, {
+          await $fetch(`/api/${owner}/${repo}/code-metadata`, {
             headers: useRequestHeaders(["cookie"]),
             method: "POST",
           })
@@ -414,11 +411,11 @@ const navigateToPR = () => {
           <h1 class="text-2xl font-bold">
             Edit metadata for
             <NuxtLink
-              :to="`https://github.com/${data?.owner}/${data?.repo}`"
+              :to="`https://github.com/${owner}/${repo}`"
               target="_blank"
               class="text-blue-500 underline transition-all hover:text-blue-600"
             >
-              {{ data?.repo }}
+              {{ repo }}
             </NuxtLink>
           </h1>
 
