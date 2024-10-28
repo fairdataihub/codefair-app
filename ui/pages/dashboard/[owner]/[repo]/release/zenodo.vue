@@ -620,7 +620,7 @@ onBeforeUnmount(() => {
 
         <template #content>
           <div class="flex w-full flex-col space-y-3">
-            <n-flex v-if="license.id" class="border p-2" align="center">
+            <n-flex v-if="license.id && license?.customLicenseTitle != ''" class="border p-2" align="center">
               <Icon name="tabler:license" size="24" />
 
               <p class="text-sm">
