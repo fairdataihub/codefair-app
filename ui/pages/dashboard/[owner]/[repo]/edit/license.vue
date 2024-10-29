@@ -42,6 +42,7 @@ const { owner, repo } = route.params as { owner: string; repo: string };
 const licenseId = ref<string | null>(null);
 const licenseContent = ref("");
 const customLicenseTitle = ref("");
+const originalLicenseContent = ref("");  // Save the original content to check if the user has made any changes
 
 const displayLicenseEditor = ref(false);
 const getLicenseLoading = ref(false);
@@ -75,6 +76,7 @@ if (data.value) {
   licenseId.value = data.value.licenseId || null;
   licenseContent.value = data.value.licenseContent ?? "";
   customLicenseTitle.value = data.value.customLicenseTitle ?? "";
+  originalLicenseContent.value = data.value.licenseContent ?? "";
 
   if (licenseContent.value) {
     displayLicenseEditor.value = true;
@@ -177,6 +179,25 @@ const saveLicenseDraft = async () => {
       submitLoading.value = false;
     });
 };
+
+const saveCustomTitle = async () => {
+  if (!customLicenseTitle.value.trim()) {
+    push.error({
+      title: "Custom license title required",
+      message: "Please enter a custom license title",
+    });
+  }
+
+  submitLoading.value = true;
+
+  const body = {
+    licenseId: licenseId.value,
+    licenseContent: licenseContent.value,
+    customLicenseTitle: customLicenseTitle.value,
+  };
+
+  await $fetch(`/api/${owner}/${repo}/license`)
+}
 
 const saveLicenseAndPush = async () => {
   if (licenseId.value === "Custom" && !customLicenseTitle.value.trim()) {
@@ -363,19 +384,36 @@ const navigateToPR = () => {
         Save draft
       </n-button>
 
-      <n-button
-        size="large"
-        color="black"
-        x
-        @click="saveLicenseAndPush"
-        :disabled="!licenseId || !licenseContent"
-        :loading="submitLoading"
-      >
-        <template #icon>
-          <Icon name="ion:push" />
-        </template>
-        Save and push license to repository
-      </n-button>
+      <n-flex class="justify-between">
+        <n-button
+          size="large"
+          color="black"
+          @click="saveLicenseDraft"
+          :disabled="(!customLicenseTitle || !licenseContent) && licenseId === 'Custom'"
+          v-if="licenseId === 'Custom'"
+          :loading="submitLoading"
+        >
+          <template #icon>
+            <Icon name="material-symbols:save" />
+          </template>
+          Save License Title
+        </n-button>
+  
+        <n-button
+          size="large"
+          color="black"
+          x
+          @click="saveLicenseAndPush"
+          :disabled="!licenseId || !licenseContent"
+          :loading="submitLoading"
+          v-if="licenseContent !== originalLicenseContent"
+        >
+          <template #icon>
+            <Icon name="ion:push" />
+          </template>
+          Save and push license to repository
+        </n-button>
+      </n-flex>
     </n-flex>
 
     <n-modal v-model:show="showSuccessModal" transform-origin="center">
