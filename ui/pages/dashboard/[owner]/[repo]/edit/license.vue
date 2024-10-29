@@ -180,25 +180,6 @@ const saveLicenseDraft = async () => {
     });
 };
 
-const saveCustomTitle = async () => {
-  if (!customLicenseTitle.value.trim()) {
-    push.error({
-      title: "Custom license title required",
-      message: "Please enter a custom license title",
-    });
-  }
-
-  submitLoading.value = true;
-
-  const body = {
-    licenseId: licenseId.value,
-    licenseContent: licenseContent.value,
-    customLicenseTitle: customLicenseTitle.value,
-  };
-
-  await $fetch(`/api/${owner}/${repo}/license`)
-}
-
 const saveLicenseAndPush = async () => {
   if (licenseId.value === "Custom" && !customLicenseTitle.value.trim()) {
     push.error({
