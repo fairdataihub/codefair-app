@@ -42,7 +42,7 @@ const { owner, repo } = route.params as { owner: string; repo: string };
 const licenseId = ref<string | null>(null);
 const licenseContent = ref("");
 const customLicenseTitle = ref("");
-const originalLicenseContent = ref("");  // Save the original content to check if the user has made any changes
+const originalLicenseContent = ref(""); // Save the original content to check if the user has made any changes
 
 const displayLicenseEditor = ref(false);
 const getLicenseLoading = ref(false);
@@ -351,8 +351,9 @@ const navigateToPR = () => {
     <n-divider />
 
     <n-flex class="my-4" justify="space-between">
-      
-      <n-flex class="justify-start gap-4">
+      <n-flex 
+        justify="start"
+      >
         <n-button
           size="large"
           color="black"
@@ -363,14 +364,16 @@ const navigateToPR = () => {
           <template #icon>
             <Icon name="material-symbols:save" />
           </template>
-  
+
           Save draft
         </n-button>
         <n-button
           size="large"
           color="black"
           @click="saveLicenseDraft"
-          :disabled="(!customLicenseTitle || !licenseContent) && licenseId === 'Custom'"
+          :disabled="
+            (!customLicenseTitle || !licenseContent) && licenseId === 'Custom'
+          "
           v-if="licenseId === 'Custom'"
           :loading="submitLoading"
         >
@@ -379,7 +382,6 @@ const navigateToPR = () => {
           </template>
           Save License Title
         </n-button>
-  
       </n-flex>
       <n-button
         size="large"
