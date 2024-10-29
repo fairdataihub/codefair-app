@@ -42,7 +42,6 @@ const { owner, repo } = route.params as { owner: string; repo: string };
 const licenseId = ref<string | null>(null);
 const licenseContent = ref("");
 const customLicenseTitle = ref("");
-const originalLicenseContent = ref(""); // Save the original content to check if the user has made any changes
 
 const displayLicenseEditor = ref(false);
 const getLicenseLoading = ref(false);
@@ -76,7 +75,6 @@ if (data.value) {
   licenseId.value = data.value.licenseId || null;
   licenseContent.value = data.value.licenseContent ?? "";
   customLicenseTitle.value = data.value.customLicenseTitle ?? "";
-  originalLicenseContent.value = data.value.licenseContent ?? "";
 
   if (licenseContent.value) {
     displayLicenseEditor.value = true;
@@ -389,7 +387,6 @@ const navigateToPR = () => {
         @click="saveLicenseAndPush"
         :disabled="!licenseId || !licenseContent"
         :loading="submitLoading"
-        v-if="licenseContent !== originalLicenseContent"
       >
         <template #icon>
           <Icon name="ion:push" />
