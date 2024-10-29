@@ -322,7 +322,7 @@ export async function getZenodoDepositionInfo(
  * @param {String} codemetadata - Code metadata JSON string (parse with JSON.parse)
  * @returns {Object} Object of Zenodo metadata
  */
-export async function getZenodoMetadata(codemetadata, repository) {
+export async function createZenodoMetadata(codemetadata, repository) {
   try {
     const new_date = new Date().toISOString().split('T')[0];
     const codeMetaContent = codemetadata;
@@ -347,16 +347,16 @@ export async function getZenodoMetadata(codemetadata, repository) {
       return tempObj;
     });
   
+    const existingLicense = await dbInstance.licenseRequest.findUnique({
+      where: {
+        repository_id: repository.id,
+      }
+    });
     if (!codeMetaContent.license) {
       // fetch from the db
       consola.warn(`No license found in the codemeta.json file. Fetching from the database...`);
-      const response = await dbInstance.licenseRequest.findUnique({
-        where: {
-          repository_id: repository.id,
-        }
-      });
-      consola.info(`License found in the database: ${response?.license_id}`);
-      codeMetaContent.license = `https://spdx.org/licenses/${response?.license_id}`;
+      consola.info(`License found in the database: ${existingLicense?.license_id}`);
+      codeMetaContent.license = `https://spdx.org/licenses/${existingLicense?.license_id}`;
     }
     const license = licensesJson.find((license) => license.detailsUrl === `${codeMetaContent.license}.json`);
     const licenseId = license ? license.licenseId : null;
@@ -375,6 +375,29 @@ export async function getZenodoMetadata(codemetadata, repository) {
       consola.error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
       throw new Error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
     }
+
+    if (licenseId === "Custom") {
+      return {
+        metadata: {
+          title: codeMetaContent?.name,
+          description: codeMetaContent?.description,
+          upload_type: "software",
+          creators: zenodoCreators,
+          access_right: zenodoMetadata.zenodo_metadata.access_right,
+          publication_date: new_date,
+          // TODO: Ask user for language
+          rights: [
+            {
+              description: {en: existingLicense?.license_content},
+              title: {en: existingLicense?.custom_license_title}
+            }
+          ],
+          version: zenodoMetadata.zenodo_metadata.version || codeMetaContent?.version,
+          custom_license: zenodoMetadata.zenodo_metadata.custom_license,
+        }
+      }
+    }
+
   
     return {
       metadata: {
