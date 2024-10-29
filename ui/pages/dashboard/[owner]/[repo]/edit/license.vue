@@ -386,7 +386,6 @@ const navigateToPR = () => {
       <n-button
         size="large"
         color="black"
-        x
         @click="saveLicenseAndPush"
         :disabled="!licenseId || !licenseContent"
         :loading="submitLoading"
