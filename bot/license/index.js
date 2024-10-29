@@ -246,7 +246,7 @@ export async function applyLicenseTemplate(
       where: { repository_id: repository.id },
     });
   } else {
-    consola.info("Creating new license request...");
+    consola.info("Creating new license request...");huy
     await dbInstance.licenseRequest.create({
       data: {
         contains_license: subjects.license,
@@ -269,8 +269,8 @@ export async function applyLicenseTemplate(
     baseTemplate += `## LICENSE ✔️\n\nA LICENSE file is found at the root level of the repository.\n\n${licenseBadge}`;
   } else if (subjects.license && licenseId === "Custom" && !existingLicense?.custom_license_title) {
     baseTemplate += `## LICENSE ❗\n\nA custom LICENSE file has been found at the root level of this repository. While using a custom license is acceptable for Zenodo, you will need to provide a title for the custom license to archive. Please note that if you wish to archive this repository on FigShare, you'll need to select a license from the [SPDX license list](https://spdx.org/licenses/) to ensure proper archival and compliance.\n\nClick the button below to provide a license title.${licenseBadge}`;
-  } else if {
-    baseTemplate += `## LICENSE ❌\n\nTo make your software reusable, a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself, and Codefair will update the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
+  } else if (subjects.license && licenseId === "Custom" && existingLicense?.custom_license_title) {
+    baseTemplate += `## LICENSE ✔️\n\nA custom LICENSE file has been found at the root level of this repository.\n\n${licenseBadge}`;
   } else {
     baseTemplate += `## LICENSE ❌\n\nTo make your software reusable, a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself, and Codefair will update the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
   }
