@@ -19,7 +19,7 @@ import { checkForLicense } from "./license/index.js";
 import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
-import { getZenodoDepositionInfo, getZenodoMetadata, updateZenodoMetadata, uploadReleaseAssetsToZenodo, parseZenodoInfo, getZenodoToken, publishZenodoDeposition, updateGitHubRelease } from "./archival/index.js";
+import { getZenodoDepositionInfo, createZenodoMetadata, updateZenodoMetadata, uploadReleaseAssetsToZenodo, parseZenodoInfo, getZenodoToken, publishZenodoDeposition, updateGitHubRelease } from "./archival/index.js";
 import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier } from "./metadata/index.js";
 
 checkEnvVariable("GITHUB_APP_NAME");
@@ -794,7 +794,7 @@ export default async (app, { getRouter }) => {
         const updatedMetadataFile = await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
 
         // 6. Gather metadata for Zenodo deposition
-        const newZenodoMetadata = await getZenodoMetadata(updatedMetadataFile, repository);
+        const newZenodoMetadata = await createZenodoMetadata(updatedMetadataFile, repository);
 
         // 7. Update the Zenodo deposition's metadata
         await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
