@@ -349,24 +349,41 @@ const navigateToPR = () => {
     <n-divider />
 
     <n-flex class="my-4" justify="space-between">
-      <n-button
-        size="large"
-        color="black"
-        @click="saveLicenseDraft"
-        :loading="submitLoading"
-        :disabled="!licenseId || !licenseContent"
+      <n-flex 
+        justify="start"
       >
-        <template #icon>
-          <Icon name="material-symbols:save" />
-        </template>
+        <n-button
+          size="large"
+          color="black"
+          @click="saveLicenseDraft"
+          :loading="submitLoading"
+          :disabled="!licenseId || !licenseContent"
+        >
+          <template #icon>
+            <Icon name="material-symbols:save" />
+          </template>
 
-        Save draft
-      </n-button>
-
+          Save draft
+        </n-button>
+        <n-button
+          size="large"
+          color="black"
+          @click="saveLicenseDraft"
+          :disabled="
+            (!customLicenseTitle || !licenseContent) && licenseId === 'Custom'
+          "
+          v-if="licenseId === 'Custom'"
+          :loading="submitLoading"
+        >
+          <template #icon>
+            <Icon name="material-symbols:save" />
+          </template>
+          Save License Title
+        </n-button>
+      </n-flex>
       <n-button
         size="large"
         color="black"
-        x
         @click="saveLicenseAndPush"
         :disabled="!licenseId || !licenseContent"
         :loading="submitLoading"
