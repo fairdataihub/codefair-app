@@ -351,21 +351,21 @@ const navigateToPR = () => {
     <n-divider />
 
     <n-flex class="my-4" justify="space-between">
-      <n-button
-        size="large"
-        color="black"
-        @click="saveLicenseDraft"
-        :loading="submitLoading"
-        :disabled="!licenseId || !licenseContent"
-      >
-        <template #icon>
-          <Icon name="material-symbols:save" />
-        </template>
-
-        Save draft
-      </n-button>
-
-      <n-flex class="justify-between">
+      
+      <n-flex class="justify-start gap-4">
+        <n-button
+          size="large"
+          color="black"
+          @click="saveLicenseDraft"
+          :loading="submitLoading"
+          :disabled="!licenseId || !licenseContent"
+        >
+          <template #icon>
+            <Icon name="material-symbols:save" />
+          </template>
+  
+          Save draft
+        </n-button>
         <n-button
           size="large"
           color="black"
@@ -380,21 +380,21 @@ const navigateToPR = () => {
           Save License Title
         </n-button>
   
-        <n-button
-          size="large"
-          color="black"
-          x
-          @click="saveLicenseAndPush"
-          :disabled="!licenseId || !licenseContent"
-          :loading="submitLoading"
-          v-if="licenseContent !== originalLicenseContent"
-        >
-          <template #icon>
-            <Icon name="ion:push" />
-          </template>
-          Save and push license to repository
-        </n-button>
       </n-flex>
+      <n-button
+        size="large"
+        color="black"
+        x
+        @click="saveLicenseAndPush"
+        :disabled="!licenseId || !licenseContent"
+        :loading="submitLoading"
+        v-if="licenseContent !== originalLicenseContent"
+      >
+        <template #icon>
+          <Icon name="ion:push" />
+        </template>
+        Save and push license to repository
+      </n-button>
     </n-flex>
 
     <n-modal v-model:show="showSuccessModal" transform-origin="center">
