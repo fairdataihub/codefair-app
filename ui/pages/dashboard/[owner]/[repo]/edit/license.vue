@@ -178,6 +178,45 @@ const saveLicenseDraft = async () => {
     });
 };
 
+const saveCustomTitle = async () => {
+  if (licenseId.value === "Custom" && !customLicenseTitle.value.trim()) {
+    push.error({
+      title: "Custom license title required",
+      message: "Please enter a custom license title",
+    });
+    return;
+  }
+
+  submitLoading.value = true;
+
+  const body = {
+    licenseId: licenseId.value,
+    licenseContent: licenseContent.value,
+    customLicenseTitle: customLicenseTitle.value,
+  };
+
+  await $fetch(`/api/${owner}/${repo}/license`, {
+    method: "PUT",
+    headers: useRequestHeaders(["cookie"]),
+    body: JSON.stringify(body),
+  })
+    .then((_response) => {
+      push.success({
+        title: "Custom title saved",
+      });
+    })
+    .catch((error) => {
+      console.error("Failed to save custom license title:", error);
+      push.error({
+        title: "Failed to save custom license title",
+        message: "Please try again later",
+      });
+    })
+    .finally(() => {
+      submitLoading.value = false;
+    });
+};
+
 const saveLicenseAndPush = async () => {
   if (licenseId.value === "Custom" && !customLicenseTitle.value.trim()) {
     push.error({
@@ -368,7 +407,7 @@ const navigateToPR = () => {
         <n-button
           size="large"
           color="black"
-          @click="saveLicenseDraft"
+          @click="saveCustomTitle"
           :disabled="
             (!customLicenseTitle || !licenseContent) && licenseId === 'Custom'
           "
@@ -378,7 +417,7 @@ const navigateToPR = () => {
           <template #icon>
             <Icon name="material-symbols:save" />
           </template>
-          Save License Title
+          Save license title
         </n-button>
       </n-flex>
       <n-button

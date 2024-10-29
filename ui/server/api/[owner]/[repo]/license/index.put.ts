@@ -58,7 +58,6 @@ export default defineEventHandler(async (event) => {
       license_id: licenseId,
       license_content: licenseContent,
       custom_license_title: customLicenseTitle,
-      updated_at: new Date(),
     },
     where: {
       id: licenseRequest.id,
