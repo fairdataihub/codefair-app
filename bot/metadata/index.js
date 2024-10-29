@@ -435,6 +435,7 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
 
 }
 
+// TODO: Prevent the user from creating/updating metadata if custom license file exists and has no license title
 /**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
  *
@@ -500,7 +501,6 @@ export async function applyMetadataTemplate(
 
     if (!existingMetadata) {
       // Entry does not exist in db, create a new one
-      const newDate = new Date();
       const gatheredMetadata = await gatherMetadata(context, owner, repository);
       await dbInstance.codeMetadata.create({
         data: {
@@ -509,10 +509,7 @@ export async function applyMetadataTemplate(
           contains_citation: subjects.citation,
           contains_codemeta: subjects.codemeta,
           contains_metadata: subjects.codemeta && subjects.citation,
-          created_at: newDate,
-          identifier,
           metadata: gatheredMetadata,
-          updated_at: newDate,
           repository: {
             connect: {
               id: repository.id,
@@ -529,7 +526,6 @@ export async function applyMetadataTemplate(
           contains_citation: subjects.citation,
           contains_codemeta: subjects.codemeta,
           contains_metadata: subjects.codemeta && subjects.citation,
-          updated_at: new Date(),
         },
         where: { repository_id: repository.id },
       });
