@@ -507,6 +507,7 @@ export async function applyMetadataTemplate(
           citation_status: validCitation ? "valid" : "invalid",
           codemeta_status: validCodemeta ? "valid" : "invalid",
           contains_citation: subjects.citation,
+          identifier,
           contains_codemeta: subjects.codemeta,
           contains_metadata: subjects.codemeta && subjects.citation,
           metadata: gatheredMetadata,
