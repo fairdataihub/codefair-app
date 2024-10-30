@@ -36,6 +36,7 @@ const license = ref({
   id: "",
   customLicenseTitle: "",
   status: "",
+  licenseLanguage: "" as string | null
 });
 
 const allConfirmed = computed(
@@ -122,9 +123,11 @@ if (data.value) {
 
   license.value.id = data.value.license.id || "";
   license.value.status = data.value.license.status || "";
+  license.value.licenseLanguage = data.value.license.customLicenseLanguage || null;
   license.value.customLicenseTitle =
-    data.value.license.customLicenseTitle || "";
-
+  data.value.license.customLicenseTitle || "";
+  
+  console.log("license", license.value);
   selectedExistingDeposition.value = data.value.existingZenodoDepositionId
     ? "existing"
     : data.value.existingZenodoDepositionId === null
@@ -620,7 +623,7 @@ onBeforeUnmount(() => {
 
         <template #content>
           <div class="flex w-full flex-col space-y-3">
-            <n-flex v-if="license.id && license?.customLicenseTitle != ''" class="border p-2" align="center">
+            <n-flex v-if="license.id && license?.customLicenseTitle != '' && license?.licenseLanguage" class="border p-2" align="center">
               <Icon name="tabler:license" size="24" />
 
               <p class="text-sm">
@@ -630,11 +633,11 @@ onBeforeUnmount(() => {
             </n-flex>
 
             <n-alert
-              v-if="license.id === 'Custom' && !license.customLicenseTitle"
+              v-if="license.id === 'Custom' && (!license.customLicenseTitle || !license?.licenseLanguage)"
               type="error"
               class="mb-4 w-full"
             >
-              Zenodo requires a license title for custom licenses. Please enter
+              Zenodo requires a license title and specified language for custom licenses. Please enter
               a custom license title in the License section.
             </n-alert>
 
@@ -649,7 +652,7 @@ onBeforeUnmount(() => {
 
             <n-checkbox
               v-model:checked="licenseChecked"
-              :disabled="license.id === 'Custom' && !license.customLicenseTitle"
+              :disabled="license.id === 'Custom' && (!license.customLicenseTitle || !license?.licenseLanguage)"
             >
               I have added and reviewed the license file that is required for
               the repository to be released on Zenodo.

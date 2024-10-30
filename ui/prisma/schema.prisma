@@ -67,7 +67,8 @@ model LicenseRequest {
   license_id      String?
   license_content String  @default("")
 
-  custom_license_title String @default("")
+  custom_license_title    String  @default("")
+  custom_license_language String?
 
   pull_request_url String @default("")
 

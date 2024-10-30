@@ -46,7 +46,7 @@ export async function publishZenodoDeposition(zenodoToken, depositionId) {
     );
 
     if (!publishDeposition.ok) {
-      throw new Error(`Failed to publish the Zenodo deposition. Status: ${publishDeposition.status}: ${publishDeposition.statusText}, Error: ${publishDeposition}`, { cause: publishDeposition });
+      throw new Error(`Failed to publish the Zenodo deposition. Status: ${publishDeposition.status}: ${publishDeposition.statusText}, Error: ${JSON.stringify(publishDeposition)}`, { cause: publishDeposition });
     }
 
     const publishedDeposition = await publishDeposition.json();
@@ -377,23 +377,26 @@ export async function createZenodoMetadata(codemetadata, repository) {
     }
 
     if (licenseId === "Custom") {
+      consola.start("Creating metadata for custom licenses...")
+      const licenseLanguage = existingLicense?.custom_license_language;
       return {
         metadata: {
           title: codeMetaContent?.name,
           description: codeMetaContent?.description,
           upload_type: "software",
           creators: zenodoCreators,
-          access_right: zenodoMetadata.zenodo_metadata.access_right,
+          access_right: zenodoMetadata.zenodo_metadata.accessRight,
           publication_date: new_date,
-          // TODO: Ask user for language
-          rights: [
-            {
-              description: {en: existingLicense?.license_content},
-              title: {en: existingLicense?.custom_license_title}
-            }
-          ],
+          // license: {
+          //   title: existingLicense?.custom_license_title,
+          //   description: existingLicense?.license_content,
+          //   id: licenseId,
+          // },
+          rights: [{
+            title: {[licenseLanguage]: existingLicense?.custom_license_title},
+            description: {[licenseLanguage]: existingLicense?.license_content},
+          }],
           version: zenodoMetadata.zenodo_metadata.version || codeMetaContent?.version,
-          custom_license: zenodoMetadata.zenodo_metadata.custom_license,
         }
       }
     }
@@ -405,7 +408,7 @@ export async function createZenodoMetadata(codemetadata, repository) {
         description: codeMetaContent?.description,
         upload_type: "software",
         creators: zenodoCreators,
-        access_right: zenodoMetadata.zenodo_metadata.access_right,
+        access_right: zenodoMetadata.zenodo_metadata.accessRight,
         publication_date: new_date,
         license: licenseId,
         version: zenodoMetadata.zenodo_metadata.version || codeMetaContent?.version,
@@ -425,6 +428,7 @@ export async function createZenodoMetadata(codemetadata, repository) {
  */
 export async function updateZenodoMetadata(depositionId, zenodoToken, metadata) {
   try {
+    consola.warn("Metadata that will be sent to Zenodo draft:", metadata);
     const updatedMetadata = await fetch(
       `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
       {
@@ -439,7 +443,7 @@ export async function updateZenodoMetadata(depositionId, zenodoToken, metadata) 
     );
 
     const updatedMetadataInfo = await updatedMetadata.json();
-    consola.success("Zenodo deposition metadata updated successfully!");
+    consola.success("Zenodo deposition metadata updated successfully!", updatedMetadataInfo);
     return updatedMetadataInfo;
   } catch (error) {
     throw new Error(`Error updating Zenodo metadata: ${error}`, { cause: error });

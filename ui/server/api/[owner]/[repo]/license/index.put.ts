@@ -7,6 +7,7 @@ export default defineEventHandler(async (event) => {
     licenseId: z.string(),
     licenseContent: z.string(),
     customLicenseTitle: z.string().optional(),
+    customLicenseLanguage: z.string().optional(),
   });
 
   const { owner, repo } = event.context.params as {
@@ -32,7 +33,12 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { licenseId, licenseContent, customLicenseTitle } = parsedBody.data;
+  const {
+    licenseId,
+    licenseContent,
+    customLicenseTitle,
+    customLicenseLanguage,
+  } = parsedBody.data;
 
   const licenseRequest = await prisma.licenseRequest.findFirst({
     where: {
@@ -53,11 +59,13 @@ export default defineEventHandler(async (event) => {
   // Check if the user is authorized to access the license request
   await repoWritePermissions(event, owner, repo);
 
+  console.log("customLicenseLanguage", customLicenseLanguage);
   const updatedLicenseRequest = await prisma.licenseRequest.update({
     data: {
       license_id: licenseId,
       license_content: licenseContent,
       custom_license_title: customLicenseTitle,
+      custom_license_language: customLicenseLanguage,
     },
     where: {
       id: licenseRequest.id,
@@ -75,5 +83,6 @@ export default defineEventHandler(async (event) => {
     licenseId,
     licenseContent,
     customLicenseTitle,
+    customLicenseLanguage,
   };
 });

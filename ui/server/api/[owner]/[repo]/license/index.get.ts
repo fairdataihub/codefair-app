@@ -29,6 +29,7 @@ export default defineEventHandler(async (event) => {
     licenseId: licenseRequest.license_id,
     licenseContent: licenseRequest.license_content,
     customLicenseTitle: licenseRequest.custom_license_title,
+    customLicenseLanguage: licenseRequest.custom_license_language,
     timestamp: Date.parse(licenseRequest.updated_at.toString()),
   };
 

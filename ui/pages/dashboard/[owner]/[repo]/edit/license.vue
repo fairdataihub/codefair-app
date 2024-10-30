@@ -2,6 +2,7 @@
 import sanitizeHtml from "sanitize-html";
 import { MdEditor, config } from "md-editor-v3";
 import licensesJSON from "@/assets/data/licenses.json";
+import zenodoLanguages from "@/assets/data/zenodoLanguages.json";
 import TargetBlankExtension from "@/utils/TargetBlankExtension";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
@@ -35,6 +36,11 @@ const licenseOptions = licensesJSON.map((option) => ({
   value: option.licenseId,
 }));
 
+const languageOptions = zenodoLanguages.map((option) => ({
+  label: option.name,
+  value: option.alpha2,
+}))
+
 const route = useRoute();
 
 const { owner, repo } = route.params as { owner: string; repo: string };
@@ -42,6 +48,7 @@ const { owner, repo } = route.params as { owner: string; repo: string };
 const licenseId = ref<string | null>(null);
 const licenseContent = ref("");
 const customLicenseTitle = ref("");
+const licenseLanguage = ref<string | null>(null);
 
 const displayLicenseEditor = ref(false);
 const getLicenseLoading = ref(false);
@@ -75,6 +82,7 @@ if (data.value) {
   licenseId.value = data.value.licenseId || null;
   licenseContent.value = data.value.licenseContent ?? "";
   customLicenseTitle.value = data.value.customLicenseTitle ?? "";
+  licenseLanguage.value = data.value.customLicenseLanguage || null;
 
   if (licenseContent.value) {
     displayLicenseEditor.value = true;
@@ -138,6 +146,16 @@ const updateLicenseContent = async (value: string) => {
   }
 };
 
+const updateLicenseLanguage = async (value: string) => {
+  if (!value) {
+    return;
+  }
+
+  console.log("Selected", value)
+  const selectedLanguage = zenodoLanguages.find((item) => item.alpha2 === value);
+  licenseLanguage.value = selectedLanguage ? selectedLanguage.alpha2 : null;
+};
+
 const saveLicenseDraft = async () => {
   if (licenseId.value === "Custom" && !customLicenseTitle.value.trim()) {
     push.error({
@@ -187,12 +205,21 @@ const saveCustomTitle = async () => {
     return;
   }
 
+  if (licenseId.value === "Custom" && !licenseLanguage.value) {
+    push.error({
+      title: "Language required",
+      message: "Please specify a language for your custom license",
+    });
+    return;
+  }
+
   submitLoading.value = true;
 
   const body = {
     licenseId: licenseId.value,
     licenseContent: licenseContent.value,
     customLicenseTitle: customLicenseTitle.value,
+    customLicenseLanguage: licenseLanguage.value,
   };
 
   await $fetch(`/api/${owner}/${repo}/license`, {
@@ -202,13 +229,13 @@ const saveCustomTitle = async () => {
   })
     .then((_response) => {
       push.success({
-        title: "Custom title saved",
+        title: "Custom details saved",
       });
     })
     .catch((error) => {
-      console.error("Failed to save custom license title:", error);
+      console.error("Failed to save custom details title:", error);
       push.error({
-        title: "Failed to save custom license title",
+        title: "Failed to save custom details title",
         message: "Please try again later",
       });
     })
@@ -329,7 +356,7 @@ const navigateToPR = () => {
         />
       </n-form-item>
 
-      <n-alert v-if="licenseId === 'Custom'" type="warning" class="w-full">
+      <n-alert v-if="licenseId === 'Custom'" type="warning" class="w-full mb-2">
         <p class="text-base">
           This repository uses a custom license. We recommend using a license
           that is within the list of allowed licenses as custom licenses may not
@@ -347,6 +374,22 @@ const navigateToPR = () => {
           size="large"
           placeholder="My custom license title"
           clearable
+        />
+      </n-form-item>
+
+      <n-form-item v-show="licenseId === 'Custom'" class="mb-5" :show-feedback="false" show-require-mark size="large">
+        <template #label>
+          <p class="pb-1 text-base font-bold">Select a language</p>
+        </template>
+
+        <n-select
+          v-model:value="licenseLanguage"
+          placeholder="English"
+          clearable
+          size="large"
+          filterable
+          @update:value="updateLicenseLanguage"
+          :options="languageOptions"
         />
       </n-form-item>
 
@@ -409,7 +452,7 @@ const navigateToPR = () => {
           color="black"
           @click="saveCustomTitle"
           :disabled="
-            (!customLicenseTitle || !licenseContent) && licenseId === 'Custom'
+            (!customLicenseTitle || !licenseContent || !licenseLanguage) && licenseId === 'Custom'
           "
           v-if="licenseId === 'Custom'"
           :loading="submitLoading"
@@ -417,7 +460,7 @@ const navigateToPR = () => {
           <template #icon>
             <Icon name="material-symbols:save" />
           </template>
-          Save license title
+          Save custom license details
         </n-button>
       </n-flex>
       <n-button
