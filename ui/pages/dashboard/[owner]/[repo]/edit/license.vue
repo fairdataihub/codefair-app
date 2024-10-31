@@ -195,7 +195,7 @@ const saveCustomTitle = async () => {
     customLicenseTitle: customLicenseTitle.value,
   };
 
-  await $fetch(`/api/${owner}/${repo}/license`, {
+  await $fetch(`/api/${owner}/${repo}/license/custom_title`, {
     method: "PUT",
     headers: useRequestHeaders(["cookie"]),
     body: JSON.stringify(body),
