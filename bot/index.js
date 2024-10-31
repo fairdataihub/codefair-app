@@ -585,7 +585,7 @@ export default async (app, { getRouter }) => {
       }
 
       // Update the issue with the new body
-      consola.info("Updating the issue with the new body", issueBody);
+      // consola.info("Updating the issue with the new body", issueBody);
       await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
     }
   });
@@ -877,6 +877,36 @@ export default async (app, { getRouter }) => {
         }
         throw new Error(`Error publishing to Zenodo: ${error.message}`, { cause: error });
       }
+    }
+
+    if (issueBody.includes("<!-- @codefair-bot custom-license-title-provided -->")) {
+      // Custom license title provided, update the issue dashboard
+      const citation = await checkForCitation(context, owner, repository.name);
+      const codemeta = await checkForCodeMeta(context, owner, repository.name);
+      const cwl = await getCWLFiles(context, owner, repository.name);
+
+      const cwlObject = {
+        contains_cwl: cwl.length > 0 || false,
+        files: cwl,
+        removed_files: [],
+      };
+
+      const subjects = {
+        citation,
+        codemeta,
+        cwl: cwlObject,
+        license: true,
+      };
+
+      const issueBody = await renderIssues(
+        context,
+        owner,
+        repository,
+        false,
+        subjects,
+      );
+
+      await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
     }
   });
 
