@@ -125,15 +125,8 @@ export async function applyArchivalTemplate(
   baseTemplate,
   repository,
   owner,
-  subjects,
 ) {
   const archiveTitle = `\n\n## FAIR Software Release`;
-  if (!subjects.license || (subjects.customLicense) || !subjects.codemeta || !subjects.citation) {
-    const unavailableButton = `[![Unavailable](https://img.shields.io/badge/Not_FAIR_compliant-fbbf24.svg)]()`
-    baseTemplate += `${archiveTitle}\n\nTo make a FAIR software release, it is necessary to have a license, CITATION.cff, and codemeta.json metadata files at the root level of your repository. Please add these files to your repository before making a release.\n\n${unavailableButton}`;
-    return baseTemplate;
-  }
-  
   const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
   const existingZenodoDep = await dbInstance.zenodoDeposition.findUnique({
     where: {

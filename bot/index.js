@@ -879,15 +879,34 @@ export default async (app, { getRouter }) => {
       }
     }
 
-    if (issueBody.includes("<!-- @codefair-bot custom-license-title-provided -->")) {
+    if (issueBody.includes("<!-- @codefair-bot re-render-dashboard -->")) {
       // Custom license title provided, update the issue dashboard
-      const citation = await checkForCitation(context, owner, repository.name);
-      const codemeta = await checkForCodeMeta(context, owner, repository.name);
-      const cwl = await getCWLFiles(context, owner, repository.name);
+      const licenseResponse = await db.licenseRequest.findUnique({
+        where: {
+          repository_id: repository.id,
+        }
+      });
+
+      const metadataResponse = await db.codeMetadata.findUnique({
+        where: {
+          repository_id: repository.id,
+        }
+      });
+
+      const cwlResponse = await db.cwlValidation.findUnique({
+        where: {
+          repository_id: repository.id,
+        }
+      });
+
+      const license = licenseResponse?.license_id ? true : false;
+      const citation = metadataResponse?.contains_citation ? true : false;
+      const codemeta = metadataResponse?.contains_codemeta ? true : false;
+      const cwl = cwlResponse?.contains_cwl_files ? true : false;
 
       const cwlObject = {
-        contains_cwl: cwl.length > 0 || false,
-        files: cwl,
+        contains_cwl: cwl,
+        files: cwlResponse?.files || [],
         removed_files: [],
       };
 
@@ -895,7 +914,7 @@ export default async (app, { getRouter }) => {
         citation,
         codemeta,
         cwl: cwlObject,
-        license: true,
+        license,
       };
 
       const issueBody = await renderIssues(

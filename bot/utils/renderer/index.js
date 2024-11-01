@@ -58,6 +58,10 @@ export async function renderIssues(
     where: { repository_id: repository.id },
   });
 
+  if (prUrl?.license_id === "Custom") {
+    subjects.customLicense = true;
+  }
+
   // If License PR is open, add the PR number to the dashboard
   if (prUrl?.pull_request_url !== "") {
     // Verify if the PR is still open

@@ -107,7 +107,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const updatedIssueBody = `${issue.body}<!-- @codefair-bot custom-license-title-provided -->`;
+    const updatedIssueBody = `${issue.body}<!-- @codefair-bot re-render-dashboard -->`;
 
     await octokit.request("PATCH /repos/{owner}/{repo}/issues/{issue_number}", {
       body: updatedIssueBody,
