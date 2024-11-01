@@ -12,13 +12,9 @@ export default defineEventHandler((event) => {
   const session = event.context.session as Session | null;
 
   if (!user || !session) {
-    // Get the original path from the request
-    const redirectPath = encodeURIComponent(event.node.req.url || "/");
-
     throw createError({
       statusCode: 401,
-      statusMessage: "unauthorized",
-      data: { redirect: `/login/github?redirect=${redirectPath}` },
+      statusMessage: "not-signed-in",
     });
   }
 

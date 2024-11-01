@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NuxtError } from "#app";
+import { error } from "naive-ui/es/_utils/naive/warn";
 
 const props = defineProps({
   error: {
@@ -23,6 +24,7 @@ const githubOAuthOrgUrl = ref("");
 
 if (props.error) {
   const errorCode = props.error.statusMessage ?? "Something went wrong";
+  const urlVisiting = (props.error as NuxtError & { url?: string }).url ?? "/";
 
   if (statusCode === 403) {
     showNotAuthorizedError.value = true;
@@ -43,7 +45,21 @@ if (props.error) {
         message: "This request has been closed. You can't edit it anymore.",
       });
     }
-  } else {
+  } else if (statusCode === 401 && errorCode === "not-signed-in") {
+    console.log("props", props);
+    const redirectPath = encodeURIComponent(urlVisiting);
+
+    try {
+      await navigateTo({
+        path: "/login/github",
+        query: { redirect: redirectPath },
+      });
+    } catch (error) {
+      console.error("Redirection error:", error);
+    }
+  }
+   else {
+    console.log("DFLSJDFL:KJSD")
     push.error({
       title: "Something went wrong",
     });
