@@ -38,10 +38,6 @@ const license = ref({
   status: "",
 });
 
-const allConfirmed = computed(
-  () => licenseChecked.value && metadataChecked.value,
-);
-
 const selectedExistingDeposition = ref<string | null>(null);
 const selectedDeposition = ref<string | null>(null);
 const selectableDepositions = ref<Array<SelectOption | SelectGroupOption>>([]);
@@ -201,6 +197,10 @@ if (data.value) {
     metadataChecked.value = true;
   }
 }
+
+const allConfirmed = computed(
+  () => licenseChecked.value && metadataChecked.value && license.value.id !== "Custom",
+);
 
 const createDraftGithubReleaseSpinner = ref(false);
 
@@ -656,7 +656,7 @@ onBeforeUnmount(() => {
             </n-alert>
 
             <n-checkbox
-              v-model:checked="licenseChecked"
+              :checked="licenseChecked && license.id !== 'Custom'"
               :disabled="license.id === 'Custom'"
             >
               I have added and reviewed the license file that is required for
