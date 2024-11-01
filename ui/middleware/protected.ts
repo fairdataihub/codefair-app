@@ -1,16 +1,18 @@
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   const user = useUser();
 
+  // Add paths will be in the form of /add/license/:identifier
+  // We need to redirect back to this path after login
   if (!user.value) {
-    // Add paths will be in the form of `/add/license/:identifier`
-    // We need to redirect back to this path after login
-    const redirectPath = to.path;
+    const redirectPath = encodeURIComponent(to.path);
 
-    return navigateTo({
-      path: "/login/github",
-      query: {
-        redirect: encodeURIComponent(redirectPath),
-      },
-    });
+    try {
+      await navigateTo({
+        path: "/login/github",
+        query: { redirect: redirectPath },
+      });
+    } catch (error) {
+      console.error("Redirection error:", error);
+    }
   }
 });
