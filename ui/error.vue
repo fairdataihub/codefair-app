@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { NuxtError } from "#app";
-import { error } from "naive-ui/es/_utils/naive/warn";
 
 const props = defineProps({
   error: {
