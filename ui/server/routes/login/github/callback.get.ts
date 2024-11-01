@@ -1,8 +1,8 @@
 import { OAuth2RequestError } from "arctic";
 import { generateIdFromEntropySize } from "lucia";
 import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
 import { github } from "~/server/utils/auth";
+const prisma = new PrismaClient();
 
 interface GitHubUser {
   id: string;
@@ -48,8 +48,8 @@ export default defineEventHandler(async (event) => {
       // Add a last login timestamp to the user
       await prisma.user.update({
         data: {
-          last_login: new Date(),
           access_token: tokens.accessToken,
+          last_login: new Date(),
         },
         where: {
           id,

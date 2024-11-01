@@ -37,21 +37,20 @@ const licenseOptions = licensesJSON.map((option) => ({
 
 const route = useRoute();
 
-const { identifier } = route.params as { identifier: string };
-
-const githubRepo = ref<string | null>(null);
+const { owner, repo } = route.params as { owner: string; repo: string };
 
 const licenseId = ref<string | null>(null);
-const licenseContent = ref<string>("");
+const licenseContent = ref("");
+const customLicenseTitle = ref("");
 
 const displayLicenseEditor = ref(false);
 const getLicenseLoading = ref(false);
 const submitLoading = ref(false);
 
 const showSuccessModal = ref(false);
-const pullRequestURL = ref<string>("");
+const pullRequestURL = ref("");
 
-const { data, error } = await useFetch(`/api/license/${identifier}`, {
+const { data, error } = await useFetch(`/api/${owner}/${repo}/license`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
@@ -73,23 +72,33 @@ if (error.value) {
 }
 
 if (data.value) {
-  githubRepo.value = `${data.value.owner}/${data.value.repo}`;
   licenseId.value = data.value.licenseId || null;
   licenseContent.value = data.value.licenseContent ?? "";
+  customLicenseTitle.value = data.value.customLicenseTitle ?? "";
 
   if (licenseContent.value) {
     displayLicenseEditor.value = true;
   }
-
-  breadcrumbsStore.setOwner(data.value.owner);
-  breadcrumbsStore.setRepo(data.value.repo);
 }
 
 const sanitize = (html: string) => sanitizeHtml(html);
 
 const updateLicenseContent = async (value: string) => {
-  console.log(value);
   if (!value) {
+    return;
+  }
+
+  if (value === "Custom") {
+    licenseContent.value = data.value?.licenseContent || "";
+    customLicenseTitle.value = data.value?.customLicenseTitle || "";
+    push.warning({
+      title: "Custom license",
+      message:
+        "Your license content was reset to the original terms. Please be aware that this license may not be publishable on some archival repositories.",
+    });
+
+    displayLicenseEditor.value = true;
+
     return;
   }
 
@@ -103,7 +112,7 @@ const updateLicenseContent = async (value: string) => {
       "Please wait while we fetch the license details...",
     );
 
-    await $fetch(`/api/license/request/${license.licenseId}`, {
+    await $fetch(`/api/request/license/${license.licenseId}`, {
       headers: useRequestHeaders(["cookie"]),
     })
       .then((response) => {
@@ -130,14 +139,23 @@ const updateLicenseContent = async (value: string) => {
 };
 
 const saveLicenseDraft = async () => {
+  if (licenseId.value === "Custom" && !customLicenseTitle.value.trim()) {
+    push.error({
+      title: "Custom license title required",
+      message: "Please enter a custom license title",
+    });
+    return;
+  }
+
   submitLoading.value = true;
 
   const body = {
     licenseId: licenseId.value,
     licenseContent: licenseContent.value,
+    customLicenseTitle: customLicenseTitle.value,
   };
 
-  await $fetch(`/api/license/${identifier}`, {
+  await $fetch(`/api/${owner}/${repo}/license`, {
     method: "PUT",
     headers: useRequestHeaders(["cookie"]),
     body: JSON.stringify(body),
@@ -160,15 +178,63 @@ const saveLicenseDraft = async () => {
     });
 };
 
-const saveLicenseAndPush = async () => {
+const saveCustomTitle = async () => {
+  if (licenseId.value === "Custom" && !customLicenseTitle.value.trim()) {
+    push.error({
+      title: "Custom license title required",
+      message: "Please enter a custom license title",
+    });
+    return;
+  }
+
   submitLoading.value = true;
 
   const body = {
     licenseId: licenseId.value,
     licenseContent: licenseContent.value,
+    customLicenseTitle: customLicenseTitle.value,
   };
 
-  await $fetch(`/api/license/${identifier}`, {
+  await $fetch(`/api/${owner}/${repo}/license/custom_title`, {
+    method: "PUT",
+    headers: useRequestHeaders(["cookie"]),
+    body: JSON.stringify(body),
+  })
+    .then((_response) => {
+      push.success({
+        title: "Custom title saved",
+      });
+    })
+    .catch((error) => {
+      console.error("Failed to save custom license title:", error);
+      push.error({
+        title: "Failed to save custom license title",
+        message: "Please try again later",
+      });
+    })
+    .finally(() => {
+      submitLoading.value = false;
+    });
+};
+
+const saveLicenseAndPush = async () => {
+  if (licenseId.value === "Custom" && !customLicenseTitle.value.trim()) {
+    push.error({
+      title: "Custom license title required",
+      message: "Please enter a custom license title",
+    });
+    return;
+  }
+
+  submitLoading.value = true;
+
+  const body = {
+    licenseId: licenseId.value,
+    licenseContent: licenseContent.value,
+    customLicenseTitle: customLicenseTitle.value,
+  };
+
+  await $fetch(`/api/${owner}/${repo}/license`, {
     method: "POST",
     headers: useRequestHeaders(["cookie"]),
     body: JSON.stringify(body),
@@ -214,11 +280,11 @@ const navigateToPR = () => {
         <h1 class="text-2xl font-bold">
           Edit LICENSE for
           <NuxtLink
-            :to="`https://github.com/${githubRepo}`"
+            :to="`https://github.com/${owner}/${repo}`"
             target="_blank"
             class="text-blue-500 underline transition-all hover:text-blue-600"
           >
-            {{ data?.repo }}
+            {{ repo }}
           </NuxtLink>
         </h1>
 
@@ -249,7 +315,7 @@ const navigateToPR = () => {
 
       <n-form-item class="mb-3 mt-5" :show-feedback="false" size="large">
         <template #label>
-          <p class="pb-1 text-base">Select a license</p>
+          <p class="pb-1 text-base font-bold">Select a license</p>
         </template>
 
         <n-select
@@ -260,6 +326,25 @@ const navigateToPR = () => {
           filterable
           @update:value="updateLicenseContent"
           :options="licenseOptions"
+        />
+      </n-form-item>
+
+      <n-alert v-if="licenseId === 'Custom'" type="warning" class="w-full">
+        <p class="text-base">
+          You selected a Custom license. It is recommended to use a standard license from the list to make your software conveniently reusable. Additionally, custom licenses may not be supported by some archival repositories.
+        </p>
+      </n-alert>
+
+      <n-form-item v-show="licenseId === 'Custom'" show-require-mark>
+        <template #label>
+          <p class="pb-1 text-base font-bold">Custom license title</p>
+        </template>
+
+        <n-input
+          v-model:value="customLicenseTitle"
+          size="large"
+          placeholder="My custom license title"
+          clearable
         />
       </n-form-item>
 
@@ -301,24 +386,41 @@ const navigateToPR = () => {
     <n-divider />
 
     <n-flex class="my-4" justify="space-between">
-      <n-button
-        size="large"
-        color="black"
-        @click="saveLicenseDraft"
-        :loading="submitLoading"
-        :disabled="!licenseId || !licenseContent"
+      <n-flex 
+        justify="start"
       >
-        <template #icon>
-          <Icon name="material-symbols:save" />
-        </template>
+        <n-button
+          size="large"
+          color="black"
+          @click="saveLicenseDraft"
+          :loading="submitLoading"
+          :disabled="!licenseId || !licenseContent"
+        >
+          <template #icon>
+            <Icon name="material-symbols:save" />
+          </template>
 
-        Save draft
-      </n-button>
-
+          Save draft
+        </n-button>
+        <n-button
+          size="large"
+          color="black"
+          @click="saveCustomTitle"
+          :disabled="
+            (!customLicenseTitle || !licenseContent) && licenseId === 'Custom'
+          "
+          v-if="licenseId === 'Custom'"
+          :loading="submitLoading"
+        >
+          <template #icon>
+            <Icon name="material-symbols:save" />
+          </template>
+          Save license title
+        </n-button>
+      </n-flex>
       <n-button
         size="large"
         color="black"
-        x
         @click="saveLicenseAndPush"
         :disabled="!licenseId || !licenseContent"
         :loading="submitLoading"

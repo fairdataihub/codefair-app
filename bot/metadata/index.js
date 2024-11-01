@@ -285,8 +285,7 @@ export async function getCodemetaContent(context, owner, repository) {
 
     // return JSON.parse(Buffer.from(codemetaFile.data.content, "base64").toString());
   } catch (error) {
-    consola.error("Error getting codemeta.json file", error);
-    return null;
+    throw new Error("Error getting codemeta.json file", error);
   }
 }
 
@@ -298,15 +297,12 @@ export async function getCitationContent(context, owner, repository) {
     repo: repository.name,
   });
 
-
-
   return {
     content: Buffer.from(citationFile.data.content, "base64").toString(),
     sha: citationFile.data.sha,
   }
  } catch (error) {
-    consola.error("Error getting CITATION.cff file", error);
-    return null;
+    throw new Error("Error getting CITATION.cff file", error);
  }
 }
 
@@ -323,7 +319,7 @@ export async function validateMetadata(content, fileType) {
       return false;
     }
   }
-
+  
   if (fileType === "citation") {
     try {
       yaml.load(content);
@@ -340,6 +336,7 @@ export async function validateMetadata(content, fileType) {
 }
 
 export async function updateMetadataIdentifier(context, owner, repository, identifier, version) {
+  try {
   // Get the citation file
   const citationObj = await getCitationContent(context, owner, repository);
   const codeMetaObj = await getCodemetaContent(context, owner, repository);
@@ -358,7 +355,6 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   })
 
   if (!zenodoMetadata) {
-    consola.error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
     throw new Error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
   }
 
@@ -420,7 +416,6 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
 
   // Update the codemetadata content with the new Zenodo identifier
   existingCodemeta.metadata.uniqueIdentifier = identifier;
-  existingCodemeta.metadata.firstReleaseDate = updated_date;
   existingCodemeta.metadata.currentVersion = zenodoMetadata?.zenodo_metadata?.version || version
 
   // Update the database with the latest metadata
@@ -434,8 +429,13 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
   })
 
   return codeMetaFile;
+  } catch (error) {
+    throw new Error(`Error on updating the GitHub metadata files: ${error}`, { cause: error })
+  }
+
 }
 
+// TODO: Prevent the user from creating/updating metadata if custom license file exists and has no license title
 /**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
  *
@@ -460,7 +460,7 @@ export async function applyMetadataTemplate(
     let validCitation = false;
     let validCodemeta = false;
 
-    let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
+    let url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata`;
 
     const existingMetadata = await dbInstance.codeMetadata.findUnique({
       where: {
@@ -501,19 +501,16 @@ export async function applyMetadataTemplate(
 
     if (!existingMetadata) {
       // Entry does not exist in db, create a new one
-      const newDate = new Date();
       const gatheredMetadata = await gatherMetadata(context, owner, repository);
       await dbInstance.codeMetadata.create({
         data: {
           citation_status: validCitation ? "valid" : "invalid",
           codemeta_status: validCodemeta ? "valid" : "invalid",
           contains_citation: subjects.citation,
+          identifier,
           contains_codemeta: subjects.codemeta,
           contains_metadata: subjects.codemeta && subjects.citation,
-          created_at: newDate,
-          identifier,
           metadata: gatheredMetadata,
-          updated_at: newDate,
           repository: {
             connect: {
               id: repository.id,
@@ -530,12 +527,13 @@ export async function applyMetadataTemplate(
           contains_citation: subjects.citation,
           contains_codemeta: subjects.codemeta,
           contains_metadata: subjects.codemeta && subjects.citation,
-          updated_at: new Date(),
         },
         where: { repository_id: repository.id },
       });
 
-      url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
+      if (existingMetadata?.identifier) {
+        url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
+      }
     }
     const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
     baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemeta.json are expected at the root level of your repository. These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;

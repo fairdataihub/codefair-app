@@ -118,7 +118,7 @@ export async function applyCWLTemplate(
   const privateRepo = await isRepoPrivate(context, owner, repository.name);
   const identifier = createId();
   const overallSection = `\n\n## Language Specific Standards\n\nTo make your software FAIR is it important to follow language specific standards and best practices. Codefair will check below that your code complies with applicable standards,`;
-  let url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${identifier}`;
+  let url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/view/cwl-validation`;
 
   // Delete file entries from db if they were removed from the repository
   if (subjects.cwl.removed_files.length > 0) {
@@ -258,7 +258,9 @@ export async function applyCWLTemplate(
     }
   } else {
     // An entry exists in the db, thus possible old files exist (merge both lists)
-    url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${existingCWL.identifier}`;
+    if (existingCWL?.identifier) {
+      url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${existingCWL.identifier}`;
+    }
     validOverall = true;
     const fileMap = new Map();
 

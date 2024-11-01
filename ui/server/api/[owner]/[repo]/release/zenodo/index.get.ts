@@ -180,10 +180,9 @@ export default defineEventHandler(async (event) => {
     lastSelectedUser: zenodoDeposition?.user.username || null,
     license: {
       id: licenseResponse.license_id || "",
-      identifier: licenseResponse.identifier || "",
+      customLicenseTitle: licenseResponse.custom_license_title || "",
       status: licenseResponse.license_status || "",
     },
-    metadataId: metadataResponse.identifier,
     zenodoDepositionId: zenodoDeposition?.zenodo_id || null,
     zenodoDepositions: existingDepositions,
     zenodoLoginUrl: zenodoLoginUrl || "",

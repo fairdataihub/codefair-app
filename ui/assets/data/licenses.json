@@ -5397,5 +5397,16 @@
     "seeAlso": ["http://old.zope.org/Resources/ZPL/"],
     "isOsiApproved": true,
     "isFsfLibre": true
+  },
+  {
+    "reference": "",
+    "isDeprecatedLicenseId": false,
+    "detailsUrl": "",
+    "referenceNumber": 0,
+    "name": "Custom",
+    "licenseId": "Custom",
+    "seeAlso": [],
+    "isOsiApproved": false,
+    "isFsfLibre": false
   }
 ]
