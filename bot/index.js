@@ -880,24 +880,24 @@ export default async (app, { getRouter }) => {
     }
 
     if (issueBody.includes("<!-- @codefair-bot re-render-dashboard -->")) {
-      // Custom license title provided, update the issue dashboard
-      const licenseResponse = await db.licenseRequest.findUnique({
-        where: {
-          repository_id: repository.id,
-        }
-      });
-
-      const metadataResponse = await db.codeMetadata.findUnique({
-        where: {
-          repository_id: repository.id,
-        }
-      });
-
-      const cwlResponse = await db.cwlValidation.findUnique({
-        where: {
-          repository_id: repository.id,
-        }
-      });
+      // Run database queries in parallel using Promise.all
+      const [licenseResponse, metadataResponse, cwlResponse] = await Promise.all([
+        db.licenseRequest.findUnique({
+          where: {
+            repository_id: repository.id,
+          }
+        }),
+        db.codeMetadata.findUnique({
+          where: {
+            repository_id: repository.id,
+          }
+        }),
+        db.cwlValidation.findUnique({
+          where: {
+            repository_id: repository.id,
+          }
+        })
+      ]);
 
       const license = licenseResponse?.license_id ? true : false;
       const citation = metadataResponse?.contains_citation ? true : false;
