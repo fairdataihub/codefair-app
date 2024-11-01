@@ -176,6 +176,9 @@ function validateLicense(licenseRequest, existingLicense) {
   }
 
   console.log("Existing License:", existingLicense?.license_id);
+  // consola.warn(existingLicense?.license_content.trim());
+  // consola.info("dfl;aksjdfl;ksajl;dfkjas;ldfjk")
+  // consola.warn(licenseContent.trim());
 
   if (licenseId === "NOASSERTION") {
     if (licenseContent === "") {
@@ -185,7 +188,7 @@ function validateLicense(licenseRequest, existingLicense) {
     } else {
       // Custom license with content provided
       licenseContentEmpty = false;
-      if (existingLicense?.license_content !== licenseContent) {
+      if (existingLicense?.license_content.trim() !== licenseContent.trim()) {
         consola.info("Custom license with new content provided");
         licenseId = "Custom"; // New custom license
       } else if (existingLicense?.license_id) {
