@@ -585,7 +585,7 @@ export default async (app, { getRouter }) => {
       }
 
       // Update the issue with the new body
-      consola.info("Updating the issue with the new body", issueBody);
+      // consola.info("Updating the issue with the new body", issueBody);
       await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
     }
   });
@@ -877,6 +877,55 @@ export default async (app, { getRouter }) => {
         }
         throw new Error(`Error publishing to Zenodo: ${error.message}`, { cause: error });
       }
+    }
+
+    if (issueBody.includes("<!-- @codefair-bot re-render-dashboard -->")) {
+      // Run database queries in parallel using Promise.all
+      const [licenseResponse, metadataResponse, cwlResponse] = await Promise.all([
+        db.licenseRequest.findUnique({
+          where: {
+            repository_id: repository.id,
+          }
+        }),
+        db.codeMetadata.findUnique({
+          where: {
+            repository_id: repository.id,
+          }
+        }),
+        db.cwlValidation.findUnique({
+          where: {
+            repository_id: repository.id,
+          }
+        })
+      ]);
+
+      const license = licenseResponse?.license_id ? true : false;
+      const citation = metadataResponse?.contains_citation ? true : false;
+      const codemeta = metadataResponse?.contains_codemeta ? true : false;
+      const cwl = cwlResponse?.contains_cwl_files ? true : false;
+
+      const cwlObject = {
+        contains_cwl: cwl,
+        files: cwlResponse?.files || [],
+        removed_files: [],
+      };
+
+      const subjects = {
+        citation,
+        codemeta,
+        cwl: cwlObject,
+        license,
+      };
+
+      const issueBody = await renderIssues(
+        context,
+        owner,
+        repository,
+        false,
+        subjects,
+      );
+
+      await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
     }
   });
 

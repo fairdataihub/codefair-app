@@ -647,9 +647,17 @@ onBeforeUnmount(() => {
               required information.
             </n-alert>
 
+            <n-alert
+              v-if="license.id === 'Custom'"
+              type="error"
+              class="mb-4 w-full"
+            >
+              This workflow is not currently supported for custom licenses. We recommend using a license that is within the list of SPDX licenses.
+            </n-alert>
+
             <n-checkbox
               v-model:checked="licenseChecked"
-              :disabled="license.id === 'Custom' && !license.customLicenseTitle"
+              :disabled="license.id === 'Custom'"
             >
               I have added and reviewed the license file that is required for
               the repository to be released on Zenodo.

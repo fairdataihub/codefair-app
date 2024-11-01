@@ -195,7 +195,7 @@ const saveCustomTitle = async () => {
     customLicenseTitle: customLicenseTitle.value,
   };
 
-  await $fetch(`/api/${owner}/${repo}/license`, {
+  await $fetch(`/api/${owner}/${repo}/license/custom_title`, {
     method: "PUT",
     headers: useRequestHeaders(["cookie"]),
     body: JSON.stringify(body),
@@ -331,9 +331,7 @@ const navigateToPR = () => {
 
       <n-alert v-if="licenseId === 'Custom'" type="warning" class="w-full">
         <p class="text-base">
-          This repository uses a custom license. We recommend using a license
-          that is within the list of allowed licenses as custom licenses may not
-          be publishable on some archival repositories.
+          You selected a Custom license. It is recommended to use a standard license from the list to make your software conveniently reusable. Additionally, custom licenses may not be supported by some archival repositories.
         </p>
       </n-alert>
 

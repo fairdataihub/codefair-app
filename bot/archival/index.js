@@ -126,8 +126,8 @@ export async function applyArchivalTemplate(
   repository,
   owner,
 ) {
-  const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
   const archiveTitle = `\n\n## FAIR Software Release`;
+  const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
   const existingZenodoDep = await dbInstance.zenodoDeposition.findUnique({
     where: {
       repository_id: repository.id,

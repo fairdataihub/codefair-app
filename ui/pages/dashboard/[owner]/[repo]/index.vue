@@ -467,6 +467,20 @@ const handleSettingsSelect = (key: any) => {
               </n-tag>
             </NuxtLink>
 
+            <div
+              v-if="data?.licenseRequest?.containsLicense"
+              class="flex flex-wrap space-x-2"
+            >
+              <n-tag
+                v-if="data?.licenseRequest?.licenseId === 'Custom'"
+                type="warning"
+              >
+                <template #icon>
+                  <Icon name="ic:round-warning" size="16" />
+                </template>
+                Cannot publish to Zenodo with a custom license
+              </n-tag>
+            </div>
             <div v-if="data?.zenodoDeposition?.zenodoStatus">
               <n-tag
                 v-if="data?.zenodoDeposition?.zenodoStatus === 'inProgress'"
@@ -503,7 +517,7 @@ const handleSettingsSelect = (key: any) => {
 
         <template #action>
           <NuxtLink :to="`/dashboard/${owner}/${repo}/release/zenodo`">
-            <n-button type="primary">
+            <n-button type="primary" :disabled="data?.licenseRequest?.licenseId === 'Custom'">
               <template #icon>
                 <Icon name="material-symbols:package-2" size="16" />
               </template>
