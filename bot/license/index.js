@@ -198,6 +198,10 @@ function validateLicense(licenseRequest, existingLicense) {
     }
   }
 
+  if (licenseContent !== "") {
+    licenseContentEmpty = false;
+  }
+
   return { licenseId, licenseContent, licenseContentEmpty };
 }
 

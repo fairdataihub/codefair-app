@@ -629,6 +629,14 @@ onBeforeUnmount(() => {
               </p>
             </n-flex>
 
+            <n-flex v-if="license.id && license.id !== 'Custom'" class="border p-2" align="center">
+              <Icon name="tabler:license" size="24" />
+
+              <p class="text-sm">
+                The license file was identified as `{{ license.id }}`
+              </p>
+            </n-flex>
+
             <n-alert
               v-if="license.id === 'Custom' && !license.customLicenseTitle"
               type="error"
@@ -657,6 +665,7 @@ onBeforeUnmount(() => {
 
             <n-checkbox
               :checked="licenseChecked && license.id !== 'Custom'"
+              @update:checked="val => licenseChecked = val"
               :disabled="license.id === 'Custom'"
             >
               I have added and reviewed the license file that is required for
