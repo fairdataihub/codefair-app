@@ -11,9 +11,6 @@ const props = defineProps({
 
 const statusCode = props.error?.statusCode ?? 500;
 
-// console.error(props.error);
-console.error(props.error.statusMessage);
-
 const showNotAuthorizedError = ref(false);
 const orgNotAuthorizedError = ref(false);
 const accountNotAuthorizedError = ref(false);
@@ -45,7 +42,6 @@ if (props.error) {
       });
     }
   } else if (statusCode === 401 && errorCode === "not-signed-in") {
-    console.log("props", props);
     const redirectPath = encodeURIComponent(urlVisiting);
 
     try {
@@ -58,7 +54,6 @@ if (props.error) {
     }
   }
    else {
-    console.log("DFLSJDFL:KJSD")
     push.error({
       title: "Something went wrong",
     });
