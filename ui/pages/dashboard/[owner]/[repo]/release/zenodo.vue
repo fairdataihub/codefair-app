@@ -33,15 +33,10 @@ const haveValidZenodoToken = ref(false);
 const licenseChecked = ref(false);
 const metadataChecked = ref(false);
 const license = ref({
-  id: "x",
-  identifier: "x",
+  id: "",
+  customLicenseTitle: "",
   status: "",
 });
-const metadataId = ref("");
-
-const allConfirmed = computed(
-  () => licenseChecked.value && metadataChecked.value,
-);
 
 const selectedExistingDeposition = ref<string | null>(null);
 const selectedDeposition = ref<string | null>(null);
@@ -122,9 +117,9 @@ if (data.value) {
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
 
   license.value.id = data.value.license.id || "";
-  license.value.identifier = data.value.license.identifier;
   license.value.status = data.value.license.status || "";
-  metadataId.value = data.value.metadataId;
+  license.value.customLicenseTitle =
+    data.value.license.customLicenseTitle || "";
 
   selectedExistingDeposition.value = data.value.existingZenodoDepositionId
     ? "existing"
@@ -202,6 +197,10 @@ if (data.value) {
     metadataChecked.value = true;
   }
 }
+
+const allConfirmed = computed(
+  () => licenseChecked.value && metadataChecked.value && license.value.id !== "Custom",
+);
 
 const createDraftGithubReleaseSpinner = ref(false);
 
@@ -527,7 +526,16 @@ onBeforeUnmount(() => {
 <template>
   <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
     <n-flex vertical>
-      <h1>FAIR Software Release</h1>
+      <div class="flex flex-row items-center justify-between">
+        <h1>FAIR Software Release</h1>
+
+        <NuxtLink
+          to="https://docs.codefair.io/docs/archive.html"
+          target="_blank"
+          class="text-blue-400 underline transition-all hover:text-blue-500"
+          >Need help?</NuxtLink
+        >
+      </div>
 
       <p>
         Create a release of your repository on Zenodo. We will also create a
@@ -563,13 +571,6 @@ onBeforeUnmount(() => {
         and the selected release was titled
         <code>{{ lastSelectedGithubReleaseTitle || "Untitled" }}</code>
 
-        <!-- <NuxtLink
-          :to="`https://github.com/${owner}/${repo}/releases/${data?.lastSelectedGithubRelease}`"
-          target="_blank"
-          class="text-blue-500 underline transition-all hover:text-blue-700"
-        >
-          {{ data?.lastSelectedGithubRelease }}
-        </NuxtLink> -->
         .
       </n-alert>
 
@@ -619,13 +620,31 @@ onBeforeUnmount(() => {
 
         <template #content>
           <div class="flex w-full flex-col space-y-3">
-            <n-flex v-if="license.id" class="border p-2" align="center">
+            <n-flex v-if="license.id && license?.customLicenseTitle != ''" class="border p-2" align="center">
+              <Icon name="tabler:license" size="24" />
+
+              <p class="text-sm">
+                The license file was identified as `{{ license.id }}` with a
+                title of `{{ license.customLicenseTitle }}`
+              </p>
+            </n-flex>
+
+            <n-flex v-if="license.id && license.id !== 'Custom'" class="border p-2" align="center">
               <Icon name="tabler:license" size="24" />
 
               <p class="text-sm">
                 The license file was identified as `{{ license.id }}`
               </p>
             </n-flex>
+
+            <n-alert
+              v-if="license.id === 'Custom' && !license.customLicenseTitle"
+              type="error"
+              class="mb-4 w-full"
+            >
+              Zenodo requires a license title for custom licenses. Please enter
+              a custom license title in the License section.
+            </n-alert>
 
             <n-alert
               v-if="license.status === 'invalid'"
@@ -636,7 +655,19 @@ onBeforeUnmount(() => {
               required information.
             </n-alert>
 
-            <n-checkbox v-model:checked="licenseChecked">
+            <n-alert
+              v-if="license.id === 'Custom'"
+              type="error"
+              class="mb-4 w-full"
+            >
+              This workflow is not currently supported for custom licenses. We recommend using a license that is within the list of SPDX licenses.
+            </n-alert>
+
+            <n-checkbox
+              :checked="licenseChecked && license.id !== 'Custom'"
+              @update:checked="val => licenseChecked = val"
+              :disabled="license.id === 'Custom'"
+            >
               I have added and reviewed the license file that is required for
               the repository to be released on Zenodo.
             </n-checkbox>
@@ -644,7 +675,7 @@ onBeforeUnmount(() => {
         </template>
 
         <template #header-extra>
-          <a :href="`/add/license/${license.identifier}`">
+          <a :href="`/dashboard/${owner}/${repo}/edit/license`">
             <n-button type="primary">
               <template #icon>
                 <Icon name="akar-icons:edit" size="16" />
@@ -688,7 +719,7 @@ onBeforeUnmount(() => {
         </template>
 
         <template #header-extra>
-          <a :href="`/add/code-metadata/${metadataId}`">
+          <a :href="`/dashboard/${owner}/${repo}/edit/code-metadata`">
             <n-button type="primary">
               <template #icon>
                 <Icon name="akar-icons:edit" size="16" />
@@ -1178,11 +1209,11 @@ onBeforeUnmount(() => {
 
           <n-button
             type="success"
-            @click="navigateToDashboard"
             :disabled="
               zenodoPublishStatus !== 'published' &&
               zenodoPublishStatus !== 'error'
             "
+            @click="navigateToDashboard"
           >
             Okay
           </n-button>

@@ -66,13 +66,10 @@ if (error.value) {
 const rerunCwlValidation = async () => {
   cwlValidationRerunRequestLoading.value = true;
 
-  await $fetch(
-    `/api/cwlValidation/${data.value?.cwlValidation?.identifier}/rerun`,
-    {
-      headers: useRequestHeaders(["cookie"]),
-      method: "POST",
-    },
-  )
+  await $fetch(`/api/${owner}/${repo}/cwl-validation/rerun`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "POST",
+  })
     .then(() => {
       push.success({
         title: "Success",
@@ -212,7 +209,10 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #header-extra>
-          <div v-if="data?.licenseRequest?.containsLicense">
+          <div
+            v-if="data?.licenseRequest?.containsLicense"
+            class="flex flex-wrap space-x-2"
+          >
             <n-tag
               v-if="data?.licenseRequest?.licenseStatus === 'valid'"
               type="success"
@@ -237,6 +237,16 @@ const handleSettingsSelect = (key: any) => {
               </template>
               We couldn't determine if the license for this repository is valid.
             </n-tooltip>
+
+            <n-tag
+              v-if="data?.licenseRequest?.licenseId === 'Custom'"
+              type="warning"
+            >
+              <template #icon>
+                <Icon name="ic:round-warning" size="16" />
+              </template>
+              This repository uses a custom license.
+            </n-tag>
           </div>
         </template>
 
@@ -245,7 +255,7 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #action>
-          <a :href="`/add/license/${data?.licenseRequest?.identifier}`">
+          <a :href="`/dashboard/${owner}/${repo}/edit/license`">
             <n-button type="primary">
               <template #icon>
                 <Icon name="akar-icons:edit" size="16" />
@@ -337,7 +347,7 @@ const handleSettingsSelect = (key: any) => {
         <template #action>
           <a
             v-if="data?.licenseRequest?.containsLicense"
-            :href="`/add/code-metadata/${data?.codeMetadataRequest?.identifier}`"
+            :href="`/dashboard/${owner}/${repo}/edit/code-metadata`"
           >
             <n-button type="primary">
               <template #icon>
@@ -419,9 +429,7 @@ const handleSettingsSelect = (key: any) => {
               This may take a few minutes to complete.
             </n-tooltip>
 
-            <NuxtLink
-              :to="`/view/cwl-validation/${data?.cwlValidation?.identifier}`"
-            >
+            <NuxtLink :to="`/dashboard/${owner}/${repo}/view/cwl-validation`">
               <n-button type="primary">
                 <template #icon> <Icon name="mdi:eye" size="16" /> </template>
                 View CWL Validation Results
@@ -459,6 +467,20 @@ const handleSettingsSelect = (key: any) => {
               </n-tag>
             </NuxtLink>
 
+            <div
+              v-if="data?.licenseRequest?.containsLicense"
+              class="flex flex-wrap space-x-2"
+            >
+              <n-tag
+                v-if="data?.licenseRequest?.licenseId === 'Custom'"
+                type="warning"
+              >
+                <template #icon>
+                  <Icon name="ic:round-warning" size="16" />
+                </template>
+                Cannot publish to Zenodo with a custom license
+              </n-tag>
+            </div>
             <div v-if="data?.zenodoDeposition?.zenodoStatus">
               <n-tag
                 v-if="data?.zenodoDeposition?.zenodoStatus === 'inProgress'"
@@ -484,7 +506,7 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #content>
-          <div class="flex w-full flex-col">
+          <div class="flex w-full flex-col space-y-2">
             <p>
               To make your software FAIR, it is necessary to archive it in a
               software archival repository like Zenodo every time you make a
@@ -495,7 +517,7 @@ const handleSettingsSelect = (key: any) => {
 
         <template #action>
           <NuxtLink :to="`/dashboard/${owner}/${repo}/release/zenodo`">
-            <n-button type="primary">
+            <n-button type="primary" :disabled="data?.licenseRequest?.licenseId === 'Custom'">
               <template #icon>
                 <Icon name="material-symbols:package-2" size="16" />
               </template>

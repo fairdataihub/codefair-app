@@ -57,7 +57,5 @@ interface CodeMetadataRequestGetResponse {
   createdAt: number;
   identifier: string;
   metadata: CodeMetadataRequest;
-  owner: string;
-  repo: string;
   updatedAt: number;
 }

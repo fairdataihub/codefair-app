@@ -67,6 +67,8 @@ model LicenseRequest {
   license_id      String?
   license_content String  @default("")
 
+  custom_license_title String @default("")
+
   pull_request_url String @default("")
 
   created_at DateTime @default(now())

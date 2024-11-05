@@ -15,10 +15,9 @@ authors:
 cff-version: 1.2.0
 message: If you use this software, please cite it using the metadata from this file.
 type: software
-doi: 10.5281/zenodo.13947817
-abstract: >-
-  Codefair is a free and open source GitHub app that acts as your personal
-  assistant when it comes to making your research software reusable and
+doi: 10.5281/zenodo.13651177
+abstract: Codefair is a free and open source GitHub app that acts as your
+  personal assistant when it comes to making your research software reusable and
   especially complying with the Findable, Accessible, Interoperable, Reusable
   (FAIR) Principles for Research Software (FAIR4RS Principles). Whether you are
   developing artificial intelligence (AI)/machine learning (ML) models with

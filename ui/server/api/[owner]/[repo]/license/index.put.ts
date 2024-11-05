@@ -6,9 +6,13 @@ export default defineEventHandler(async (event) => {
   const bodySchema = z.object({
     licenseId: z.string(),
     licenseContent: z.string(),
+    customLicenseTitle: z.string().optional(),
   });
 
-  const { identifier } = event.context.params as { identifier: string };
+  const { owner, repo } = event.context.params as {
+    owner: string;
+    repo: string;
+  };
 
   const body = await readBody(event);
 
@@ -28,14 +32,14 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { licenseId, licenseContent } = parsedBody.data;
+  const { licenseId, licenseContent, customLicenseTitle } = parsedBody.data;
 
   const licenseRequest = await prisma.licenseRequest.findFirst({
     where: {
-      identifier,
-    },
-    include: {
-      repository: true,
+      repository: {
+        owner,
+        repo,
+      },
     },
   });
 
@@ -47,20 +51,16 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if the user is authorized to access the license request
-  await repoWritePermissions(
-    event,
-    licenseRequest.repository.owner,
-    licenseRequest.repository.repo,
-  );
+  await repoWritePermissions(event, owner, repo);
 
   const updatedLicenseRequest = await prisma.licenseRequest.update({
     data: {
       license_id: licenseId,
       license_content: licenseContent,
-      updated_at: new Date(),
+      custom_license_title: customLicenseTitle,
     },
     where: {
-      identifier,
+      id: licenseRequest.id,
     },
   });
 
@@ -74,8 +74,6 @@ export default defineEventHandler(async (event) => {
   return {
     licenseId,
     licenseContent,
-    identifier,
-    owner: licenseRequest.repository.owner,
-    repo: licenseRequest.repository.repo,
+    customLicenseTitle,
   };
 });

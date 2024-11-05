@@ -14,7 +14,7 @@ export default defineEventHandler((event) => {
   if (!user || !session) {
     throw createError({
       statusCode: 401,
-      statusMessage: "unauthorized",
+      statusMessage: "not-signed-in",
     });
   }
 

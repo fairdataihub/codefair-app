@@ -5,6 +5,23 @@ All notable changes the Codefair App will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+
+## v.3.1.0 - 11-05-2024
+
+### Added
+
+- Enhance logging by adding more informative messages and removing redundant logs.
+- Added NuxtLinks to external resources in the Codefair description
+- Modified the GitHub issue button layout
+- Improved error handling when publishing to Zenodo
+- Improved handling of 'no-license' and 'NOASSERTION' cases in the SPDX license detection
+
+### Fixed
+
+- Patched issue with PR link not being replaced correctly in the Metadata section of the FAIR Compliance Dashboard Issue
+- Stop updating the date for "first released date" in the existing codemeta.json file
+- Fixed spacing between the "Open a GitHub issue" and icon in the home page.
+
 ## v.3.0.0 - 2024-10-17
 
 ### Added

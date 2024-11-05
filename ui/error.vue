@@ -11,9 +11,6 @@ const props = defineProps({
 
 const statusCode = props.error?.statusCode ?? 500;
 
-// console.error(props.error);
-console.error(props.error.statusMessage);
-
 const showNotAuthorizedError = ref(false);
 const orgNotAuthorizedError = ref(false);
 const accountNotAuthorizedError = ref(false);
@@ -23,6 +20,7 @@ const githubOAuthOrgUrl = ref("");
 
 if (props.error) {
   const errorCode = props.error.statusMessage ?? "Something went wrong";
+  const urlVisiting = (props.error as NuxtError & { url?: string }).url ?? "/";
 
   if (statusCode === 403) {
     showNotAuthorizedError.value = true;
@@ -43,7 +41,19 @@ if (props.error) {
         message: "This request has been closed. You can't edit it anymore.",
       });
     }
-  } else {
+  } else if (statusCode === 401 && errorCode === "not-signed-in") {
+    const redirectPath = encodeURIComponent(urlVisiting);
+
+    try {
+      await navigateTo({
+        path: "/login/github",
+        query: { redirect: redirectPath },
+      });
+    } catch (error) {
+      console.error("Redirection error:", error);
+    }
+  }
+   else {
     push.error({
       title: "Something went wrong",
     });
