@@ -44,6 +44,22 @@ const settingsOptions = [
   },
 ];
 
+const licenseSettingsOptions = [
+  {
+    icon: renderIcon("mdi:github"),
+    key: "re-validate-license",
+    label: "Re-validate license",
+  },
+];
+
+const metadataSettingsOptions = [
+  {
+    icon: renderIcon("mdi:github"),
+    key: "re-validate-metadata",
+    label: "Re-validate metadata files",
+  },
+];
+
 const { data, error } = await useFetch(`/api/${owner}/${repo}/dashboard`, {
   headers: useRequestHeaders(["cookie"]),
 });
@@ -97,7 +113,7 @@ const rerunCwlValidation = async () => {
     });
 };
 
-const rerunCodefairChecks = async () => {
+const rerunCodefairChecks = async (rerunType: string) => {
   push.info({
     title: "Submitting request",
     message:
@@ -106,6 +122,9 @@ const rerunCodefairChecks = async () => {
 
   await $fetch(`/api/${owner}/${repo}/rerun`, {
     headers: useRequestHeaders(["cookie"]),
+    body: {
+      rerunType,
+    },
     method: "POST",
   })
     .then(() => {
@@ -140,7 +159,7 @@ const handleSettingsSelect = (key: any) => {
       },
     });
   } else if (key === "rerun-codefair-on-repo") {
-    rerunCodefairChecks();
+    rerunCodefairChecks("full-repo");
   } else if (key === "view-codefair-settings") {
     if (data.value?.isOrganization) {
       navigateTo(
@@ -161,6 +180,10 @@ const handleSettingsSelect = (key: any) => {
         },
       );
     }
+  } else if (key === "re-validate-license") {
+    rerunCodefairChecks("license");
+  } else if (key === "re-validate-metadata") {
+    rerunCodefairChecks("metadata");
   }
 };
 </script>
@@ -247,6 +270,21 @@ const handleSettingsSelect = (key: any) => {
               </template>
               This repository uses a custom license.
             </n-tag>
+
+            <!-- <n-button class="border-none"></n-button> -->
+
+            <n-dropdown
+              :options="licenseSettingsOptions"
+              placement="bottom-end"
+              :show-arrow="true"
+              @select="handleSettingsSelect"
+            >
+              <n-button text size="large">
+                <template #icon>
+                  <Icon name="humbleicons:dots-vertical" size="20" />
+                </template>
+              </n-button>
+            </n-dropdown>
           </div>
         </template>
 
@@ -324,6 +362,21 @@ const handleSettingsSelect = (key: any) => {
               </template>
               codemeta.json
             </n-tag>
+
+            <n-dropdown
+              v-if="data?.licenseRequest?.containsLicense"
+              :options="metadataSettingsOptions"
+              placement="bottom-end"
+              :show-arrow="true"
+              @select="handleSettingsSelect"
+            >
+              <n-button text size="large">
+                <template #icon>
+                  <Icon name="humbleicons:dots-vertical" size="20" />
+                </template>
+                </n-button
+              >
+            </n-dropdown>
           </n-flex>
         </template>
 
@@ -517,7 +570,10 @@ const handleSettingsSelect = (key: any) => {
 
         <template #action>
           <NuxtLink :to="`/dashboard/${owner}/${repo}/release/zenodo`">
-            <n-button type="primary" :disabled="data?.licenseRequest?.licenseId === 'Custom'">
+            <n-button
+              type="primary"
+              :disabled="data?.licenseRequest?.licenseId === 'Custom'"
+            >
               <template #icon>
                 <Icon name="material-symbols:package-2" size="16" />
               </template>

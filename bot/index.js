@@ -130,7 +130,6 @@ export default async (app, { getRouter }) => {
         };
 
         // If existing cwl validation exists, update the contains_cwl value
-        // If existing cwl validation exists, update the contains_cwl value
         const cwlExists = await dbInstance.cwlValidation.findUnique({
           where: { repository_id: repository.id },
         });
