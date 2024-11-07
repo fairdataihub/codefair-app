@@ -15,7 +15,7 @@ import {
   getReleaseById,
   downloadRepositoryZip,
 } from "./utils/tools/index.js";
-import { checkForLicense } from "./license/index.js";
+import { checkForLicense, validateLicense } from "./license/index.js";
 import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
@@ -753,6 +753,56 @@ export default async (app, { getRouter }) => {
       );
 
       await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+    }
+
+    if (issueBody.includes("<!-- @codefair-bot rerun-license-validation -->")) {
+      // Run the license validation again
+      consola.start("Rerunning License Validation...");
+      const licenseRequest = await context.octokit.rest.licenses.getForRepo({
+        owner,
+        repo: repository.name,
+      });
+
+      const existingLicense = await db.licenseRequest.findUnique({
+        where: {
+          repository_id: repository.id,
+        }
+      })
+
+      const license = licenseRequest.data.license ? true : false;
+
+      if (!license) {
+        throw new Error("License not found in the repository");
+      }
+
+      const { licenseId, licenseContent, licenseContentEmpty } = validateLicense(licenseRequest, existingLicense);
+
+      consola.info("License validation complete:", licenseId, licenseContent, licenseContentEmpty);
+
+      // Update the database with the license information
+      if (existingLicense) {
+        await db.licenseRequest.update({
+          data: {
+            license_id: licenseId,
+            license_content: licenseContent,
+            license_status: licenseContentEmpty ? "valid" : "invalid",
+          },
+          where: {
+            repository_id: repository.id,
+          }
+        })
+      } else {
+        await db.licenseRequest.create({
+          data: {
+            license_id: licenseId,
+            license_content: licenseContent,
+            license_status: licenseContentEmpty ? "valid" : "invalid",
+          },
+          where: {
+            repository_id: repository.id,
+          }
+        })
+      }
     }
 
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
