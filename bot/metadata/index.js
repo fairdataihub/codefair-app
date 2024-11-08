@@ -30,7 +30,7 @@ export function convertDateToUnix(date) {
  * @param {JSON} codemetaContent - The codemeta.json file content
  * @returns {JSON} - The metadata object for the database
  */
-export async function convertMetadataForDB(codemetaContent, repository) {
+export async function convertCodemetaForDB(codemetaContent, repository) {
   // eslint-disable-next-line prefer-const
   const sortedAuthors = [];
   // eslint-disable-next-line prefer-const
@@ -108,10 +108,6 @@ export async function convertMetadataForDB(codemetaContent, repository) {
     });
   }
 
-
-  // Now search through sortedAuthors and sortedContributors and check if uri begins with '_:' and if so, delete the key
-  // consola.info("Sorted authors:", JSON.stringify(sortedAuthors, null, 2));
-  // consola.info("Sorted contributors:", sortedContributors);
   for (let i = 0; i < sortedAuthors.length; i++) {
     if (sortedAuthors[i].uri.startsWith("_:")) {
       delete sortedAuthors[i].uri;
@@ -188,6 +184,32 @@ export async function convertMetadataForDB(codemetaContent, repository) {
     runtimePlatform: codemetaContent?.runtimePlatform || [],
     uniqueIdentifier: codemetaContent?.identifier || "",
   };
+}
+
+export async function convertCitationForDB(citationContent, repository) {
+  const authors = [];
+
+  if (citationContent?.authors) {
+    citationContent.authors.forEach((author) => {
+      authors.push({
+        affiliation: author.affiliation || "",
+        email: author.email || "",
+        familyName: author["family-names"] || "",
+        givenName: author["given-names"] || "",
+      })
+    });
+  }
+
+  return {
+    authors,
+    uniqueIdentifier: citationContent?.doi || "",
+    license: citationContent?.license || "",
+    codeRepository: citationContent["repository-code"] || "",
+    description: citationContent.abstract || "",
+    currentVersionReleaseDate: citationContent["date-released"] || null,
+    currentVersion: citationContent.version || "",
+    keywords: citationContent.keywords || [],
+  }
 }
 
 /**
@@ -270,6 +292,13 @@ export async function gatherMetadata(context, owner, repo) {
   return codeMeta;
 }
 
+/**
+ * * Gets the metadata for the repository and returns it as a string
+ * @param {Object} context - The GitHub context object
+ * @param {String} owner - The owner of the repository
+ * @param {Object} repository - Object containing the repository information
+ * @returns - The content of the codemeta.json file as a string object
+ */
 export async function getCodemetaContent(context, owner, repository) {
   try {
     const codemetaFile = await context.octokit.repos.getContent({
@@ -547,7 +576,7 @@ export async function applyMetadataTemplate(
     const validCitation = true;
 
     // Convert the content to the structure we use for code metadata
-    const metadata = await convertMetadataForDB(JSON.parse(codemetaContent.content), repository);
+    const metadata = await convertCodemetaForDB(JSON.parse(codemetaContent.content), repository);
 
     // Fetch license details from database
     const license = await dbInstance.licenseRequest.findUnique({
