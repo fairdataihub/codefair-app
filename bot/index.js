@@ -21,7 +21,7 @@ import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
 import { getZenodoDepositionInfo, createZenodoMetadata, updateZenodoMetadata, uploadReleaseAssetsToZenodo, parseZenodoInfo, getZenodoToken, publishZenodoDeposition, updateGitHubRelease } from "./archival/index.js";
-import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier, convertCodemetaForDB, convertCitationForDB, gatherMetadata } from "./metadata/index.js";
+import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier, convertCodemetaForDB, convertCitationForDB, gatherMetadata, convertDateToUnix } from "./metadata/index.js";
 
 checkEnvVariable("GITHUB_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
@@ -888,40 +888,57 @@ export default async (app, { getRouter }) => {
         metadata.uniqueIdentifier = convertedCodemeta.uniqueIdentifier || metadata.uniqueIdentifier || "";
 
         if (metadata.authors) {
+          consola.info("metadata.authors", metadata.authors);
+          consola.info("convertedCodemeta.authors", convertedCodemeta.authors);
           // Check if authors are already in the metadata, if so update the details of the author
           if (metadata.authors.length > 0) {
             const updatedAuthors = metadata.authors.map((author) => {
               const foundAuthor = convertedCodemeta.authors.find((newAuthor) => newAuthor.familyName === author.familyName && newAuthor.givenName === author.givenName);
               if (foundAuthor) {
-                foundAuthor.affiliation = author.affiliation || foundAuthor.affiliation || "";
-                foundAuthor.email = author.email || foundAuthor.email || "";
-                foundAuthor.roles = author.roles || foundAuthor.roles || [];
-                foundAuthor.uri = author.uri || foundAuthor.uri || "";
-                return foundAuthor;
+                consola.info("Found author:", foundAuthor);
+                author.affiliation = foundAuthor.affiliation || author.affiliation || "";
+                author.email = foundAuthor.email || author.email || "";
+                author.roles = foundAuthor.roles || author.roles || [];
+                author.uri = foundAuthor.uri || author.uri || "";
+                
+                // Remove author from convertedCodemeta.authors
+                const index = convertedCodemeta.authors.indexOf(foundAuthor);
+                if (index > -1) {
+                  convertedCodemeta.authors.splice(index, 1);
+                }
               }
               return author;
             });
 
-            metadata.authors = updatedAuthors;
+            // join the updated authors with the remaining authors
+            metadata.authors = updatedAuthors.concat(convertedCodemeta.authors);
           }
         }
 
         if (metadata.contributors) {
+          // consola.info(metadata.contributors);
+          // consola.info(convertedCodemeta.contributors);
           // Check if contributors are already in the metadata, if so update the details of the contributor
           if (metadata.contributors.length > 0) {
             const updatedContributors = metadata.contributors.map((contributor) => {
               const foundContributor = convertedCodemeta.contributors.find((newContributor) => newContributor.familyName === contributor.familyName && newContributor.givenName === contributor.givenName);
               if (foundContributor) {
-                foundContributor.affiliation = contributor.affiliation || foundContributor.affiliation || "";
-                foundContributor.email = contributor.email || foundContributor.email || "";
-                foundContributor.roles = contributor.roles || foundContributor.roles || [];
-                foundContributor.uri = contributor.uri || foundContributor.uri || "";
-                return foundContributor;
+                contributor.affiliation = foundContributor.affiliation || contributor.affiliation || "";
+                contributor.email = foundContributor.email || contributor.email || "";
+                contributor.roles = foundContributor.roles || contributor.roles || [];
+                contributor.uri = foundContributor.uri || contributor.uri || "";
+                
+
+                // Remove contributor from convertedCodemeta.contributors
+                const index = convertedCodemeta.contributors.indexOf(foundContributor);
+                if (index > -1) {
+                  convertedCodemeta.contributors.splice(index, 1);
+                }
               }
               return contributor;
             });
 
-            metadata.contributors = updatedContributors;
+            metadata.contributors = updatedContributors.concat(convertedCodemeta.contributors);
           }
         }
       }
@@ -941,25 +958,49 @@ export default async (app, { getRouter }) => {
 
         if (convertedCitation.authors) {
           // Check if the authors are already in the metadata, if so update the details of the author
-          consola.info("Authors:", metadata);
-          consola.info("Authors:", metadata.authors);
-          consola.info("Authors:", metadata.authors.length);
           if (metadata.authors.length > 0) {
             const updatedAuthors = metadata.authors.map((author) => {
               const foundAuthor = convertedCitation.authors.find((newAuthor) => newAuthor.familyName === author.familyName && newAuthor.givenName === author.givenName);
               if (foundAuthor) {
-                foundAuthor.affiliation = author.affiliation || foundAuthor.affiliation || "";
-                foundAuthor.email = author.email || foundAuthor.email || "";  
-                return foundAuthor;
+                author.affiliation = author.affiliation || foundAuthor.affiliation || "";
+                author.email = author.email || foundAuthor.email || "";
+                
+                // Remove author from convertedCitation.authors
+                const index = convertedCitation.authors.indexOf(foundAuthor);
+                if (index > -1) {
+                  convertedCitation.authors.splice(index, 1);
+                }
               }
+
               return author;
             });
 
-            metadata.authors = updatedAuthors;
+            // Apply the missings fields to the remaining convertedCitation.authors
+            convertedCitation.authors = convertedCitation.authors.map((author) => {
+              author.affiliation = author.affiliation || "";
+              author.email = author.email || "";
+              author.roles = author.roles || [];
+              author.uri = author.uri || "";
+              return author;
+            });
+
+            metadata.authors = updatedAuthors.concat(convertedCitation.authors);
           }
         }
       }
 
+      // Ensure all dates have been converted to ISO strings split by the T
+      if (metadata.creationDate) {
+        metadata.creationDate = new Date(convertDateToUnix(metadata.creationDate)).toISOString().split("T")[0];
+      }
+      if (metadata.firstReleaseDate) {
+        metadata.firstReleaseDate = new Date(convertDateToUnix(metadata.firstReleaseDate)).toISOString().split("T")[0];
+      }
+      if (metadata.currentVersionReleaseDate) {
+        metadata.currentVersionReleaseDate = new Date(convertDateToUnix(metadata.currentVersionReleaseDate)).toISOString().split("T")[0];
+      }
+
+      consola.warn("Metadata:", JSON.stringify(metadata));
       // update the database with the metadata information
       if (existingMetadataEntry) {
         await db.codeMetadata.update({
