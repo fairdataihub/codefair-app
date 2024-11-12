@@ -10,7 +10,7 @@
       },
       "email": "dportillo@calmi2.org",
       "familyName": "Portillo",
-      "id": "_:author_1",
+      "id": "https://dorianportillo.dev",
       "givenName": "Dorian",
       "type": "Person"
     },
@@ -39,12 +39,12 @@
   ],
   "codeRepository": "https://github.com/fairdataihub/codefair-app",
   "dateCreated": "2024-03-27",
-  "dateModified": "2024-10-17",
+  "dateModified": "2024-11-11",
   "datePublished": "2024-09-03",
   "description": "Codefair is a free and open source GitHub app that acts as your personal assistant when it comes to making your research software reusable and especially complying with the Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software (FAIR4RS Principles). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, Codefair is here to assist you. ",
   "developmentStatus": "active",
   "downloadUrl": "https://github.com/marketplace/codefair-app",
-  "identifier": "10.5281/zenodo.13947817",
+  "identifier": "10.5281/zenodo.14064362",
   "issueTracker": "https://github.com/fairdataihub/codefair-app/issues",
   "keywords": [
     "best-practices",
@@ -62,7 +62,10 @@
     "CSS",
     "Dockerfile"
   ],
-  "schema:releaseNotes": "## v.3.0.0 - 2024-10-17\n\n### Added\n\n- A new workflow has been implemented to streamline the integration of the GitHub release process with Zenodo archiving. This enhancement ensures that metadata is updated prior to each GitHub release, allowing for a more accurate and up-to-date archived version of the repository on Zenodo. This change simplifies the release process and enhances the accessibility of our project's data.",
-  "version": "3.0.0",
+  "relatedLink": [
+    "https://docs.codefair.io/"
+  ],
+  "schema:releaseNotes": "## v.3.1.0 - 11-05-2024\n\n### Added\n\n- Enhance logging by adding more informative messages and removing redundant logs.\n- Added NuxtLinks to external resources in the Codefair description\n- Modified the GitHub issue button layout\n- Improved error handling when publishing to Zenodo\n- Improved handling of 'no-license' and 'NOASSERTION' cases in the SPDX license detection\n\n### Fixed\n\n- Patched issue with PR link not being replaced correctly in the Metadata section of the FAIR Compliance Dashboard Issue\n- Stop updating the date for \"first released date\" in the existing codemeta.json file\n- Fixed spacing between the \"Open a GitHub issue\" and icon in the home page.",
+  "version": "3.1.0",
   "type": "SoftwareSourceCode"
 }
