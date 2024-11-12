@@ -258,9 +258,6 @@ export async function applyCWLTemplate(
     }
   } else {
     // An entry exists in the db, thus possible old files exist (merge both lists)
-    if (existingCWL?.identifier) {
-      url = `${CODEFAIR_DOMAIN}/view/cwl-validation/${existingCWL.identifier}`;
-    }
     validOverall = true;
     const fileMap = new Map();
 
