@@ -65,7 +65,7 @@
   "relatedLink": [
     "https://docs.codefair.io/"
   ],
-  "schema:releaseNotes": "## v.3.1.0 - 11-05-2024\n\n### Added\n\n- Enhance logging by adding more informative messages and removing redundant logs.\n- Added NuxtLinks to external resources in the Codefair description\n- Modified the GitHub issue button layout\n- Improved error handling when publishing to Zenodo\n- Improved handling of 'no-license' and 'NOASSERTION' cases in the SPDX license detection\n\n### Fixed\n\n- Patched issue with PR link not being replaced correctly in the Metadata section of the FAIR Compliance Dashboard Issue\n- Stop updating the date for \"first released date\" in the existing codemeta.json file\n- Fixed spacing between the \"Open a GitHub issue\" and icon in the home page.",
-  "version": "3.1.0",
+  "schema:releaseNotes": "## v3.1.1 - 11-12-2024\n\n### Fixed\n\n- Remove outdated URL links in the template renderer to ensure the correct and current links are used for metadata, CWL, and license templates.",
+  "version": "3.1.1",
   "type": "SoftwareSourceCode"
 }
