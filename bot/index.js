@@ -855,6 +855,8 @@ export default async (app, { getRouter }) => {
         metadata.reviewBody = existingMetadata.reviewBody || metadata.reviewBody || "";
         metadata.runtimePlatform = existingMetadata.runtimePlatform || metadata.runtimePlatform || [];
         metadata.uniqueIdentifier = existingMetadata.uniqueIdentifier || metadata.uniqueIdentifier || "";
+
+        // consola.info("Metadata so far after db update", metadata);
       }
 
       const citation = await getCitationContent(context, owner, repository);
@@ -889,57 +891,43 @@ export default async (app, { getRouter }) => {
         metadata.uniqueIdentifier = convertedCodemeta.uniqueIdentifier || metadata.uniqueIdentifier || "";
 
         if (metadata.authors) {
-          consola.info("metadata.authors", metadata.authors);
-          consola.info("convertedCodemeta.authors", convertedCodemeta.authors);
+          // consola.info("metadata.authors", metadata.authors);
+          // consola.info("convertedCodemeta.authors", convertedCodemeta.authors);
           // Check if authors are already in the metadata, if so update the details of the author
-          if (metadata.authors.length > 0) {
-            const updatedAuthors = metadata.authors.map((author) => {
-              const foundAuthor = convertedCodemeta.authors.find((newAuthor) => newAuthor?.familyName === author?.familyName && newAuthor.givenName === author.givenName);
+          if (convertedCodemeta.authors.length > 0) {
+            const updatedAuthors = convertedCodemeta.authors.map((author) => {
+              const foundAuthor = metadata.authors.find((newAuthor) => newAuthor?.familyName === author?.familyName && newAuthor.givenName === author.givenName);
               if (foundAuthor) {
-                consola.info("Found author:", foundAuthor);
+                // consola.info("Found author:", foundAuthor);
                 author.affiliation = foundAuthor.affiliation || author.affiliation || "";
                 author.email = foundAuthor.email || author.email || "";
                 author.roles = foundAuthor.roles || author.roles || [];
                 author.uri = foundAuthor.uri || author.uri || "";
-                
-                // Remove author from convertedCodemeta.authors
-                const index = convertedCodemeta.authors.indexOf(foundAuthor);
-                if (index > -1) {
-                  convertedCodemeta.authors.splice(index, 1);
-                }
               }
               return author;
             });
 
             // join the updated authors with the remaining authors
-            metadata.authors = updatedAuthors.concat(convertedCodemeta.authors);
+            metadata.authors = updatedAuthors;
           }
         }
 
         if (metadata.contributors) {
-          // consola.info(metadata.contributors);
-          // consola.info(convertedCodemeta.contributors);
+
           // Check if contributors are already in the metadata, if so update the details of the contributor
-          if (metadata.contributors.length > 0) {
-            const updatedContributors = metadata.contributors.map((contributor) => {
-              const foundContributor = convertedCodemeta.contributors.find((newContributor) => newContributor.familyName === contributor.familyName && newContributor.givenName === contributor.givenName);
+          if (convertedCodemeta.contributors.length > 0) {
+            const updatedContributors = convertedCodemeta.contributors.map((contributor) => {
+              const foundContributor = metadata.contributors.find((newContributor) => newContributor.familyName === contributor.familyName && newContributor.givenName === contributor.givenName);
               if (foundContributor) {
                 contributor.affiliation = foundContributor.affiliation || contributor.affiliation || "";
                 contributor.email = foundContributor.email || contributor.email || "";
                 contributor.roles = foundContributor.roles || contributor.roles || [];
                 contributor.uri = foundContributor.uri || contributor.uri || "";
-                
-
-                // Remove contributor from convertedCodemeta.contributors
-                const index = convertedCodemeta.contributors.indexOf(foundContributor);
-                if (index > -1) {
-                  convertedCodemeta.contributors.splice(index, 1);
-                }
               }
               return contributor;
             });
 
-            metadata.contributors = updatedContributors.concat(convertedCodemeta.contributors);
+            metadata.contributors = updatedContributors;
           }
         }
       }
@@ -989,48 +977,50 @@ export default async (app, { getRouter }) => {
             metadata.authors = updatedAuthors.concat(convertedCitation.authors);
           }
         }
+
+        // consola.info("Metadata so far after citation update", JSON.stringify(metadata, null, 2));
       }
 
       // Ensure all dates have been converted to ISO strings split by the T
       if (metadata.creationDate) {
-        metadata.creationDate = new Date(convertDateToUnix(metadata.creationDate)).toISOString().split("T")[0];
+        metadata.creationDate = convertDateToUnix(metadata.creationDate);
       }
       if (metadata.firstReleaseDate) {
-        metadata.firstReleaseDate = new Date(convertDateToUnix(metadata.firstReleaseDate)).toISOString().split("T")[0];
+        metadata.firstReleaseDate = convertDateToUnix(metadata.firstReleaseDate);
       }
       if (metadata.currentVersionReleaseDate) {
-        metadata.currentVersionReleaseDate = new Date(convertDateToUnix(metadata.currentVersionReleaseDate)).toISOString().split("T")[0];
+        metadata.currentVersionReleaseDate = convertDateToUnix(metadata.currentVersionReleaseDate);
       }
 
-      consola.warn("Metadata:", JSON.stringify(metadata));
+      consola.warn("Metadata:", JSON.stringify(metadata, null, 2));
       // update the database with the metadata information
-      if (existingMetadataEntry) {
-        await db.codeMetadata.update({
-          data: {
-            codemeta_status: validCodemeta ? "valid" : "invalid",
-            citation_status: validCitation ? "valid" : "invalid",
-            contains_citation: containsCitation,
-            contains_codemeta: containsCodemeta,
-            metadata: metadata,
-          },
-          where: {
-            repository_id: repository.id,
-          }
-        })
-      } else {
-        await db.codeMetadata.create({
-          data: {
-            codemeta_status: validCodemeta ? "valid" : "invalid",
-            citation_status: validCitation ? "valid" : "invalid",
-            contains_citation: containsCitation,
-            contains_codemeta: containsCodemeta,
-            metadata: metadata,
-          },
-          where: {
-            repository_id: repository.id,
-          }
-        })
-      }
+      // if (existingMetadataEntry) {
+      //   await db.codeMetadata.update({
+      //     data: {
+      //       codemeta_status: validCodemeta ? "valid" : "invalid",
+      //       citation_status: validCitation ? "valid" : "invalid",
+      //       contains_citation: containsCitation,
+      //       contains_codemeta: containsCodemeta,
+      //       metadata: metadata,
+      //     },
+      //     where: {
+      //       repository_id: repository.id,
+      //     }
+      //   })
+      // } else {
+      //   await db.codeMetadata.create({
+      //     data: {
+      //       codemeta_status: validCodemeta ? "valid" : "invalid",
+      //       citation_status: validCitation ? "valid" : "invalid",
+      //       contains_citation: containsCitation,
+      //       contains_codemeta: containsCodemeta,
+      //       metadata: metadata,
+      //     },
+      //     where: {
+      //       repository_id: repository.id,
+      //     }
+      //   })
+      // }
     }
 
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
