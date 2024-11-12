@@ -994,33 +994,33 @@ export default async (app, { getRouter }) => {
 
       consola.warn("Metadata:", JSON.stringify(metadata, null, 2));
       // update the database with the metadata information
-      // if (existingMetadataEntry) {
-      //   await db.codeMetadata.update({
-      //     data: {
-      //       codemeta_status: validCodemeta ? "valid" : "invalid",
-      //       citation_status: validCitation ? "valid" : "invalid",
-      //       contains_citation: containsCitation,
-      //       contains_codemeta: containsCodemeta,
-      //       metadata: metadata,
-      //     },
-      //     where: {
-      //       repository_id: repository.id,
-      //     }
-      //   })
-      // } else {
-      //   await db.codeMetadata.create({
-      //     data: {
-      //       codemeta_status: validCodemeta ? "valid" : "invalid",
-      //       citation_status: validCitation ? "valid" : "invalid",
-      //       contains_citation: containsCitation,
-      //       contains_codemeta: containsCodemeta,
-      //       metadata: metadata,
-      //     },
-      //     where: {
-      //       repository_id: repository.id,
-      //     }
-      //   })
-      // }
+      if (existingMetadataEntry) {
+        await db.codeMetadata.update({
+          data: {
+            codemeta_status: validCodemeta ? "valid" : "invalid",
+            citation_status: validCitation ? "valid" : "invalid",
+            contains_citation: containsCitation,
+            contains_codemeta: containsCodemeta,
+            metadata: metadata,
+          },
+          where: {
+            repository_id: repository.id,
+          }
+        })
+      } else {
+        await db.codeMetadata.create({
+          data: {
+            codemeta_status: validCodemeta ? "valid" : "invalid",
+            citation_status: validCitation ? "valid" : "invalid",
+            contains_citation: containsCitation,
+            contains_codemeta: containsCodemeta,
+            metadata: metadata,
+          },
+          where: {
+            repository_id: repository.id,
+          }
+        })
+      }
     }
 
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
