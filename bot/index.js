@@ -808,12 +808,11 @@ export default async (app, { getRouter }) => {
 
     if (issueBody.includes("<!-- @codefair-bot rerun-metadata-validation -->")) {
       consola.start("Validating metadata files...");
+      let metadata = await gatherMetadata(context, owner, repository);
       let containsCitation = false,
           containsCodemeta = false,
           validCitation = false,
           validCodemeta = false;
-
-      let metadata = await gatherMetadata(context, owner, repository);
 
       const existingMetadataEntry = await db.codeMetadata.findUnique({
         where: {
@@ -823,6 +822,7 @@ export default async (app, { getRouter }) => {
 
       if (existingMetadataEntry?.metadata) {
         // Update the metadata variable
+        consola.info("Existing metadata in db found")
         const existingMetadata = existingMetadataEntry.metadata;
         containsCitation = existingMetadata.contains_citation;
         containsCodemeta = existingMetadata.contains_metadata;
@@ -862,10 +862,11 @@ export default async (app, { getRouter }) => {
 
 
       if (codemeta) {
-        containsCodemeta = true;
+        consola.info("Codemeta found");
         const codemetaContent = JSON.parse(codemeta.content);
-        validCodemeta = validateMetadata(codemeta, "codemeta");
         const convertedCodemeta = await convertCodemetaForDB(codemetaContent, repository);
+        containsCodemeta = true;
+        validCodemeta = validateMetadata(codemeta, "codemeta");
 
         metadata.name = convertedCodemeta.name || metadata.name || "";
         metadata.applicationCategory = convertedCodemeta.applicationCategory || metadata.applicationCategory || null;
@@ -893,7 +894,7 @@ export default async (app, { getRouter }) => {
           // Check if authors are already in the metadata, if so update the details of the author
           if (metadata.authors.length > 0) {
             const updatedAuthors = metadata.authors.map((author) => {
-              const foundAuthor = convertedCodemeta.authors.find((newAuthor) => newAuthor.familyName === author.familyName && newAuthor.givenName === author.givenName);
+              const foundAuthor = convertedCodemeta.authors.find((newAuthor) => newAuthor?.familyName === author?.familyName && newAuthor.givenName === author.givenName);
               if (foundAuthor) {
                 consola.info("Found author:", foundAuthor);
                 author.affiliation = foundAuthor.affiliation || author.affiliation || "";
@@ -944,6 +945,7 @@ export default async (app, { getRouter }) => {
       }
 
       if (citation) {
+        consola.info("Citation found");
         containsCitation = true;
         const citationContent = yaml.load(citation.content);
         validCitation = validateMetadata(citation, "citation");

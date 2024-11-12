@@ -71,8 +71,6 @@ export async function convertCodemetaForDB(codemetaContent, repository) {
   }
 
   if (codemetaContent?.contributor) {
-    // const sortedContributors = [];
-
     // Loop through all contributors
     codemetaContent?.contributor.forEach((contributor) => {
       // If the contributor is a Person or Organization, we need to add them
@@ -208,13 +206,13 @@ export async function convertCitationForDB(citationContent, repository) {
 
   return {
     authors,
-    uniqueIdentifier: citationContent?.doi || "",
-    license: citationContent?.license || "",
-    codeRepository: citationContent["repository-code"] || "",
-    description: citationContent.abstract || "",
+    uniqueIdentifier: citationContent?.doi || null,
+    license: citationContent?.license || null,
+    codeRepository: citationContent["repository-code"] || null,
+    description: citationContent.abstract || null,
     currentVersionReleaseDate: citationContent["date-released"] || null,
-    currentVersion: citationContent.version || "",
-    keywords: citationContent.keywords || [],
+    currentVersion: citationContent.version || null,
+    keywords: citationContent.keywords || null,
   }
 }
 
