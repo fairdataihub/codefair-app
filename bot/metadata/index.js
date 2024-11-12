@@ -186,6 +186,12 @@ export async function convertCodemetaForDB(codemetaContent, repository) {
   };
 }
 
+/**
+ * * Converts the CITATION.cff file content to a metadata object for the database
+ * @param {YAML} citationContent - The CITATION.cff file content loaded as a YAML object
+ * @param {Object} repository - The repository information 
+ * @returns {Object} - The metadata object for the database
+ */
 export async function convertCitationForDB(citationContent, repository) {
   const authors = [];
 
@@ -318,6 +324,13 @@ export async function getCodemetaContent(context, owner, repository) {
   }
 }
 
+/**
+ * * Get the content of the CITATION.cff file
+ * @param {Object} context - The GitHub context object
+ * @param {String} owner - The owner of the repository 
+ * @param {Object} repository - The repository information
+ * @returns {String} - The content of the CITATION.cff file as a string object (need to yaml load it)
+ */
 export async function getCitationContent(context, owner, repository) {
  try {
   const citationFile = await context.octokit.repos.getContent({
@@ -335,6 +348,12 @@ export async function getCitationContent(context, owner, repository) {
  }
 }
 
+/**
+ * * Ensures the metadata is valid based on certain fields
+ * @param {String} content - The content of the metadata file
+ * @param {String} fileType - The type of metadata file (codemeta or citation)
+ * @returns 
+ */
 export async function validateMetadata(content, fileType) {
   if (fileType === "codemeta") {
     try {
@@ -364,6 +383,15 @@ export async function validateMetadata(content, fileType) {
 
 }
 
+/**
+ * * Updates the metadata files with the Zenodo identifier
+ * @param {Object} context - The GitHub context object 
+ * @param {String} owner - The owner of the repository
+ * @param {Object} repository - The repository information
+ * @param {String} identifier - The Zenodo identifier
+ * @param {String} version - The version of the software
+ * @returns {Object} - The updated codemeta.json file
+ */
 export async function updateMetadataIdentifier(context, owner, repository, identifier, version) {
   try {
   // Get the citation file
