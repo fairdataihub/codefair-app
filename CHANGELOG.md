@@ -5,7 +5,13 @@ All notable changes the Codefair App will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## v.3.1.0 - 11-05-2024
+## v3.1.1 - 11-12-2024
+
+### Fixed
+
+- Remove outdated URL links in the template renderer to ensure the correct and current links are used for metadata, CWL, and license templates.
+
+## v3.1.0 - 11-05-2024
 
 ### Added
 
@@ -21,13 +27,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Stop updating the date for "first released date" in the existing codemeta.json file
 - Fixed spacing between the "Open a GitHub issue" and icon in the home page.
 
-## v.3.0.0 - 2024-10-17
+## v3.0.0 - 2024-10-17
 
 ### Added
 
 - A new workflow has been implemented to streamline the integration of the GitHub release process with Zenodo archiving. This enhancement ensures that metadata is updated prior to each GitHub release, allowing for a more accurate and up-to-date archived version of the repository on Zenodo. This change simplifies the release process and enhances the accessibility of our project's data.
 
-## v.2.0.1 - 2024-09-03
+## v2.0.1 - 2024-09-03
 
 ### Identifier
 
@@ -47,8 +53,7 @@ https://doi.org/10.5281/zenodo.13651177
 
 - Removed references to the action key in the database as it was not being used.
 
-
-## v.2.0.0 - 2024-08-29
+## v2.0.0 - 2024-08-29
 
 ### Identifier
 

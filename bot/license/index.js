@@ -247,9 +247,6 @@ export async function applyLicenseTemplate(
 
   if (existingLicense) {
     consola.info("Updating existing license request...");
-    if (existingLicense?.identifier) {
-      badgeURL = `${CODEFAIR_DOMAIN}/add/license/${existingLicense.identifier}`;
-    }
     await dbInstance.licenseRequest.update({
       data: {
         contains_license: subjects.license,

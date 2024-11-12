@@ -509,13 +509,12 @@ export async function applyMetadataTemplate(
   owner,
   context,
 ) {
+  let url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata`;
   if ((!subjects.codemeta || !subjects.citation) && subjects.license) {
     // License was found but no codemeta.json or CITATION.cff exists
     const identifier = createId();
     let validCitation = false;
     let validCodemeta = false;
-
-    let url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata`;
 
     const existingMetadata = await dbInstance.codeMetadata.findUnique({
       where: {
@@ -585,10 +584,6 @@ export async function applyMetadataTemplate(
         },
         where: { repository_id: repository.id },
       });
-
-      if (existingMetadata?.identifier) {
-        url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
-      }
     }
     const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
     baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemeta.json are expected at the root level of your repository. These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
@@ -617,8 +612,6 @@ export async function applyMetadataTemplate(
 
     // License, codemeta.json and CITATION.cff files were found
     const identifier = createId();
-
-    let url = `${CODEFAIR_DOMAIN}/add/code-metadata/${identifier}`;
 
     const existingMetadata = await dbInstance.codeMetadata.findUnique({
       where: {
@@ -662,8 +655,6 @@ export async function applyMetadataTemplate(
         },
         where: { repository_id: repository.id },
       });
-
-      url = `${CODEFAIR_DOMAIN}/add/code-metadata/${existingMetadata.identifier}`;
     }
     const metadataBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-0ea5e9.svg)](${url}?)`;
     baseTemplate += `\n\n## Metadata ✔️\n\nA CITATION.cff and a codemeta.json file are found in the repository. They may need to be updated over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
