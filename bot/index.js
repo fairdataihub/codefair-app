@@ -868,7 +868,7 @@ export default async (app, { getRouter }) => {
         const codemetaContent = JSON.parse(codemeta.content);
         const convertedCodemeta = await convertCodemetaForDB(codemetaContent, repository);
         containsCodemeta = true;
-        validCodemeta = validateMetadata(codemeta, "codemeta");
+        validCodemeta = await validateMetadata(codemeta, "codemeta");
 
         metadata.name = convertedCodemeta.name || metadata.name || "";
         metadata.applicationCategory = convertedCodemeta.applicationCategory || metadata.applicationCategory || null;
@@ -913,7 +913,6 @@ export default async (app, { getRouter }) => {
         }
 
         if (metadata.contributors) {
-
           // Check if contributors are already in the metadata, if so update the details of the contributor
           if (convertedCodemeta.contributors.length > 0) {
             const updatedContributors = convertedCodemeta.contributors.map((contributor) => {
@@ -936,7 +935,7 @@ export default async (app, { getRouter }) => {
         consola.info("Citation found");
         containsCitation = true;
         const citationContent = yaml.load(citation.content);
-        validCitation = validateMetadata(citation, "citation");
+        validCitation = await validateMetadata(citation, "citation");
         const convertedCitation = await convertCitationForDB(citationContent, repository);
 
         metadata.license = convertedCitation.license || metadata.license || null;
