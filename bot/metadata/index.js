@@ -314,6 +314,7 @@ export async function getCodemetaContent(context, owner, repository) {
     return {
       content: Buffer.from(codemetaFile.data.content, "base64").toString(),
       sha: codemetaFile.data.sha,
+      file_path: codemetaFile.data.download_url,
     }
 
     // return JSON.parse(Buffer.from(codemetaFile.data.content, "base64").toString());
@@ -340,6 +341,7 @@ export async function getCitationContent(context, owner, repository) {
   return {
     content: Buffer.from(citationFile.data.content, "base64").toString(),
     sha: citationFile.data.sha,
+    file_path: citationFile.data.download_url,
   }
  } catch (error) {
     throw new Error("Error getting CITATION.cff file", error);
@@ -350,14 +352,15 @@ export async function getCitationContent(context, owner, repository) {
  * * Ensures the metadata is valid based on certain fields
  * @param {String} content - The content of the metadata file
  * @param {String} fileType - The type of metadata file (codemeta or citation)
+ * @param {String} file_path - Raw GitHub file path
  * @returns 
  */
-export async function validateMetadata(content, fileType) {
+export async function validateMetadata(metadataInfo, fileType) {
   if (fileType === "codemeta") {
     try {
-      JSON.parse(content);
+      const loaded_file = JSON.parse(metadataInfo.content);
       // Verify the required fields are present
-      if (!content.name || !content.authors || !content.description) {
+      if (!loaded_file.name || !loaded_file.author || !loaded_file.description) {
         return false;
       }
       return true;
@@ -368,12 +371,31 @@ export async function validateMetadata(content, fileType) {
   
   if (fileType === "citation") {
     try {
-      yaml.load(content);
+      const loaded_file = yaml.load(metadataInfo.content);
       // Verify the required fields are present
-      if (!content.title || !content.authors) {
+      if (!loaded_file.title || !loaded_file.authors) {
         return false;
       }
-      return true;
+
+      consola.info("validating CITATION.cff file", loaded_file);
+      try {
+        const response = await fetch("https://cwl-validate.codefair.io/validate-citation", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            file_path: metadataInfo.file_path,
+          })
+        });
+
+        const data = await response.json();
+        // TODO: Store the validation response in the database
+        return data.message === "valid";
+      } catch (error) {
+        consola.error("Error validating the CITATION.cff file", error);
+        return false;
+      }
     } catch (error) {
       return false;
     }
