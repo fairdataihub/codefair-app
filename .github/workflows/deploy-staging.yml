@@ -1,33 +1,69 @@
 name: Deploy to staging environment
 
+concurrency:
+  group: production
+  cancel-in-progress: true
+
 on:
   push:
     branches:
-      - staging
+      - kamal
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: stg
+    defaults:
+      run:
+        working-directory: bot
+
+    env:
+      DOCKER_BUILDKIT: 1
+      KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+      KAMAL_SERVER_IP: ${{ secrets.KAMAL_SERVER_IP }}
+      APP_ID: ${{ secrets.APP_ID }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      GH_APP_NAME: ${{ secrets.GH_APP_NAME }}
+      GH_APP_ID: ${{ secrets.GH_APP_ID }}
+      GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
+      GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
+      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      WEBHOOK_PROXY_URL: ${{ secrets.WEBHOOK_PROXY_URL }}
+      WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
 
     steps:
-      - name: Checkout the repo
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3.1
+          bundler-cache: true
 
-      # - name: Setup pnpm
-      #   uses: pnpm/action-setup@v3
-      #   with:
-      #     version: 9
+      - run: gem install kamal
 
-      # - name: Install dependencies
-      #   run: pnpm install --frozen-lockfile
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          
+      - name: Rename staging files
+        run: |
+          mv Dockerfile.staging Dockerfile
+          mv .kamal/config/deploy-staging.yml .kamal/config/deploy.yml
 
-      # - name: Run script
-      #   env:
-      #     COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
-      #     BOT_DEPLOY_HOOK: ${{ secrets.STAGING_BOT_DEPLOY_HOOK }}
-      #     UI_DEPLOY_HOOK: ${{ secrets.STAGING_UI_DEPLOY_HOOK }}
-      #   run: pnpm scripts:deploy
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx for cache
+        uses: docker/setup-buildx-action@v3
+
+      - run: kamal version
+      - run: kamal registry login --verbose
+
+      # Suggestion to use lock release and redeploy after reading comments from others. Deploying two builds could cause locking issues when the first is cancelled.
+      - run: kamal lock release --verbose
+      - run: kamal redeploy --verbose
