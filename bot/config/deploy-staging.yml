@@ -29,7 +29,7 @@ registry:
   # Specify the registry server, if you're not using Docker Hub
   # server: registry.digitalocean.com / ghcr.io / ...
   server: https://ghcr.io
-  username: fairdataihub
+  username: megasanjay
   
   # Always use an access token rather than real password (pulled from .kamal/secrets).
   password:
@@ -52,11 +52,14 @@ env:
     - PRIVATE_KEY
     - WEBHOOK_PROXY_URL
     - WEBHOOK_SECRET
+    - CODEFAIR_APP_DOMAIN
+    - ZENODO_API_ENDPOINT
+    - ZENODO_ENDPOINT
   clear:
     NODE_ENV: production
-    CODEFAIR_APP_DOMAIN: "https://staging2.codefair.io"
-    ZENODO_API_ENDPOINT: "https://sandbox.zenodo.org/api"
-    ZENODO_ENDPOINT: "https://sandbox.zenodo.org"
+    # CODEFAIR_APP_DOMAIN: "https://staging2.codefair.io"
+    # ZENODO_API_ENDPOINT: "https://sandbox.zenodo.org/api"
+    # ZENODO_ENDPOINT: "https://sandbox.zenodo.org"
 
 # Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
 # "bin/kamal logs -r job" will tail logs from the first server in the job section.
@@ -67,7 +70,7 @@ env:
 # Use a different ssh user than root
 #
 ssh:
-  user: fairdataihub
+  user: azureuser
 
 # Use a persistent storage volume.
 #

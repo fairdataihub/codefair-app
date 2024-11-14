@@ -31,6 +31,9 @@ jobs:
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
       WEBHOOK_PROXY_URL: ${{ secrets.WEBHOOK_PROXY_URL }}
       WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+      CODEFAIR_APP_DOMAIN: ${{ secrets.CODEFAIR_APP_DOMAIN }}
+      ZENODO_API_ENDPOINT: ${{ secrets.ZENODO_API_ENDPOINT }}
+      ZENODO_ENDPOINT: ${{ secrets.ZENODO_ENDPOINT }}
 
     steps:
       - uses: actions/checkout@v4
