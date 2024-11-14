@@ -20,7 +20,9 @@ jobs:
 
     env:
       DOCKER_BUILDKIT: 1
+      KAMAL_REGISTRY_USERNAME: ${{ secrets.KAMAL_REGISTRY_USERNAME }}
       KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+      KAMAL_REGISTRY_LOGIN_SERVER: ${{ secrets.KAMAL_REGISTRY_LOGIN_SERVER }}
       KAMAL_SERVER_IP: ${{ secrets.KAMAL_SERVER_IP }}
       APP_ID: ${{ secrets.APP_ID }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -54,11 +56,11 @@ jobs:
           mv Dockerfile.staging Dockerfile
           mv config/deploy-staging.yml config/deploy.yml
 
-      - name: Login to Github Container Registry
-        uses: docker/login-action@v3
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
         with:
-          registry: ghcr.io
-          username: megasanjay
+          login-server: ${{ secrets.KAMAL_REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.KAMAL_REGISTRY_USERNAME }}
           password: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
 
       - name: Set up Docker Buildx for cache
