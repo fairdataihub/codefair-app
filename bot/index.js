@@ -53,6 +53,12 @@ export default async (app, { getRouter }) => {
     res.status(200).send("Health check passed");
   });
 
+  // for kamal
+  router.get("/up", (req, res) => {
+    consola.log('Requested healthcheck');
+    res.status(200).send("Health check passed");
+  });
+
   // When the app is installed on an Org or Repository
   app.on(
     ["installation.created", "installation_repositories.added"],
