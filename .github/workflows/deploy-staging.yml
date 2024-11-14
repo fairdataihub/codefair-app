@@ -52,7 +52,7 @@ jobs:
       - name: Rename staging files
         run: |
           mv Dockerfile.staging Dockerfile
-          mv .kamal/config/deploy-staging.yml .kamal/config/deploy.yml
+          mv config/deploy-staging.yml config/deploy.yml
 
       - name: Login to Github Container Registry
         uses: docker/login-action@v3
