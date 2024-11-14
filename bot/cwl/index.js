@@ -198,7 +198,7 @@ export async function applyCWLTemplate(
       }
 
       // Create a new object for the file entry to be added to the db
-      const newDate = new Date();
+      const newDate = Math.floor(Date.now() / 1000);
       cwlFiles.push({
         href: file.html_url,
         last_modified: newDate,
