@@ -2,7 +2,7 @@
 service: codefair-bot
 
 # Name of the container image.
-image: <%= ENV["KAMAL_REGISTRY_LOGIN_SERVER"] %>/codefair-bot
+image: codefair-bot
 
 # Deploy to these servers.
 servers:
