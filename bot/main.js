@@ -7,7 +7,7 @@ async function startServer() {
     port: process.env.PORT || 3000,
     Probot: Probot.defaults({
       appId: process.env.GH_APP_ID,
-      privateKey: process.env.PRIVATE_KEY,
+      privateKey: process.env.PRIVATE_KEY.replace(/\\n/g, "\n"),
       secret: process.env.WEBHOOK_SECRET,
     }),
   });
