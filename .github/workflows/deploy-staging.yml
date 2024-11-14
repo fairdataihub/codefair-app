@@ -58,7 +58,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: fairdataihub
+          username: megasanjay
           password: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
 
       - name: Set up Docker Buildx for cache
