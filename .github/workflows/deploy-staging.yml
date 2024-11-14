@@ -59,7 +59,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
 
       - name: Set up Docker Buildx for cache
         uses: docker/setup-buildx-action@v3
