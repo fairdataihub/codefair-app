@@ -2,7 +2,7 @@
 service: codefair-bot
 
 # Name of the container image.
-image: fairdataihub/codefair-bot:staging-1
+image: fairdataihub/codefair-bot:staging
 
 # Deploy to these servers.
 servers:
