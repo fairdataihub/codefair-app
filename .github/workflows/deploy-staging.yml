@@ -51,10 +51,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           
-      - name: Rename staging files
-        run: |
-          mv Dockerfile.staging Dockerfile
-          mv config/deploy-staging.yml config/deploy.yml
+      # - name: Rename staging files
+      #   run: |
+      #     mv Dockerfile.staging Dockerfile
+      #     mv config/deploy-staging.yml config/deploy.yml
 
       - name: Login to Azure Container Registry
         uses: azure/docker-login@v1
