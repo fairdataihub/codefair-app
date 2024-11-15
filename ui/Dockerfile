@@ -16,8 +16,8 @@ COPY prisma ./prisma/
 
 # Install dependencies and generate prisma client
 RUN yarn install --frozen-lockfile --production \
-  && yarn prisma:migrate:deploy \
   && yarn prisma:generate \
+  && yarn prisma:migrate:deploy \
   && yarn cache clean
 
 # Copy source files and build
