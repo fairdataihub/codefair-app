@@ -7,7 +7,7 @@ async function startServer() {
   const server = new Server({
     port: process.env.PORT || 3000,
     Probot: Probot.defaults({
-      appId: process.env.GITHUB_APP_ID,
+      appId: process.env.GH_APP_ID,
       privateKey,
       secret: process.env.WEBHOOK_SECRET,
     }),

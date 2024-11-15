@@ -10,3 +10,4 @@ public/assets/css/styles.css
 .DS_Store
 nuxt-app/.nuxt/
 .vercel
+bot/yarn-error.log

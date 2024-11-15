@@ -29,7 +29,7 @@ checkEnvVariable("CODEFAIR_APP_DOMAIN");
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
-const { ZENODO_ENDPOINT, GH_APP_NAME } = process.env;
+const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT, GH_APP_NAME } = process.env;
 
 /**
  * This is the main entrypoint to your Probot app

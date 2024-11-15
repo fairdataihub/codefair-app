@@ -1,8 +1,8 @@
 # Name of your application. Used to uniquely configure containers.
-service: codefair-bot
+service: codefair-ui
 
 # Name of the container image.
-image: codefair-bot
+image: codefair-ui
 
 # Deploy to these servers.
 servers:
@@ -20,7 +20,7 @@ servers:
 # Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption. 
 proxy: 
   ssl: true
-  host: <%= ENV["KAMAL_BOT_DOMAIN"] %>
+  host: <%= ENV["KAMAL_APP_DOMAIN"] %>
   # Proxy connects to your container on port 80 by default.
   app_port: 3000
 
@@ -30,7 +30,7 @@ registry:
   # server: registry.digitalocean.com / ghcr.io / ...
   server: <%= ENV["KAMAL_REGISTRY_LOGIN_SERVER"] %>
   username: <%= ENV["KAMAL_REGISTRY_USERNAME"] %>
-  
+
   # Always use an access token rather than real password (pulled from .kamal/secrets).
   password:
     - KAMAL_REGISTRY_PASSWORD
@@ -45,15 +45,15 @@ env:
   secret:
     - DATABASE_URL
     - GH_APP_ID
-    - GH_APP_NAME
-    - APP_ID
-    - GH_APP_CLIENT_ID
-    - GH_APP_CLIENT_SECRET
     - GH_APP_PRIVATE_KEY
-    - WEBHOOK_SECRET
-    - CODEFAIR_APP_DOMAIN
+    - GH_OAUTH_APP_ID
+    - GH_OAUTH_CLIENT_ID
+    - GH_OAUTH_CLIENT_SECRET
     - ZENODO_API_ENDPOINT
     - ZENODO_ENDPOINT
+    - ZENODO_CLIENT_ID
+    - ZENODO_CLIENT_SECRET
+    - ZENODO_REDIRECT_URI
   clear:
     NODE_ENV: production
 
