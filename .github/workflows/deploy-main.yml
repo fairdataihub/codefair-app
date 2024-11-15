@@ -65,7 +65,7 @@ jobs:
 
       # Setup kamal for the first time
       # Might need to run `sudo usermod -aG docker $USER | newgrp docker | docker ps` to add the user to the docker group if the user is not already in the docker group
-      - run: kamal setup       
+      # - run: kamal setup       
 
       # Login to the registry on the server
       - run: kamal registry login
@@ -76,5 +76,5 @@ jobs:
       # - run: kamal lock release --verbose
 
       # Deploy the app for all other times
-      # - run: kamal redeploy
+      - run: kamal redeploy
       # - run: kamal redeploy --verbose
