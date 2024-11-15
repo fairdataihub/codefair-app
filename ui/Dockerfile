@@ -13,16 +13,9 @@ ARG DATABASE_URL
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
 
-# Install dependencies and generate prisma client
-RUN yarn install --frozen-lockfile 
-RUN yarn prisma:generate
-RUN yarn prisma:migrate:deploy
-RUN yarn cache clean
-
-# RUN yarn install --frozen-lockfile --production \
-#   && yarn prisma:generate \
-#   && yarn prisma:migrate:deploy \
-#   && yarn cache clean
+RUN yarn install --frozen-lockfile \
+  && yarn prisma:generate \
+  && yarn cache clean
 
 # Copy source files and build
 COPY . .
@@ -43,6 +36,12 @@ COPY --from=builder /app/.output ./
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
+# Create startup script that runs migrations before starting the app
+RUN echo '#!/bin/sh' > /app/start.sh && \
+  echo 'yarn prisma:migrate deploy' >> /app/start.sh && \
+  echo 'exec node /app/server/index.mjs' >> /app/start.sh && \
+  chmod +x /app/start.sh
+
 EXPOSE 3000
 
-CMD ["node", "/app/server/index.mjs"]
+CMD ["/bin/sh", "/app/start.sh"]
