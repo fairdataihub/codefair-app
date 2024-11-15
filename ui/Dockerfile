@@ -43,7 +43,7 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Create startup script that runs migrations before starting the app
-RUN echo '#!/bin/sh\nyarn prisma:migrate deploy\nexec node /app/server/index.mjs' > /start.sh && \
+RUN echo '#!/bin/sh\nyarn prisma:migrate deploy\nexec node /app/server/index.mjs' > /app/start.sh && \
   chmod +x /app/start.sh
 
 EXPOSE 3000
