@@ -66,13 +66,14 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - run: kamal version
+
+      # Setup kamal for the first time
+      - run: kamal setup       
+
       - run: kamal registry login --verbose
 
       # Suggestion to use lock release and redeploy after reading comments from others. Deploying two builds could cause locking issues when the first is cancelled.
       - run: kamal lock release --verbose
 
-      # Setup kamal for the first time
-      - run: kamal setup 
-
       # Deploy the app for all other times
-      # - run: kamal redeploy --verbose
+      - run: kamal redeploy --verbose
