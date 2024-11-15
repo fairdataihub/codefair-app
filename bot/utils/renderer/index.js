@@ -9,7 +9,7 @@ import { applyLicenseTemplate } from "../../license/index.js";
 import { applyArchivalTemplate } from "../../archival/index.js";
 import dbInstance from "../../db.js";
 
-const { GITHUB_APP_NAME } = process.env;
+const { GH_APP_NAME } = process.env;
 
 /**
  * * Renders the body of the dashboard issue message
@@ -152,7 +152,7 @@ export async function createIssue(context, owner, repository, title, body) {
   // If issue has been created, create one
   const issue = await context.octokit.issues.listForRepo({
     title,
-    creator: `${GITHUB_APP_NAME}[bot]`,
+    creator: `${GH_APP_NAME}[bot]`,
     owner,
     repo: repository.name,
     state: "open",
