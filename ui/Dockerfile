@@ -8,10 +8,6 @@ WORKDIR /app
 
 # Only needed for prisma build
 ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-
-# Write DATABASE_URL to .env file
-RUN echo "DATABASE_URL=$DATABASE_URL" > .env
 
 # Copy only necessary files for dependency installation
 COPY package.json yarn.lock ./
