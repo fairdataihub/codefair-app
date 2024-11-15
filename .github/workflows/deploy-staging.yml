@@ -72,13 +72,13 @@ jobs:
       # - run: kamal setup       
 
       # Login to the registry on the server
-      # - run: kamal registry login
-      - run: kamal registry login --verbose
+      - run: kamal registry login
+      # - run: kamal registry login --verbose
 
       # Suggestion to use lock release and redeploy after reading comments from others. Deploying two builds could cause locking issues when the first is cancelled.
-      # - run: kamal lock release
-      - run: kamal lock release --verbose
+      - run: kamal lock release
+      # - run: kamal lock release --verbose
 
       # Deploy the app for all other times
-      # - run: kamal redeploy
-      - run: kamal redeploy --verbose
+      - run: kamal redeploy
+      # - run: kamal redeploy --verbose
