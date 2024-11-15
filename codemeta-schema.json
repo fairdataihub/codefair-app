@@ -121,6 +121,107 @@
         "currentVersionDownloadURL": {
             "type": "string",
             "description": "The URL of the current version download."
+        },
+        "currentVersionReleaseDate": {
+          "type": "integer",
+          "description": "The release date of the current version"
+        },
+        "currentVersionReleaseNotes": {
+          "type": "string",
+          "description": "The release notes of the current version"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the software"
+        },
+        "developmentStatus": {
+          "type": "string",
+          "description": "The development status of the software."
+        },
+        "firstReleaseDate": {
+          "type": "string",
+          "description": "The first release date of the software."
+        },
+        "fundingCode": {
+          "type": "string",
+          "description": "The funding code of the software."
+        },
+        "fundingOrganization": {
+          "type": "string",
+          "description": "The funding organization of the software."
+        },
+        "isPartOf": {
+          "type": "string",
+          "description": "The parent software package."
+        },
+        "isSourceCodeOf": {
+          "type": "string",
+          "description": "The software package that this code is the source code of."
+        },
+        "issueTracker": {
+          "type": "string",
+          "description": "The URL of the issue tracker."
+        },
+        "keywords": {
+          "type": "array",
+          "description": "The keywords of the software.",
+          "items": {
+            "type": "string",
+            "description": "A keyword of the software."
+          },
+          "uniqueItems": true
+        },
+        "license": {
+          "type": "string",
+          "description": "The license of the software."
+        },
+        "operatingSystem": {
+          "type": "array",
+          "description": "The operating systems that the software runs on.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "otherSoftwareRequirements": {
+          "type": "array",
+          "description": "Other software requirements to run the software.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "programmingLanguages": {
+          "type": "array",
+          "description": "The programming languages used in the software.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "referencePublication": {
+          "type": "string",
+          "description": "The reference publication of the software."
+        },
+        "relatedLinks": {
+          "type": "array",
+          "description": "Related links to the software.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reviewAspect": {
+          "type": "string",
+          "description": "The review aspect of the software."
+        },
+        "reviewBody": {
+          "type": "string",
+          "description": "The review body of the software."
+        },
+        "runtimePlatform": {
+          "type": "array",
+          "description": "The runtime platforms that the software runs on."
+        },
+        "uniqueIdentifier": {
+          "type": "string",
+          "description": "The unique identifier of the software."
         }
     }
 }
