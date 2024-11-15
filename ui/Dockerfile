@@ -6,6 +6,10 @@ RUN apk add --no-cache openssl
 
 WORKDIR /app
 
+# Only needed for prisma build
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
+
 # Copy only necessary files for dependency installation
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
@@ -34,9 +38,6 @@ WORKDIR /app
 COPY --from=builder /app/.output ./
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
-# Add environment variable with a default value
-ENV DATABASE_URL=""
 
 EXPOSE 3000
 
