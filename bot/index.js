@@ -1318,7 +1318,7 @@ export default async (app, { getRouter }) => {
   });
 
   app.on("pull_request.closed", async (context) => {
-    if (context.payload.pull_request.user.login === `${GITHUB_APP_NAME}[bot]`) {    
+    if (context.payload.pull_request.user.login === `${GH_APP_NAME}[bot]`) {    
       // Remove the PR url from the database
       const prLink = context.payload.pull_request.html_url;
       const owner = context.payload.repository.owner.login;
