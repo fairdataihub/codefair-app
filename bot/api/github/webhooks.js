@@ -6,7 +6,7 @@ const app = require("../../index.js");
 const probot = createProbot({
   overrides: {
     appId: process.env.APP_ID,
-    privateKey: process.env.PRIVATE_KEY.replace(/\\n/g, "\n"),
+    privateKey: process.env.GH_APP_PRIVATE_KEY.replace(/\\n/g, "\n"),
     secret: process.env.WEBHOOK_SECRET,
   },
 });
