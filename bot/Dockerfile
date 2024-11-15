@@ -33,9 +33,6 @@ LABEL description="Your coding assistant to make research software reusable with
 
 ENV DATABASE_URL=""
 ENV NODE_ENV=production
-ENV CODEFAIR_APP_DOMAIN="https://staging.codefair.io"
-ENV ZENODO_API_ENDPOINT="https://sandbox.zenodo.org/api"
-ENV ZENODO_ENDPOINT="https://sandbox.zenodo.org"
 
 RUN apt-get update -y \
     && apt-get install -y openssl --no-install-recommends \
