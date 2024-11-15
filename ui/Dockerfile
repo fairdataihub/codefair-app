@@ -13,7 +13,7 @@ ARG DATABASE_URL
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
 
-RUN yarn install --frozen-lockfile --production \
+RUN yarn install --frozen-lockfile \
   && yarn prisma:generate \
   && yarn cache clean
 
