@@ -48,12 +48,12 @@ export default defineEventHandler(async (event) => {
 
   // Create an octokit app instance
   const app = new App({
-    appId: process.env.GITHUB_APP_ID!,
+    appId: process.env.GH_APP_ID!,
     oauth: {
       clientId: null as unknown as string,
       clientSecret: null as unknown as string,
     },
-    privateKey: process.env.GITHUB_APP_PRIVATE_KEY!,
+    privateKey: process.env.GH_APP_PRIVATE_KEY!,
   });
 
   // Get the installation instance for the app

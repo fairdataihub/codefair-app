@@ -7,7 +7,7 @@ const repoWritePermissions = async (
 ) => {
   const user = event.context.user as User;
 
-  const GITHUB_OAUTH_APP_ID = process.env.GITHUB_OAUTH_APP_ID || "";
+  const GH_OAUTH_APP_ID = process.env.GH_OAUTH_APP_ID || "";
 
   if (!owner || !repo) {
     throw createError({
@@ -54,7 +54,7 @@ const repoWritePermissions = async (
       if (
         statusJSONMessage.search("has enabled OAuth App access restrictions")
       ) {
-        const statusMessage = `unauthorized-org-access|https://github.com/orgs/${owner}/policies/applications/${GITHUB_OAUTH_APP_ID}`;
+        const statusMessage = `unauthorized-org-access|https://github.com/orgs/${owner}/policies/applications/${GH_OAUTH_APP_ID}`;
 
         throw createError({
           statusCode: 403,
