@@ -22,13 +22,13 @@ import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
 import { getZenodoDepositionInfo, createZenodoMetadata, updateZenodoMetadata, uploadReleaseAssetsToZenodo, parseZenodoInfo, getZenodoToken, publishZenodoDeposition, updateGitHubRelease } from "./archival/index.js";
 import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier } from "./metadata/index.js";
 
-checkEnvVariable("GITHUB_APP_NAME");
+checkEnvVariable("GH_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
-const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT, GITHUB_APP_NAME } = process.env;
+const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT, GH_APP_NAME } = process.env;
 
 /**
  * This is the main entrypoint to your Probot app
@@ -49,6 +49,13 @@ export default async (app, { getRouter }) => {
   router.use(express.static("public"));
 
   router.get("/healthcheck", (req, res) => {
+    consola.log('Requested healthcheck');
+    res.status(200).send("Health check passed");
+  });
+
+  // for kamal
+  router.get("/up", (req, res) => {
+    consola.log('Requested healthcheck');
     res.status(200).send("Health check passed");
   });
 
@@ -326,7 +333,7 @@ export default async (app, { getRouter }) => {
 
     // Check if the author of the commit is the bot
     const commitAuthor = context.payload.head_commit.author;
-    if (commitAuthor?.name === `${GITHUB_APP_NAME}[bot]`) {
+    if (commitAuthor?.name === `${GH_APP_NAME}[bot]`) {
       const commitMessages = ["chore: 📝 Update CITATION.cff with Zenodo identifier", "chore: 📝 Update codemeta.json with Zenodo identifier"]
       if (latestCommitInfo.latest_commit_message === commitMessages[0] || latestCommitInfo.latest_commit_message === commitMessages[1]) {
         return;
@@ -514,7 +521,7 @@ export default async (app, { getRouter }) => {
 
     // Seach for the issue with the title FAIR Compliance Dashboard and authored with the github bot
     const issues = await context.octokit.issues.listForRepo({
-      creator: `${GITHUB_APP_NAME}[bot]`,
+      creator: `${GH_APP_NAME}[bot]`,
       owner,
       repo: repository.name,
       state: "open",
@@ -573,10 +580,10 @@ export default async (app, { getRouter }) => {
         }
         // Use a regular expression to match the "Metadata ❌" section
         const metadataSectionRegex = /## Metadata ❌\n\nTo make your software FAIR, a CITATION\.cff and codemeta\.json are expected at the root level of your repository\. These files are not found in the repository\. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files\.\n\n\[!\[Metadata\]\(https:\/\/img\.shields\.io\/badge\/Add_Metadata-dc2626\.svg\)\]\(([^)]+)\)/;
-              
+
         // Define the replacement string with the new metadata PR badge
         const metadataPRBadge = `A pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
-              
+
         // Perform the replacement while preserving the identifier
         issueBody = issueBody.replace(
           metadataSectionRegex,
@@ -598,7 +605,7 @@ export default async (app, { getRouter }) => {
     const owner = context.payload.repository.owner.login;
     const potentialBot = context.payload.sender.login;
 
-    if (issueTitle != ISSUE_TITLE && potentialBot != `${GITHUB_APP_NAME}[bot]`) {
+    if (issueTitle != ISSUE_TITLE && potentialBot != `${GH_APP_NAME}[bot]`) {
       return;
     }
 
@@ -789,7 +796,7 @@ export default async (app, { getRouter }) => {
         const tempString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. A draft deposition was created and will be adding the necessary files and metadata.`;
         const finalTempString = await applyLastModifiedTemplate(tempString);
         await createIssue(context, owner, repository, ISSUE_TITLE, finalTempString);
-        
+
         // 5. Update the CITATION.cff and codemeta.json files with the DOI provided by Zenodo
         const updatedMetadataFile = await updateMetadataIdentifier(context, owner, repository, zenodoDoi, tagVersion);
 
@@ -899,10 +906,10 @@ export default async (app, { getRouter }) => {
         })
       ]);
 
-      const license = licenseResponse?.license_id ? true : false;
-      const citation = metadataResponse?.contains_citation ? true : false;
-      const codemeta = metadataResponse?.contains_codemeta ? true : false;
-      const cwl = cwlResponse?.contains_cwl_files ? true : false;
+      const license = !!licenseResponse?.license_id;
+      const citation = !!metadataResponse?.contains_citation;
+      const codemeta = !!metadataResponse?.contains_codemeta;
+      const cwl = !!cwlResponse?.contains_cwl_files;
 
       const cwlObject = {
         contains_cwl: cwl,
@@ -1052,20 +1059,20 @@ export default async (app, { getRouter }) => {
 
     // Seach for the issue with the title FAIR Compliance Dashboard and authored with the github bot
     const issues = await context.octokit.issues.listForRepo({
-      creator: `${GITHUB_APP_NAME}[bot]`,
+      creator: `${GH_APP_NAME}[bot]`,
       owner,
       repo: repository.name,
       state: "open",
     });
-    
+
     // Find the issue with the exact title "FAIR Compliance Dashboard"
     const dashboardIssue = issues.data.find(issue => issue.title === "FAIR Compliance Dashboard");
-  
+
     if (!dashboardIssue) {
       consola.error("FAIR Compliance Dashboard issue not found");
       return;
     }
-  
+
     // Get the current body of the issue
     let issueBody = dashboardIssue.body;
 
