@@ -13,15 +13,9 @@ ARG DATABASE_URL
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
 
-# Install dependencies and generate prisma client
-RUN yarn install --frozen-lockfile 
-RUN yarn prisma:generate
-RUN yarn cache clean
-
-# RUN yarn install --frozen-lockfile --production \
-#   && yarn prisma:generate \
-#   && yarn prisma:migrate:deploy \
-#   && yarn cache clean
+RUN yarn install --frozen-lockfile --production \
+  && yarn prisma:generate \
+  && yarn cache clean
 
 # Copy source files and build
 COPY . .
