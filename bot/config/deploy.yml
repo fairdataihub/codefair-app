@@ -20,7 +20,7 @@ servers:
 # Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption. 
 proxy: 
   ssl: true
-  host: staging2.codefair.io
+  host: staging-bot.codefair.io
   # Proxy connects to your container on port 80 by default.
   app_port: 3000
 
@@ -50,16 +50,12 @@ env:
     - GH_CLIENT_ID
     - GH_CLIENT_SECRET
     - PRIVATE_KEY
-    - WEBHOOK_PROXY_URL
     - WEBHOOK_SECRET
     - CODEFAIR_APP_DOMAIN
     - ZENODO_API_ENDPOINT
     - ZENODO_ENDPOINT
   clear:
     NODE_ENV: production
-    # CODEFAIR_APP_DOMAIN: "https://staging2.codefair.io"
-    # ZENODO_API_ENDPOINT: "https://sandbox.zenodo.org/api"
-    # ZENODO_ENDPOINT: "https://sandbox.zenodo.org"
 
 # Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
 # "bin/kamal logs -r job" will tail logs from the first server in the job section.
@@ -70,7 +66,7 @@ env:
 # Use a different ssh user than root
 #
 ssh:
-  user: azureuser
+  user: fairdataihub
 
 # Use a persistent storage volume.
 #
