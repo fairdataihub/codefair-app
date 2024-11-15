@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
       clientId: null as unknown as string,
       clientSecret: null as unknown as string,
     },
-    privateKey: process.env.GH_APP_PRIVATE_KEY!,
+    privateKey: process.env.GH_APP_PRIVATE_KEY.replace(/\\n/g, "\n")!,
   });
 
   // Get the installation instance for the app
