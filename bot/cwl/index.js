@@ -23,6 +23,11 @@ export function getCWLFiles(context, owner, repoName) {
     consola.info("Checking for CWL files in the repository...");
 
     const cwlFiles = [];
+    const cwlObject = {
+      contains_cwl: false,
+      files: [],
+      removed_files: [],
+    }
 
     const searchDirectory = async function (path) {
       try {
@@ -33,8 +38,7 @@ export function getCWLFiles(context, owner, repoName) {
         });
 
         for (const file of repoContent.data) {
-          const fileSplit = file.name.split(".");
-          if (file.type === "file" && fileSplit.includes("cwl")) {
+          if (file.type === "file" && file.name.endsWith(".cwl")) {
             cwlFiles.push(file);
           }
           if (file.type === "dir") {
@@ -44,7 +48,7 @@ export function getCWLFiles(context, owner, repoName) {
       } catch (error) {
         if (error.status === 404) {
           // Repository is empty
-          resolve(cwlFiles);
+          resolve(cwlObject);
           return;
         }
         consola.error(
@@ -57,8 +61,35 @@ export function getCWLFiles(context, owner, repoName) {
 
     // Call the async function and handle its promise
     searchDirectory("")
-      .then(() => {
-        resolve(cwlFiles);
+      .then(async () => {
+        cwlObject = {
+          contains_cwl: cwlFiles.length > 0,
+          files: cwlFiles,
+          removed_files: [],
+        }
+
+        // Check if the db entry exists for the repository
+        const existingCWL = await dbInstance.cwlValidation.findUnique({
+          where: {
+            repository_id: context.payload.repository.id,
+          }
+        });
+
+        if (existingCWL) {
+          // TODO: Check for removed files
+          // // Check for removed files
+          // const removedFiles = existingCWL.files.filter((file) => {
+          //   return !cwlFiles.some((newFile) => newFile.path === file.path)
+          // });
+
+          // if (removedFiles.length > 0) {
+          //   cwlObject.removed_files = removedFiles.map((file) => file.path);
+          // }
+          if (existingCWL?.contains_cwl_files) {
+            cwlObject.contains_cwl_files = existingCWL.contains_cwl_files;
+          }
+        }
+        resolve(cwlObject);
       })
       .catch(reject);
   });

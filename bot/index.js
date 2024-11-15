@@ -29,7 +29,7 @@ checkEnvVariable("CODEFAIR_APP_DOMAIN");
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
-const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT, GH_APP_NAME } = process.env;
+const { ZENODO_ENDPOINT, GH_APP_NAME } = process.env;
 
 /**
  * This is the main entrypoint to your Probot app
@@ -129,22 +129,22 @@ export default async (app, { getRouter }) => {
           owner,
           repository.name,
         );
-        const cwl = await getCWLFiles(context, owner, repository.name);
+        const cwlObject = await getCWLFiles(context, owner, repository.name);
 
-        const cwlObject = {
-          contains_cwl: cwl.length > 0 || false,
-          files: cwl,
-          removed_files: [],
-        };
+        // const cwlObject = {
+        //   contains_cwl: cwl.length > 0 || false,
+        //   files: cwl,
+        //   removed_files: [],
+        // };
 
-        // If existing cwl validation exists, update the contains_cwl value
-        const cwlExists = await dbInstance.cwlValidation.findUnique({
-          where: { repository_id: repository.id },
-        });
+        // // If existing cwl validation exists, update the contains_cwl value
+        // const cwlExists = await dbInstance.cwlValidation.findUnique({
+        //   where: { repository_id: repository.id },
+        // });
 
-        if (cwlExists?.contains_cwl_files) {
-          cwlObject.contains_cwl = cwlExists.contains_cwl_files;
-        }
+        // if (cwlExists?.contains_cwl_files) {
+        //   cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+        // }
 
         const subjects = {
           citation,
@@ -344,6 +344,11 @@ export default async (app, { getRouter }) => {
     const { commits } = context.payload;
 
     let cwl = [];
+    const cwlObject = {
+      contains_cwl: false,
+      files: [],
+      removed_files: [],
+    }
     let license = await checkForLicense(context, owner, repository.name);
     let citation = await checkForCitation(context, owner, repository.name);
     let codemeta = await checkForCodeMeta(context, owner, repository.name);
@@ -437,7 +442,8 @@ export default async (app, { getRouter }) => {
       }
     }
 
-    const cwlObject = {
+    cwlObject.contains_cwl = cwl.length > 0 || false;
+    cwlObject = {
       contains_cwl: cwl.length > 0 || false,
       files: cwl.filter(file => !removedCWLFiles.includes(file.path)),
       removed_files: removedCWLFiles,
