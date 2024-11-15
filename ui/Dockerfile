@@ -12,23 +12,13 @@ COPY prisma ./prisma/
 
 # Install dependencies and generate prisma client
 RUN yarn install --frozen-lockfile --production \
+  && yarn prisma:migrate:deploy \
   && yarn prisma:generate \
-  && yarn cache clean \
-  && yarn prisma:migrate:deploy
+  && yarn cache clean
 
-# Build stage for the application
-FROM node:20-alpine AS build
-
-WORKDIR /app
-
-# Copy all source files
+# Copy source files and build
 COPY . .
-# Copy node_modules from builder
-COPY --from=builder /app/node_modules ./node_modules
-
-# Build the application
-RUN yarn run build \
-  && yarn prisma:generate
+RUN yarn run build
 
 # Production stage
 FROM node:20-alpine
@@ -40,10 +30,13 @@ RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-# Copy only the necessary files from previous stages
-COPY --from=build /app/.output ./
+# Copy only the necessary files from builder stage
+COPY --from=builder /app/.output ./
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# Add environment variable with a default value
+ENV DATABASE_URL=""
 
 EXPOSE 3000
 
