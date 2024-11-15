@@ -5636,6 +5636,13 @@ git-config-path@^2.0.0:
   resolved "https://registry.yarnpkg.com/git-config-path/-/git-config-path-2.0.0.tgz#62633d61af63af4405a5024efd325762f58a181b"
   integrity sha512-qc8h1KIQbJpp+241id3GuAtkdyJ+IK+LIVtkiFTRKRrmddDzs3SI9CvP1QYmWBFvm1I/PWRwj//of8bgAc0ltA==
 
+git-removed-branches@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/git-removed-branches/-/git-removed-branches-2.3.1.tgz#a7f5ab20403de2d6e18a286cae94d82ec538426b"
+  integrity sha512-9LuXcbodbNlfBU1wK60a8CIDaMnR5Br7yncHEdo90NtUMqTVowLjz+orLZvmn/oFEGEXzI9+zBqv/Pn05pYZrQ==
+  dependencies:
+    minimist "^1.2.0"
+
 git-up@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/git-up/-/git-up-7.0.0.tgz#bace30786e36f56ea341b6f69adfd83286337467"
