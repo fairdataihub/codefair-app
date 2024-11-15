@@ -1,0 +1,126 @@
+{
+    "title": "Codemeta.json Schema",
+    "description": "This schema is used to validate the codemeta.json files.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "The name of the software package."
+        },
+        "authors": {
+            "type": "array",
+            "description": "The authors of the software package.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "affiliation": {
+                        "type": "string",
+                        "description": "The affiliation of the author."
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "The email address of the author."
+                    },
+                    "familyName": {
+                        "type": "string",
+                        "description": "The family name of the author."
+                    },
+                    "givenName": {
+                        "type": "string",
+                        "description": "The given name of the author."
+                    },
+                    "roles": {
+                        "type": "object",
+                        "description": "The roles of the author.",
+                        "properties": {
+                            "endDate": {
+                                "type": "integer",
+                                "description": "The end date of the role."
+                            },
+                            "startDate": {
+                                "type": "integer",
+                                "description": "The start date of the role."
+                            },
+                            "role": {
+                                "type": "string",
+                                "description": "The role of the author."
+                            }
+                        }
+                    },
+                    "uri": {
+                        "type": "string",
+                        "description": "The URI of the author."
+                    }
+                }
+            }
+        },
+        "codeRepository": {
+            "type": "string",
+            "description": "The URL of the code repository."
+        },
+        "continuousIntegration": {
+            "type": "string",
+            "description": "The URL of the continuous integration service."
+        },
+        "contributors": {
+            "type": "array",
+            "description": "The contributors of the software package.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "affiliation": {
+                        "type": "string",
+                        "description": "The affiliation of the contributor."
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "The email address of the contributor."
+                    },
+                    "familyName": {
+                        "type": "string",
+                        "description": "The family name of the contributor."
+                    },
+                    "givenName": {
+                        "type": "string",
+                        "description": "The given name of the contributor."
+                    },
+                    "roles": {
+                        "type": "object",
+                        "description": "The roles of the contributor.",
+                        "properties": {
+                            "endDate": {
+                                "type": "integer",
+                                "description": "The end date of the role."
+                            },
+                            "startDate": {
+                                "type": "integer",
+                                "description": "The start date of the role."
+                            },
+                            "role": {
+                                "type": "string",
+                                "description": "The role of the contributor."
+                            }
+                        }
+                    },
+                    "uri": {
+                        "type": "string",
+                        "description": "The URI of the contributor."
+                    }
+                }
+            }
+        },
+        "creationDate": {
+            "type": "string",
+            "description": "The creation date of the software package."
+        },
+        "currentVersion": {
+            "type": "string",
+            "description": "The current version of the software package."
+        },
+        "currentVersionDownloadURL": {
+            "type": "string",
+            "description": "The URL of the current version download."
+        }
+    }
+}
