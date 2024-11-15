@@ -20,7 +20,7 @@ servers:
 # Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption. 
 proxy: 
   ssl: true
-  host: staging-bota.codefair.io
+  host: staging-bot.codefair.io
   # Proxy connects to your container on port 80 by default.
   app_port: 3000
 
