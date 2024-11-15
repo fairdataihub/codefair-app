@@ -79,7 +79,7 @@ export async function getDefaultBranch(context, owner, repositoryName) {
 export async function verifyFirstIssue(context, owner, repo, title) {
   // If there is an issue that has been created by the bot, (either opened or closed) don't create another issue
   const issues = await context.octokit.issues.listForRepo({
-    creator: `${GITHUB_APP_NAME}[bot]`,
+    creator: `${GH_APP_NAME}[bot]`,
     owner,
     repo,
     state: "all",
@@ -114,7 +114,7 @@ export async function closeOpenIssue(context, owner, repo, title) {
   // Check if issue is open and close it
   const issue = await context.octokit.issues.listForRepo({
     title,
-    creator: `${GITHUB_APP_NAME}[bot]`,
+    creator: `${GH_APP_NAME}[bot]`,
     owner,
     repo,
     state: "open",

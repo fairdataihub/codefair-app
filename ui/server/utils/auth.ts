@@ -36,6 +36,6 @@ declare module "lucia" {
 }
 
 export const github = new GitHub(
-  process.env.GITHUB_CLIENT_ID!,
-  process.env.GITHUB_CLIENT_SECRET!,
+  process.env.GH_CLIENT_ID!,
+  process.env.GH_CLIENT_SECRET!,
 );
