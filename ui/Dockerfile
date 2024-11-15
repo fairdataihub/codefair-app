@@ -6,11 +6,6 @@ RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-# Only needed for prisma build
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-ENV NODE_ENV=production
-
 # Copy only necessary files for dependency installation
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
@@ -31,11 +26,6 @@ COPY . .
 # Copy node_modules from builder
 COPY --from=builder /app/node_modules ./node_modules
 
-# Only needed for prisma build
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-ENV NODE_ENV=production
-
 # Build the application
 RUN yarn run build \
   && yarn prisma:generate
@@ -49,11 +39,6 @@ LABEL maintainer="FAIR Data Innovations Hub <contact@fairdataihub.org>" \
 RUN apk add --no-cache openssl
 
 WORKDIR /app
-
-# Only needed for prisma build
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-ENV NODE_ENV=production
 
 # Copy only the necessary files from previous stages
 COPY --from=build /app/.output ./
