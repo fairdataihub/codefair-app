@@ -71,7 +71,7 @@ export function getCWLFiles(context, owner, repoName) {
  */
 export async function validateCWLFile(downloadUrl) {
   try {
-    const response = await fetch("https://cwl-validate.codefair.io/validate", {
+    const response = await fetch("https://cwl-validate.codefair.io/validate-cwl", {
       body: JSON.stringify({
         file_path: downloadUrl,
       }),
