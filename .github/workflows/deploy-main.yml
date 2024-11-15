@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  deploy-bot:
     runs-on: ubuntu-latest
     environment: prd
     defaults:
@@ -24,18 +24,86 @@ jobs:
       KAMAL_REGISTRY_USERNAME: ${{ secrets.KAMAL_REGISTRY_USERNAME }}
       KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
       KAMAL_SERVER_IP: ${{ secrets.KAMAL_SERVER_IP }}
+      KAMAL_BOT_DOMAIN: ${{ secrets.KAMAL_BOT_DOMAIN }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       APP_ID: ${{ secrets.APP_ID }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
       GH_APP_NAME: ${{ secrets.GH_APP_NAME }}
-      GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
-      GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
-      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+      GH_APP_CLIENT_SECRET: ${{ secrets.GH_APP_CLIENT_SECRET }}
+      GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
       WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
       CODEFAIR_APP_DOMAIN: ${{ secrets.CODEFAIR_APP_DOMAIN }}
-      CODEFAIR_BOT_DOMAIN: ${{ secrets.CODEFAIR_BOT_DOMAIN }}
       ZENODO_API_ENDPOINT: ${{ secrets.ZENODO_API_ENDPOINT }}
       ZENODO_ENDPOINT: ${{ secrets.ZENODO_ENDPOINT }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3.1
+          bundler-cache: true
+
+      - run: gem install kamal
+
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.KAMAL_REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.KAMAL_REGISTRY_USERNAME }}
+          password: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+
+      - name: Set up Docker Buildx for cache
+        uses: docker/setup-buildx-action@v3
+
+      - run: kamal version
+
+      # Setup kamal for the first time
+      # Might need to run `sudo usermod -aG docker $USER | newgrp docker | docker ps` to add the user to the docker group if the user is not already in the docker group
+      # - run: kamal setup       
+
+      # Login to the registry on the server
+      - run: kamal registry login
+      # - run: kamal registry login --verbose
+
+      # Suggestion to use lock release and redeploy after reading comments from others. Deploying two builds could cause locking issues when the first is cancelled.
+      - run: kamal lock release
+      # - run: kamal lock release --verbose
+
+      # Deploy the app for all other times
+      - run: kamal redeploy
+      # - run: kamal redeploy --verbose
+
+  deploy-ui:
+    runs-on: ubuntu-latest
+    environment: stg
+    defaults:
+      run:
+        working-directory: ui
+
+    env:
+      DOCKER_BUILDKIT: 1
+      KAMAL_REGISTRY_LOGIN_SERVER: ${{ secrets.KAMAL_REGISTRY_LOGIN_SERVER }}
+      KAMAL_REGISTRY_USERNAME: ${{ secrets.KAMAL_REGISTRY_USERNAME }}
+      KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+      KAMAL_SERVER_IP: ${{ secrets.KAMAL_SERVER_IP }}
+      KAMAL_APP_DOMAIN: ${{ secrets.KAMAL_APP_DOMAIN }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      GH_APP_ID: ${{ secrets.GH_APP_ID }}
+      GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      GH_OAUTH_APP_ID: ${{ secrets.GH_OAUTH_APP_ID }}
+      GH_OAUTH_CLIENT_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
+      GH_OAUTH_CLIENT_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
+      ZENODO_API_ENDPOINT: ${{ secrets.ZENODO_API_ENDPOINT }}
+      ZENODO_ENDPOINT: ${{ secrets.ZENODO_ENDPOINT }}
+      ZENODO_CLIENT_ID: ${{ secrets.ZENODO_CLIENT_ID }}
+      ZENODO_CLIENT_SECRET: ${{ secrets.ZENODO_CLIENT_SECRET }}
+      ZENODO_REDIRECT_URI: ${{ secrets.ZENODO_REDIRECT_URI }}
 
     steps:
       - uses: actions/checkout@v4

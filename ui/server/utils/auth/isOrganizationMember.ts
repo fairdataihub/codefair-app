@@ -7,7 +7,7 @@ const isOrganizationMember = async (
 ) => {
   const user = event.context.user as User;
 
-  const GITHUB_OAUTH_APP_ID = process.env.GITHUB_OAUTH_APP_ID || "";
+  const GH_OAUTH_APP_ID = process.env.GH_OAUTH_APP_ID || "";
 
   if (orgStatus) {
     // Check organization membership for a user
@@ -23,7 +23,7 @@ const isOrganizationMember = async (
     );
 
     if (!isOrgMember.ok) {
-      const statusMessage = `unauthorized-org-access|https://github.com/orgs/${owner}/policies/applications/${GITHUB_OAUTH_APP_ID}`;
+      const statusMessage = `unauthorized-org-access|https://github.com/orgs/${owner}/policies/applications/${GH_OAUTH_APP_ID}`;
 
       throw createError({
         statusCode: 403,

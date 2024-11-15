@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "tunnel": "lt --port 3000 --subdomain codefair",
-    "build": "yarn prisma:migrate:deploy && nuxt build && yarn prisma:generate",
+    "build-full": "yarn prisma:migrate:deploy && nuxt build && yarn prisma:generate",
+    "build": "nuxt build",
     "dev": "nuxt dev -p 3000",
     "start": "node .output/server/index.mjs",
     "generate": "nuxt generate",
