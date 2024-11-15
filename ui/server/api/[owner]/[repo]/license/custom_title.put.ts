@@ -71,12 +71,12 @@ export default defineEventHandler(async (event) => {
   await repoWritePermissions(event, owner, repo);
 
   const app = new App({
-    appId: process.env.GITHUB_APP_ID!,
+    appId: process.env.GH_APP_ID!,
     oauth: {
       clientId: null as unknown as string,
       clientSecret: null as unknown as string,
     },
-    privateKey: process.env.GITHUB_APP_PRIVATE_KEY!,
+    privateKey: process.env.GH_APP_PRIVATE_KEY.replace(/\\n/g, "\n")!,
   });
 
   const octokit = await app.getInstallationOctokit(
