@@ -23,7 +23,14 @@ class HelloEverynyan(Resource):
 
         return "Server active!"
 
+@api.route("/up", endpoint="up")
+class Up(Resource):
+    """Health check for kamal"""
+    @api.response(200, "Success")
+    def get(self):
+        """Returns a simple message"""
 
+        return ":)"
 
 @api.route("/validate-cwl", endpoint="validate-cwl")
 class ValidateCWL(Resource):
