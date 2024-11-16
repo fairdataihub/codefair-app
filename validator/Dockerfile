@@ -1,40 +1,23 @@
 FROM python:3.10-alpine
-# FROM ubuntu/python:stable
-
-EXPOSE 5000
 
 WORKDIR /app
 
-ENV POETRY_VERSION=1.3.2
+EXPOSE 5000
 
-# RUN apt-get update
-# RUN sudo apt-get install cwltool 
-
-RUN apk update
+# Install system dependencies
 RUN apk add --no-cache gcc libffi-dev musl-dev
-# RUN apk add --update cwltool
 
-RUN pip install "poetry==$POETRY_VERSION"
+# Install Python dependencies directly via pip
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# COPY poetry.lock pyproject.toml ./
-COPY pyproject.toml .
-
-RUN poetry config virtualenvs.create false
-RUN poetry install
-
-RUN pip install cwltool
-RUN pip install cffconvert
-
+# Copy application files
 COPY apis ./apis
-COPY config.py .
-COPY app.py .
+COPY config.py app.py entrypoint.sh ./ 
 
-# COPY entrypoint.sh .
+# Optional: Ensure the entrypoint script is executable
+RUN chmod +x entrypoint.sh
 
-# RUN chmod +x entrypoint.sh
-
+# Set default entrypoint and command
 ENTRYPOINT [ "python3" ]
-
 CMD [ "app.py" ]
-
-# ENTRYPOINT ["./entrypoint.sh"]

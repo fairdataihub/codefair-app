@@ -118,7 +118,7 @@ class ValidateCitation(Resource):
         except subprocess.CalledProcessError as e:
             stdout_clean = e.stdout
             match = re.search(r'jsonschema.exceptions.ValidationError:.*', e.stderr)
-            stderr_clean = match.group(0) if match else "Unknown error"
+            stderr_clean = match[0] if match else "Unknown error"
             return {"message": "invalid", "output": stdout_clean, "error": stderr_clean}, 400
         except Exception as e:
             return {"message": "An unexpected error occurred", "error": str(e)}, 500
