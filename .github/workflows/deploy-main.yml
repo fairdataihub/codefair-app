@@ -81,7 +81,7 @@ jobs:
 
   deploy-ui:
     runs-on: ubuntu-latest
-    environment: stg
+    environment: prd
     defaults:
       run:
         working-directory: ui
