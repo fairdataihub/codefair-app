@@ -1,0 +1,3 @@
+{
+  "recommendations": ["njpwerner.autodocstring", "aaron-bond.better-comments", "ms-python.black-formatter", "visualstudioexptteam.vscodeintellicode", "visualstudioexptteam.intellicode-api-usage-examples", "davidanson.vscode-markdownlint", "ms-python.vscode-pylance", "ms-python.pylint", "ms-python.python", "donjayamanne.python-environment-manager", "kevinrose.vsc-python-indent"]
+}

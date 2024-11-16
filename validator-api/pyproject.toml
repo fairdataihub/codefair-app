@@ -1,0 +1,167 @@
+[tool.poetry]
+
+name = "cwl-validation-api"
+version = "0.1.0"
+description = "API for CWL validation"
+
+license = "MIT"
+authors = ["FAIR Data Innovations Hub <contact@fairdataihub.org>"]
+
+readme = "README.md"
+homepage = "https://codefair.io"
+documentation = "https://docs.codefair.io"
+repository = "https://github.com/fairdataihub/codefair"
+
+
+keywords = []
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+]
+
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+# Core
+Flask = "^2.3.2"
+Flask-Cors = "^4.0.0"
+flask-restx = "^1.1.0"
+waitress = "^2.1.2"
+
+
+# API Client
+requests = "^2.31.0"
+
+# Database
+
+minilog = "*"
+art = "^6.0"
+jsonschema = "^4.17.3"
+dicttoxml = "^1.7.16"
+types-requests = "^2.30.0.0"
+
+pyflakes = "^3.0.1"
+faker = "^18.11.2"
+
+
+[tool.poetry.group.dev.dependencies]
+
+# Environment
+python-dotenv = "^1.0.0"
+
+# Formatters
+black = "^23.3.0"
+tomli = "^2.0.1"
+isort = "^5.12.0"
+
+# Linters
+mypy = "^1.4.1"
+pydocstyle = "^6.3.0"
+pylint = "^2.17.4"
+flake8 = "^6.0.0"
+
+# Testing
+pytest = "^7.1"
+pytest-describe = "^2.0"
+pytest-expecter = "^3.0"
+pytest-random = "*"
+pytest-cov = "^3.0"
+freezegun = "*"
+
+# Reports
+coveragespace = "^6.0"
+
+# Documentation
+mkdocs = "~1.3"
+pygments = "^2.11.1"
+
+# Scripting
+poethepoet = "^0.20.0"
+
+# Jupyter
+# jupyter = "^1.0.0"
+
+# Types
+types-python-dateutil = "^2.8.19.14"
+types-waitress = "^2.1.4.9"
+
+# Environment
+
+[tool.poe.tasks]
+
+dev = "flask run --debug"
+dev_docker = "docker run -p 5000:5000 fairhub-flask-api:local"
+
+freeze_dependencies = "pip list --format=freeze > requirements.txt"
+
+docs = "mkdocs serve"
+
+flake8 = "flake8 app.py"
+
+format_with_isort = "isort app.py"
+format_with_black = "black app.py"
+
+format = ["format_with_isort", "format_with_black"]
+
+typecheck = "mypy app.py"
+
+pylint = "pylint app.py --rcfile=.pylint.ini"
+
+lint = ["flake8", "typecheck", "pylint"]
+
+precommit = ["format", "flake8", "typecheck", "pylint"]
+
+pytest = "pytest -rx -W ignore::DeprecationWarning"
+pytest_with_capture = "pytest -s -W ignore::DeprecationWarning"
+
+jupyter = "jupyter notebook"
+
+export_requirements = "poetry export -f requirements.txt --output requirements.txt --without-hashes"
+build_docker_image = "docker build --tag cwl-validate:local ."
+
+[tool.black]
+
+quiet = true
+
+[tool.isort]
+
+profile = "black"
+
+[tool.mypy]
+
+ignore_missing_imports = true
+no_implicit_optional = true
+check_untyped_defs = true
+
+cache_dir = ".cache/mypy/"
+
+[tool.pytest.ini_options]
+
+addopts = """
+--strict-markers
+
+-r sxX
+--show-capture=log
+
+--cov-report=html
+--cov-report=term-missing:skip-covered
+--no-cov-on-fail
+"""
+
+filterwarnings = ["ignore", "default:::flask_restx.*"]
+
+cache_dir = ".cache/pytest/"
+
+markers = []
+
+[build-system]
+requires = ["poetry-core>=1.3.2"]
+build-backend = "poetry.core.masonry.api"

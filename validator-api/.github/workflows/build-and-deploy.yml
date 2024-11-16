@@ -1,0 +1,44 @@
+name: Build and push validator api image to Azure Container Registry
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and push Docker image
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    env:
+      AZURE_REGISTRY_LOGIN_SERVER: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}
+      AZURE_REGISTRY_USERNAME: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+      AZURE_REGISTRY_PASSWORD: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+          password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/cwl-validator-api:latest
