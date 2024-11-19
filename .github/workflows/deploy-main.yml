@@ -81,7 +81,7 @@ jobs:
 
   deploy-ui:
     runs-on: ubuntu-latest
-    environment: stg
+    environment: prd
     defaults:
       run:
         working-directory: ui
@@ -104,6 +104,63 @@ jobs:
       ZENODO_CLIENT_ID: ${{ secrets.ZENODO_CLIENT_ID }}
       ZENODO_CLIENT_SECRET: ${{ secrets.ZENODO_CLIENT_SECRET }}
       ZENODO_REDIRECT_URI: ${{ secrets.ZENODO_REDIRECT_URI }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3.1
+          bundler-cache: true
+
+      - run: gem install kamal
+
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.KAMAL_REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.KAMAL_REGISTRY_USERNAME }}
+          password: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+
+      - name: Set up Docker Buildx for cache
+        uses: docker/setup-buildx-action@v3
+
+      - run: kamal version
+
+      # Setup kamal for the first time
+      # Might need to run `sudo usermod -aG docker $USER | newgrp docker | docker ps` to add the user to the docker group if the user is not already in the docker group
+      # - run: kamal setup       
+
+      # Login to the registry on the server
+      - run: kamal registry login
+      # - run: kamal registry login --verbose
+
+      # Suggestion to use lock release and redeploy after reading comments from others. Deploying two builds could cause locking issues when the first is cancelled.
+      - run: kamal lock release
+      # - run: kamal lock release --verbose
+
+      # Deploy the app for all other times
+      - run: kamal redeploy
+      # - run: kamal redeploy --verbose
+      
+  deploy-validator:
+    runs-on: ubuntu-latest
+    environment: stg
+    defaults:
+      run:
+        working-directory: validator
+
+    env:
+      DOCKER_BUILDKIT: 1
+      KAMAL_REGISTRY_LOGIN_SERVER: ${{ secrets.KAMAL_REGISTRY_LOGIN_SERVER }}
+      KAMAL_REGISTRY_USERNAME: ${{ secrets.KAMAL_REGISTRY_USERNAME }}
+      KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+      KAMAL_SERVER_IP: ${{ secrets.KAMAL_SERVER_IP }}
+      KAMAL_VALIDATOR_DOMAIN: ${{ secrets.KAMAL_VALIDATOR_DOMAIN }}
 
     steps:
       - uses: actions/checkout@v4

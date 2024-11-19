@@ -1,0 +1,23 @@
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
+
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# API Platform specific files
+*.pyc
+/config.ps1
+
+# Environment variables
+.env
