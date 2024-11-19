@@ -10,11 +10,13 @@
     },
     "name": {
       "type": "string",
-      "description": "The name of the software package."
+      "description": "The name of the software package.",
+      "minLength": 1
     },
     "author": {
       "type": "array",
       "description": "The authors of the software package.",
+      "minItems": 1,
       "items": {
         "type": "object",
         "properties": {
@@ -42,7 +44,8 @@
           },
           "givenName": {
             "type": "string",
-            "description": "The given name of the author."
+            "description": "The given name of the author.",
+            "minLength": 1
           },
           "id": {
             "type": "string",
@@ -76,49 +79,51 @@
       "description": "The programming languages used in the software.",
       "items": {
         "type": "string"
-      }
+      },
+      "minLength": 1
     },
     "contributor": {
       "type": "array",
       "description": "Contributors to the software package.",
       "items": {
+      "type": "object",
+      "properties": {
+        "affiliation": {
         "type": "object",
+        "description": "The affiliation of the contributor.",
         "properties": {
-          "affiliation": {
-            "type": "object",
-            "description": "The affiliation of the contributor.",
-            "properties": {
-              "name": {
-                "type": "string",
-                "description": "The name of the affiliation."
-              },
-              "type": {
-                "type": "string",
-                "description": "Organization or Person"
-              }
-            }
-          },
-          "email": {
-            "type": "string",
-            "description": "The email address of the contributor."
-          },
-          "familyName": {
-            "type": "string",
-            "description": "The family name of the contributor."
-          },
-          "givenName": {
-            "type": "string",
-            "description": "The given name of the contributor."
-          },
-          "id": {
-            "type": "string",
-            "description": "The URI of the contributor."
+          "name": {
+          "type": "string",
+          "description": "The name of the affiliation."
           },
           "type": {
-            "type": "string",
-            "description": "Organization or Person"
+          "type": "string",
+          "description": "Organization or Person"
           }
         }
+        },
+        "email": {
+        "type": "string",
+        "description": "The email address of the contributor."
+        },
+        "familyName": {
+        "type": "string",
+        "description": "The family name of the contributor."
+        },
+        "givenName": {
+        "type": "string",
+        "description": "The given name of the contributor.",
+        "minLength": 1
+        },
+        "id": {
+        "type": "string",
+        "description": "The URI of the contributor."
+        },
+        "type": {
+        "type": "string",
+        "description": "Organization or Person"
+        }
+      }
       }
     },
     "codeRepository": {
@@ -139,7 +144,8 @@
     },
     "description": {
       "type": "string",
-      "description": "Description of the software."
+      "description": "Description of the software.",
+      "minLength": 1
     },
     "downloadUrl": {
       "type": "string",
@@ -182,7 +188,8 @@
         "type": "string",
         "description": "A keyword of the software."
       },
-      "uniqueItems": true
+      "uniqueItems": true,
+      "minLength": 1
     },
     "operatingSystem": {
       "type": "array",
