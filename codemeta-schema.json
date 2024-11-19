@@ -145,12 +145,50 @@
       "type": "string",
       "description": "The URL where the software can be downloaded."
     },
+    "funder": {
+      "type": "object",
+      "description": "The funder of the software.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the funder."
+        },
+        "type": {
+          "type": "string",
+          "description": "Organization or Person",
+          "enum": [
+            "Organization",
+            "Person"
+          ]
+        }
+      }
+    },
+    "funding": {
+      "type": "string",
+      "description": "The funding code of the software."
+    },
+    "isPartOf": {
+      "type": "string",
+      "description": "The larger project that the software is part of."
+    },
+    "isSourceCodeOf": {
+      "type": "string",
+      "description": "The larger project that the software is part of."
+    },
     "keywords": {
       "type": "array",
       "description": "The keywords of the software.",
       "items": {
         "type": "string",
         "description": "A keyword of the software."
+      },
+      "uniqueItems": true
+    },
+    "operatingSystem": {
+      "type": "array",
+      "description": "The operating systems the software is compatible with.",
+      "items": {
+        "type": "string"
       },
       "uniqueItems": true
     },
@@ -169,9 +207,43 @@
         "type": "string"
       }
     },
+    "review": {
+      "type": "object",
+      "description": "A review of the software.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of review."
+        },
+        "reviewAspect": {
+          "type": "string",
+          "description": "The aspect of the software being reviewed."
+        },
+        "reviewBody": {
+          "type": "string",
+          "description": "The body of the review."
+        }
+      }
+    },
+    "runtimePlatform": {
+      "type": "array",
+      "description": "The runtime platforms the software is compatible with.",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
     "schema:releaseNotes": {
       "type": "string",
       "description": "The release notes of the software."
+    },
+    "softwareRequirements": {
+      "type": "array",
+      "description": "The software requirements of the software.",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "version": {
       "type": "string",
