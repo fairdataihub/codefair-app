@@ -363,7 +363,29 @@ export async function validateMetadata(metadataInfo, fileType) {
       if (!loaded_file.name || !loaded_file.author || !loaded_file.description) {
         return false;
       }
-      return true;
+
+      consola.start("Sending content to metadata validator");
+      try {
+        const response = await fetch("https://staging-validator.codefair.io/validate-codemeta", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            file_content: metadataInfo.content,
+          })
+        });
+
+        const data = await response.json();
+
+        print(data);
+
+        return data.message === "valid";
+
+      } catch (error) {
+        consola.error("Error validating the codemeta.json file", error);
+        return false;
+      }
     } catch (error) {
       return false;
     }
@@ -379,7 +401,7 @@ export async function validateMetadata(metadataInfo, fileType) {
 
       consola.info("validating CITATION.cff file", loaded_file);
       try {
-        const response = await fetch("https://cwl-validate.codefair.io/validate-citation", {
+        const response = await fetch("https://staging-validator.codefair.io/validate-citation", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
