@@ -1,227 +1,185 @@
 {
-    "title": "Codemeta.json Schema",
-    "description": "This schema is used to validate the codemeta.json files.",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "name": {
-            "type": "string",
-            "description": "The name of the software package."
-        },
-        "authors": {
-            "type": "array",
-            "description": "The authors of the software package.",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "affiliation": {
-                        "type": "string",
-                        "description": "The affiliation of the author."
-                    },
-                    "email": {
-                        "type": "string",
-                        "description": "The email address of the author."
-                    },
-                    "familyName": {
-                        "type": "string",
-                        "description": "The family name of the author."
-                    },
-                    "givenName": {
-                        "type": "string",
-                        "description": "The given name of the author."
-                    },
-                    "roles": {
-                        "type": "object",
-                        "description": "The roles of the author.",
-                        "properties": {
-                            "endDate": {
-                                "type": "integer",
-                                "description": "The end date of the role."
-                            },
-                            "startDate": {
-                                "type": "integer",
-                                "description": "The start date of the role."
-                            },
-                            "role": {
-                                "type": "string",
-                                "description": "The role of the author."
-                            }
-                        }
-                    },
-                    "uri": {
-                        "type": "string",
-                        "description": "The URI of the author."
-                    }
-                }
+  "title": "Codemeta.json Schema",
+  "description": "This schema is used to validate the codemeta.json files.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "type": "string",
+      "description": "The JSON-LD context for codemeta."
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the software package."
+    },
+    "author": {
+      "type": "array",
+      "description": "The authors of the software package.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "affiliation": {
+            "type": "object",
+            "description": "The affiliation of the author.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the affiliation."
+              },
+              "type": {
+                "type": "string",
+                "description": "Organization or Person"
+              }
             }
-        },
-        "codeRepository": {
-            "type": "string",
-            "description": "The URL of the code repository."
-        },
-        "continuousIntegration": {
-            "type": "string",
-            "description": "The URL of the continuous integration service."
-        },
-        "contributors": {
-            "type": "array",
-            "description": "The contributors of the software package.",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "affiliation": {
-                        "type": "string",
-                        "description": "The affiliation of the contributor."
-                    },
-                    "email": {
-                        "type": "string",
-                        "description": "The email address of the contributor."
-                    },
-                    "familyName": {
-                        "type": "string",
-                        "description": "The family name of the contributor."
-                    },
-                    "givenName": {
-                        "type": "string",
-                        "description": "The given name of the contributor."
-                    },
-                    "roles": {
-                        "type": "object",
-                        "description": "The roles of the contributor.",
-                        "properties": {
-                            "endDate": {
-                                "type": "integer",
-                                "description": "The end date of the role."
-                            },
-                            "startDate": {
-                                "type": "integer",
-                                "description": "The start date of the role."
-                            },
-                            "role": {
-                                "type": "string",
-                                "description": "The role of the contributor."
-                            }
-                        }
-                    },
-                    "uri": {
-                        "type": "string",
-                        "description": "The URI of the contributor."
-                    }
-                }
-            }
-        },
-        "creationDate": {
-            "type": "string",
-            "description": "The creation date of the software package."
-        },
-        "currentVersion": {
-            "type": "string",
-            "description": "The current version of the software package."
-        },
-        "currentVersionDownloadURL": {
-            "type": "string",
-            "description": "The URL of the current version download."
-        },
-        "currentVersionReleaseDate": {
-          "type": "integer",
-          "description": "The release date of the current version"
-        },
-        "currentVersionReleaseNotes": {
-          "type": "string",
-          "description": "The release notes of the current version"
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the software"
-        },
-        "developmentStatus": {
-          "type": "string",
-          "description": "The development status of the software."
-        },
-        "firstReleaseDate": {
-          "type": "string",
-          "description": "The first release date of the software."
-        },
-        "fundingCode": {
-          "type": "string",
-          "description": "The funding code of the software."
-        },
-        "fundingOrganization": {
-          "type": "string",
-          "description": "The funding organization of the software."
-        },
-        "isPartOf": {
-          "type": "string",
-          "description": "The parent software package."
-        },
-        "isSourceCodeOf": {
-          "type": "string",
-          "description": "The software package that this code is the source code of."
-        },
-        "issueTracker": {
-          "type": "string",
-          "description": "The URL of the issue tracker."
-        },
-        "keywords": {
-          "type": "array",
-          "description": "The keywords of the software.",
-          "items": {
-            "type": "string",
-            "description": "A keyword of the software."
           },
-          "uniqueItems": true
-        },
-        "license": {
-          "type": "string",
-          "description": "The license of the software."
-        },
-        "operatingSystem": {
-          "type": "array",
-          "description": "The operating systems that the software runs on.",
-          "items": {
-            "type": "string"
+          "email": {
+            "type": "string",
+            "description": "The email address of the author."
+          },
+          "familyName": {
+            "type": "string",
+            "description": "The family name of the author."
+          },
+          "givenName": {
+            "type": "string",
+            "description": "The given name of the author."
+          },
+          "id": {
+            "type": "string",
+            "description": "The URI of the author."
+          },
+          "type": {
+            "type": "string",
+            "description": "Organization or Person"
           }
-        },
-        "otherSoftwareRequirements": {
-          "type": "array",
-          "description": "Other software requirements to run the software.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "programmingLanguages": {
-          "type": "array",
-          "description": "The programming languages used in the software.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "referencePublication": {
-          "type": "string",
-          "description": "The reference publication of the software."
-        },
-        "relatedLinks": {
-          "type": "array",
-          "description": "Related links to the software.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "reviewAspect": {
-          "type": "string",
-          "description": "The review aspect of the software."
-        },
-        "reviewBody": {
-          "type": "string",
-          "description": "The review body of the software."
-        },
-        "runtimePlatform": {
-          "type": "array",
-          "description": "The runtime platforms that the software runs on."
-        },
-        "uniqueIdentifier": {
-          "type": "string",
-          "description": "The unique identifier of the software."
         }
+      }
+    },
+    "applicationCategory": {
+      "type": "string",
+      "description": "The category of the application."
+    },
+    "developmentStatus": {
+      "type": "string",
+      "description": "The development status of the software."
+    },
+    "identifier": {
+      "type": "string",
+      "description": "A unique identifier for the software."
+    },
+    "issueTracker": {
+      "type": "string",
+      "description": "The URL of the issue tracker."
+    },
+    "programmingLanguage": {
+      "type": "array",
+      "description": "The programming languages used in the software.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contributor": {
+      "type": "array",
+      "description": "Contributors to the software package.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "affiliation": {
+            "type": "object",
+            "description": "The affiliation of the contributor.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the affiliation."
+              },
+              "type": {
+                "type": "string",
+                "description": "Organization or Person"
+              }
+            }
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address of the contributor."
+          },
+          "familyName": {
+            "type": "string",
+            "description": "The family name of the contributor."
+          },
+          "givenName": {
+            "type": "string",
+            "description": "The given name of the contributor."
+          },
+          "id": {
+            "type": "string",
+            "description": "The URI of the contributor."
+          },
+          "type": {
+            "type": "string",
+            "description": "Organization or Person"
+          }
+        }
+      }
+    },
+    "codeRepository": {
+      "type": "string",
+      "description": "The URL of the code repository."
+    },
+    "dateCreated": {
+      "type": "string",
+      "description": "The date the software was created."
+    },
+    "dateModified": {
+      "type": "string",
+      "description": "The date the software was last modified."
+    },
+    "datePublished": {
+      "type": "string",
+      "description": "The date the software was published."
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the software."
+    },
+    "downloadUrl": {
+      "type": "string",
+      "description": "The URL where the software can be downloaded."
+    },
+    "keywords": {
+      "type": "array",
+      "description": "The keywords of the software.",
+      "items": {
+        "type": "string",
+        "description": "A keyword of the software."
+      },
+      "uniqueItems": true
+    },
+    "license": {
+      "type": "string",
+      "description": "The license of the software."
+    },
+    "referencePublication": {
+      "type": "string",
+      "description": "The reference publication of the software."
+    },
+    "relatedLink": {
+      "type": "array",
+      "description": "Related links to the software.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "schema:releaseNotes": {
+      "type": "string",
+      "description": "The release notes of the software."
+    },
+    "version": {
+      "type": "string",
+      "description": "The current version of the software package."
+    },
+    "type": {
+      "type": "string",
+      "description": "The type of software."
     }
+  }
 }
