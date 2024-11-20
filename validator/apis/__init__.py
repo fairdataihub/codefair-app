@@ -208,6 +208,16 @@ class ValidateCodemeta(Resource):
                     "error": "Invalid JSON: " + str(e),
                 }, 400
 
+        codemeta_context = file_content.get("@context", "")
+        if codemeta_context == "https://doi.org/10.5063/schema/codemeta-2.0":
+            codemeta_version = "2.0"
+        elif codemeta_context == "https://w3id.org/codemeta/3.0":
+            codemeta_version = "3.0"
+        else:
+            return {
+                "message": "Validation Error",
+                "error": "Unsupported codemeta version",
+            }, 400
         try:
             with open("./codemeta-schema.json", "r", encoding="utf-8") as f:
                 schema = json.load(f)
@@ -215,9 +225,10 @@ class ValidateCodemeta(Resource):
 
             return {
                 "message": "valid",
+                "version": codemeta_version,
             }, 200
         except jsonschema.exceptions.ValidationError as e:
             return {
                 "message": "invalid",
-                "error": str(e.message),
+                "error": str(e.message + " at " + str(e.validator_value)),
             }, 400

@@ -6,7 +6,11 @@
   "properties": {
     "@context": {
       "type": "string",
-      "description": "The JSON-LD context for codemeta."
+      "description": "The JSON-LD context for codemeta.",
+      "enum": [
+        "https://doi.org/10.5063/schema/codemeta-2.0",
+        "https://w3id.org/codemeta/3.0"
+      ]
     },
     "name": {
       "type": "string",
@@ -84,46 +88,46 @@
     },
     "contributor": {
       "type": "array",
-      "description": "Contributors to the software package.",
+      "description": "The authors of the software package.",
       "items": {
-      "type": "object",
-      "properties": {
-        "affiliation": {
         "type": "object",
-        "description": "The affiliation of the contributor.",
         "properties": {
-          "name": {
-          "type": "string",
-          "description": "The name of the affiliation."
+          "affiliation": {
+            "type": "object",
+            "description": "The affiliation of the author.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the affiliation."
+              },
+              "type": {
+                "type": "string",
+                "description": "Organization or Person"
+              }
+            }
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address of the author."
+          },
+          "familyName": {
+            "type": "string",
+            "description": "The family name of the author."
+          },
+          "givenName": {
+            "type": "string",
+            "description": "The given name of the author.",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "description": "The URI of the author."
           },
           "type": {
-          "type": "string",
-          "description": "Organization or Person"
+            "type": "string",
+            "description": "Organization or Person"
           }
         }
-        },
-        "email": {
-        "type": "string",
-        "description": "The email address of the contributor."
-        },
-        "familyName": {
-        "type": "string",
-        "description": "The family name of the contributor."
-        },
-        "givenName": {
-        "type": "string",
-        "description": "The given name of the contributor.",
-        "minLength": 1
-        },
-        "id": {
-        "type": "string",
-        "description": "The URI of the contributor."
-        },
-        "type": {
-        "type": "string",
-        "description": "Organization or Person"
-        }
-      }
       }
     },
     "codeRepository": {
