@@ -5,6 +5,17 @@ All notable changes the Codefair App will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v3.2.0 - 11-22-2024
+
+### Added
+
+- Introducde metadata and license validation capabilities, allows for re-validation of metadata files and licenses through the UI.
+- Add support for validation codemeta.json and CITATION.cff files using a new schema and validation endpoints.
+
+## Fixed
+
+- Fixed issues related to filtering what is consider a cwl file in the repository.
+
 ## v3.1.1 - 11-12-2024
 
 ### Fixed
