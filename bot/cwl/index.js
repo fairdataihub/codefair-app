@@ -62,11 +62,8 @@ export function getCWLFiles(context, owner, repoName) {
     // Call the async function and handle its promise
     searchDirectory("")
       .then(async () => {
-        cwlObject = {
-          contains_cwl: cwlFiles.length > 0,
-          files: cwlFiles,
-          removed_files: [],
-        }
+        cwlObject.contains_cwl = cwlFiles.length > 0;
+        cwlObject.files = cwlFiles;
 
         // Check if the db entry exists for the repository
         const existingCWL = await dbInstance.cwlValidation.findUnique({
@@ -195,73 +192,76 @@ export async function applyCWLTemplate(
   }
   
   consola.start("Validating CWL files for", repository.name);
-  // Validate each CWL file from list
-  for (const file of subjects.cwl.files) {
-    const fileSplit = file.name.split(".");
-
-    if (fileSplit.includes("cwl")) {
-      const downloadUrl =
-        file?.commitId && !privateRepo
-          ? file.download_url.replace("/main/", `/${file.commitId}/`)
-          : file.download_url; // Replace the branch with the commit id if commit id is available and the repo is public
-
-      const [isValidCWL, validationMessage] =
-        await validateCWLFile(downloadUrl);
-
-      if (!isValidCWL && validOverall) {
-        // Overall status of CWL validations is invalid
-        validOverall = false;
-      }
-
-      if (!isValidCWL) {
-        failedCount += 1;
-      }
-
-      const [modifiedValidationMessage, lineNumber1, lineNumber2] =
-        replaceRawGithubUrl(validationMessage, downloadUrl, file.html_url);
-
-      // Add the line numbers to the URL if they exist
-      if (lineNumber1) {
-        file.html_url += `#L${lineNumber1}`;
-        if (lineNumber2) {
-          file.html_url += `-L${lineNumber2}`;
+  // Validate each CWL file from list\
+  consola.info(`Validating ${JSON.stringify(subjects.cwl)} CWL files`);
+  if (subjects.cwl.files.length > 0) {
+    for (const file of subjects.cwl.files) {
+      const fileSplit = file.name.split(".");
+  
+      if (fileSplit.includes("cwl")) {
+        const downloadUrl =
+          file?.commitId && !privateRepo
+            ? file.download_url.replace("/main/", `/${file.commitId}/`)
+            : file.download_url; // Replace the branch with the commit id if commit id is available and the repo is public
+  
+        const [isValidCWL, validationMessage] =
+          await validateCWLFile(downloadUrl);
+  
+        if (!isValidCWL && validOverall) {
+          // Overall status of CWL validations is invalid
+          validOverall = false;
         }
-      }
-
-      // Create a new object for the file entry to be added to the db
-      const newDate = Math.floor(Date.now() / 1000);
-      cwlFiles.push({
-        href: file.html_url,
-        last_modified: newDate,
-        last_validated: newDate,
-        path: file.path,
-        validation_message: modifiedValidationMessage,
-        validation_status: isValidCWL ? "valid" : "invalid",
-      });
-
-      // Apply the validation file count to the analytics collection on the db
-      const analyticsCollection = dbInstance.analytics;
-      await analyticsCollection.upsert({
-        create: {
-          cwl_validated_file_count: 1, // Start count at 1 when creating
-          id: repository.id, // Create a new record if it doesn't exist
-        },
-        update: {
-          cwl_validated_file_count: {
-            increment: 1,
+  
+        if (!isValidCWL) {
+          failedCount += 1;
+        }
+  
+        const [modifiedValidationMessage, lineNumber1, lineNumber2] =
+          replaceRawGithubUrl(validationMessage, downloadUrl, file.html_url);
+  
+        // Add the line numbers to the URL if they exist
+        if (lineNumber1) {
+          file.html_url += `#L${lineNumber1}`;
+          if (lineNumber2) {
+            file.html_url += `-L${lineNumber2}`;
+          }
+        }
+  
+        // Create a new object for the file entry to be added to the db
+        const newDate = Math.floor(Date.now() / 1000);
+        cwlFiles.push({
+          href: file.html_url,
+          last_modified: newDate,
+          last_validated: newDate,
+          path: file.path,
+          validation_message: modifiedValidationMessage,
+          validation_status: isValidCWL ? "valid" : "invalid",
+        });
+  
+        // Apply the validation file count to the analytics collection on the db
+        const analyticsCollection = dbInstance.analytics;
+        await analyticsCollection.upsert({
+          create: {
+            cwl_validated_file_count: 1, // Start count at 1 when creating
+            id: repository.id, // Create a new record if it doesn't exist
           },
-        },
-        where: {
-          id: repository.id,
-        },
-      });
-
-      // Add the file to the table content of the issue dashboard
-      tableContent += `| ${file.path} | ${isValidCWL ? "✔️" : "❌"} |\n`;
-
-      consola.success(
-        `File: ${file.path} is ${isValidCWL ? "valid" : "invalid"}`,
-      );
+          update: {
+            cwl_validated_file_count: {
+              increment: 1,
+            },
+          },
+          where: {
+            id: repository.id,
+          },
+        });
+  
+        // Add the file to the table content of the issue dashboard
+        tableContent += `| ${file.path} | ${isValidCWL ? "✔️" : "❌"} |\n`;
+  
+        consola.success(
+          `File: ${file.path} is ${isValidCWL ? "valid" : "invalid"}`,
+        );
+      }
     }
   }
 
