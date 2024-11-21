@@ -226,7 +226,7 @@ export async function convertCitationForDB(citationContent, repository) {
  * @returns {object} - An object containing the metadata for the repository
  */
 export async function gatherMetadata(context, owner, repo) {
-  consola.start("Gathering metadata...");
+  consola.start("Gathering initial metadata from GitHub API...");
 
   // Get the metadata of the repo
   const repoData = await context.octokit.repos.get({
@@ -355,10 +355,12 @@ export async function getCitationContent(context, owner, repository) {
  * @param {String} file_path - Raw GitHub file path
  * @returns 
  */
-export async function validateMetadata(metadataInfo, fileType) {
+export async function validateMetadata(metadataInfo, fileType, repository) {
   if (fileType === "codemeta") {
     try {
-      const loaded_file = JSON.parse(metadataInfo.content);
+      const cleanContent = metadataInfo.content.trim();
+      const normalizedContent = cleanContent.replace(/^\uFEFF/, ''); // Remove BOM if present
+      const loaded_file = JSON.parse(normalizedContent);
       // Verify the required fields are present
       if (!loaded_file.name || !loaded_file.author || !loaded_file.description) {
         return false;
@@ -366,19 +368,30 @@ export async function validateMetadata(metadataInfo, fileType) {
 
       consola.start("Sending content to metadata validator");
       try {
-        const response = await fetch("https://staging-validator.codefair.io/validate-codemeta", {
+        const response = await fetch("http://127.0.0.1:5000/validate-codemeta", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            file_content: metadataInfo.content,
+            file_content: loaded_file,
           })
         });
 
+        if (!response.ok) {
+          throw new Error("Error validating the codemeta.json file", response);
+        }
         const data = await response.json();
+        consola.info("Codemeta validation response", data);
 
-        print(data);
+        await dbInstance.codeMetadata.update({
+          where: {
+            repository_id: repository.id,
+          },
+          data: {
+            codemeta_validation_message: data.message === "valid" ? data.output : data.error,
+          }
+        });
 
         return data.message === "valid";
 
@@ -399,9 +412,8 @@ export async function validateMetadata(metadataInfo, fileType) {
         return false;
       }
 
-      consola.info("validating CITATION.cff file", loaded_file);
       try {
-        const response = await fetch("https://staging-validator.codefair.io/validate-citation", {
+        const response = await fetch("http://127.0.0.1:5000/validate-citation", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -411,7 +423,12 @@ export async function validateMetadata(metadataInfo, fileType) {
           })
         });
 
+        if (!response.ok) {
+          throw new Error("Error validating the CITATION.cff file", response);
+        }
+
         const data = await response.json();
+        consola.info("Citation validation response", data);
         // TODO: Store the validation response in the database
         await dbInstance.codeMetadata.update({
           where: {
@@ -542,6 +559,159 @@ export async function updateMetadataIdentifier(context, owner, repository, ident
 
 }
 
+export function applyDbMetadata(existingMetadataEntry, metadata) {
+  const existingMetadata = existingMetadataEntry.metadata;
+
+  metadata.name = existingMetadata.name || metadata.name || "";
+  metadata.applicationCategory = existingMetadata.applicationCategory || metadata.applicationCategory || null;
+  metadata.codeRepository = existingMetadata.codeRepository || metadata.codeRepository || "";
+  metadata.continuousIntegration = existingMetadata.continuousIntegration || metadata.continuousIntegration || "";
+  metadata.creationDate = existingMetadata.creationDate || metadata.creationDate || null;
+  metadata.currentVersion = existingMetadata.currentVersion || metadata.currentVersion || "";
+  metadata.currentVersionDownloadURL = existingMetadata.currentVersionDownloadURL || metadata.currentVersionDownloadURL || "";
+  metadata.currentVersionReleaseDate = existingMetadata.currentVersionReleaseDate || metadata.currentVersionReleaseDate || null;
+  metadata.currentVersionReleaseNotes = existingMetadata.currentVersionReleaseNotes || metadata.currentVersionReleaseNotes || "";
+  metadata.description = existingMetadata.description || metadata.description || "";
+  metadata.developmentStatus = existingMetadata.developmentStatus || metadata.developmentStatus || null;
+  metadata.firstReleaseDate = existingMetadata.firstReleaseDate || metadata.firstReleaseDate || null;
+  metadata.fundingCode = existingMetadata.fundingCode || metadata.fundingCode || "";
+  metadata.fundingOrganization = existingMetadata.fundingOrganization || metadata.fundingOrganization || "";
+  metadata.isPartOf = existingMetadata.isPartOf || metadata.isPartOf || "";
+  metadata.isSourceCodeOf = existingMetadata.isSourceCodeOf || metadata.isSourceCodeOf || "";
+  metadata.issueTracker = existingMetadata.issueTracker || metadata.issueTracker || "";
+  metadata.keywords = existingMetadata.keywords || metadata.keywords || [];
+  metadata.license = existingMetadata.license || metadata.license || null;
+  metadata.operatingSystem = existingMetadata.operatingSystem || metadata.operatingSystem || [];
+  metadata.otherSoftwareRequirements = existingMetadata.otherSoftwareRequirements || metadata.otherSoftwareRequirements || [];
+  metadata.programmingLanguages = existingMetadata.programmingLanguages || metadata.programmingLanguages || [];
+  metadata.referencePublication = existingMetadata.referencePublication || metadata.referencePublication || "";
+  metadata.relatedLinks = existingMetadata.relatedLinks || metadata.relatedLinks || [];
+  metadata.reviewAspect = existingMetadata.reviewAspect || metadata.reviewAspect || "";
+  metadata.reviewBody = existingMetadata.reviewBody || metadata.reviewBody || "";
+  metadata.runtimePlatform = existingMetadata.runtimePlatform || metadata.runtimePlatform || [];
+  metadata.uniqueIdentifier = existingMetadata.uniqueIdentifier || metadata.uniqueIdentifier || "";
+
+  return metadata;
+}
+
+export async function applyCodemetaMetadata(codemeta, metadata, repository) {
+  consola.info("Codemeta found");
+  const codemetaContent = JSON.parse(codemeta.content);
+  const convertedCodemeta = await convertCodemetaForDB(codemetaContent, repository);
+
+  metadata.name = convertedCodemeta.name || metadata.name || "";
+  metadata.applicationCategory = convertedCodemeta.applicationCategory || metadata.applicationCategory || null;
+  metadata.codeRepository = convertedCodemeta.codeRepository || metadata.codeRepository || "";
+  metadata.continuousIntegration = convertedCodemeta.continuousIntegration || metadata.continuousIntegration || "";
+  metadata.creationDate = convertedCodemeta.creationDate || metadata.creationDate || null;
+  metadata.currentVersion = convertedCodemeta.currentVersion || metadata.currentVersion || "";
+  metadata.currentVersionDownloadURL = convertedCodemeta.currentVersionDownloadURL || metadata.currentVersionDownloadURL || "";
+  metadata.currentVersionReleaseDate = convertedCodemeta.currentVersionReleaseDate || metadata.currentVersionReleaseDate || null;
+  metadata.currentVersionReleaseNotes = convertedCodemeta.currentVersionReleaseNotes || metadata.currentVersionReleaseNotes || "";
+  metadata.description = convertedCodemeta.description || metadata.description || "";
+  metadata.developmentStatus = convertedCodemeta.developmentStatus || metadata.developmentStatus || null;
+  metadata.firstReleaseDate = convertedCodemeta.firstReleaseDate || metadata.firstReleaseDate || null;
+  metadata.fundingCode = convertedCodemeta.fundingCode || metadata.fundingCode || "";
+  metadata.fundingOrganization = convertedCodemeta.fundingOrganization || metadata.fundingOrganization || "";
+  metadata.isPartOf = convertedCodemeta.isPartOf || metadata.isPartOf || "";
+  metadata.reviewAspect = convertedCodemeta.reviewAspect || metadata.reviewAspect || "";
+  metadata.reviewBody = convertedCodemeta.reviewBody || metadata.reviewBody || "";
+  metadata.runtimePlatform = convertedCodemeta.runtimePlatform || metadata.runtimePlatform || [];
+  metadata.uniqueIdentifier = convertedCodemeta.uniqueIdentifier || metadata.uniqueIdentifier || "";
+
+  if (metadata.authors) {
+    // consola.info("metadata.authors", metadata.authors);
+    // consola.info("convertedCodemeta.authors", convertedCodemeta.authors);
+    // Check if authors are already in the metadata, if so update the details of the author
+    if (convertedCodemeta.authors.length > 0) {
+      const updatedAuthors = convertedCodemeta.authors.map((author) => {
+        const foundAuthor = metadata.authors.find((newAuthor) => newAuthor?.familyName === author?.familyName && newAuthor.givenName === author.givenName);
+        if (foundAuthor) {
+          // consola.info("Found author:", foundAuthor);
+          author.affiliation = foundAuthor.affiliation || author.affiliation || "";
+          author.email = foundAuthor.email || author.email || "";
+          author.roles = foundAuthor.roles || author.roles || [];
+          author.uri = foundAuthor.uri || author.uri || "";
+        }
+        return author;
+      });
+
+      // join the updated authors with the remaining authors
+      metadata.authors = updatedAuthors;
+    }
+  }
+
+  if (metadata.contributors) {
+    // Check if contributors are already in the metadata, if so update the details of the contributor
+    if (convertedCodemeta.contributors.length > 0) {
+      const updatedContributors = convertedCodemeta.contributors.map((contributor) => {
+        const foundContributor = metadata.contributors.find((newContributor) => newContributor.familyName === contributor.familyName && newContributor.givenName === contributor.givenName);
+        if (foundContributor) {
+          contributor.affiliation = foundContributor.affiliation || contributor.affiliation || "";
+          contributor.email = foundContributor.email || contributor.email || "";
+          contributor.roles = foundContributor.roles || contributor.roles || [];
+          contributor.uri = foundContributor.uri || contributor.uri || "";
+        }
+        return contributor;
+      });
+
+      metadata.contributors = updatedContributors;
+    }
+  }
+
+  return metadata;
+}
+
+export async function applyCitationMetadata(citation, metadata, repository) {
+  consola.info("Citation found");
+  const citationContent = yaml.load(citation.content);
+  const convertedCitation = await convertCitationForDB(citationContent, repository);
+
+  metadata.license = convertedCitation.license || metadata.license || null;
+  metadata.codeRepository = convertedCitation.codeRepository || metadata.codeRepository || "";
+  metadata.currentVersion = convertedCitation.currentVersion || metadata.currentVersion || "";
+  metadata.currentVersionReleaseDate = convertedCitation.currentVersionReleaseDate || metadata.currentVersionReleaseDate || null;
+  metadata.keywords = convertedCitation.keywords || metadata.keywords || [];
+  metadata.uniqueIdentifier = convertedCitation.uniqueIdentifier || metadata.uniqueIdentifier || "";
+
+  consola.info("metadata.authors", metadata.authors);
+  consola.info("convertedCitation.authors", convertedCitation.authors);
+  if (convertedCitation.authors) {
+    // Check if the authors are already in the metadata, if so update the details of the author
+    if (metadata.authors.length > 0) {
+      const updatedAuthors = metadata.authors.map((author) => {
+        const foundAuthor = convertedCitation.authors.find((newAuthor) => newAuthor.familyName === author.familyName && newAuthor.givenName === author.givenName);
+        if (foundAuthor) {
+          author.affiliation = author.affiliation || foundAuthor.affiliation || "";
+          author.email = author.email || foundAuthor.email || "";
+          
+          // Remove author from convertedCitation.authors
+          const index = convertedCitation.authors.indexOf(foundAuthor);
+          if (index > -1) {
+            convertedCitation.authors.splice(index, 1);
+          }
+        }
+
+        return author;
+      });
+
+      // Apply the missings fields to the remaining convertedCitation.authors
+      convertedCitation.authors = convertedCitation.authors.map((author) => {
+        author.affiliation = author.affiliation || "";
+        author.email = author.email || "";
+        author.roles = author.roles || [];
+        author.uri = author.uri || "";
+        return author;
+      });
+
+      metadata.authors = updatedAuthors.concat(convertedCitation.authors);
+    }
+  }
+
+  return metadata;
+}
+
+
 // TODO: Prevent the user from creating/updating metadata if custom license file exists and has no license title
 /**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
@@ -561,155 +731,83 @@ export async function applyMetadataTemplate(
   owner,
   context,
 ) {
+  const identifier = createId();
   let url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata`;
+  let containsCitation = false,
+      containsCodemeta = false,
+      validCitation = false,
+      validCodemeta = false;
+  const existingMetadata = await dbInstance.codeMetadata.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  });
+
+  let metadata = gatherMetadata(context, owner, repository);
+  if (existingMetadata?.metadata) {
+    containsCitation = existingMetadata.contains_citation;
+    containsCodemeta = existingMetadata.contains_metadata;
+    metadata = applyDbMetadata(existingMetadata, metadata);
+  }
+
+  if (subjects.codemeta) {
+    const codemeta = await getCodemetaContent(context, owner, repository);
+    containsCodemeta = true;
+    validCodemeta = await validateMetadata(codemeta, "codemeta", repository);
+    metadata = await applyCodemetaMetadata(codemeta, metadata, repository);
+    consola.info(metadata);
+  }
+
+  if (subjects.citation) {
+    const citation = await getCitationContent(context, owner, repository);
+    containsCitation = true;
+    validCitation = await validateMetadata(citation, "citation", repository);
+    metadata = await applyCitationMetadata(citation, metadata, repository);
+    consola.info(metadata);
+  }
+
   if ((!subjects.codemeta || !subjects.citation) && subjects.license) {
     // License was found but no codemeta.json or CITATION.cff exists
-    const identifier = createId();
-    let validCitation = false;
-    let validCodemeta = false;
-
-    const existingMetadata = await dbInstance.codeMetadata.findUnique({
-      where: {
-        repository_id: repository.id,
-      },
-    });
-
-    if (subjects.codemeta) {
-      try {
-        const codemetaFile = await context.octokit.repos.getContent({
-          owner,
-          path: "codemeta.json",
-          repo: repository.name,
-        });
-
-        JSON.parse(Buffer.from(codemetaFile.data.content, "base64").toString());
-
-        validCodemeta = true;
-      } catch (error) {
-        consola.error("Error getting codemeta.json file", error);
-      }
-    }
-
-    if (subjects.citation) {
-      try {
-        const citationFile = await context.octokit.repos.getContent({
-          owner,
-          path: "CITATION.cff",
-          repo: repository.name,
-        });
-
-        yaml.load(Buffer.from(citationFile.data.content, "base64").toString());
-        validCitation = true;
-      } catch (error) {
-        consola.error("Error getting CITATION.cff file", error);
-      }
-    }
-
-    if (!existingMetadata) {
-      // Entry does not exist in db, create a new one
-      const gatheredMetadata = await gatherMetadata(context, owner, repository);
-      await dbInstance.codeMetadata.create({
-        data: {
-          citation_status: validCitation ? "valid" : "invalid",
-          codemeta_status: validCodemeta ? "valid" : "invalid",
-          contains_citation: subjects.citation,
-          identifier,
-          contains_codemeta: subjects.codemeta,
-          contains_metadata: subjects.codemeta && subjects.citation,
-          metadata: gatheredMetadata,
-          repository: {
-            connect: {
-              id: repository.id,
-            },
-          },
-        },
-      });
-    } else {
-      // Get the identifier of the existing metadata request
-      await dbInstance.codeMetadata.update({
-        data: {
-          citation_status: validCitation ? "valid" : "invalid",
-          codemeta_status: validCodemeta ? "valid" : "invalid",
-          contains_citation: subjects.citation,
-          contains_codemeta: subjects.codemeta,
-          contains_metadata: subjects.codemeta && subjects.citation,
-        },
-        where: { repository_id: repository.id },
-      });
-    }
     const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
     baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemeta.json are expected at the root level of your repository. These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
   }
 
   if (subjects.codemeta && subjects.citation && subjects.license) {
-    const codemetaContent = await getCodemetaContent(context, owner, repository);
-    // const citationContent = await getCitationContent(context, owner, repository);
-
-    const validCodemeta = true;
-    const validCitation = true;
-
-    // Convert the content to the structure we use for code metadata
-    const metadata = await convertCodemetaForDB(JSON.parse(codemetaContent.content), repository);
-
-    // Fetch license details from database
-    const license = await dbInstance.licenseRequest.findUnique({
-      where: {
-        repository_id: repository.id,
-      },
-    });
-
-    if (license?.license_id) {
-      metadata.license = `https://spdx.org/licenses/${license.license_id}`;
-    }
-
-    // License, codemeta.json and CITATION.cff files were found
-    const identifier = createId();
-
-    const existingMetadata = await dbInstance.codeMetadata.findUnique({
-      where: {
-        repository_id: repository.id,
-      },
-    });
-
-    if (!existingMetadata) {
-      // Entry does not exist in db, create a new one
-      const newDate = new Date();
-      // const gatheredMetadata = await gatherMetadata(context, owner, repository);
-      await dbInstance.codeMetadata.create({
-        data: {
-          citation_status: validCitation ? "valid" : "invalid",
-          codemeta_status: validCodemeta ? "valid" : "invalid",
-          contains_citation: subjects.citation,
-          contains_codemeta: subjects.codemeta,
-          contains_metadata: subjects.codemeta && subjects.citation,
-          created_at: newDate,
-          identifier,
-          metadata,
-          repository: {
-            connect: {
-              id: repository.id,
-            },
-          },
-          updated_at: newDate,
-        },
-      });
-    } else {
-      // Get the identifier of the existing metadata request
-      await dbInstance.codeMetadata.update({
-        data: {
-          citation_status: validCitation ? "valid" : "invalid",
-          codemeta_status: validCodemeta ? "valid" : "invalid",
-          contains_citation: subjects.citation,
-          contains_codemeta: subjects.codemeta,
-          contains_metadata: subjects.codemeta && subjects.citation,
-          metadata,
-          updated_at: new Date(),
-        },
-        where: { repository_id: repository.id },
-      });
-    }
     const metadataBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-0ea5e9.svg)](${url}?)`;
     baseTemplate += `\n\n## Metadata ✔️\n\nA CITATION.cff and a codemeta.json file are found in the repository. They may need to be updated over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
+  }
+
+  if (!existingMetadata) {
+    // Entry does not exist in db, create a new one
+    await dbInstance.codeMetadata.create({
+      data: {
+        citation_status: validCitation ? "valid" : "invalid",
+        codemeta_status: validCodemeta ? "valid" : "invalid",
+        contains_citation: containsCitation,
+        identifier,
+        contains_codemeta: containsCodemeta,
+        contains_metadata: containsCodemeta && containsCitation,
+        metadata,
+        repository: {
+          connect: {
+            id: repository.id,
+          },
+        },
+      },
+    });
+  } else {
+    // Get the identifier of the existing metadata request
+    await dbInstance.codeMetadata.update({
+      data: {
+        citation_status: validCitation ? "valid" : "invalid",
+        codemeta_status: validCodemeta ? "valid" : "invalid",
+        contains_citation: containsCitation,
+        contains_codemeta: containsCodemeta,
+        contains_metadata: containsCodemeta && containsCitation,
+        metadata,
+      },
+      where: { repository_id: repository.id },
+    });
   }
 
   if (!subjects.license) {
