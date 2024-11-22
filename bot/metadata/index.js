@@ -563,6 +563,8 @@ export function applyDbMetadata(existingMetadataEntry, metadata) {
   const existingMetadata = existingMetadataEntry.metadata;
 
   metadata.name = existingMetadata.name || metadata.name || "";
+  metadata.authors = existingMetadata.authors || metadata.authors || [];
+  metadata.contributors = existingMetadata.contributors || metadata.contributors || [];
   metadata.applicationCategory = existingMetadata.applicationCategory || metadata.applicationCategory || null;
   metadata.codeRepository = existingMetadata.codeRepository || metadata.codeRepository || "";
   metadata.continuousIntegration = existingMetadata.continuousIntegration || metadata.continuousIntegration || "";
@@ -620,43 +622,112 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
   metadata.uniqueIdentifier = convertedCodemeta.uniqueIdentifier || metadata.uniqueIdentifier || "";
 
   if (metadata.authors) {
-    // consola.info("metadata.authors", metadata.authors);
-    // consola.info("convertedCodemeta.authors", convertedCodemeta.authors);
-    // Check if authors are already in the metadata, if so update the details of the author
     if (convertedCodemeta.authors.length > 0) {
       const updatedAuthors = convertedCodemeta.authors.map((author) => {
-        const foundAuthor = metadata.authors.find((newAuthor) => newAuthor?.familyName === author?.familyName && newAuthor.givenName === author.givenName);
+        // Find a matching author in metadata
+        const foundAuthor = metadata.authors.find(
+          (existingAuthor) =>
+            existingAuthor?.familyName === author?.familyName &&
+            existingAuthor?.givenName === author?.givenName
+        );
+  
         if (foundAuthor) {
-          // consola.info("Found author:", foundAuthor);
-          author.affiliation = foundAuthor.affiliation || author.affiliation || "";
-          author.email = foundAuthor.email || author.email || "";
-          author.roles = foundAuthor.roles || author.roles || [];
-          author.uri = foundAuthor.uri || author.uri || "";
+          // Merge roles, avoiding duplicates based on `role` and `startDate`
+          const mergedRoles = [
+            ...foundAuthor.roles,
+            ...author.roles.filter(
+              (newRole) =>
+                !foundAuthor.roles.some(
+                  (existingRole) =>
+                    existingRole.role === newRole.role &&
+                    existingRole.startDate === newRole.startDate
+                )
+            )
+          ];
+  
+          // Merge and prioritize data from `author`
+          return {
+            ...foundAuthor,
+            ...author,
+            affiliation: author.affiliation || foundAuthor.affiliation || "",
+            email: author.email || foundAuthor.email || "",
+            uri: author.uri || foundAuthor.uri || "",
+            roles: mergedRoles
+          };
         }
+  
+        // If no match, return the current author from convertedCodemeta
         return author;
       });
-
-      // join the updated authors with the remaining authors
-      metadata.authors = updatedAuthors;
+  
+      // Merge updated authors with any authors in metadata not present in convertedCodemeta
+      const nonUpdatedAuthors = metadata.authors.filter(
+        (existingAuthor) =>
+          !convertedCodemeta.authors.some(
+            (author) =>
+              author.familyName === existingAuthor.familyName &&
+              author.givenName === existingAuthor.givenName
+          )
+      );
+  
+      metadata.authors = [...nonUpdatedAuthors, ...updatedAuthors];
     }
   }
-
+  
   if (metadata.contributors) {
-    // Check if contributors are already in the metadata, if so update the details of the contributor
     if (convertedCodemeta.contributors.length > 0) {
       const updatedContributors = convertedCodemeta.contributors.map((contributor) => {
-        const foundContributor = metadata.contributors.find((newContributor) => newContributor.familyName === contributor.familyName && newContributor.givenName === contributor.givenName);
+        // Find a matching contributor in metadata
+        const foundContributor = metadata.contributors.find(
+          (existingContributor) =>
+            existingContributor?.familyName === contributor?.familyName &&
+            existingContributor?.givenName === contributor?.givenName
+        );
+  
         if (foundContributor) {
-          contributor.affiliation = foundContributor.affiliation || contributor.affiliation || "";
-          contributor.email = foundContributor.email || contributor.email || "";
-          contributor.roles = foundContributor.roles || contributor.roles || [];
-          contributor.uri = foundContributor.uri || contributor.uri || "";
+          // Merge roles, avoiding duplicates based on `role` and `startDate`
+          const mergedRoles = [
+            ...foundContributor.roles,
+            ...contributor.roles.filter(
+              (newRole) =>
+                !foundContributor.roles.some(
+                  (existingRole) =>
+                    existingRole.role === newRole.role &&
+                    existingRole.startDate === newRole.startDate
+                )
+            )
+          ];
+  
+          // Merge and prioritize data from `contributor`
+          return {
+            ...foundContributor,
+            ...contributor,
+            affiliation: contributor.affiliation || foundContributor.affiliation || "",
+            email: contributor.email || foundContributor.email || "",
+            uri: contributor.uri || foundContributor.uri || "",
+            roles: mergedRoles
+          };
         }
+  
+        // If no match, return the current contributor from convertedCodemeta
         return contributor;
       });
-
-      metadata.contributors = updatedContributors;
+  
+      // Merge updated contributors with any contributors in metadata not present in convertedCodemeta
+      const nonUpdatedContributors = metadata.contributors.filter(
+        (existingContributor) =>
+          !convertedCodemeta.contributors.some(
+            (contributor) =>
+              contributor.familyName === existingContributor.familyName &&
+              contributor.givenName === existingContributor.givenName
+          )
+      );
+  
+      metadata.contributors = [...nonUpdatedContributors, ...updatedContributors];
     }
+  } else if (convertedCodemeta.contributors.length > 0) {
+    // If metadata.contributors is empty, directly assign convertedCodemeta.contributors
+    metadata.contributors = [...convertedCodemeta.contributors];
   }
 
   return metadata;
@@ -676,35 +747,40 @@ export async function applyCitationMetadata(citation, metadata, repository) {
 
   consola.info("metadata.authors", metadata.authors);
   consola.info("convertedCitation.authors", convertedCitation.authors);
+
   if (convertedCitation.authors) {
     // Check if the authors are already in the metadata, if so update the details of the author
     if (metadata.authors.length > 0) {
-      const updatedAuthors = metadata.authors.map((author) => {
-        const foundAuthor = convertedCitation.authors.find((newAuthor) => newAuthor.familyName === author.familyName && newAuthor.givenName === author.givenName);
+      const updatedAuthors = convertedCitation.authors.map((author) => {
+        // Find an existing author in metadata.authors with the same familyName and givenName
+        const foundAuthor = metadata.authors.find(
+          (existingAuthor) =>
+            existingAuthor.familyName === author.familyName &&
+            existingAuthor.givenName === author.givenName
+        );
+  
+        consola.info("foundAuthor in citation", foundAuthor);
+        consola.info("author", author);
+  
         if (foundAuthor) {
-          author.affiliation = author.affiliation || foundAuthor.affiliation || "";
-          author.email = author.email || foundAuthor.email || "";
-          
-          // Remove author from convertedCitation.authors
-          const index = convertedCitation.authors.indexOf(foundAuthor);
-          if (index > -1) {
-            convertedCitation.authors.splice(index, 1);
-          }
+          // Update author details, preserving information from convertedCitation
+          return {
+            ...foundAuthor, // Existing details from metadata.authors
+            ...author, // Overwrite with any additional information from convertedCitation
+            affiliation: foundAuthor.affiliation || author.affiliation || "",
+            email: author.email || foundAuthor.email || ""
+          };
         }
-
+  
+        // If no matching author is found, return the current author from convertedCitation
         return author;
       });
-
-      // Apply the missings fields to the remaining convertedCitation.authors
-      convertedCitation.authors = convertedCitation.authors.map((author) => {
-        author.affiliation = author.affiliation || "";
-        author.email = author.email || "";
-        author.roles = author.roles || [];
-        author.uri = author.uri || "";
-        return author;
-      });
-
-      metadata.authors = updatedAuthors.concat(convertedCitation.authors);
+  
+      // Update metadata.authors with the consolidated list
+      metadata.authors = updatedAuthors;
+    } else {
+      // If metadata.authors is empty, simply assign convertedCitation.authors
+      metadata.authors = [...convertedCitation.authors];
     }
   }
 
