@@ -9,6 +9,7 @@ import {
 import dbInstance from "../db.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
+const { GH_APP_NAME } = process.env;
 
 /**
  * * Converts the date to a Unix timestamp
@@ -379,7 +380,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
         });
 
         if (!response.ok) {
-          throw new Error("Error validating the codemeta.json file", response);
+          throw new Error("Error validating the codemeta.json file", response.json());
         }
         const data = await response.json();
         consola.info("Codemeta validation response", data);
@@ -807,41 +808,73 @@ export async function applyMetadataTemplate(
   owner,
   context,
 ) {
+  const githubAction = context.payload?.pusher?.name;
   const identifier = createId();
+
   // TODO: On push events don't re-gather metadata, unless the metadata files were updated by a person
   // TODO: Move the workflow around to get the metadata from github api last
-  let url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata`;
-  let containsCitation = false,
-      containsCodemeta = false,
-      validCitation = false,
-      validCodemeta = false;
-  const existingMetadata = await dbInstance.codeMetadata.findUnique({
-    where: {
-      repository_id: repository.id,
-    },
-  });
-
-  let metadata = gatherMetadata(context, owner, repository);
-  if (existingMetadata?.metadata) {
-    containsCitation = existingMetadata.contains_citation;
-    containsCodemeta = existingMetadata.contains_metadata;
-    metadata = applyDbMetadata(existingMetadata, metadata);
+  const url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata`;
+  let revalidate = true;
+  let containsCitation = subjects.citation,
+  containsCodemeta = subjects.codemeta,
+  validCitation = false,
+  validCodemeta = false;
+  const dataObject = {
+    contains_citation: containsCitation,
+    contains_codemeta: containsCodemeta,
+    contains_metadata: containsCitation && containsCodemeta,
   }
 
-  if (subjects.codemeta) {
-    const codemeta = await getCodemetaContent(context, owner, repository);
-    containsCodemeta = true;
-    validCodemeta = await validateMetadata(codemeta, "codemeta", repository);
-    metadata = await applyCodemetaMetadata(codemeta, metadata, repository);
-    consola.info(metadata);
+  if (githubAction && githubAction !== `${GH_APP_NAME}[bot]`) {
+    // Push event was made, only update the metadata if the pusher updated the codemeta.json or citation.cff
+    const updatedFiles = context.payload.head_commit.modified;
+    const addedFiles = context.payload.head_commit.added;
+    revalidate = false;
+
+    if (updatedFiles.includes("codemeta.json") || updatedFiles.includes("CITATION.cff")) {
+      revalidate = true;
+    }
+
+    if (addedFiles.includes("codemeta.json") || addedFiles.includes("CITATION.cff")) {
+      revalidate = true;
+    }
   }
 
-  if (subjects.citation) {
-    const citation = await getCitationContent(context, owner, repository);
-    containsCitation = true;
-    validCitation = await validateMetadata(citation, "citation", repository);
-    metadata = await applyCitationMetadata(citation, metadata, repository);
-    consola.info(metadata);
+  if (revalidate) {
+    // Revalidation steps
+    const existingMetadata = await dbInstance.codeMetadata.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
+    });
+  
+    let metadata = gatherMetadata(context, owner, repository);
+    if (existingMetadata?.metadata) {
+      containsCitation = existingMetadata.contains_citation;
+      containsCodemeta = existingMetadata.contains_metadata;
+      metadata = applyDbMetadata(existingMetadata, metadata);
+    }
+  
+    if (subjects.codemeta) {
+      const codemeta = await getCodemetaContent(context, owner, repository);
+      containsCodemeta = true;
+      validCodemeta = await validateMetadata(codemeta, "codemeta", repository);
+      metadata = await applyCodemetaMetadata(codemeta, metadata, repository);
+      consola.info(metadata);
+    }
+  
+    if (subjects.citation) {
+      const citation = await getCitationContent(context, owner, repository);
+      containsCitation = true;
+      validCitation = await validateMetadata(citation, "citation", repository);
+      metadata = await applyCitationMetadata(citation, metadata, repository);
+      consola.info(metadata);
+    }
+
+    // Add metadata to database object
+    dataObject.metadata = metadata;
+    dataObject.citation_status = validCitation ? "valid" : "invalid";
+    dataObject.codemeta_status = validCodemeta ? "valid" : "invalid";
   }
 
   if ((!subjects.codemeta || !subjects.citation) && subjects.license) {
@@ -857,33 +890,20 @@ export async function applyMetadataTemplate(
 
   if (!existingMetadata) {
     // Entry does not exist in db, create a new one
+    dataObject.identifier = identifier;
+    dataObject.repository = {
+      connect: {
+        id: repository.id,
+      }
+    };
+
     await dbInstance.codeMetadata.create({
-      data: {
-        citation_status: validCitation ? "valid" : "invalid",
-        codemeta_status: validCodemeta ? "valid" : "invalid",
-        contains_citation: containsCitation,
-        identifier,
-        contains_codemeta: containsCodemeta,
-        contains_metadata: containsCodemeta && containsCitation,
-        metadata,
-        repository: {
-          connect: {
-            id: repository.id,
-          },
-        },
-      },
+      data: dataObject,
     });
   } else {
     // Get the identifier of the existing metadata request
     await dbInstance.codeMetadata.update({
-      data: {
-        citation_status: validCitation ? "valid" : "invalid",
-        codemeta_status: validCodemeta ? "valid" : "invalid",
-        contains_citation: containsCitation,
-        contains_codemeta: containsCodemeta,
-        contains_metadata: containsCodemeta && containsCitation,
-        metadata,
-      },
+      data: dataObject,
       where: { repository_id: repository.id },
     });
   }
