@@ -1,0 +1,7 @@
+Flask
+flask-restx
+Flask-Cors
+python-dotenv
+waitress
+cwltool
+cffconvert
