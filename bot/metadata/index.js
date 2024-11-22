@@ -808,6 +808,8 @@ export async function applyMetadataTemplate(
   context,
 ) {
   const identifier = createId();
+  // TODO: On push events don't re-gather metadata, unless the metadata files were updated by a person
+  // TODO: Move the workflow around to get the metadata from github api last
   let url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata`;
   let containsCitation = false,
       containsCodemeta = false,
