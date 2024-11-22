@@ -722,13 +722,7 @@ export default async (app, { getRouter }) => {
       const license = await checkForLicense(context, owner, repository.name);
       const citation = await checkForCitation(context, owner, repository.name);
       const codemeta = await checkForCodeMeta(context, owner, repository.name);
-      const cwl = await getCWLFiles(context, owner, repository.name);
-
-      const cwlObject = {
-        contains_cwl: cwl.length > 0 || false,
-        files: cwl,
-        removed_files: [],
-      };
+      const cwlObject = await getCWLFiles(context, owner, repository.name);
 
       // If existing cwl validation exists, update the contains_cwl value
       const cwlExists = await db.cwlValidation.findUnique({
