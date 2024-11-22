@@ -130,6 +130,11 @@
         }
       }
     },
+    "contIntegration": {
+      "type": "string",
+      "description": "The continuous integration service used for the software."
+    },
+
     "codeRepository": {
       "type": "string",
       "description": "The URL of the code repository."
@@ -181,9 +186,15 @@
       "type": "string",
       "description": "The larger project that the software is part of."
     },
-    "isSourceCodeOf": {
-      "type": "string",
-      "description": "The larger project that the software is part of."
+    "codemeta:isSourceCodeOf": {
+      "type": "object",
+      "description": "The software that this code is the source code of.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The URI of the software"
+        }
+      }
     },
     "keywords": {
       "type": "array",
