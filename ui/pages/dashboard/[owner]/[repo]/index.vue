@@ -234,7 +234,7 @@ const handleSettingsSelect = (key: any) => {
         <template #header-extra>
           <div
             v-if="data?.licenseRequest?.containsLicense"
-            class="flex flex-wrap space-x-2"
+            class="flex flex-wrap space-x-2 items-center"
           >
             <n-tag
               v-if="data?.licenseRequest?.licenseStatus === 'valid'"
@@ -279,7 +279,7 @@ const handleSettingsSelect = (key: any) => {
               :show-arrow="true"
               @select="handleSettingsSelect"
             >
-              <n-button text size="large">
+              <n-button quaternary circle size="large">
                 <template #icon>
                   <Icon name="humbleicons:dots-vertical" size="20" />
                 </template>
@@ -320,6 +320,7 @@ const handleSettingsSelect = (key: any) => {
               data?.licenseRequest?.containsLicense &&
               data?.codeMetadataRequest?.containsMetadata
             "
+            class="align-middle items-center"
           >
             <n-tag
               v-if="data?.codeMetadataRequest?.containsCitation"
@@ -370,7 +371,7 @@ const handleSettingsSelect = (key: any) => {
               :show-arrow="true"
               @select="handleSettingsSelect"
             >
-              <n-button text size="large">
+              <n-button quaternary circle size="large">
                 <template #icon>
                   <Icon name="humbleicons:dots-vertical" size="20" />
                 </template>
