@@ -817,6 +817,11 @@ export default async (app, { getRouter }) => {
             }
           });
         }
+
+        // Update the issue body
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
       } catch (error) {
         // Remove the command from the issue body
         const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
@@ -905,6 +910,10 @@ export default async (app, { getRouter }) => {
             }
           })
         }
+
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
       } catch (error) {
         // Remove the command from the issue body
         const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
@@ -1039,51 +1048,60 @@ export default async (app, { getRouter }) => {
 
     if (issueBody.includes("<!-- @codefair-bot re-render-dashboard -->")) {
       // Run database queries in parallel using Promise.all
-      const [licenseResponse, metadataResponse, cwlResponse] = await Promise.all([
-        db.licenseRequest.findUnique({
-          where: {
-            repository_id: repository.id,
-          }
-        }),
-        db.codeMetadata.findUnique({
-          where: {
-            repository_id: repository.id,
-          }
-        }),
-        db.cwlValidation.findUnique({
-          where: {
-            repository_id: repository.id,
-          }
-        })
-      ]);
-
-      const license = !!licenseResponse?.license_id;
-      const citation = !!metadataResponse?.contains_citation;
-      const codemeta = !!metadataResponse?.contains_codemeta;
-      const cwl = !!cwlResponse?.contains_cwl_files;
-
-      const cwlObject = {
-        contains_cwl: cwl,
-        files: cwlResponse?.files || [],
-        removed_files: [],
-      };
-
-      const subjects = {
-        citation,
-        codemeta,
-        cwl: cwlObject,
-        license,
-      };
-
-      const issueBody = await renderIssues(
-        context,
-        owner,
-        repository,
-        false,
-        subjects,
-      );
-
-      await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+      consola.start("Re-rendering issue dashboard...");
+      try {
+        const [licenseResponse, metadataResponse, cwlResponse] = await Promise.all([
+          db.licenseRequest.findUnique({
+            where: {
+              repository_id: repository.id,
+            }
+          }),
+          db.codeMetadata.findUnique({
+            where: {
+              repository_id: repository.id,
+            }
+          }),
+          db.cwlValidation.findUnique({
+            where: {
+              repository_id: repository.id,
+            }
+          })
+        ]);
+  
+        const license = !!licenseResponse?.license_id;
+        const citation = !!metadataResponse?.contains_citation;
+        const codemeta = !!metadataResponse?.contains_codemeta;
+        const cwl = !!cwlResponse?.contains_cwl_files;
+  
+        const cwlObject = {
+          contains_cwl: cwl,
+          files: cwlResponse?.files || [],
+          removed_files: [],
+        };
+  
+        const subjects = {
+          citation,
+          codemeta,
+          cwl: cwlObject,
+          license,
+        };
+  
+        const issueBody = await renderIssues(
+          context,
+          owner,
+          repository,
+          false,
+          subjects,
+        );
+  
+        await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+      } catch (error) {
+        // Remove the command from the issue body
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+        throw new Error("Error rerunning re-rendering dashboard", error)
+      }
     }
   });
 
