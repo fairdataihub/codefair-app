@@ -345,7 +345,7 @@ export default async (app, { getRouter }) => {
 
     // TODO: UPDATE CWL OBJECT
     let cwl = [];
-    const cwlObject = {
+    let cwlObject = {
       contains_cwl: false,
       files: [],
       removed_files: [],
@@ -354,7 +354,7 @@ export default async (app, { getRouter }) => {
     let citation = await checkForCitation(context, owner, repository.name);
     let codemeta = await checkForCodeMeta(context, owner, repository.name);
     if (fullCodefairRun) {
-      cwl = await getCWLFiles(context, owner, repository.name);
+      cwlObject = await getCWLFiles(context, owner, repository.name);
     }
 
     // Check if any of the commits added a LICENSE, CITATION, or codemeta file
@@ -486,6 +486,7 @@ export default async (app, { getRouter }) => {
     const definedPRTitles = [
       "feat: ✨ LICENSE file added",
       "feat: ✨ Add code metadata files",
+      "feat: ✨ Update code metadata files",
     ];
 
     const emptyRepo = await isRepoEmpty(context, owner, repository.name);
@@ -563,12 +564,12 @@ export default async (app, { getRouter }) => {
 
         // Append the PR badge after the "LICENSE ❌" section
         issueBody = issueBody.replace(
-          `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the \"Add license\" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/add/license/${response.identifier})`,
-          `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/add/license/${response.identifier})\n\n${licensePRBadge}`
+          `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/license)`,
+          `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/license)\n\n${licensePRBadge}`
         );
       }
 
-      if (prTitle === "feat: ✨ Add code metadata files") {
+      if (prTitle === "feat: ✨ Add code metadata files" || prTitle === "feat: ✨ Update code metadata files") {
         const response = await db.codeMetadata.update({
           data: {
             pull_request_url: prLink,
@@ -582,17 +583,19 @@ export default async (app, { getRouter }) => {
           consola.error("Error updating the code metadata PR URL");
           return;
         }
-        // Use a regular expression to match the "Metadata ❌" section
-        const metadataSectionRegex = /## Metadata ❌\n\nTo make your software FAIR, a CITATION\.cff and codemeta\.json are expected at the root level of your repository\. These files are not found in the repository\. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files\.\n\n\[!\[Metadata\]\(https:\/\/img\.shields\.io\/badge\/Add_Metadata-dc2626\.svg\)\]\(([^)]+)\)/;
 
         // Define the replacement string with the new metadata PR badge
+        consola.info("Updating the metadata PR badge");
+        consola.info("Owner:", owner);
+        consola.info("Repository:", repository.name);
         const metadataPRBadge = `A pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
 
         // Perform the replacement while preserving the identifier
         issueBody = issueBody.replace(
-          metadataSectionRegex,
-          `## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemeta.json are expected at the root level of your repository. These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${CODEFAIR_DOMAIN}/add/code-metadata/${response.identifier})\n\n${metadataPRBadge}`
+          `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)`,
+          `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)\n\n${metadataPRBadge}`
         );
+        consola.info(issueBody);
       }
 
       // Update the issue with the new body
@@ -1246,7 +1249,7 @@ export default async (app, { getRouter }) => {
       // Get the current body of the issue
       let issueBody = dashboardIssue.body;
   
-      if (context.payload.pull_request.title === "feat: ✨ Add code metadata files") {
+      if (context.payload.pull_request.title === "feat: ✨ Add code metadata files" || context.payload.pull_request.title === "feat: ✨ Update code metadata files") {
         const response = await db.codeMetadata.update({
           data: {
             pull_request_url: "",
@@ -1265,8 +1268,8 @@ export default async (app, { getRouter }) => {
   
         // Append the Metadata PR badge after the "Metadata" section
         issueBody = issueBody.replace(
-          `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${CODEFAIR_DOMAIN}/add/code-metadata/${response.identifier})\n\n${metadataPRBadge}`,
-          `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${CODEFAIR_DOMAIN}/add/code-metadata/${response.identifier})`
+          `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)\n\n${metadataPRBadge}`,
+          `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)`
         );
       }
   
@@ -1285,8 +1288,8 @@ export default async (app, { getRouter }) => {
   
         // Append the PR badge after the "LICENSE ❌" section
         issueBody = issueBody.replace(
-          `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/add/license/${response.identifier})\n\n${licensePRBadge}`,
-          `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the \"Add license\" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/add/license/${response.identifier})`,
+          `\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/license)\n\n${licensePRBadge}`,
+          `\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/license)`,
         );
       }
   
