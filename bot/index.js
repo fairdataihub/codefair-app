@@ -718,186 +718,200 @@ export default async (app, { getRouter }) => {
       issueBody.includes("<!-- @codefair-bot rerun-full-repo-validation -->")
     ) {
       consola.start("Rerunning full repository validation...");
-
-      const license = await checkForLicense(context, owner, repository.name);
-      const citation = await checkForCitation(context, owner, repository.name);
-      const codemeta = await checkForCodeMeta(context, owner, repository.name);
-      const cwlObject = await getCWLFiles(context, owner, repository.name);
-
-      // If existing cwl validation exists, update the contains_cwl value
-      const cwlExists = await db.cwlValidation.findUnique({
-        where: {
-          repository_id: repository.id,
-        },
-      });
-
-      if (cwlExists?.contains_cwl_files) {
-        cwlObject.contains_cwl = cwlExists.contains_cwl_files;
-
-        if (cwlExists.files.length > 0) {
-          // Remove the files that are not in cwlObject
-          const cwlFilePaths = cwlObject.files.map((file) => file.path);
-          cwlObject.removed_files = cwlExists.files.filter((file) => {
-            return !cwlFilePaths.includes(file.path);
-          });
+      try {
+        const license = await checkForLicense(context, owner, repository.name);
+        const citation = await checkForCitation(context, owner, repository.name);
+        const codemeta = await checkForCodeMeta(context, owner, repository.name);
+        const cwlObject = await getCWLFiles(context, owner, repository.name);
+  
+        // If existing cwl validation exists, update the contains_cwl value
+        const cwlExists = await db.cwlValidation.findUnique({
+          where: {
+            repository_id: repository.id,
+          },
+        });
+  
+        if (cwlExists?.contains_cwl_files) {
+          cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+  
+          if (cwlExists.files.length > 0) {
+            // Remove the files that are not in cwlObject
+            const cwlFilePaths = cwlObject.files.map((file) => file.path);
+            cwlObject.removed_files = cwlExists.files.filter((file) => {
+              return !cwlFilePaths.includes(file.path);
+            });
+          }
         }
+  
+        const subjects = {
+          citation,
+          codemeta,
+          cwl: cwlObject,
+          license,
+        };
+  
+        const issueBody = await renderIssues(
+          context,
+          owner,
+          repository,
+          false,
+          subjects,
+        );
+  
+        await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+      } catch (error) {
+        // Remove the command from the issue body
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+        throw new Error("Error rerunning license validation", error);
       }
-
-      const subjects = {
-        citation,
-        codemeta,
-        cwl: cwlObject,
-        license,
-      };
-
-      const issueBody = await renderIssues(
-        context,
-        owner,
-        repository,
-        false,
-        subjects,
-      );
-
-      await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
     }
 
     if (issueBody.includes("<!-- @codefair-bot rerun-license-validation -->")) {
       // Run the license validation again
       consola.start("Rerunning License Validation...");
-      const licenseRequest = await context.octokit.rest.licenses.getForRepo({
-        owner,
-        repo: repository.name,
-      });
-
-      const existingLicense = await db.licenseRequest.findUnique({
-        where: {
-          repository_id: repository.id,
+      try {
+        const licenseRequest = await context.octokit.rest.licenses.getForRepo({
+          owner,
+          repo: repository.name,
+        });
+  
+        const existingLicense = await db.licenseRequest.findUnique({
+          where: {
+            repository_id: repository.id,
+          }
+        });
+  
+        const license = licenseRequest.data.license ? true : false;
+  
+        if (!license) {
+          throw new Error("License not found in the repository");
         }
-      })
-
-      const license = licenseRequest.data.license ? true : false;
-
-      if (!license) {
-        throw new Error("License not found in the repository");
-      }
-
-      const { licenseId, licenseContent, licenseContentEmpty } = validateLicense(licenseRequest, existingLicense);
-
-      consola.info("License validation complete:", licenseId, licenseContent, licenseContentEmpty);
-
-      // Update the database with the license information
-      if (existingLicense) {
-        await db.licenseRequest.update({
-          data: {
-            license_id: licenseId,
-            license_content: licenseContent,
-            license_status: licenseContentEmpty ? "valid" : "invalid",
-          },
-          where: {
-            repository_id: repository.id,
-          }
-        })
-      } else {
-        await db.licenseRequest.create({
-          data: {
-            license_id: licenseId,
-            license_content: licenseContent,
-            license_status: licenseContentEmpty ? "valid" : "invalid",
-          },
-          where: {
-            repository_id: repository.id,
-          }
-        })
+  
+        const { licenseId, licenseContent, licenseContentEmpty } = validateLicense(licenseRequest, existingLicense);
+  
+        consola.info("License validation complete:", licenseId, licenseContent, licenseContentEmpty);
+  
+        // Update the database with the license information
+        if (existingLicense) {
+          await db.licenseRequest.update({
+            data: {
+              license_id: licenseId,
+              license_content: licenseContent,
+              license_status: licenseContentEmpty ? "valid" : "invalid",
+            },
+            where: {
+              repository_id: repository.id,
+            }
+          });
+        } else {
+          await db.licenseRequest.create({
+            data: {
+              license_id: licenseId,
+              license_content: licenseContent,
+              license_status: licenseContentEmpty ? "valid" : "invalid",
+            },
+            where: {
+              repository_id: repository.id,
+            }
+          });
+        }
+      } catch (error) {
+        // Remove the command from the issue body
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+        throw new Error("Error rerunning license validation", error);
       }
     }
 
     if (issueBody.includes("<!-- @codefair-bot rerun-metadata-validation -->")) {
       consola.start("Validating metadata files...");
-      let metadata = await gatherMetadata(context, owner, repository);
-      let containsCitation = false,
-          containsCodemeta = false,
-          validCitation = false,
-          validCodemeta = false;
-
-      const existingMetadataEntry = await db.codeMetadata.findUnique({
-        where: {
-          repository_id: repository.id,
+      try {
+        let metadata = await gatherMetadata(context, owner, repository);
+        let containsCitation = false,
+            containsCodemeta = false,
+            validCitation = false,
+            validCodemeta = false;
+  
+        const existingMetadataEntry = await db.codeMetadata.findUnique({
+          where: {
+            repository_id: repository.id,
+          }
+        });
+  
+        if (existingMetadataEntry?.metadata) {
+          // Update the metadata variable
+          consola.info("Existing metadata in db found");
+          containsCitation = existingMetadataEntry.contains_citation;
+          containsCodemeta = existingMetadataEntry.contains_codemeta;
+          metadata = applyDbMetadata(existingMetadataEntry, metadata);
         }
-      });
-
-      if (existingMetadataEntry?.metadata) {
-        // Update the metadata variable
-        consola.info("Existing metadata in db found");
-        containsCitation = existingMetadataEntry.contains_citation;
-        containsCodemeta = existingMetadataEntry.contains_codemeta;
-        metadata = applyDbMetadata(existingMetadataEntry, metadata);
+  
+        const citation = await getCitationContent(context, owner, repository);
+        const codemeta = await getCodemetaContent(context, owner, repository);
+  
+        if (codemeta) {
+          containsCodemeta = true;
+          validCodemeta = await validateMetadata(codemeta, "codemeta", repository);
+          metadata = await applyCodemetaMetadata(codemeta, metadata, repository);
+        }
+  
+        if (citation) {
+          containsCitation = true;
+          validCitation = await validateMetadata(citation, "citation", repository);
+          metadata = await applyCitationMetadata(citation, metadata, repository);
+          // consola.info("Metadata so far after citation update", JSON.stringify(metadata, null, 2));
+        }
+  
+        // Ensure all dates have been converted to ISO strings split by the T
+        if (metadata.creationDate) {
+          metadata.creationDate = convertDateToUnix(metadata.creationDate);
+        }
+        if (metadata.firstReleaseDate) {
+          metadata.firstReleaseDate = convertDateToUnix(metadata.firstReleaseDate);
+        }
+        if (metadata.currentVersionReleaseDate) {
+          metadata.currentVersionReleaseDate = convertDateToUnix(metadata.currentVersionReleaseDate);
+        }
+  
+        consola.warn("Metadata:", JSON.stringify(metadata, null, 2));
+        // update the database with the metadata information
+        if (existingMetadataEntry) {
+          await db.codeMetadata.update({
+            data: {
+              codemeta_status: validCodemeta ? "valid" : "invalid",
+              citation_status: validCitation ? "valid" : "invalid",
+              contains_citation: containsCitation,
+              contains_codemeta: containsCodemeta,
+              metadata: metadata,
+            },
+            where: {
+              repository_id: repository.id,
+            }
+          })
+        } else {
+          await db.codeMetadata.create({
+            data: {
+              codemeta_status: validCodemeta ? "valid" : "invalid",
+              citation_status: validCitation ? "valid" : "invalid",
+              contains_citation: containsCitation,
+              contains_codemeta: containsCodemeta,
+              metadata: metadata,
+            },
+            where: {
+              repository_id: repository.id,
+            }
+          })
+        }
+      } catch (error) {
+        // Remove the command from the issue body
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+        throw new Error("Error rerunning metadata validation", error);
       }
-
-      const citation = await getCitationContent(context, owner, repository);
-      const codemeta = await getCodemetaContent(context, owner, repository);
-
-
-      if (codemeta) {
-        containsCodemeta = true;
-        validCodemeta = await validateMetadata(codemeta, "codemeta", repository);
-        metadata = await applyCodemetaMetadata(codemeta, metadata, repository);
-      }
-
-      if (citation) {
-        containsCitation = true;
-        validCitation = await validateMetadata(citation, "citation", repository);
-        metadata = await applyCitationMetadata(citation, metadata, repository);
-        // consola.info("Metadata so far after citation update", JSON.stringify(metadata, null, 2));
-      }
-
-      // Ensure all dates have been converted to ISO strings split by the T
-      if (metadata.creationDate) {
-        metadata.creationDate = convertDateToUnix(metadata.creationDate);
-      }
-      if (metadata.firstReleaseDate) {
-        metadata.firstReleaseDate = convertDateToUnix(metadata.firstReleaseDate);
-      }
-      if (metadata.currentVersionReleaseDate) {
-        metadata.currentVersionReleaseDate = convertDateToUnix(metadata.currentVersionReleaseDate);
-      }
-
-      consola.warn("Metadata:", JSON.stringify(metadata, null, 2));
-      // update the database with the metadata information
-      if (existingMetadataEntry) {
-        await db.codeMetadata.update({
-          data: {
-            codemeta_status: validCodemeta ? "valid" : "invalid",
-            citation_status: validCitation ? "valid" : "invalid",
-            contains_citation: containsCitation,
-            contains_codemeta: containsCodemeta,
-            metadata: metadata,
-          },
-          where: {
-            repository_id: repository.id,
-          }
-        })
-      } else {
-        await db.codeMetadata.create({
-          data: {
-            codemeta_status: validCodemeta ? "valid" : "invalid",
-            citation_status: validCitation ? "valid" : "invalid",
-            contains_citation: containsCitation,
-            contains_codemeta: containsCodemeta,
-            metadata: metadata,
-          },
-          where: {
-            repository_id: repository.id,
-          }
-        })
-      }
-    }
-
-    if (issueBody.includes("<!-- @codefair-bot re-gather-license")) {
-      consola.start("Re-gathering license informatiom...");
-    }
-
-    if (issueBody.includes("<!-- @codefair-bot re-gather-metadata")) {
-      consola.start("Re-gathering metadata informatiom...");
     }
 
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
