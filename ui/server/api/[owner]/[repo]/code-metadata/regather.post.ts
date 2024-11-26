@@ -1,32 +1,7 @@
 import { App } from "octokit";
-import { z } from "zod";
 
 export default defineEventHandler(async (event) => {
   protectRoute(event);
-
-  const bodySchema = z.object({
-    rerunType: z.string(),
-  });
-
-  const body = await readBody(event);
-
-  if (!body) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Missing required fields",
-    });
-  }
-
-  const parsedBody = bodySchema.safeParse(body);
-
-  if (!parsedBody.success) {
-    throw createError({
-      statusMessage: "The provided parameters are invalid",
-      statusCode: 400,
-    });
-  }
-
-  const { rerunType } = parsedBody.data;
 
   const { owner, repo } = event.context.params as {
     owner: string;
@@ -101,13 +76,11 @@ export default defineEventHandler(async (event) => {
     // Check if the issue body already contains the hidden comment
     const issueBody = issue.body || "";
 
-    if (
-      issueBody.includes(`<!-- @codefair-bot rerun-${rerunType}-validation -->`)
-    ) {
+    if (issueBody.includes(`<!-- @codefair-bot re-gather-metadata -->`)) {
       throw new Error("Validation already requested");
     }
 
-    const updatedIssueBody = `${issueBody}\n<!-- @codefair-bot rerun-${rerunType}-validation -->`;
+    const updatedIssueBody = `${issueBody}\n<!-- @codefair-bot re-gather-metadata -->`;
 
     await octokit.request("PATCH /repos/{owner}/{repo}/issues/{issue_number}", {
       body: updatedIssueBody,

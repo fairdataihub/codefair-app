@@ -50,6 +50,11 @@ const licenseSettingsOptions = [
     key: "re-validate-license",
     label: "Re-validate license",
   },
+  {
+    icon: renderIcon("mdi:github"),
+    key: "re-gather-license",
+    label: "Re-gather license information",
+  }
 ];
 
 const metadataSettingsOptions = [
@@ -58,6 +63,11 @@ const metadataSettingsOptions = [
     key: "re-validate-metadata",
     label: "Re-validate metadata files",
   },
+  {
+    icon: renderIcon("mdi:github"),
+    key: "re-gather-metadata",
+    label: "Re-gather metadata"
+  }
 ];
 
 const { data, error } = await useFetch(`/api/${owner}/${repo}/dashboard`, {
@@ -151,6 +161,76 @@ const rerunCodefairChecks = async (rerunType: string) => {
     });
 };
 
+const regatherMetadata = async () => {
+  push.info({
+    title: "Submitting request",
+    message:
+      "Please wait while we submit a request to regather the information for this repository.",
+  });
+
+  await $fetch(`/api/${owner}/${repo}/code-metadata/regather`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "POST",
+  })
+    .then(() => {
+      push.success({
+        title: "Success",
+        message:
+          "A request to regather the information has been submitted succesfully. Please wait a few minutes for this process to take place.",
+      });
+    })
+    .catch((error) => {
+      if (error.statusMessage === "Validation already requested") {
+        push.error({
+          title: "Error",
+          message:
+            "A request to regather the information has already been submitted. Please wait a few minutes for this process to take place.",
+        });
+      } else {
+        push.error({
+          title: "Error",
+          message:
+            "Failed to submit the request to regather the information. Please try again later.",
+        });
+      }
+    });
+}
+
+const regatherLicense = async () => {
+  push.info({
+    title: "Submitting request",
+    message:
+      "Please wait while we submit a request to regather the information for this repository.",
+  });
+
+  await $fetch(`/api/${owner}/${repo}/license/regather`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "POST",
+  })
+    .then(() => {
+      push.success({
+        title: "Success",
+        message:
+          "A request to regather the information has been submitted succesfully. Please wait a few minutes for this process to take place.",
+      });
+    })
+    .catch((error) => {
+      if (error.statusMessage === "Validation already requested") {
+        push.error({
+          title: "Error",
+          message:
+            "A request to regather the information has already been submitted. Please wait a few minutes for this process to take place.",
+        });
+      } else {
+        push.error({
+          title: "Error",
+          message:
+            "Failed to submit the request to regather the information. Please try again later.",
+        });
+      }
+    });
+}
+
 const handleSettingsSelect = (key: any) => {
   if (key === "view-repo") {
     navigateTo(`https://github.com/${owner}/${repo}`, {
@@ -184,6 +264,10 @@ const handleSettingsSelect = (key: any) => {
     rerunCodefairChecks("license");
   } else if (key === "re-validate-metadata") {
     rerunCodefairChecks("metadata");
+  } else if (key === "re-gather-license") {
+    regatherLicense();
+  } else if (key === "re-gather-metadata") {
+    regatherMetadata();
   }
 };
 </script>

@@ -892,6 +892,14 @@ export default async (app, { getRouter }) => {
       }
     }
 
+    if (issueBody.includes("<!-- @codefair-bot re-gather-license")) {
+      consola.start("Re-gathering license informatiom...");
+    }
+
+    if (issueBody.includes("<!-- @codefair-bot re-gather-metadata")) {
+      consola.start("Re-gathering metadata informatiom...");
+    }
+
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
       consola.start("Publishing to Zenodo...");
       const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf("<!-- @codefair-bot publish-zenodo"));

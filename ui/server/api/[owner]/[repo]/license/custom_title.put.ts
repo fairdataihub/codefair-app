@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { App } from "octokit";
-import type { User } from "lucia";
 
 export default defineEventHandler(async (event) => {
   protectRoute(event);
@@ -99,7 +98,7 @@ export default defineEventHandler(async (event) => {
     if (
       issue.user?.login !== "codefair-test[bot]" &&
       issue.user?.login !== "codefair-staging[bot]" &&
-      issue.user?.login !== "codefair-app[bot]"
+      issue.user?.login !== "codefair-io[bot]"
     ) {
       throw createError({
         statusCode: 400,

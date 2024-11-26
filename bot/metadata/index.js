@@ -429,8 +429,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
         }
 
         const data = await response.json();
-        consola.info("Citation validation response", data);
-        // TODO: Store the validation response in the database
+
         await dbInstance.codeMetadata.update({
           where: {
             repository_id: repository.id,
@@ -439,6 +438,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
             citation_validation_message: data.message === "valid" ? data.output : data.error,
           }
         });
+
         return data.message === "valid";
       } catch (error) {
         consola.error("Error validating the CITATION.cff file", error);

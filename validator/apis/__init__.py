@@ -175,7 +175,7 @@ class ValidateCitation(Resource):
                 "message": "invalid",
                 "output": stdout_clean,
                 "error": stderr_clean,
-            }, 400
+            }, 200
         except Exception as e:
             return {"message": "An unexpected error occurred", "error": str(e)}, 500
 
