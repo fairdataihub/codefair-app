@@ -134,7 +134,16 @@
       "type": "string",
       "description": "The continuous integration service used for the software."
     },
-
+    "codemeta:continuousIntegration": {
+      "type": "object",
+      "description": "The continuous integration service used for the software.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The URI of the continuous integration service."
+        }
+      }
+    },
     "codeRepository": {
       "type": "string",
       "description": "The URL of the code repository."
