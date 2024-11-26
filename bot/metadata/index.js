@@ -819,6 +819,11 @@ export async function applyMetadataTemplate(
   containsCodemeta = subjects.codemeta,
   validCitation = false,
   validCodemeta = false;
+  const existingMetadata = await dbInstance.codeMetadata.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  });
   const dataObject = {
     contains_citation: containsCitation,
     contains_codemeta: containsCodemeta,
@@ -842,12 +847,6 @@ export async function applyMetadataTemplate(
 
   if (revalidate) {
     // Revalidation steps
-    const existingMetadata = await dbInstance.codeMetadata.findUnique({
-      where: {
-        repository_id: repository.id,
-      },
-    });
-  
     let metadata = gatherMetadata(context, owner, repository);
     if (existingMetadata?.metadata) {
       containsCitation = existingMetadata.contains_citation;
