@@ -57,7 +57,7 @@ Codefair is your personal assistant when it comes to making your research softwa
 
 ### Installing
 
-1. Install Codefair from the [GitHub market place](https://github.com/marketplace/codefair-io) on the GitHub organizations or repositories of your choice
+1. Install Codefair from the [GitHub market place](https://github.com/marketplace/codefair-app) on the GitHub organizations or repositories of your choice
 2. Code as usual
 3. Track FAIR compliance issues through the Codefair issue dashboard and address them through the Codefair website.
 
