@@ -4,6 +4,7 @@ import * as express from "express";
 import { consola } from "consola";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
 import dbInstance from "./db.js";
+import yaml from "js-yaml";
 import {
   checkEnvVariable,
   isRepoEmpty,
@@ -15,12 +16,12 @@ import {
   getReleaseById,
   downloadRepositoryZip,
 } from "./utils/tools/index.js";
-import { checkForLicense } from "./license/index.js";
+import { checkForLicense, validateLicense } from "./license/index.js";
 import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
 import { getZenodoDepositionInfo, createZenodoMetadata, updateZenodoMetadata, uploadReleaseAssetsToZenodo, parseZenodoInfo, getZenodoToken, publishZenodoDeposition, updateGitHubRelease } from "./archival/index.js";
-import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier } from "./metadata/index.js";
+import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier, convertCodemetaForDB, convertCitationForDB, gatherMetadata, convertDateToUnix, applyDbMetadata, applyCodemetaMetadata, applyCitationMetadata } from "./metadata/index.js";
 
 checkEnvVariable("GH_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
@@ -128,23 +129,22 @@ export default async (app, { getRouter }) => {
           owner,
           repository.name,
         );
-        const cwl = await getCWLFiles(context, owner, repository.name);
+        const cwlObject = await getCWLFiles(context, owner, repository.name);
 
-        const cwlObject = {
-          contains_cwl: cwl.length > 0 || false,
-          files: cwl,
-          removed_files: [],
-        };
+        // const cwlObject = {
+        //   contains_cwl: cwl.length > 0 || false,
+        //   files: cwl,
+        //   removed_files: [],
+        // };
 
-        // If existing cwl validation exists, update the contains_cwl value
-        // If existing cwl validation exists, update the contains_cwl value
-        const cwlExists = await dbInstance.cwlValidation.findUnique({
-          where: { repository_id: repository.id },
-        });
+        // // If existing cwl validation exists, update the contains_cwl value
+        // const cwlExists = await dbInstance.cwlValidation.findUnique({
+        //   where: { repository_id: repository.id },
+        // });
 
-        if (cwlExists?.contains_cwl_files) {
-          cwlObject.contains_cwl = cwlExists.contains_cwl_files;
-        }
+        // if (cwlExists?.contains_cwl_files) {
+        //   cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+        // }
 
         const subjects = {
           citation,
@@ -343,12 +343,16 @@ export default async (app, { getRouter }) => {
     // Grab the commits being pushed
     const { commits } = context.payload;
 
-    let cwl = [];
+    let cwlObject = {
+      contains_cwl_files: false,
+      files: [],
+      removed_files: [],
+    }
     let license = await checkForLicense(context, owner, repository.name);
     let citation = await checkForCitation(context, owner, repository.name);
     let codemeta = await checkForCodeMeta(context, owner, repository.name);
     if (fullCodefairRun) {
-      cwl = await getCWLFiles(context, owner, repository.name);
+      cwlObject = await getCWLFiles(context, owner, repository.name);
     }
 
     // Check if any of the commits added a LICENSE, CITATION, or codemeta file
@@ -433,15 +437,13 @@ export default async (app, { getRouter }) => {
         });
 
         cwlFile.data.commitId = file.commitId;
-        cwl.push(cwlFile.data);
+        cwlObject.files.push(cwlFile.data);
       }
     }
 
-    const cwlObject = {
-      contains_cwl: cwl.length > 0 || false,
-      files: cwl.filter(file => !removedCWLFiles.includes(file.path)),
-      removed_files: removedCWLFiles,
-    };
+    cwlObject.contains_cwl_files = cwlObject.files.length > 0 || false;
+    cwlObject.files = cwl.filter(file => !removedCWLFiles.includes(file.path));
+    cwlObject.removed_files = removedCWLFiles;
 
     const cwlExists = await db.cwlValidation.findUnique({
       where: {
@@ -451,7 +453,7 @@ export default async (app, { getRouter }) => {
 
     // Does the repository already contain CWL files
     if (cwlExists) {
-      cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+      cwlObject.contains_cwl_files = cwlExists.contains_cwl_files;
     }
 
     const subjects = {
@@ -482,6 +484,7 @@ export default async (app, { getRouter }) => {
     const definedPRTitles = [
       "feat: ✨ LICENSE file added",
       "feat: ✨ Add code metadata files",
+      "feat: ✨ Update code metadata files",
     ];
 
     const emptyRepo = await isRepoEmpty(context, owner, repository.name);
@@ -559,12 +562,12 @@ export default async (app, { getRouter }) => {
 
         // Append the PR badge after the "LICENSE ❌" section
         issueBody = issueBody.replace(
-          `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the \"Add license\" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/add/license/${response.identifier})`,
-          `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/add/license/${response.identifier})\n\n${licensePRBadge}`
+          `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/license)`,
+          `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/license)\n\n${licensePRBadge}`
         );
       }
 
-      if (prTitle === "feat: ✨ Add code metadata files") {
+      if (prTitle === "feat: ✨ Add code metadata files" || prTitle === "feat: ✨ Update code metadata files") {
         const response = await db.codeMetadata.update({
           data: {
             pull_request_url: prLink,
@@ -578,17 +581,19 @@ export default async (app, { getRouter }) => {
           consola.error("Error updating the code metadata PR URL");
           return;
         }
-        // Use a regular expression to match the "Metadata ❌" section
-        const metadataSectionRegex = /## Metadata ❌\n\nTo make your software FAIR, a CITATION\.cff and codemeta\.json are expected at the root level of your repository\. These files are not found in the repository\. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files\.\n\n\[!\[Metadata\]\(https:\/\/img\.shields\.io\/badge\/Add_Metadata-dc2626\.svg\)\]\(([^)]+)\)/;
 
         // Define the replacement string with the new metadata PR badge
+        consola.info("Updating the metadata PR badge");
+        consola.info("Owner:", owner);
+        consola.info("Repository:", repository.name);
         const metadataPRBadge = `A pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
 
         // Perform the replacement while preserving the identifier
         issueBody = issueBody.replace(
-          metadataSectionRegex,
-          `## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemeta.json are expected at the root level of your repository. These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${CODEFAIR_DOMAIN}/add/code-metadata/${response.identifier})\n\n${metadataPRBadge}`
+          `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)`,
+          `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)\n\n${metadataPRBadge}`
         );
+        consola.info(issueBody);
       }
 
       // Update the issue with the new body
@@ -663,7 +668,7 @@ export default async (app, { getRouter }) => {
       );
 
       const cwlObject = {
-        contains_cwl: cwl.length > 0 || false,
+        contains_cwl_files: cwl.length > 0 || false,
         files: cwl,
         removed_files: [],
       };
@@ -675,7 +680,7 @@ export default async (app, { getRouter }) => {
       });
 
       if (cwlExists) {
-        cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+        cwlObject.contains_cwl_files = cwlExists.contains_cwl_files;
 
         if (cwlExists.files.length > 0) {
           // Remove the files that are not in cwlObject
@@ -714,53 +719,209 @@ export default async (app, { getRouter }) => {
       issueBody.includes("<!-- @codefair-bot rerun-full-repo-validation -->")
     ) {
       consola.start("Rerunning full repository validation...");
+      try {
+        const license = await checkForLicense(context, owner, repository.name);
+        const citation = await checkForCitation(context, owner, repository.name);
+        const codemeta = await checkForCodeMeta(context, owner, repository.name);
+        const cwlObject = await getCWLFiles(context, owner, repository.name);
+  
+        // If existing cwl validation exists, update the contains_cwl value
+        const cwlExists = await db.cwlValidation.findUnique({
+          where: {
+            repository_id: repository.id,
+          },
+        });
+  
+        if (cwlExists?.contains_cwl_files) {
+          cwlObject.contains_cwl_files = cwlExists.contains_cwl_files;
+  
+          if (cwlExists.files.length > 0) {
+            // Remove the files that are not in cwlObject
+            const cwlFilePaths = cwlObject.files.map((file) => file.path);
+            cwlObject.removed_files = cwlExists.files.filter((file) => {
+              return !cwlFilePaths.includes(file.path);
+            });
+          }
+        }
+  
+        const subjects = {
+          citation,
+          codemeta,
+          cwl: cwlObject,
+          license,
+        };
+  
+        const issueBody = await renderIssues(
+          context,
+          owner,
+          repository,
+          false,
+          subjects,
+        );
+  
+        await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+      } catch (error) {
+        // Remove the command from the issue body
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+        throw new Error("Error rerunning license validation", error);
+      }
+    }
 
-      const license = await checkForLicense(context, owner, repository.name);
-      const citation = await checkForCitation(context, owner, repository.name);
-      const codemeta = await checkForCodeMeta(context, owner, repository.name);
-      const cwl = await getCWLFiles(context, owner, repository.name);
-
-      const cwlObject = {
-        contains_cwl: cwl.length > 0 || false,
-        files: cwl,
-        removed_files: [],
-      };
-
-      // If existing cwl validation exists, update the contains_cwl value
-      const cwlExists = await db.cwlValidation.findUnique({
-        where: {
-          repository_id: repository.id,
-        },
-      });
-
-      if (cwlExists?.contains_cwl_files) {
-        cwlObject.contains_cwl = cwlExists.contains_cwl_files;
-
-        if (cwlExists.files.length > 0) {
-          // Remove the files that are not in cwlObject
-          const cwlFilePaths = cwlObject.files.map((file) => file.path);
-          cwlObject.removed_files = cwlExists.files.filter((file) => {
-            return !cwlFilePaths.includes(file.path);
+    if (issueBody.includes("<!-- @codefair-bot rerun-license-validation -->")) {
+      // Run the license validation again
+      consola.start("Rerunning License Validation...");
+      try {
+        const licenseRequest = await context.octokit.rest.licenses.getForRepo({
+          owner,
+          repo: repository.name,
+        });
+  
+        const existingLicense = await db.licenseRequest.findUnique({
+          where: {
+            repository_id: repository.id,
+          }
+        });
+  
+        const license = licenseRequest.data.license ? true : false;
+  
+        if (!license) {
+          throw new Error("License not found in the repository");
+        }
+  
+        const { licenseId, licenseContent, licenseContentEmpty } = validateLicense(licenseRequest, existingLicense);
+  
+        consola.info("License validation complete:", licenseId, licenseContent, licenseContentEmpty);
+  
+        // Update the database with the license information
+        if (existingLicense) {
+          await db.licenseRequest.update({
+            data: {
+              license_id: licenseId,
+              license_content: licenseContent,
+              license_status: licenseContentEmpty ? "valid" : "invalid",
+            },
+            where: {
+              repository_id: repository.id,
+            }
+          });
+        } else {
+          await db.licenseRequest.create({
+            data: {
+              license_id: licenseId,
+              license_content: licenseContent,
+              license_status: licenseContentEmpty ? "valid" : "invalid",
+            },
+            where: {
+              repository_id: repository.id,
+            }
           });
         }
+
+        // Update the issue body
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+      } catch (error) {
+        // Remove the command from the issue body
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+        throw new Error("Error rerunning license validation", error);
       }
+    }
 
-      const subjects = {
-        citation,
-        codemeta,
-        cwl: cwlObject,
-        license,
-      };
+    if (issueBody.includes("<!-- @codefair-bot rerun-metadata-validation -->")) {
+      consola.start("Validating metadata files...");
+      try {
+        let metadata = await gatherMetadata(context, owner, repository);
+        let containsCitation = false,
+            containsCodemeta = false,
+            validCitation = false,
+            validCodemeta = false;
+  
+        const existingMetadataEntry = await db.codeMetadata.findUnique({
+          where: {
+            repository_id: repository.id,
+          }
+        });
+  
+        if (existingMetadataEntry?.metadata) {
+          // Update the metadata variable
+          consola.info("Existing metadata in db found");
+          containsCitation = existingMetadataEntry.contains_citation;
+          containsCodemeta = existingMetadataEntry.contains_codemeta;
+          metadata = applyDbMetadata(existingMetadataEntry, metadata);
+        }
+  
+        const citation = await getCitationContent(context, owner, repository);
+        const codemeta = await getCodemetaContent(context, owner, repository);
+  
+        if (codemeta) {
+          containsCodemeta = true;
+          validCodemeta = await validateMetadata(codemeta, "codemeta", repository);
+          metadata = await applyCodemetaMetadata(codemeta, metadata, repository);
+        }
+  
+        if (citation) {
+          containsCitation = true;
+          validCitation = await validateMetadata(citation, "citation", repository);
+          metadata = await applyCitationMetadata(citation, metadata, repository);
+          // consola.info("Metadata so far after citation update", JSON.stringify(metadata, null, 2));
+        }
+  
+        // Ensure all dates have been converted to ISO strings split by the T
+        if (metadata.creationDate) {
+          metadata.creationDate = convertDateToUnix(metadata.creationDate);
+        }
+        if (metadata.firstReleaseDate) {
+          metadata.firstReleaseDate = convertDateToUnix(metadata.firstReleaseDate);
+        }
+        if (metadata.currentVersionReleaseDate) {
+          metadata.currentVersionReleaseDate = convertDateToUnix(metadata.currentVersionReleaseDate);
+        }
+  
+        consola.warn("Metadata:", JSON.stringify(metadata, null, 2));
+        // update the database with the metadata information
+        if (existingMetadataEntry) {
+          await db.codeMetadata.update({
+            data: {
+              codemeta_status: validCodemeta ? "valid" : "invalid",
+              citation_status: validCitation ? "valid" : "invalid",
+              contains_citation: containsCitation,
+              contains_codemeta: containsCodemeta,
+              metadata: metadata,
+            },
+            where: {
+              repository_id: repository.id,
+            }
+          })
+        } else {
+          await db.codeMetadata.create({
+            data: {
+              codemeta_status: validCodemeta ? "valid" : "invalid",
+              citation_status: validCitation ? "valid" : "invalid",
+              contains_citation: containsCitation,
+              contains_codemeta: containsCodemeta,
+              metadata: metadata,
+            },
+            where: {
+              repository_id: repository.id,
+            }
+          })
+        }
 
-      const issueBody = await renderIssues(
-        context,
-        owner,
-        repository,
-        false,
-        subjects,
-      );
-
-      await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+      } catch (error) {
+        // Remove the command from the issue body
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+        throw new Error("Error rerunning metadata validation", error);
+      }
     }
 
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
@@ -778,8 +939,8 @@ export default async (app, { getRouter }) => {
         const codemeta = await getCodemetaContent(context, owner, repository);
 
         // 2. Validate the CITATION.cff and codemeta.json files
-        await validateMetadata(citationCff, "citation")
-        await validateMetadata(codemeta, "codemeta")
+        await validateMetadata(citationCff, "citation", repository);
+        await validateMetadata(codemeta, "codemeta", repository);
 
         // 3. Fetch the Zenodo token from the database and verify it is valid
         const zenodoToken = await getZenodoToken(userWhoSubmitted);
@@ -888,51 +1049,60 @@ export default async (app, { getRouter }) => {
 
     if (issueBody.includes("<!-- @codefair-bot re-render-dashboard -->")) {
       // Run database queries in parallel using Promise.all
-      const [licenseResponse, metadataResponse, cwlResponse] = await Promise.all([
-        db.licenseRequest.findUnique({
-          where: {
-            repository_id: repository.id,
-          }
-        }),
-        db.codeMetadata.findUnique({
-          where: {
-            repository_id: repository.id,
-          }
-        }),
-        db.cwlValidation.findUnique({
-          where: {
-            repository_id: repository.id,
-          }
-        })
-      ]);
-
-      const license = !!licenseResponse?.license_id;
-      const citation = !!metadataResponse?.contains_citation;
-      const codemeta = !!metadataResponse?.contains_codemeta;
-      const cwl = !!cwlResponse?.contains_cwl_files;
-
-      const cwlObject = {
-        contains_cwl: cwl,
-        files: cwlResponse?.files || [],
-        removed_files: [],
-      };
-
-      const subjects = {
-        citation,
-        codemeta,
-        cwl: cwlObject,
-        license,
-      };
-
-      const issueBody = await renderIssues(
-        context,
-        owner,
-        repository,
-        false,
-        subjects,
-      );
-
-      await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+      consola.start("Re-rendering issue dashboard...");
+      try {
+        const [licenseResponse, metadataResponse, cwlResponse] = await Promise.all([
+          db.licenseRequest.findUnique({
+            where: {
+              repository_id: repository.id,
+            }
+          }),
+          db.codeMetadata.findUnique({
+            where: {
+              repository_id: repository.id,
+            }
+          }),
+          db.cwlValidation.findUnique({
+            where: {
+              repository_id: repository.id,
+            }
+          })
+        ]);
+  
+        const license = !!licenseResponse?.license_id;
+        const citation = !!metadataResponse?.contains_citation;
+        const codemeta = !!metadataResponse?.contains_codemeta;
+        const cwl = !!cwlResponse?.contains_cwl_files;
+  
+        const cwlObject = {
+          contains_cwl_files: cwl,
+          files: cwlResponse?.files || [],
+          removed_files: [],
+        };
+  
+        const subjects = {
+          citation,
+          codemeta,
+          cwl: cwlObject,
+          license,
+        };
+  
+        const issueBody = await renderIssues(
+          context,
+          owner,
+          repository,
+          false,
+          subjects,
+        );
+  
+        await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+      } catch (error) {
+        // Remove the command from the issue body
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+        throw new Error("Error rerunning re-rendering dashboard", error)
+      }
     }
   });
 
@@ -1016,7 +1186,7 @@ export default async (app, { getRouter }) => {
       const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
 
       const cwlObject = {
-        contains_cwl: cwl.length > 0 || false,
+        contains_cwl_files: cwl.length > 0 || false,
         files: cwl,
         removed_files: [],
       };
@@ -1028,7 +1198,7 @@ export default async (app, { getRouter }) => {
       });
 
       if (cwlExists) {
-        cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+        cwlObject.contains_cwl_files = cwlExists.contains_cwl_files;
       }
 
       const subjects = {
@@ -1052,76 +1222,86 @@ export default async (app, { getRouter }) => {
   });
 
   app.on("pull_request.closed", async (context) => {
-    // Remove the PR url from the database
-    const prLink = context.payload.pull_request.html_url;
-    const owner = context.payload.repository.owner.login;
-    const { repository } = context.payload;
-
-    // Seach for the issue with the title FAIR Compliance Dashboard and authored with the github bot
-    const issues = await context.octokit.issues.listForRepo({
-      creator: `${GH_APP_NAME}[bot]`,
-      owner,
-      repo: repository.name,
-      state: "open",
-    });
-
-    // Find the issue with the exact title "FAIR Compliance Dashboard"
-    const dashboardIssue = issues.data.find(issue => issue.title === "FAIR Compliance Dashboard");
-
-    if (!dashboardIssue) {
-      consola.error("FAIR Compliance Dashboard issue not found");
-      return;
-    }
-
-    // Get the current body of the issue
-    let issueBody = dashboardIssue.body;
-
-    if (context.payload.pull_request.title === "feat: ✨ Add code metadata files") {
-      const response = await db.codeMetadata.update({
-        data: {
-          pull_request_url: "",
-        },
-        where: {
-          repository_id: context.payload.repository.id,
-        },
+    if (context.payload.pull_request.user.login === `${GH_APP_NAME}[bot]`) {    
+      // Remove the PR url from the database
+      const prLink = context.payload.pull_request.html_url;
+      const owner = context.payload.repository.owner.login;
+      const { repository } = context.payload;
+  
+      // Seach for the issue with the title FAIR Compliance Dashboard and authored with the github bot
+      const issues = await context.octokit.issues.listForRepo({
+        creator: `${GH_APP_NAME}[bot]`,
+        owner,
+        repo: repository.name,
+        state: "open",
       });
-
-      if (!response) {
-        consola.error("Error updating the license request PR URL");
+      
+      // Find the issue with the exact title "FAIR Compliance Dashboard"
+      const dashboardIssue = issues.data.find(issue => issue.title === "FAIR Compliance Dashboard");
+    
+      if (!dashboardIssue) {
+        consola.error("FAIR Compliance Dashboard issue not found");
         return;
       }
-
-      const metadataPRBadge = `A pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
-
-      // Append the Metadata PR badge after the "Metadata" section
-      issueBody = issueBody.replace(
-        `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${CODEFAIR_DOMAIN}/add/code-metadata/${response.identifier})\n\n${metadataPRBadge}`,
-        `## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${CODEFAIR_DOMAIN}/add/code-metadata/${response.identifier})`
-      );
-    }
-
-    if (context.payload.pull_request.title === "feat: ✨ LICENSE file added") {
-      const response = await db.licenseRequest.update({
-        data: {
-          pull_request_url: "",
-        },
-        where: {
-          repository_id: context.payload.repository.id,
-        },
+    
+      // Get the current body of the issue
+      let issueBody = dashboardIssue.body;
+  
+      if (context.payload.pull_request.title === "feat: ✨ Add code metadata files" || context.payload.pull_request.title === "feat: ✨ Update code metadata files") {
+        const response = await db.codeMetadata.update({
+          data: {
+            pull_request_url: "",
+          },
+          where: {
+            repository_id: context.payload.repository.id,
+          },
+        });
+  
+        if (!response) {
+          consola.error("Error updating the license request PR URL");
+          return;
+        }
+  
+        const metadataPRBadge = `A pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
+  
+        // Append the Metadata PR badge after the "Metadata" section
+        issueBody = issueBody.replace(
+          `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)\n\n${metadataPRBadge}`,
+          `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)`
+        );
+      }
+  
+      if (context.payload.pull_request.title === "feat: ✨ LICENSE file added") {
+        const response = await db.licenseRequest.update({
+          data: {
+            pull_request_url: "",
+          },
+          where: {
+            repository_id: context.payload.repository.id,
+          },
+        });
+  
+        // Define the PR badge markdown for the LICENSE section
+        const licensePRBadge = `A pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
+  
+        // Append the PR badge after the "LICENSE ❌" section
+        issueBody = issueBody.replace(
+          `\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/license)\n\n${licensePRBadge}`,
+          `\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/license)`,
+        );
+      }
+  
+      // Update the issue with the new body
+      await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+  
+      // Delete the branch name from GitHub
+      const branchName = context.payload.pull_request.head.ref;
+      await context.octokit.git.deleteRef({
+        owner,
+        ref: `heads/${branchName}`,
+        repo: repository.name,
       });
-
-      // Define the PR badge markdown for the LICENSE section
-      const licensePRBadge = `A pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
-
-      // Append the PR badge after the "LICENSE ❌" section
-      issueBody = issueBody.replace(
-        `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/add/license/${response.identifier})\n\n${licensePRBadge}`,
-        `## LICENSE ❌\n\nTo make your software reusable a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the \"Add license\" button below to go to our interface for selecting and adding a license. You can also add a license file yourself and Codefair will update the the dashboard when it detects it on the main branch.\n\n[![License](https://img.shields.io/badge/Add_License-dc2626.svg)](${CODEFAIR_DOMAIN}/add/license/${response.identifier})`,
-      );
     }
-
-    // Update the issue with the new body
-    await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
   }
 );
 };

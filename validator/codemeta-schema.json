@@ -1,0 +1,288 @@
+{
+  "title": "Codemeta.json Schema",
+  "description": "This schema is used to validate the codemeta.json files.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "type": "string",
+      "description": "The JSON-LD context for codemeta.",
+      "enum": [
+        "https://doi.org/10.5063/schema/codemeta-2.0",
+        "https://w3id.org/codemeta/3.0"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the software package.",
+      "minLength": 1
+    },
+    "author": {
+      "type": "array",
+      "description": "The authors of the software package.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "affiliation": {
+            "type": "object",
+            "description": "The affiliation of the author.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the affiliation."
+              },
+              "type": {
+                "type": "string",
+                "description": "Organization or Person"
+              }
+            }
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address of the author."
+          },
+          "familyName": {
+            "type": "string",
+            "description": "The family name of the author."
+          },
+          "givenName": {
+            "type": "string",
+            "description": "The given name of the author.",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "description": "The URI of the author."
+          },
+          "type": {
+            "type": "string",
+            "description": "Organization or Person"
+          }
+        }
+      }
+    },
+    "applicationCategory": {
+      "type": "string",
+      "description": "The category of the application."
+    },
+    "developmentStatus": {
+      "type": "string",
+      "description": "The development status of the software."
+    },
+    "identifier": {
+      "type": "string",
+      "description": "A unique identifier for the software."
+    },
+    "issueTracker": {
+      "type": "string",
+      "description": "The URL of the issue tracker."
+    },
+    "programmingLanguage": {
+      "type": "array",
+      "description": "The programming languages used in the software.",
+      "items": {
+        "type": "string"
+      },
+      "minLength": 1
+    },
+    "contributor": {
+      "type": "array",
+      "description": "The authors of the software package.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "affiliation": {
+            "type": "object",
+            "description": "The affiliation of the author.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the affiliation."
+              },
+              "type": {
+                "type": "string",
+                "description": "Organization or Person"
+              }
+            }
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address of the author."
+          },
+          "familyName": {
+            "type": "string",
+            "description": "The family name of the author."
+          },
+          "givenName": {
+            "type": "string",
+            "description": "The given name of the author.",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "description": "The URI of the author."
+          },
+          "type": {
+            "type": "string",
+            "description": "Organization or Person"
+          }
+        }
+      }
+    },
+    "contIntegration": {
+      "type": "string",
+      "description": "The continuous integration service used for the software."
+    },
+    "codemeta:continuousIntegration": {
+      "type": "object",
+      "description": "The continuous integration service used for the software.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The URI of the continuous integration service."
+        }
+      }
+    },
+    "codeRepository": {
+      "type": "string",
+      "description": "The URL of the code repository."
+    },
+    "dateCreated": {
+      "type": "string",
+      "description": "The date the software was created."
+    },
+    "dateModified": {
+      "type": "string",
+      "description": "The date the software was last modified."
+    },
+    "datePublished": {
+      "type": "string",
+      "description": "The date the software was published."
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the software.",
+      "minLength": 1
+    },
+    "downloadUrl": {
+      "type": "string",
+      "description": "The URL where the software can be downloaded."
+    },
+    "funder": {
+      "type": "object",
+      "description": "The funder of the software.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the funder."
+        },
+        "type": {
+          "type": "string",
+          "description": "Organization or Person",
+          "enum": [
+            "Organization",
+            "Person"
+          ]
+        }
+      }
+    },
+    "funding": {
+      "type": "string",
+      "description": "The funding code of the software."
+    },
+    "isPartOf": {
+      "type": "string",
+      "description": "The larger project that the software is part of."
+    },
+    "codemeta:isSourceCodeOf": {
+      "type": "object",
+      "description": "The software that this code is the source code of.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The URI of the software"
+        }
+      }
+    },
+    "keywords": {
+      "type": "array",
+      "description": "The keywords of the software.",
+      "items": {
+        "type": "string",
+        "description": "A keyword of the software."
+      },
+      "uniqueItems": true,
+      "minLength": 1
+    },
+    "operatingSystem": {
+      "type": "array",
+      "description": "The operating systems the software is compatible with.",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "license": {
+      "type": "string",
+      "description": "The license of the software."
+    },
+    "referencePublication": {
+      "type": "string",
+      "description": "The reference publication of the software."
+    },
+    "relatedLink": {
+      "type": "array",
+      "description": "Related links to the software.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "review": {
+      "type": "object",
+      "description": "A review of the software.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of review."
+        },
+        "reviewAspect": {
+          "type": "string",
+          "description": "The aspect of the software being reviewed."
+        },
+        "reviewBody": {
+          "type": "string",
+          "description": "The body of the review."
+        }
+      }
+    },
+    "runtimePlatform": {
+      "type": "array",
+      "description": "The runtime platforms the software is compatible with.",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "schema:releaseNotes": {
+      "type": "string",
+      "description": "The release notes of the software."
+    },
+    "softwareRequirements": {
+      "type": "array",
+      "description": "The software requirements of the software.",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "version": {
+      "type": "string",
+      "description": "The current version of the software package."
+    },
+    "type": {
+      "type": "string",
+      "description": "The type of software."
+    }
+  }
+}
