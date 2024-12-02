@@ -442,7 +442,7 @@ export default async (app, { getRouter }) => {
     }
 
     cwlObject.contains_cwl_files = cwlObject.files.length > 0 || false;
-    cwlObject.files = cwl.filter(file => !removedCWLFiles.includes(file.path));
+    cwlObject.files = cwlObject.files.filter(file => !removedCWLFiles.includes(file.path));
     cwlObject.removed_files = removedCWLFiles;
 
     const cwlExists = await db.cwlValidation.findUnique({
@@ -920,6 +920,9 @@ export default async (app, { getRouter }) => {
         const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
         const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
         await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+        if (error.cause) {
+          consola.error(error.cause);
+        }
         throw new Error("Error rerunning metadata validation", error);
       }
     }
