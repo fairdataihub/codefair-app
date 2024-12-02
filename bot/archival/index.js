@@ -386,7 +386,7 @@ export async function createZenodoMetadata(codemetadata, repository) {
       //     creators: zenodoCreators,
       //     access_right: zenodoMetadata.zenodo_metadata.accessRight,
       //     publication_date: new_date,
-      //     // TODO: Ask user for language
+      //     
       //     rights: [
       //       {
       //         description: {en: existingLicense?.license_content},
@@ -467,7 +467,6 @@ export async function uploadReleaseAssetsToZenodo(
   repository,
   tagVersion,
 ) {
-  // TODO: Add try catches for each fetch
   const startTime = performance.now();
   if (draftReleaseAssets.length > 0) {
     for (const asset of draftReleaseAssets) {

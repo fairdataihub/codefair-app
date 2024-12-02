@@ -24,7 +24,7 @@ export function getCWLFiles(context, owner, repoName) {
 
     const cwlFiles = [];
     const cwlObject = {
-      contains_cwl: false,
+      contains_cwl_files: false,
       files: [],
       removed_files: [],
     }
@@ -39,7 +39,7 @@ export function getCWLFiles(context, owner, repoName) {
 
         for (const file of repoContent.data) {
           if (file.type === "file" && file.name.endsWith(".cwl")) {
-            cwlFiles.push(file);
+            cwlObject.files.push(file);
           }
           if (file.type === "dir") {
             await searchDirectory(file.path);
@@ -62,7 +62,7 @@ export function getCWLFiles(context, owner, repoName) {
     // Call the async function and handle its promise
     searchDirectory("")
       .then(async () => {
-        cwlObject.contains_cwl = cwlFiles.length > 0;
+        cwlObject.contains_cwl_files = cwlFiles.length > 0;
         cwlObject.files = cwlFiles;
 
         // Check if the db entry exists for the repository
@@ -73,15 +73,6 @@ export function getCWLFiles(context, owner, repoName) {
         });
 
         if (existingCWL) {
-          // TODO: Check for removed files
-          // // Check for removed files
-          // const removedFiles = existingCWL.files.filter((file) => {
-          //   return !cwlFiles.some((newFile) => newFile.path === file.path)
-          // });
-
-          // if (removedFiles.length > 0) {
-          //   cwlObject.removed_files = removedFiles.map((file) => file.path);
-          // }
           if (existingCWL?.contains_cwl_files) {
             cwlObject.contains_cwl_files = existingCWL.contains_cwl_files;
           }
@@ -269,7 +260,7 @@ export async function applyCWLTemplate(
   if (!existingCWL) {
     await dbInstance.cwlValidation.create({
       data: {
-        contains_cwl_files: subjects.cwl.contains_cwl,
+        contains_cwl_files: subjects.cwl.contains_cwl_files,
         files: cwlFiles,
         identifier,
         overall_status: validOverall ? "valid" : "invalid",

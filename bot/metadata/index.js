@@ -414,6 +414,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
       }
 
       try {
+        // TODO: CHANGE THIS BEFORE DEPLOYING TO MAIN
         const response = await fetch("http://127.0.0.1:5000/validate-citation", {
           method: "POST",
           headers: {
@@ -768,7 +769,7 @@ export async function applyCitationMetadata(citation, metadata, repository) {
           return {
             ...foundAuthor, // Existing details from metadata.authors
             ...author, // Overwrite with any additional information from convertedCitation
-            affiliation: foundAuthor.affiliation || author.affiliation || "",
+            affiliation: author.affiliation || foundAuthor.affiliation || "",
             email: author.email || foundAuthor.email || ""
           };
         }
@@ -811,7 +812,6 @@ export async function applyMetadataTemplate(
   const githubAction = context.payload?.pusher?.name;
   const identifier = createId();
 
-  // TODO: On push events don't re-gather metadata, unless the metadata files were updated by a person
   // TODO: Move the workflow around to get the metadata from github api last
   const url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata`;
   let revalidate = true;

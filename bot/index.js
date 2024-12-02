@@ -343,10 +343,8 @@ export default async (app, { getRouter }) => {
     // Grab the commits being pushed
     const { commits } = context.payload;
 
-    // TODO: UPDATE CWL OBJECT
-    let cwl = [];
     let cwlObject = {
-      contains_cwl: false,
+      contains_cwl_files: false,
       files: [],
       removed_files: [],
     }
@@ -439,11 +437,11 @@ export default async (app, { getRouter }) => {
         });
 
         cwlFile.data.commitId = file.commitId;
-        cwl.push(cwlFile.data);
+        cwlObject.files.push(cwlFile.data);
       }
     }
 
-    cwlObject.contains_cwl = cwl.length > 0 || false;
+    cwlObject.contains_cwl_files = cwlObject.files.length > 0 || false;
     cwlObject.files = cwl.filter(file => !removedCWLFiles.includes(file.path));
     cwlObject.removed_files = removedCWLFiles;
 
@@ -455,7 +453,7 @@ export default async (app, { getRouter }) => {
 
     // Does the repository already contain CWL files
     if (cwlExists) {
-      cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+      cwlObject.contains_cwl_files = cwlExists.contains_cwl_files;
     }
 
     const subjects = {
@@ -670,7 +668,7 @@ export default async (app, { getRouter }) => {
       );
 
       const cwlObject = {
-        contains_cwl: cwl.length > 0 || false,
+        contains_cwl_files: cwl.length > 0 || false,
         files: cwl,
         removed_files: [],
       };
@@ -682,7 +680,7 @@ export default async (app, { getRouter }) => {
       });
 
       if (cwlExists) {
-        cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+        cwlObject.contains_cwl_files = cwlExists.contains_cwl_files;
 
         if (cwlExists.files.length > 0) {
           // Remove the files that are not in cwlObject
@@ -735,7 +733,7 @@ export default async (app, { getRouter }) => {
         });
   
         if (cwlExists?.contains_cwl_files) {
-          cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+          cwlObject.contains_cwl_files = cwlExists.contains_cwl_files;
   
           if (cwlExists.files.length > 0) {
             // Remove the files that are not in cwlObject
@@ -1077,7 +1075,7 @@ export default async (app, { getRouter }) => {
         const cwl = !!cwlResponse?.contains_cwl_files;
   
         const cwlObject = {
-          contains_cwl: cwl,
+          contains_cwl_files: cwl,
           files: cwlResponse?.files || [],
           removed_files: [],
         };
@@ -1188,7 +1186,7 @@ export default async (app, { getRouter }) => {
       const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
 
       const cwlObject = {
-        contains_cwl: cwl.length > 0 || false,
+        contains_cwl_files: cwl.length > 0 || false,
         files: cwl,
         removed_files: [],
       };
@@ -1200,7 +1198,7 @@ export default async (app, { getRouter }) => {
       });
 
       if (cwlExists) {
-        cwlObject.contains_cwl = cwlExists.contains_cwl_files;
+        cwlObject.contains_cwl_files = cwlExists.contains_cwl_files;
       }
 
       const subjects = {
