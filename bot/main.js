@@ -1,7 +1,7 @@
 import { Server, Probot } from "probot";
 import app from "./index.js";
 // import "dotenv/config";
-const privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
+const privateKey = process.env.GH_APP_PRIVATE_KEY.replace(/\\n/g, "\n");
 
 async function startServer() {
   const server = new Server({

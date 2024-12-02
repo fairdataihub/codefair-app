@@ -2,7 +2,7 @@
 const { createNodeMiddleware, createProbot } = require("probot");
 
 const app = require("../../index.js");
-const privateKey = process.env.PRIVATE_KEY.replace(/\\n/g, "\n");
+const privateKey = process.env.GH_APP_PRIVATE_KEY.replace(/\\n/g, "\n");
 
 const probot = createProbot({
   overrides: {
