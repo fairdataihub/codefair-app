@@ -62,9 +62,6 @@ export function getCWLFiles(context, owner, repoName) {
     // Call the async function and handle its promise
     searchDirectory("")
       .then(async () => {
-        cwlObject.contains_cwl_files = cwlFiles.length > 0;
-        cwlObject.files = cwlFiles;
-
         // Check if the db entry exists for the repository
         const existingCWL = await dbInstance.cwlValidation.findUnique({
           where: {
@@ -77,6 +74,9 @@ export function getCWLFiles(context, owner, repoName) {
             cwlObject.contains_cwl_files = existingCWL.contains_cwl_files;
           }
         }
+
+        cwlObject.contains_cwl_files = cwlFiles.files.length > 0;
+
         resolve(cwlObject);
       })
       .catch(reject);
