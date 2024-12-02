@@ -270,7 +270,7 @@ export async function gatherMetadata(context, owner, repo) {
     currentVersionReleaseDate:
       Date.parse(releases.data[0]?.published_at) || null,
     currentVersionReleaseNotes: releases.data[0]?.body || "",
-    description: repoData.data.description,
+    description: repoData.data.description || "",
     developmentStatus: null,
     firstReleaseDate: Date.parse(releases.data[0]?.published_at) || null,
     fundingCode: "",
@@ -600,139 +600,156 @@ export function applyDbMetadata(existingMetadataEntry, metadata) {
 
 export async function applyCodemetaMetadata(codemeta, metadata, repository) {
   consola.info("Codemeta found");
-  const codemetaContent = JSON.parse(codemeta.content);
-  const convertedCodemeta = await convertCodemetaForDB(codemetaContent, repository);
-
-  metadata.name = convertedCodemeta.name || metadata.name || "";
-  metadata.applicationCategory = convertedCodemeta.applicationCategory || metadata.applicationCategory || null;
-  metadata.codeRepository = convertedCodemeta.codeRepository || metadata.codeRepository || "";
-  metadata.continuousIntegration = convertedCodemeta.continuousIntegration || metadata.continuousIntegration || "";
-  metadata.creationDate = convertedCodemeta.creationDate || metadata.creationDate || null;
-  metadata.currentVersion = convertedCodemeta.currentVersion || metadata.currentVersion || "";
-  metadata.currentVersionDownloadURL = convertedCodemeta.currentVersionDownloadURL || metadata.currentVersionDownloadURL || "";
-  metadata.currentVersionReleaseDate = convertedCodemeta.currentVersionReleaseDate || metadata.currentVersionReleaseDate || null;
-  metadata.currentVersionReleaseNotes = convertedCodemeta.currentVersionReleaseNotes || metadata.currentVersionReleaseNotes || "";
-  metadata.description = convertedCodemeta.description || metadata.description || "";
-  metadata.developmentStatus = convertedCodemeta.developmentStatus || metadata.developmentStatus || null;
-  metadata.firstReleaseDate = convertedCodemeta.firstReleaseDate || metadata.firstReleaseDate || null;
-  metadata.fundingCode = convertedCodemeta.fundingCode || metadata.fundingCode || "";
-  metadata.fundingOrganization = convertedCodemeta.fundingOrganization || metadata.fundingOrganization || "";
-  metadata.isPartOf = convertedCodemeta.isPartOf || metadata.isPartOf || "";
-  metadata.reviewAspect = convertedCodemeta.reviewAspect || metadata.reviewAspect || "";
-  metadata.reviewBody = convertedCodemeta.reviewBody || metadata.reviewBody || "";
-  metadata.runtimePlatform = convertedCodemeta.runtimePlatform || metadata.runtimePlatform || [];
-  metadata.uniqueIdentifier = convertedCodemeta.uniqueIdentifier || metadata.uniqueIdentifier || "";
-
-  if (metadata.authors) {
-    if (convertedCodemeta.authors.length > 0) {
-      const updatedAuthors = convertedCodemeta.authors.map((author) => {
-        // Find a matching author in metadata
-        const foundAuthor = metadata.authors.find(
+  try {
+    const codemetaContent = JSON.parse(codemeta.content);
+    const convertedCodemeta = await convertCodemetaForDB(codemetaContent, repository);
+    consola.info("convertedCodemeta", convertedCodemeta);
+  
+    metadata.name = convertedCodemeta.name || metadata.name || "";
+    metadata.applicationCategory = convertedCodemeta.applicationCategory || metadata.applicationCategory || null;
+    metadata.codeRepository = convertedCodemeta.codeRepository || metadata.codeRepository || "";
+    metadata.continuousIntegration = convertedCodemeta.continuousIntegration || metadata.continuousIntegration || "";
+    metadata.creationDate = convertedCodemeta.creationDate || metadata.creationDate || null;
+    metadata.currentVersion = convertedCodemeta.version || metadata.currentVersion || "";
+    metadata.currentVersionDownloadURL = convertedCodemeta.currentVersionDownloadURL || metadata.currentVersionDownloadURL || "";
+    metadata.currentVersionReleaseDate = convertedCodemeta.currentVersionReleaseDate || metadata.currentVersionReleaseDate || null;
+    metadata.currentVersionReleaseNotes = convertedCodemeta.currentVersionReleaseNotes || metadata.currentVersionReleaseNotes || "";
+    metadata.description = convertedCodemeta.description || metadata.description || "";
+    metadata.developmentStatus = convertedCodemeta.developmentStatus || metadata.developmentStatus || null;
+    metadata.firstReleaseDate = convertedCodemeta.firstReleaseDate || metadata.firstReleaseDate || null;
+    metadata.fundingCode = convertedCodemeta.funding || metadata.fundingCode || "";
+    metadata.fundingOrganization = convertedCodemeta.fundingOrganization || metadata.fundingOrganization || "";
+    metadata.isPartOf = convertedCodemeta.isPartOf || metadata.isPartOf || "";
+    metadata.reviewAspect = convertedCodemeta.reviewAspect || metadata.reviewAspect || "";
+    metadata.reviewBody = convertedCodemeta.reviewBody || metadata.reviewBody || "";
+    metadata.runtimePlatform = convertedCodemeta.runtimePlatform || metadata.runtimePlatform || [];
+    metadata.uniqueIdentifier = convertedCodemeta.uniqueIdentifier || metadata.uniqueIdentifier || "";
+    metadata.isSourceCodeOf = convertedCodemeta.isSourceCodeOf || metadata.isSourceCodeOf || "";
+    metadata.programmingLanguages = convertedCodemeta.programmingLanguages || metadata.programmingLanguages || [];
+    metadata.operatingSystem = convertedCodemeta.operatingSystem || metadata.operatingSystem || [];
+    metadata.relatedLinks = convertedCodemeta.relatedLinks || metadata.relatedLinks || [];
+    metadata.otherSoftwareRequirements = convertedCodemeta.otherSoftwareRequirements || metadata.otherSoftwareRequirements || [];
+  
+    if (metadata.authors) {
+      if (convertedCodemeta.authors.length > 0) {
+        const updatedAuthors = convertedCodemeta.authors.map((author) => {
+          // Find a matching author in metadata
+          const foundAuthor = metadata.authors.find(
+            (existingAuthor) =>
+              existingAuthor?.familyName === author?.familyName &&
+              existingAuthor?.givenName === author?.givenName
+          );
+    
+          if (foundAuthor) {
+            // Merge roles, avoiding duplicates based on `role` and `startDate`
+            if (!foundAuthor?.roles) {
+              foundAuthor.roles = [];
+            }
+            consola.info("foundAuthor in codemeta", foundAuthor);
+            const mergedRoles = [
+              ...foundAuthor.roles,
+              ...author.roles.filter(
+                (newRole) =>
+                  !foundAuthor.roles.some(
+                    (existingRole) =>
+                      existingRole.role === newRole.role &&
+                      existingRole.startDate === newRole.startDate
+                  )
+              )
+            ];
+    
+            // Merge and prioritize data from `author`
+            return {
+              ...foundAuthor,
+              ...author,
+              affiliation: author.affiliation || foundAuthor.affiliation || "",
+              email: author.email || foundAuthor.email || "",
+              uri: author.uri || foundAuthor.uri || "",
+              roles: mergedRoles
+            };
+          }
+    
+          // If no match, return the current author from convertedCodemeta
+          return author;
+        });
+    
+        // Merge updated authors with any authors in metadata not present in convertedCodemeta
+        const nonUpdatedAuthors = metadata.authors.filter(
           (existingAuthor) =>
-            existingAuthor?.familyName === author?.familyName &&
-            existingAuthor?.givenName === author?.givenName
-        );
-  
-        if (foundAuthor) {
-          // Merge roles, avoiding duplicates based on `role` and `startDate`
-          const mergedRoles = [
-            ...foundAuthor.roles,
-            ...author.roles.filter(
-              (newRole) =>
-                !foundAuthor.roles.some(
-                  (existingRole) =>
-                    existingRole.role === newRole.role &&
-                    existingRole.startDate === newRole.startDate
-                )
+            !convertedCodemeta.authors.some(
+              (author) =>
+                author.familyName === existingAuthor.familyName &&
+                author.givenName === existingAuthor.givenName
             )
-          ];
-  
-          // Merge and prioritize data from `author`
-          return {
-            ...foundAuthor,
-            ...author,
-            affiliation: author.affiliation || foundAuthor.affiliation || "",
-            email: author.email || foundAuthor.email || "",
-            uri: author.uri || foundAuthor.uri || "",
-            roles: mergedRoles
-          };
-        }
-  
-        // If no match, return the current author from convertedCodemeta
-        return author;
-      });
-  
-      // Merge updated authors with any authors in metadata not present in convertedCodemeta
-      const nonUpdatedAuthors = metadata.authors.filter(
-        (existingAuthor) =>
-          !convertedCodemeta.authors.some(
-            (author) =>
-              author.familyName === existingAuthor.familyName &&
-              author.givenName === existingAuthor.givenName
-          )
-      );
-  
-      metadata.authors = [...nonUpdatedAuthors, ...updatedAuthors];
+        );
+    
+        metadata.authors = [...nonUpdatedAuthors, ...updatedAuthors];
+      }
     }
-  }
-  
-  if (metadata.contributors) {
-    if (convertedCodemeta.contributors.length > 0) {
-      const updatedContributors = convertedCodemeta.contributors.map((contributor) => {
-        // Find a matching contributor in metadata
-        const foundContributor = metadata.contributors.find(
+    
+    if (metadata.contributors) {
+      if (convertedCodemeta.contributors.length > 0) {
+        const updatedContributors = convertedCodemeta.contributors.map((contributor) => {
+          // Find a matching contributor in metadata
+          const foundContributor = metadata.contributors.find(
+            (existingContributor) =>
+              existingContributor?.familyName === contributor?.familyName &&
+              existingContributor?.givenName === contributor?.givenName
+          );
+    
+          if (foundContributor) {
+            if (!foundContributor?.roles) {
+              foundContributor.roles = [];
+            }
+            // Merge roles, avoiding duplicates based on `role` and `startDate`
+            const mergedRoles = [
+              ...foundContributor.roles,
+              ...contributor.roles.filter(
+                (newRole) =>
+                  !foundContributor.roles.some(
+                    (existingRole) =>
+                      existingRole.role === newRole.role &&
+                      existingRole.startDate === newRole.startDate
+                  )
+              )
+            ];
+    
+            // Merge and prioritize data from `contributor`
+            return {
+              ...foundContributor,
+              ...contributor,
+              affiliation: contributor.affiliation || foundContributor.affiliation || "",
+              email: contributor.email || foundContributor.email || "",
+              uri: contributor.uri || foundContributor.uri || "",
+              roles: mergedRoles
+            };
+          }
+    
+          // If no match, return the current contributor from convertedCodemeta
+          return contributor;
+        });
+    
+        // Merge updated contributors with any contributors in metadata not present in convertedCodemeta
+        const nonUpdatedContributors = metadata.contributors.filter(
           (existingContributor) =>
-            existingContributor?.familyName === contributor?.familyName &&
-            existingContributor?.givenName === contributor?.givenName
-        );
-  
-        if (foundContributor) {
-          // Merge roles, avoiding duplicates based on `role` and `startDate`
-          const mergedRoles = [
-            ...foundContributor.roles,
-            ...contributor.roles.filter(
-              (newRole) =>
-                !foundContributor.roles.some(
-                  (existingRole) =>
-                    existingRole.role === newRole.role &&
-                    existingRole.startDate === newRole.startDate
-                )
+            !convertedCodemeta.contributors.some(
+              (contributor) =>
+                contributor.familyName === existingContributor.familyName &&
+                contributor.givenName === existingContributor.givenName
             )
-          ];
-  
-          // Merge and prioritize data from `contributor`
-          return {
-            ...foundContributor,
-            ...contributor,
-            affiliation: contributor.affiliation || foundContributor.affiliation || "",
-            email: contributor.email || foundContributor.email || "",
-            uri: contributor.uri || foundContributor.uri || "",
-            roles: mergedRoles
-          };
-        }
-  
-        // If no match, return the current contributor from convertedCodemeta
-        return contributor;
-      });
-  
-      // Merge updated contributors with any contributors in metadata not present in convertedCodemeta
-      const nonUpdatedContributors = metadata.contributors.filter(
-        (existingContributor) =>
-          !convertedCodemeta.contributors.some(
-            (contributor) =>
-              contributor.familyName === existingContributor.familyName &&
-              contributor.givenName === existingContributor.givenName
-          )
-      );
-  
-      metadata.contributors = [...nonUpdatedContributors, ...updatedContributors];
+        );
+    
+        metadata.contributors = [...nonUpdatedContributors, ...updatedContributors];
+      }
+    } else if (convertedCodemeta.contributors.length > 0) {
+      // If metadata.contributors is empty, directly assign convertedCodemeta.contributors
+      metadata.contributors = [...convertedCodemeta.contributors];
     }
-  } else if (convertedCodemeta.contributors.length > 0) {
-    // If metadata.contributors is empty, directly assign convertedCodemeta.contributors
-    metadata.contributors = [...convertedCodemeta.contributors];
+  
+    return metadata;
+  } catch (error) {
+    throw new Error("Error applying codemeta metadata", { cause: error });
   }
-
-  return metadata;
 }
 
 export async function applyCitationMetadata(citation, metadata, repository) {
@@ -746,6 +763,7 @@ export async function applyCitationMetadata(citation, metadata, repository) {
   metadata.currentVersionReleaseDate = convertedCitation.currentVersionReleaseDate || metadata.currentVersionReleaseDate || null;
   metadata.keywords = convertedCitation.keywords || metadata.keywords || [];
   metadata.uniqueIdentifier = convertedCitation.uniqueIdentifier || metadata.uniqueIdentifier || "";
+  metadata.description = convertedCitation.abstract || metadata.description || "";
 
   consola.info("metadata.authors", metadata.authors);
   consola.info("convertedCitation.authors", convertedCitation.authors);
@@ -832,15 +850,18 @@ export async function applyMetadataTemplate(
 
   if (githubAction && githubAction !== `${GH_APP_NAME}[bot]`) {
     // Push event was made, only update the metadata if the pusher updated the codemeta.json or citation.cff
+    consola.info("Push event detected");
     const updatedFiles = context.payload.head_commit.modified;
     const addedFiles = context.payload.head_commit.added;
     revalidate = false;
 
     if (updatedFiles.includes("codemeta.json") || updatedFiles.includes("CITATION.cff")) {
+      consola.info("Codemeta.json or CITATION.cff file was updated");
       revalidate = true;
     }
 
     if (addedFiles.includes("codemeta.json") || addedFiles.includes("CITATION.cff")) {
+      consola.info("Codemeta.json or CITATION.cff file was added");
       revalidate = true;
     }
   }
@@ -848,10 +869,12 @@ export async function applyMetadataTemplate(
   if (revalidate) {
     // Revalidation steps
     let metadata = gatherMetadata(context, owner, repository);
+
     if (existingMetadata?.metadata) {
       containsCitation = existingMetadata.contains_citation;
       containsCodemeta = existingMetadata.contains_metadata;
       metadata = applyDbMetadata(existingMetadata, metadata);
+      consola.info("metadata afer db", JSON.stringify(metadata));
     }
   
     if (subjects.codemeta) {
@@ -859,7 +882,7 @@ export async function applyMetadataTemplate(
       containsCodemeta = true;
       validCodemeta = await validateMetadata(codemeta, "codemeta", repository);
       metadata = await applyCodemetaMetadata(codemeta, metadata, repository);
-      consola.info(metadata);
+      consola.info("metadata after codemeta", JSON.stringify(metadata));
     }
   
     if (subjects.citation) {
@@ -867,7 +890,7 @@ export async function applyMetadataTemplate(
       containsCitation = true;
       validCitation = await validateMetadata(citation, "citation", repository);
       metadata = await applyCitationMetadata(citation, metadata, repository);
-      consola.info(metadata);
+      consola.info("metadata after citation", JSON.stringify(metadata));
     }
 
     // Add metadata to database object
