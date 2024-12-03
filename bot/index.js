@@ -21,7 +21,7 @@ import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
 import { getZenodoDepositionInfo, createZenodoMetadata, updateZenodoMetadata, uploadReleaseAssetsToZenodo, parseZenodoInfo, getZenodoToken, publishZenodoDeposition, updateGitHubRelease } from "./archival/index.js";
-import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier, convertCodemetaForDB, convertCitationForDB, gatherMetadata, convertDateToUnix, applyDbMetadata, applyCodemetaMetadata, applyCitationMetadata } from "./metadata/index.js";
+import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier, gatherMetadata, convertDateToUnix, applyDbMetadata, applyCodemetaMetadata, applyCitationMetadata } from "./metadata/index.js";
 
 checkEnvVariable("GH_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
@@ -765,7 +765,10 @@ export default async (app, { getRouter }) => {
         const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
         const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
         await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
-        throw new Error("Error rerunning license validation", error);
+        if (error.cause) {
+          consola.error(error.cause);
+        }
+        throw new Error("Error rerunning full repo validation", error);
       }
     }
 
