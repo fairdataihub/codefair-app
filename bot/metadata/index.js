@@ -868,7 +868,7 @@ export async function applyMetadataTemplate(
 
   if (revalidate) {
     // Revalidation steps
-    let metadata = gatherMetadata(context, owner, repository);
+    let metadata = await gatherMetadata(context, owner, repository);
 
     if (existingMetadata?.metadata) {
       containsCitation = existingMetadata.contains_citation;
