@@ -192,28 +192,32 @@ export async function convertCodemetaForDB(codemetaContent, repository) {
  * @returns {Object} - The metadata object for the database
  */
 export async function convertCitationForDB(citationContent, repository) {
-  const authors = [];
-
-  if (citationContent?.authors) {
-    citationContent.authors.forEach((author) => {
-      authors.push({
-        affiliation: author.affiliation || "",
-        email: author.email || "",
-        familyName: author["family-names"] || "",
-        givenName: author["given-names"] || "",
-      })
-    });
-  }
-
-  return {
-    authors,
-    uniqueIdentifier: citationContent?.doi || null,
-    license: citationContent?.license || null,
-    codeRepository: citationContent["repository-code"] || null,
-    description: citationContent.abstract || null,
-    currentVersionReleaseDate: citationContent["date-released"] || null,
-    currentVersion: citationContent.version || null,
-    keywords: citationContent.keywords || null,
+  try {
+    const authors = [];
+  
+    if (citationContent?.authors) {
+      citationContent.authors.forEach((author) => {
+        authors.push({
+          affiliation: author.affiliation || "",
+          email: author.email || "",
+          familyName: author["family-names"] || "",
+          givenName: author["given-names"] || "",
+        })
+      });
+    }
+  
+    return {
+      authors,
+      uniqueIdentifier: citationContent?.doi || null,
+      license: citationContent?.license || null,
+      codeRepository: citationContent["repository-code"] || null,
+      description: citationContent.abstract || null,
+      currentVersionReleaseDate: citationContent["date-released"] || null,
+      currentVersion: citationContent.version || null,
+      keywords: citationContent.keywords || null,
+    };
+  } catch (error) {
+    throw new Error("Error converting CITATION.cff file to metadata object", { cause: error });
   }
 }
 
@@ -408,6 +412,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
   if (fileType === "citation") {
     try {
       const loaded_file = yaml.load(metadataInfo.content);
+      consola.start("Validating the CITATION.cff file");
       // Verify the required fields are present
       if (!loaded_file.title || !loaded_file.authors) {
         return false;
@@ -756,6 +761,8 @@ export async function applyCitationMetadata(citation, metadata, repository) {
   consola.info("Citation found");
   const citationContent = yaml.load(citation.content);
   const convertedCitation = await convertCitationForDB(citationContent, repository);
+  consola.warn("convertedCitation", convertedCitation.description);
+  consola.warn("convertedCitation", convertedCitation.keywords);
 
   metadata.license = convertedCitation.license || metadata.license || null;
   metadata.codeRepository = convertedCitation.codeRepository || metadata.codeRepository || "";
@@ -763,10 +770,7 @@ export async function applyCitationMetadata(citation, metadata, repository) {
   metadata.currentVersionReleaseDate = convertedCitation.currentVersionReleaseDate || metadata.currentVersionReleaseDate || null;
   metadata.keywords = convertedCitation.keywords || metadata.keywords || [];
   metadata.uniqueIdentifier = convertedCitation.uniqueIdentifier || metadata.uniqueIdentifier || "";
-  metadata.description = convertedCitation.abstract || metadata.description || "";
-
-  consola.info("metadata.authors", metadata.authors);
-  consola.info("convertedCitation.authors", convertedCitation.authors);
+  metadata.description = convertedCitation.description || metadata.description || "";
 
   if (convertedCitation.authors) {
     // Check if the authors are already in the metadata, if so update the details of the author
@@ -890,7 +894,8 @@ export async function applyMetadataTemplate(
       containsCitation = true;
       validCitation = await validateMetadata(citation, "citation", repository);
       metadata = await applyCitationMetadata(citation, metadata, repository);
-      consola.info("metadata after citation", JSON.stringify(metadata));
+      consola.info(metadata);
+      consola.info("metadata above should have the description and keywords");
     }
 
     // Add metadata to database object
