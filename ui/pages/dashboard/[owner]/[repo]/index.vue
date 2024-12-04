@@ -391,11 +391,61 @@ const handleSettingsSelect = (key: any) => {
             to this repository before the code metadata can be validated.
           </n-alert>
 
-          <p v-else>
-            The code metadata for the repository is shown here. This includes
-            the number of files, the number of lines of code, and the number of
-            commits.
-          </p>
+          <div v-else>
+            <n-collapse default-expanded-names="code-metadata-validation">
+              <n-collapse-item
+                title="codemeta.json validation"
+                name="code-metadata-validation"
+              >
+                <n-alert
+                  v-if="!data?.codeMetadataRequest?.containsMetadata"
+                  type="info"
+                  class="w-full"
+                >
+                  There is no code metadata in this repository.
+                </n-alert>
+
+                <n-alert
+                  v-else-if="data?.codeMetadataRequest?.containsMetadata"
+                  :type="data?.codeMetadataRequest?.codemetaValidationMessage !== '' ? 'success' : 'info'"
+                  class="w-full max-h-40 overflow-y-auto"
+                >
+                <span v-if="data?.codeMetadataRequest?.codemetaValidationMessage" class="max-h-40 overflow-y-auto">
+                  {{ data?.codeMetadataRequest?.codemetaValidationMessage }}
+                </span>
+                <span v-else>
+                  The codemeta.json file has not been validated yet.
+                </span>
+                </n-alert>
+              </n-collapse-item>
+
+              <n-collapse-item
+                title="CITATION.CFF validation"
+                name="citation-cff"
+              >
+                <n-alert
+                  v-if="data?.codeMetadataRequest?.containsCitation"
+                  :type="data?.codeMetadataRequest?.citationValidationMessage !== '' ? 'success' : 'info'"
+                  class="w-full max-h-40 overflow-y-auto"
+                >
+                  <span v-if="data?.codeMetadataRequest?.citationValidationMessage">
+                  {{ data?.codeMetadataRequest?.citationValidationMessage }}
+                </span>
+                <span v-else>
+                  The CITATION.cff file has not been validated yet.
+                </span>
+                </n-alert>
+
+                <n-alert
+                  v-else
+                  type="info"
+                  class="w-full"
+                >
+                There is no CITATION.cff in this repository.
+                </n-alert>
+              </n-collapse-item>
+            </n-collapse>
+          </div>
         </template>
 
         <template #action>
