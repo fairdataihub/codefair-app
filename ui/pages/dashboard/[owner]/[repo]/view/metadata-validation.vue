@@ -16,6 +16,8 @@ const { data, error } = await useFetch(`/api/${owner}/${repo}/metadata-validatio
   headers: useRequestHeaders(["cookie"]),
 });
 
+console.log(data);
+
 breadcrumbsStore.setFeature({
   id: "view-metadata-validation",
   name: "View metadata Validation",
@@ -63,8 +65,30 @@ if (error.value) {
         </p>
       </div>
 
-      <n-collapse :trigger-areas="['main', 'arrow']"></n-collapse>
+      <n-collapse :trigger-areas="['main', 'arrow']" :default-expanded-names="['CITATION.cff', 'codemeta.json']">
+        <n-collapse-item
+          key="CITATION.cff"
+          title="CITATION.cff Validation"
+          name="CITATION.cff"
+        >
+          <n-flex vertical>
+            <n-alert :type="data?.citationStatus === 'invalid' ? 'error' : 'success'">
+              <pre>{{ data?.citationValidationMessage }}</pre>
+            </n-alert>
+          </n-flex>
+        </n-collapse-item>
+        <n-collapse-item
+          key="codemeta.json"
+          title="codemeta.json Validation"
+          name="codemeta.json"
+        >
+          <n-flex vertical>
+            <n-alert :type="data?.codemetaStatus === 'invalid' ? 'error' : 'success'">
+              <pre>{{ data?.codemetaValidationMessage }}</pre>
+            </n-alert>
+          </n-flex>
+        </n-collapse-item>
+      </n-collapse>
     </n-flex>
-    <pre>{{ data }}</pre>
   </main>
 </template>
