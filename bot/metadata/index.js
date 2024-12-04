@@ -389,12 +389,20 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
         const data = await response.json();
         consola.info("Codemeta validation response", data);
 
+        let validationMessage = "";
+        if (data.message === "valid") {
+          validationMessage = `The codemeta.json file is valid according to the ${data.version} codemeta.json schema.`;
+        } else {
+          validationMessage = message.error;
+        }
+
         await dbInstance.codeMetadata.update({
           where: {
             repository_id: repository.id,
           },
           data: {
-            codemeta_validation_message: data.message === "valid" ? data.output : data.error,
+            codemeta_validation_message: validationMessage,
+            codemeta_status: data.message
           }
         });
 
@@ -436,12 +444,15 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
 
         const data = await response.json();
 
+        consola.info("Citation validation response", data);
+
         await dbInstance.codeMetadata.update({
           where: {
             repository_id: repository.id,
           },
           data: {
-            citation_validation_message: data.message === "valid" ? data.output : data.error,
+            citation_validation_message: data.output,
+            citation_status: data.message === "valid" ? "valid" : "invalid",
           }
         });
 
