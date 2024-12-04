@@ -393,7 +393,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
         if (data.message === "valid") {
           validationMessage = `The codemeta.json file is valid according to the ${data.version} codemeta.json schema.`;
         } else {
-          validationMessage = message.error;
+          validationMessage = data.error;
         }
 
         await dbInstance.codeMetadata.update({
@@ -445,14 +445,20 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
         const data = await response.json();
 
         consola.info("Citation validation response", data);
+        let validationMessage = "";
+        if (data.message === "valid") {
+          validationMessage = data.output;
+        } else {
+          validationMessage = data.error;
+        }
 
         await dbInstance.codeMetadata.update({
           where: {
             repository_id: repository.id,
           },
           data: {
-            citation_validation_message: data.output,
-            citation_status: data.message === "valid" ? "valid" : "invalid",
+            citation_validation_message: validationMessage,
+            citation_status: data.message,
           }
         });
 
@@ -633,7 +639,7 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
     metadata.description = convertedCodemeta.description || metadata.description || "";
     metadata.developmentStatus = convertedCodemeta.developmentStatus || metadata.developmentStatus || null;
     metadata.firstReleaseDate = convertedCodemeta.firstReleaseDate || metadata.firstReleaseDate || null;
-    metadata.fundingCode = convertedCodemeta.funding || metadata.fundingCode || "";
+    metadata.fundingCode = convertedCodemeta.fundingCode || metadata.fundingCode || "";
     metadata.fundingOrganization = convertedCodemeta.fundingOrganization || metadata.fundingOrganization || "";
     metadata.isPartOf = convertedCodemeta.isPartOf || metadata.isPartOf || "";
     metadata.reviewAspect = convertedCodemeta.reviewAspect || metadata.reviewAspect || "";
