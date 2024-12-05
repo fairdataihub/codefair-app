@@ -324,40 +324,57 @@ const handleSettingsSelect = (key: any) => {
         <template #header-extra>
           <n-flex
             v-if="
-              data?.licenseRequest?.containsLicense &&
-              data?.codeMetadataRequest?.containsMetadata
+              data?.licenseRequest?.containsLicense
             "
             class="items-center align-middle"
           >
-            <n-tag
-              v-if="data?.codeMetadataRequest?.containsCitation"
-              :type="
-                data?.codeMetadataRequest?.citationStatus === 'valid'
-                  ? 'success'
-                  : 'error'
-              "
-            >
-              <template #icon>
-                <Icon :name="data?.codeMetadataRequest?.citationStatus === 'valid'
-                    ? 'icon-park-solid:check-one'
-                    : 'icon-park-solid:close-one'
-                  " size="16" />
+            <n-popover trigger="hover">
+              <template #trigger>
+                <n-tag
+                  v-if="data?.codeMetadataRequest?.containsCitation"
+                  :type="
+                    data?.codeMetadataRequest?.citationStatus === 'valid'
+                      ? 'success'
+                      : 'error'
+                  "
+                >
+                  <template #icon>
+                    <Icon
+                      :name="
+                        data?.codeMetadataRequest?.citationStatus === 'valid'
+                          ? 'icon-park-solid:check-one'
+                          : 'icon-park-solid:close-one'
+                      "
+                      size="16"
+                    />
+                  </template>
+                  citation.CFF
+                </n-tag>
               </template>
-              citation.CFF
-            </n-tag>
+              <span v-if="data?.codeMetadataRequest?.citationStatus === 'valid'">CITATION.cff is valid</span>
+              <span v-else>Errors found in your file. View the report below</span>
+            </n-popover>
 
-            <n-tag v-if="data?.codeMetadataRequest?.codemetaStatus" :type="data?.codeMetadataRequest?.codemetaStatus === 'valid'
-                ? 'success'
-                : 'error'
-              ">
-              <template #icon>
-                <Icon :name="data?.codeMetadataRequest?.codemetaStatus === 'valid'
-                    ? 'icon-park-solid:check-one'
-                    : 'icon-park-solid:close-one'
-                  " size="16" />
+            <n-popover trigger="hover">
+              <template #trigger>
+                <span>
+                  <n-tag v-if="data?.codeMetadataRequest?.containsCodemeta" :type="data?.codeMetadataRequest?.codemetaStatus === 'valid'
+                      ? 'success'
+                      : 'error'
+                    ">
+                    <template #icon>
+                      <Icon :name="data?.codeMetadataRequest?.codemetaStatus === 'valid'
+                          ? 'icon-park-solid:check-one'
+                          : 'icon-park-solid:close-one'
+                        " size="16" />
+                    </template>
+                    codemeta.json
+                  </n-tag>
+                </span>
               </template>
-              codemeta.json
-            </n-tag>
+              <span v-if="data?.codeMetadataRequest?.codemetaStatus === 'valid'">Your codemeta.json is valid</span>
+              <span v-else>Errors found in your file. View the report below</span>
+            </n-popover>
 
             <n-dropdown v-if="data?.licenseRequest?.containsLicense" :options="metadataSettingsOptions"
               placement="bottom-end" :show-arrow="true" @select="handleSettingsSelect">
