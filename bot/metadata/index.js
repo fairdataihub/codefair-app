@@ -372,6 +372,20 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
     try {
       const cleanContent = metadataInfo.content.trim();
       const normalizedContent = cleanContent.replace(/^\uFEFF/, ''); // Remove BOM if present
+      try {
+        JSON.parse(normalizedContent);
+      } catch (error) {
+        await dbInstance.codeMetadata.update({
+          where: {
+            repository_id: repository.id,
+          },
+          data: {
+            codemeta_validation_message: "Error parsing the codemeta.json file",
+            codemeta_status: "invalid"
+          }
+        });
+        return false;
+      }
       const loaded_file = JSON.parse(normalizedContent);
       // Verify the required fields are present
       if (!loaded_file.name || !loaded_file.author || !loaded_file.description) {
@@ -426,6 +440,20 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
   
   if (fileType === "citation") {
     try {
+      try {
+        yaml.load(metadataInfo.content);
+      } catch (error) {
+        await dbInstance.codeMetadata.update({
+          where: {
+            repository_id: repository.id,
+          },
+          data: {
+            citation_validation_message: "Error parsing the CITATION.cff file",
+            citation_status: "invalid"
+          }
+        });
+        return false;
+      }
       const loaded_file = yaml.load(metadataInfo.content);
       consola.start("Validating the CITATION.cff file");
       // Verify the required fields are present
@@ -631,7 +659,13 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
   consola.info("Codemeta found");
   try {
     // consola.warn("codemeta", codemeta.content.trim());
-    const codemetaContent = JSON.parse(codemeta.content.trim());
+    let codemetaContent;
+    try {
+        codemetaContent = JSON.parse(codemeta.content.trim());
+    } catch (error) {
+        consola.error("Error parsing codemeta content", error);
+        return;
+    }
     consola.info("DFSDKFJL:SD", codemetaContent);
     const convertedCodemeta = await convertCodemetaForDB(codemetaContent, repository);
     consola.info("convertedCodemeta", convertedCodemeta);
@@ -974,7 +1008,10 @@ export async function applyMetadataTemplate(
     return baseTemplate;
 
   } catch (error) {
-    consola.error("Error applying metadata template", error);
+    if (error.cause){
+      consola.error("Error applying metadata template", error.cause);
+      // throw new Error("Error applying metadata template", { cause: error.cause });
+    }
     throw new Error("Error applying metadata template", { cause: error });
   }
 }
