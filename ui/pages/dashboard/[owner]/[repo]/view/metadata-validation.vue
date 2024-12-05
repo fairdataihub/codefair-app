@@ -72,8 +72,9 @@ if (error.value) {
           name="CITATION.cff"
         >
           <n-flex vertical>
-            <n-alert :type="data?.citationStatus === 'invalid' ? 'error' : 'success'">
-              <pre>{{ data?.citationValidationMessage }}</pre>
+            <n-alert :type="data?.citationStatus === 'invalid' ? 'error' : 'success'" class="max-h-36 overflow-y-auto">
+              <pre v-if="data?.citationValidationMessage !== ''">{{ data?.citationValidationMessage }}</pre>
+              <pre v-else>This file either doesn't exist or has not been validated.</pre>
             </n-alert>
           </n-flex>
         </n-collapse-item>
@@ -83,8 +84,9 @@ if (error.value) {
           name="codemeta.json"
         >
           <n-flex vertical>
-            <n-alert :type="data?.codemetaStatus === 'invalid' ? 'error' : 'success'">
-              <pre>{{ data?.codemetaValidationMessage }}</pre>
+            <n-alert :type="data?.codemetaStatus === 'invalid' ? 'error' : 'success'" class="max-h-36 overflow-y-auto">
+              <pre v-if="data?.codemetaValidationMessage !== ''">{{ data?.codemetaValidationMessage }}</pre>
+              <pre v-else>This file either doesn't exist or has not been validated.</pre>
             </n-alert>
           </n-flex>
         </n-collapse-item>

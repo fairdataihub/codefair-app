@@ -19,6 +19,7 @@ const devMode = process.env.NODE_ENV === "development";
 
 const botNotInstalled = ref(false);
 const cwlValidationRerunRequestLoading = ref(false);
+const showModal = ref(false);
 
 const renderIcon = (icon: string) => {
   return () => {
@@ -49,7 +50,7 @@ const licenseSettingsOptions = [
     icon: renderIcon("mdi:github"),
     key: "re-validate-license",
     label: "Re-validate license",
-  }
+  },
 ];
 
 const metadataSettingsOptions = [
@@ -57,7 +58,7 @@ const metadataSettingsOptions = [
     icon: renderIcon("mdi:github"),
     key: "re-validate-metadata",
     label: "Re-validate metadata files",
-  }
+  },
 ];
 
 const { data, error } = await useFetch(`/api/${owner}/${repo}/dashboard`, {
@@ -78,6 +79,14 @@ if (error.value) {
     throw createError(error.value);
   }
 }
+
+const hideConfirmation = () => {
+  showModal.value = false;
+};
+
+const showConfirmation = () => {
+  showModal.value = true;
+};
 
 const rerunCwlValidation = async () => {
   cwlValidationRerunRequestLoading.value = true;
@@ -114,6 +123,7 @@ const rerunCwlValidation = async () => {
 };
 
 const rerunCodefairChecks = async (rerunType: string) => {
+  hideConfirmation();
   push.info({
     title: "Submitting request",
     message:
@@ -181,9 +191,11 @@ const handleSettingsSelect = (key: any) => {
       );
     }
   } else if (key === "re-validate-license") {
-    rerunCodefairChecks("license");
+    // rerunCodefairChecks("license");
+    showConfirmation();
   } else if (key === "re-validate-metadata") {
-    rerunCodefairChecks("metadata");
+    // rerunCodefairChecks("metadata");
+    showConfirmation();
   }
 };
 </script>
@@ -234,7 +246,7 @@ const handleSettingsSelect = (key: any) => {
         <template #header-extra>
           <div
             v-if="data?.licenseRequest?.containsLicense"
-            class="flex flex-wrap space-x-2 items-center"
+            class="flex flex-wrap items-center space-x-2"
           >
             <n-tag
               v-if="data?.licenseRequest?.licenseStatus === 'valid'"
@@ -285,6 +297,18 @@ const handleSettingsSelect = (key: any) => {
                 </template>
               </n-button>
             </n-dropdown>
+
+            <n-modal
+              v-model:show="showModal"
+              :mask-closable="false"
+              preset="dialog"
+              title="Are you sure?"
+              content="Doing this action will overwrite any existing draft. Do you want to continue?"
+              positive-text="Confirm"
+              negative-text="Cancel"
+              @positive-click="rerunCodefairChecks('license')"
+              @negative-click="hideConfirmation"
+            />
           </div>
         </template>
 
@@ -320,7 +344,7 @@ const handleSettingsSelect = (key: any) => {
               data?.licenseRequest?.containsLicense &&
               data?.codeMetadataRequest?.containsMetadata
             "
-            class="align-middle items-center"
+            class="items-center align-middle"
           >
             <n-tag
               v-if="data?.codeMetadataRequest?.containsCitation"
@@ -375,9 +399,20 @@ const handleSettingsSelect = (key: any) => {
                 <template #icon>
                   <Icon name="humbleicons:dots-vertical" size="20" />
                 </template>
-                </n-button
-              >
+              </n-button>
             </n-dropdown>
+
+            <n-modal
+              v-model:show="showModal"
+              :mask-closable="false"
+              preset="dialog"
+              title="Are you sure?"
+              content="Doing this action will overwrite any existing draft. Do you want to continue?"
+              positive-text="Confirm"
+              negative-text="Cancel"
+              @positive-click="rerunCodefairChecks('metadata')"
+              @negative-click="hideConfirmation"
+            />
           </n-flex>
         </template>
 
@@ -407,15 +442,22 @@ const handleSettingsSelect = (key: any) => {
 
                 <n-alert
                   v-else-if="data?.codeMetadataRequest?.containsMetadata"
-                  :type="data?.codeMetadataRequest?.codemetaValidationMessage !== '' ? 'success' : 'info'"
-                  class="w-full max-h-40 overflow-y-auto"
+                  :type="
+                    data?.codeMetadataRequest?.codemetaStatus === 'valid'
+                      ? 'success'
+                      : 'error'
+                  "
+                  class="max-h-40 w-full overflow-y-auto"
                 >
-                <span v-if="data?.codeMetadataRequest?.codemetaValidationMessage" class="max-h-40 overflow-y-auto">
-                  {{ data?.codeMetadataRequest?.codemetaValidationMessage }}
-                </span>
-                <span v-else>
-                  The codemeta.json file has not been validated yet.
-                </span>
+                  <span
+                    v-if="data?.codeMetadataRequest?.codemetaValidationMessage"
+                    class="max-h-40 overflow-y-auto"
+                  >
+                    {{ data?.codeMetadataRequest?.codemetaValidationMessage }}
+                  </span>
+                  <span v-else>
+                    The codemeta.json file has not been validated yet.
+                  </span>
                 </n-alert>
               </n-collapse-item>
 
@@ -425,23 +467,25 @@ const handleSettingsSelect = (key: any) => {
               >
                 <n-alert
                   v-if="data?.codeMetadataRequest?.containsCitation"
-                  :type="data?.codeMetadataRequest?.citationValidationMessage !== '' ? 'success' : 'info'"
-                  class="w-full max-h-40 overflow-y-auto"
+                  :type="
+                    data?.codeMetadataRequest?.citationStatus === 'valid'
+                      ? 'success'
+                      : 'error'
+                  "
+                  class="max-h-40 w-full overflow-y-auto"
                 >
-                  <span v-if="data?.codeMetadataRequest?.citationValidationMessage">
-                  {{ data?.codeMetadataRequest?.citationValidationMessage }}
-                </span>
-                <span v-else>
-                  The CITATION.cff file has not been validated yet.
-                </span>
+                  <span
+                    v-if="data?.codeMetadataRequest?.citationValidationMessage"
+                  >
+                    {{ data?.codeMetadataRequest?.citationValidationMessage }}
+                  </span>
+                  <span v-else>
+                    The CITATION.cff file has not been validated yet.
+                  </span>
                 </n-alert>
 
-                <n-alert
-                  v-else
-                  type="info"
-                  class="w-full"
-                >
-                There is no CITATION.cff in this repository.
+                <n-alert v-else type="info" class="w-full">
+                  There is no CITATION.cff in this repository.
                 </n-alert>
               </n-collapse-item>
             </n-collapse>
