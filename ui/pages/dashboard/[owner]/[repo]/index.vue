@@ -20,6 +20,7 @@ const devMode = process.env.NODE_ENV === "development";
 const botNotInstalled = ref(false);
 const cwlValidationRerunRequestLoading = ref(false);
 const displayMetadataValidationResults = ref(false);
+const showModal = ref(false);
 
 const renderIcon = (icon: string) => {
   return () => {
@@ -50,7 +51,7 @@ const licenseSettingsOptions = [
     icon: renderIcon("mdi:github"),
     key: "re-validate-license",
     label: "Re-validate license",
-  }
+  },
 ];
 
 const metadataSettingsOptions = [
@@ -58,7 +59,7 @@ const metadataSettingsOptions = [
     icon: renderIcon("mdi:github"),
     key: "re-validate-metadata",
     label: "Re-validate metadata files",
-  }
+  },
 ];
 
 const { data, error } = await useFetch(`/api/${owner}/${repo}/dashboard`, {
@@ -83,6 +84,14 @@ if (error.value) {
 if ((data.value?.codeMetadataRequest?.codemetaStatus === "invalid" || data.value?.codeMetadataRequest?.citationStatus === "invalid") && (data.value?.codeMetadataRequest?.containsCodemeta || data.value?.codeMetadataRequest?.containsCitation)) {
   displayMetadataValidationResults.value = true;
 }
+
+const hideConfirmation = () => {
+  showModal.value = false;
+};
+
+const showConfirmation = () => {
+  showModal.value = true;
+};
 
 const rerunCwlValidation = async () => {
   cwlValidationRerunRequestLoading.value = true;
@@ -119,6 +128,7 @@ const rerunCwlValidation = async () => {
 };
 
 const rerunCodefairChecks = async (rerunType: string) => {
+  hideConfirmation();
   push.info({
     title: "Submitting request",
     message:
@@ -186,9 +196,11 @@ const handleSettingsSelect = (key: any) => {
       );
     }
   } else if (key === "re-validate-license") {
-    rerunCodefairChecks("license");
+    // rerunCodefairChecks("license");
+    showConfirmation();
   } else if (key === "re-validate-metadata") {
-    rerunCodefairChecks("metadata");
+    // rerunCodefairChecks("metadata");
+    showConfirmation();
   }
 };
 </script>
@@ -228,8 +240,14 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #header-extra>
-          <div v-if="data?.licenseRequest?.containsLicense" class="flex flex-wrap space-x-2 items-center">
-            <n-tag v-if="data?.licenseRequest?.licenseStatus === 'valid'" type="success">
+          <div
+            v-if="data?.licenseRequest?.containsLicense"
+            class="flex flex-wrap items-center space-x-2"
+          >
+            <n-tag
+              v-if="data?.licenseRequest?.licenseStatus === 'valid'"
+              type="success"
+            >
               <template #icon>
                 <Icon name="icon-park-solid:check-one" size="16" />
               </template>
@@ -265,6 +283,18 @@ const handleSettingsSelect = (key: any) => {
                 </template>
               </n-button>
             </n-dropdown>
+
+            <n-modal
+              v-model:show="showModal"
+              :mask-closable="false"
+              preset="dialog"
+              title="Are you sure?"
+              content="Doing this action will overwrite any existing draft. Do you want to continue?"
+              positive-text="Confirm"
+              negative-text="Cancel"
+              @positive-click="rerunCodefairChecks('license')"
+              @negative-click="hideConfirmation"
+            />
           </div>
         </template>
 
@@ -292,14 +322,21 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #header-extra>
-          <n-flex v-if="
-            data?.licenseRequest?.containsLicense &&
-            data?.codeMetadataRequest?.containsMetadata
-          " class="align-middle items-center">
-            <n-tag v-if="data?.codeMetadataRequest?.containsCitation" :type="data?.codeMetadataRequest?.citationStatus === 'valid'
-                ? 'success'
-                : 'error'
-              ">
+          <n-flex
+            v-if="
+              data?.licenseRequest?.containsLicense &&
+              data?.codeMetadataRequest?.containsMetadata
+            "
+            class="items-center align-middle"
+          >
+            <n-tag
+              v-if="data?.codeMetadataRequest?.containsCitation"
+              :type="
+                data?.codeMetadataRequest?.citationStatus === 'valid'
+                  ? 'success'
+                  : 'error'
+              "
+            >
               <template #icon>
                 <Icon :name="data?.codeMetadataRequest?.citationStatus === 'valid'
                     ? 'icon-park-solid:check-one'
@@ -330,6 +367,18 @@ const handleSettingsSelect = (key: any) => {
                 </template>
               </n-button>
             </n-dropdown>
+
+            <n-modal
+              v-model:show="showModal"
+              :mask-closable="false"
+              preset="dialog"
+              title="Are you sure?"
+              content="Doing this action will overwrite any existing draft. Do you want to continue?"
+              positive-text="Confirm"
+              negative-text="Cancel"
+              @positive-click="rerunCodefairChecks('metadata')"
+              @negative-click="hideConfirmation"
+            />
           </n-flex>
         </template>
 
