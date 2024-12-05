@@ -32,157 +32,164 @@ export function convertDateToUnix(date) {
  * @returns {JSON} - The metadata object for the database
  */
 export async function convertCodemetaForDB(codemetaContent, repository) {
-  // eslint-disable-next-line prefer-const
-  const sortedAuthors = [];
-  // eslint-disable-next-line prefer-const
-  const sortedContributors = [];
-  if (codemetaContent?.author) {
-    codemetaContent?.author.forEach((author) => {
-      // If the author is a Person or Organization, we need to add them
-      if (author.type === "Person" || author.type === "Organization") {
-        sortedAuthors.push({
-          affiliation: author?.affiliation?.name || "",
-          email: author?.email || "",
-          familyName: author?.familyName || "",
-          givenName: author?.givenName || "",
-          roles: [], // Roles will be added later
-          uri: author?.id || "",
-        });
-      }
-    });
-
-    // Loop through the authors again to handle roles
-    codemetaContent?.author.forEach((author) => {
-      if (author.type === "Role") {
-        // Find the author that matches the "schema:author" field of the role
-        sortedAuthors.forEach((sortedAuthor) => {
-          if (sortedAuthor.uri === author?.["schema:author"]) {
-            // Create the role object
-            const roleObj = {
-              role: author.roleName || "",
-              startDate: author.startDate ? convertDateToUnix(author.startDate) : null,
-              endDate: author.endDate ? convertDateToUnix(author.endDate) : null,
-            };
-            // Add the role to the author's roles array
-            sortedAuthor.roles.push(roleObj);
-          }
-        });
-      }
-    });
-  }
-
-  if (codemetaContent?.contributor) {
-    // Loop through all contributors
-    codemetaContent?.contributor.forEach((contributor) => {
-      // If the contributor is a Person or Organization, we need to add them
-      if (contributor.type === "Person" || contributor.type === "Organization") {
-        sortedContributors.push({
-          affiliation: contributor?.affiliation?.name || "",
-          email: contributor?.email || "",
-          familyName: contributor?.familyName || "",
-          givenName: contributor?.givenName || "",
-          roles: [], // Roles will be added later
-          uri: contributor?.id || "",
-        });
-      }
-    });
-
-    // Loop through the contributors again to handle roles
-    codemetaContent?.contributor.forEach((contributor) => {
-      if (contributor.type === "Role") {
-        // Find the contributor that matches the "contributor" field of the role
-        sortedContributors.forEach((sortedContributor) => {
-          if (sortedContributor.uri === contributor?.contributor || sortedContributor.uri === contributor["schema:contributor"]) {
-            // Create the role object
-            const roleObj = {
-              role: contributor.roleName || "",
-              startDate: contributor.startDate ? convertDateToUnix(contributor.startDate) : null,
-              endDate: contributor.endDate ? convertDateToUnix(contributor.endDate) : null,
-            };
-            // Add the role to the contributor's roles array
-            sortedContributor.roles.push(roleObj);
-          }
-        });
-      }
-    });
-  }
-
-  for (let i = 0; i < sortedAuthors.length; i++) {
-    if (sortedAuthors[i].uri.startsWith("_:")) {
-      delete sortedAuthors[i].uri;
+  try {
+    consola.info("DFKJSLDKFJ")
+    // eslint-disable-next-line prefer-const
+    const sortedAuthors = [];
+    // eslint-disable-next-line prefer-const
+    const sortedContributors = [];
+    if (codemetaContent?.author) {
+      codemetaContent?.author.forEach((author) => {
+        // If the author is a Person or Organization, we need to add them
+        if (author.type === "Person" || author.type === "Organization") {
+          sortedAuthors.push({
+            affiliation: author?.affiliation?.name || "",
+            email: author?.email || "",
+            familyName: author?.familyName || "",
+            givenName: author?.givenName || "",
+            roles: [], // Roles will be added later
+            uri: author?.id || "",
+          });
+        }
+      });
+  
+      // Loop through the authors again to handle roles
+      codemetaContent?.author.forEach((author) => {
+        if (author.type === "Role") {
+          // Find the author that matches the "schema:author" field of the role
+          sortedAuthors.forEach((sortedAuthor) => {
+            if (sortedAuthor.uri === author?.["schema:author"]) {
+              // Create the role object
+              const roleObj = {
+                role: author.roleName || "",
+                startDate: author.startDate ? convertDateToUnix(author.startDate) : null,
+                endDate: author.endDate ? convertDateToUnix(author.endDate) : null,
+              };
+              // Add the role to the author's roles array
+              sortedAuthor.roles.push(roleObj);
+            }
+          });
+        }
+      });
     }
-  }
-
-  for (let i = 0; i < sortedContributors.length; i++) {
-    if (sortedContributors[i].uri.startsWith("_:")) {
-      delete sortedContributors[i].uri;
+  
+    if (codemetaContent?.contributor) {
+      // Loop through all contributors
+      codemetaContent?.contributor.forEach((contributor) => {
+        // If the contributor is a Person or Organization, we need to add them
+        if (contributor.type === "Person" || contributor.type === "Organization") {
+          sortedContributors.push({
+            affiliation: contributor?.affiliation?.name || "",
+            email: contributor?.email || "",
+            familyName: contributor?.familyName || "",
+            givenName: contributor?.givenName || "",
+            roles: [], // Roles will be added later
+            uri: contributor?.id || "",
+          });
+        }
+      });
+  
+      // Loop through the contributors again to handle roles
+      codemetaContent?.contributor.forEach((contributor) => {
+        if (contributor.type === "Role") {
+          // Find the contributor that matches the "contributor" field of the role
+          sortedContributors.forEach((sortedContributor) => {
+            if (sortedContributor.uri === contributor?.contributor || sortedContributor.uri === contributor["schema:contributor"]) {
+              // Create the role object
+              const roleObj = {
+                role: contributor.roleName || "",
+                startDate: contributor.startDate ? convertDateToUnix(contributor.startDate) : null,
+                endDate: contributor.endDate ? convertDateToUnix(contributor.endDate) : null,
+              };
+              // Add the role to the contributor's roles array
+              sortedContributor.roles.push(roleObj);
+            }
+          });
+        }
+      });
     }
-  }
-
-  const regex = /https:\/\/spdx\.org\/licenses\/(.*)/;
-  let licenseId = null;
-  if (codemetaContent?.license) {
-    const url = codemetaContent.license;
-    const match = url.match(regex);
-
-    if (match) {
-      licenseId = match[1];
+  
+    for (let i = 0; i < sortedAuthors.length; i++) {
+      if (sortedAuthors[i].uri.startsWith("_:")) {
+        delete sortedAuthors[i].uri;
+      }
     }
-  }
-
-  if (licenseId === null) {
-    // Fetch license details from database
-    const license = await dbInstance.licenseRequest.findUnique({
-      where: {
-        repository_id: repository.id,
-      },
-    });
-
-
-    if (license?.license_id) {
-      licenseId = `https://spdx.org/licenses/${license.license_id}`
+  
+    for (let i = 0; i < sortedContributors.length; i++) {
+      if (sortedContributors[i].uri.startsWith("_:")) {
+        delete sortedContributors[i].uri;
+      }
     }
-  }
+  
+    const regex = /https:\/\/spdx\.org\/licenses\/(.*)/;
+    let licenseId = null;
+    if (codemetaContent?.license) {
+      const url = codemetaContent.license;
+      const match = url.match(regex);
+  
+      if (match) {
+        licenseId = match[1];
+      }
+    }
+  
+    if (licenseId === null) {
+      // Fetch license details from database
+      const license = await dbInstance.licenseRequest.findUnique({
+        where: {
+          repository_id: repository.id,
+        },
+      });
+  
+  
+      if (license?.license_id) {
+        licenseId = `https://spdx.org/licenses/${license.license_id}`
+      }
+    }
 
-  return {
-    name: codemetaContent?.name || null,
-    applicationCategory: codemetaContent?.applicationCategory || null,
-    authors: sortedAuthors,
-    codeRepository: codemetaContent?.codeRepository || "",
-    continuousIntegration:
-      codemetaContent?.["codemeta:continuousIntegration"]?.id || "",
-    contributors: sortedContributors,
-    creationDate: codemetaContent?.dateCreated
-      ? convertDateToUnix(codemetaContent?.dateCreated)
-      : null,
-    currentVersion: codemetaContent?.version || "",
-    currentVersionDownloadURL: codemetaContent?.downloadUrl || "",
-    currentVersionReleaseDate: codemetaContent?.dateModified
-      ? convertDateToUnix(codemetaContent?.dateModified)
-      : null,
-    currentVersionReleaseNotes: codemetaContent?.["schema:releaseNotes"] || "",
-    description: codemetaContent?.description || "",
-    developmentStatus: codemetaContent?.developmentStatus || null,
-    firstReleaseDate: codemetaContent?.datePublished
-      ? convertDateToUnix(codemetaContent?.datePublished)
-      : null,
-    fundingCode: codemetaContent?.funding || "",
-    fundingOrganization: codemetaContent?.funder?.name || "",
-    isPartOf: codemetaContent?.isPartOf || "",
-    isSourceCodeOf: codemetaContent?.["codemeta:isSourceCodeOf"]?.id || "",
-    issueTracker: codemetaContent?.issueTracker || "",
-    keywords: codemetaContent?.keywords || [],
-    license: licenseId,
-    operatingSystem: codemetaContent?.operatingSystem || [],
-    otherSoftwareRequirements: codemetaContent?.softwareRequirements || [],
-    programmingLanguages: codemetaContent?.programmingLanguage || [],
-    referencePublication: codemetaContent?.referencePublication || "",
-    relatedLinks: codemetaContent?.relatedLink || [],
-    reviewAspect: codemetaContent?.reviewAspect || "",
-    reviewBody: codemetaContent?.reviewBody || "",
-    runtimePlatform: codemetaContent?.runtimePlatform || [],
-    uniqueIdentifier: codemetaContent?.identifier || "",
-  };
+    consola.warn("TESTING")
+  
+    return {
+      name: codemetaContent?.name || null,
+      applicationCategory: codemetaContent?.applicationCategory || null,
+      authors: sortedAuthors,
+      codeRepository: codemetaContent?.codeRepository || "",
+      continuousIntegration:
+        codemetaContent?.["codemeta:continuousIntegration"]?.id || "",
+      contributors: sortedContributors,
+      creationDate: codemetaContent?.dateCreated
+        ? convertDateToUnix(codemetaContent?.dateCreated)
+        : null,
+      currentVersion: codemetaContent?.version || "",
+      currentVersionDownloadURL: codemetaContent?.downloadUrl || "",
+      currentVersionReleaseDate: codemetaContent?.dateModified
+        ? convertDateToUnix(codemetaContent?.dateModified)
+        : null,
+      currentVersionReleaseNotes: codemetaContent?.["schema:releaseNotes"] || "",
+      description: codemetaContent?.description || "",
+      developmentStatus: codemetaContent?.developmentStatus || null,
+      firstReleaseDate: codemetaContent?.datePublished
+        ? convertDateToUnix(codemetaContent?.datePublished)
+        : null,
+      fundingCode: codemetaContent?.funding || "",
+      fundingOrganization: codemetaContent?.funder?.name || "",
+      isPartOf: codemetaContent?.isPartOf || "",
+      isSourceCodeOf: codemetaContent?.["codemeta:isSourceCodeOf"]?.id || "",
+      issueTracker: codemetaContent?.issueTracker || "",
+      keywords: codemetaContent?.keywords || [],
+      license: licenseId,
+      operatingSystem: codemetaContent?.operatingSystem || [],
+      otherSoftwareRequirements: codemetaContent?.softwareRequirements || [],
+      programmingLanguages: codemetaContent?.programmingLanguage || [],
+      referencePublication: codemetaContent?.referencePublication || "",
+      relatedLinks: codemetaContent?.relatedLink || [],
+      reviewAspect: codemetaContent?.reviewAspect || "",
+      reviewBody: codemetaContent?.reviewBody || "",
+      runtimePlatform: codemetaContent?.runtimePlatform || [],
+      uniqueIdentifier: codemetaContent?.identifier || "",
+    };
+  } catch (error) {
+    throw new Error("Error converting codemeta.json file to metadata object", { cause: error });
+  }
 }
 
 /**
@@ -623,7 +630,9 @@ export function applyDbMetadata(existingMetadataEntry, metadata) {
 export async function applyCodemetaMetadata(codemeta, metadata, repository) {
   consola.info("Codemeta found");
   try {
-    const codemetaContent = JSON.parse(codemeta.content);
+    // consola.warn("codemeta", codemeta.content.trim());
+    const codemetaContent = JSON.parse(codemeta.content.trim());
+    consola.info("DFSDKFJL:SD", codemetaContent);
     const convertedCodemeta = await convertCodemetaForDB(codemetaContent, repository);
     consola.info("convertedCodemeta", convertedCodemeta);
   
@@ -770,6 +779,7 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
   
     return metadata;
   } catch (error) {
+    consola.error("Error applying codemeta metadata", JSON.stringify(error));
     throw new Error("Error applying codemeta metadata", { cause: error });
   }
 }
@@ -848,115 +858,123 @@ export async function applyMetadataTemplate(
   owner,
   context,
 ) {
-  const githubAction = context.payload?.pusher?.name;
-  const identifier = createId();
-
-  // TODO: Move the workflow around to get the metadata from github api last
-  const url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata`;
-  let revalidate = true;
-  let containsCitation = subjects.citation,
-  containsCodemeta = subjects.codemeta,
-  validCitation = false,
-  validCodemeta = false;
-  const existingMetadata = await dbInstance.codeMetadata.findUnique({
-    where: {
-      repository_id: repository.id,
-    },
-  });
-  const dataObject = {
-    contains_citation: containsCitation,
-    contains_codemeta: containsCodemeta,
-    contains_metadata: containsCitation && containsCodemeta,
-  }
-
-  if (githubAction && githubAction !== `${GH_APP_NAME}[bot]`) {
-    // Push event was made, only update the metadata if the pusher updated the codemeta.json or citation.cff
-    consola.info("Push event detected");
-    const updatedFiles = context.payload.head_commit.modified;
-    const addedFiles = context.payload.head_commit.added;
-    revalidate = false;
-
-    if (updatedFiles.includes("codemeta.json") || updatedFiles.includes("CITATION.cff")) {
-      consola.info("Codemeta.json or CITATION.cff file was updated");
-      revalidate = true;
-    }
-
-    if (addedFiles.includes("codemeta.json") || addedFiles.includes("CITATION.cff")) {
-      consola.info("Codemeta.json or CITATION.cff file was added");
-      revalidate = true;
-    }
-  }
-
-  if (revalidate) {
-    // Revalidation steps
-    let metadata = await gatherMetadata(context, owner, repository);
-
-    if (existingMetadata?.metadata) {
-      containsCitation = existingMetadata.contains_citation;
-      containsCodemeta = existingMetadata.contains_metadata;
-      metadata = applyDbMetadata(existingMetadata, metadata);
-      consola.info("metadata afer db", JSON.stringify(metadata));
+  try {
+    const githubAction = context.payload?.pusher?.name;
+    const identifier = createId();
+  
+    // TODO: Move the workflow around to get the metadata from github api last
+    const url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata`;
+    let revalidate = true;
+    let containsCitation = subjects.citation,
+    containsCodemeta = subjects.codemeta,
+    validCitation = false,
+    validCodemeta = false;
+    const existingMetadata = await dbInstance.codeMetadata.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
+    });
+    const dataObject = {
+      contains_citation: containsCitation,
+      contains_codemeta: containsCodemeta,
+      contains_metadata: containsCitation && containsCodemeta,
     }
   
-    if (subjects.codemeta) {
-      const codemeta = await getCodemetaContent(context, owner, repository);
-      containsCodemeta = true;
-      validCodemeta = await validateMetadata(codemeta, "codemeta", repository);
-      metadata = await applyCodemetaMetadata(codemeta, metadata, repository);
-      consola.info("metadata after codemeta", JSON.stringify(metadata));
-    }
+    if (githubAction && githubAction !== `${GH_APP_NAME}[bot]`) {
+      // Push event was made, only update the metadata if the pusher updated the codemeta.json or citation.cff
+      consola.info("Push event detected");
+      const updatedFiles = context.payload.head_commit.modified;
+      const addedFiles = context.payload.head_commit.added;
+      revalidate = false;
   
-    if (subjects.citation) {
-      const citation = await getCitationContent(context, owner, repository);
-      containsCitation = true;
-      validCitation = await validateMetadata(citation, "citation", repository);
-      metadata = await applyCitationMetadata(citation, metadata, repository);
-      consola.info(metadata);
-      consola.info("metadata above should have the description and keywords");
-    }
-
-    // Add metadata to database object
-    dataObject.metadata = metadata;
-    dataObject.citation_status = validCitation ? "valid" : "invalid";
-    dataObject.codemeta_status = validCodemeta ? "valid" : "invalid";
-  }
-
-  if ((!subjects.codemeta || !subjects.citation) && subjects.license) {
-    // License was found but no codemeta.json or CITATION.cff exists
-    const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
-    baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemeta.json are expected at the root level of your repository. These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
-  }
-
-  if (subjects.codemeta && subjects.citation && subjects.license) {
-    const metadataBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-0ea5e9.svg)](${url}?)`;
-    baseTemplate += `\n\n## Metadata ✔️\n\nA CITATION.cff and a codemeta.json file are found in the repository. They may need to be updated over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
-  }
-
-  if (!existingMetadata) {
-    // Entry does not exist in db, create a new one
-    dataObject.identifier = identifier;
-    dataObject.repository = {
-      connect: {
-        id: repository.id,
+      if (updatedFiles.includes("codemeta.json") || updatedFiles.includes("CITATION.cff")) {
+        consola.info("Codemeta.json or CITATION.cff file was updated");
+        revalidate = true;
       }
-    };
+  
+      if (addedFiles.includes("codemeta.json") || addedFiles.includes("CITATION.cff")) {
+        consola.info("Codemeta.json or CITATION.cff file was added");
+        revalidate = true;
+      }
+    }
+  
+    if (revalidate) {
+      // Revalidation steps
+      let metadata = await gatherMetadata(context, owner, repository);
+  
+      if (existingMetadata?.metadata) {
+        containsCitation = existingMetadata.contains_citation;
+        containsCodemeta = existingMetadata.contains_metadata;
+        metadata = applyDbMetadata(existingMetadata, metadata);
+        consola.info("metadata afer db", JSON.stringify(metadata));
+      }
+    
+      if (subjects.codemeta) {
+        const codemeta = await getCodemetaContent(context, owner, repository);
+        console.log("HAHAHA")
+        containsCodemeta = true;
+        validCodemeta = await validateMetadata(codemeta, "codemeta", repository);
+        console.log("hehehehe", validCodemeta)
+        metadata = await applyCodemetaMetadata(codemeta, metadata, repository);
+        consola.info("metadata after codemeta", JSON.stringify(metadata));
+      }
+    
+      if (subjects.citation) {
+        const citation = await getCitationContent(context, owner, repository);
+        containsCitation = true;
+        validCitation = await validateMetadata(citation, "citation", repository);
+        metadata = await applyCitationMetadata(citation, metadata, repository);
+        consola.info(metadata);
+        consola.info("metadata above should have the description and keywords");
+      }
+  
+      // Add metadata to database object
+      dataObject.metadata = metadata;
+      dataObject.citation_status = validCitation ? "valid" : "invalid";
+      dataObject.codemeta_status = validCodemeta ? "valid" : "invalid";
+    }
+  
+    if ((!subjects.codemeta || !subjects.citation) && subjects.license) {
+      // License was found but no codemeta.json or CITATION.cff exists
+      const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
+      baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemeta.json are expected at the root level of your repository. These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
+    }
+  
+    if (subjects.codemeta && subjects.citation && subjects.license) {
+      const metadataBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-0ea5e9.svg)](${url}?)`;
+      baseTemplate += `\n\n## Metadata ✔️\n\nA CITATION.cff and a codemeta.json file are found in the repository. They may need to be updated over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
+    }
+  
+    if (!existingMetadata) {
+      // Entry does not exist in db, create a new one
+      dataObject.identifier = identifier;
+      dataObject.repository = {
+        connect: {
+          id: repository.id,
+        }
+      };
+  
+      await dbInstance.codeMetadata.create({
+        data: dataObject,
+      });
+    } else {
+      // Get the identifier of the existing metadata request
+      await dbInstance.codeMetadata.update({
+        data: dataObject,
+        where: { repository_id: repository.id },
+      });
+    }
+  
+    if (!subjects.license) {
+      // License was not found
+      const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
+      baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n${metadataBadge}`;
+    }
+  
+    return baseTemplate;
 
-    await dbInstance.codeMetadata.create({
-      data: dataObject,
-    });
-  } else {
-    // Get the identifier of the existing metadata request
-    await dbInstance.codeMetadata.update({
-      data: dataObject,
-      where: { repository_id: repository.id },
-    });
+  } catch (error) {
+    consola.error("Error applying metadata template", error);
+    throw new Error("Error applying metadata template", { cause: error });
   }
-
-  if (!subjects.license) {
-    // License was not found
-    const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
-    baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n${metadataBadge}`;
-  }
-
-  return baseTemplate;
 }

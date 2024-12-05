@@ -91,7 +91,6 @@ if (error.value) {
           </n-flex>
         </n-collapse-item>
       </n-collapse>
-      <pre>{{ data }}</pre>
     </n-flex>
   </main>
 </template>
