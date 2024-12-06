@@ -346,6 +346,10 @@
       },
       "uniqueItems": true
     },
+    "releaseNotes": {
+      "type": "string",
+      "description": "The release notes of the software."
+    },
     "schema:releaseNotes": {
       "type": "string",
       "description": "The release notes of the software."
@@ -366,5 +370,6 @@
       "type": "string",
       "description": "The type of software."
     }
-  }
+  },
+  "required": ["@context", "type", "author", "name", "license"]
 }
