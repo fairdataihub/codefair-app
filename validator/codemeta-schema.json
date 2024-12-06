@@ -22,44 +22,126 @@
       "description": "The authors of the software package.",
       "minItems": 1,
       "items": {
-        "type": "object",
-        "properties": {
-          "affiliation": {
+        "oneOf": [
+          {
             "type": "object",
-            "description": "The affiliation of the author.",
+            "description": "Person or Organization (common to 2.0 and 3.0)",
             "properties": {
-              "name": {
+              "id": {
                 "type": "string",
-                "description": "The name of the affiliation."
+                "description": "The URI of the author."
               },
               "type": {
                 "type": "string",
-                "description": "Organization or Person"
+                "description": "Type of the entity (Person or Organization)",
+                "enum": [
+                  "Person",
+                  "Organization"
+                ]
+              },
+              "affiliation": {
+                "type": "object",
+                "description": "The affiliation of the author.",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The name of the affiliation."
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Organization or Person"
+                  }
+                }
+              },
+              "email": {
+                "type": "string",
+                "description": "The email address of the author."
+              },
+              "familyName": {
+                "type": "string",
+                "description": "The family name of the author."
+              },
+              "givenName": {
+                "type": "string",
+                "description": "The given name of the author.",
+                "minLength": 1
               }
-            }
+            },
+            "required": [
+              "type"
+            ]
           },
-          "email": {
-            "type": "string",
-            "description": "The email address of the author."
+          {
+            "type": "object",
+            "description": "Role (3.0 format)",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "The type of the role.",
+                "enum": [
+                  "Role"
+                ]
+              },
+              "schema:author": {
+                "type": "string",
+                "description": "The URI of the author."
+              },
+              "roleName": {
+                "type": "string",
+                "description": "The role name."
+              },
+              "startDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Start date of the role."
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date",
+                "description": "End date of the role."
+              }
+            },
+            "required": [
+              "type",
+              "schema:author"
+            ]
           },
-          "familyName": {
-            "type": "string",
-            "description": "The family name of the author."
-          },
-          "givenName": {
-            "type": "string",
-            "description": "The given name of the author.",
-            "minLength": 1
-          },
-          "id": {
-            "type": "string",
-            "description": "The URI of the author."
-          },
-          "type": {
-            "type": "string",
-            "description": "Organization or Person"
+          {
+            "type": "object",
+            "description": "Role (2.0 format)",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "The type of the role.",
+                "enum": [
+                  "schema:Role"
+                ]
+              },
+              "schema:author": {
+                "type": "string",
+                "description": "The URI of the author."
+              },
+              "schema:roleName": {
+                "type": "string",
+                "description": "The role name."
+              },
+              "schema:startDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Start date of the role."
+              },
+              "schema:endDate": {
+                "type": "string",
+                "format": "date",
+                "description": "End date of the role."
+              }
+            },
+            "required": [
+              "type",
+              "schema:author"
+            ]
           }
-        }
+        ]
       }
     },
     "applicationCategory": {
@@ -264,6 +346,10 @@
       },
       "uniqueItems": true
     },
+    "releaseNotes": {
+      "type": "string",
+      "description": "The release notes of the software."
+    },
     "schema:releaseNotes": {
       "type": "string",
       "description": "The release notes of the software."
@@ -284,5 +370,6 @@
       "type": "string",
       "description": "The type of software."
     }
-  }
+  },
+  "required": ["@context", "type", "author", "name", "license"]
 }
