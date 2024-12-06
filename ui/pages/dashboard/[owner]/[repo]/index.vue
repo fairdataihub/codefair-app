@@ -372,7 +372,7 @@ const handleSettingsSelect = (key: any) => {
                   </n-tag>
                 </span>
               </template>
-              <span v-if="data?.codeMetadataRequest?.codemetaStatus === 'valid'">Your codemeta.json is valid</span>
+              <span v-if="data?.codeMetadataRequest?.codemetaStatus === 'valid'">codemeta.json is valid</span>
               <span v-else>Errors found in your file. View the report below</span>
             </n-popover>
 
