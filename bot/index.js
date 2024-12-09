@@ -583,9 +583,6 @@ export default async (app, { getRouter }) => {
         }
 
         // Define the replacement string with the new metadata PR badge
-        consola.info("Updating the metadata PR badge");
-        consola.info("Owner:", owner);
-        consola.info("Repository:", repository.name);
         const metadataPRBadge = `A pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
 
         // Perform the replacement while preserving the identifier
@@ -593,7 +590,6 @@ export default async (app, { getRouter }) => {
           `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)`,
           `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)\n\n${metadataPRBadge}`
         );
-        consola.info(issueBody);
       }
 
       // Update the issue with the new body
@@ -884,8 +880,7 @@ export default async (app, { getRouter }) => {
         if (metadata.currentVersionReleaseDate) {
           metadata.currentVersionReleaseDate = convertDateToUnix(metadata.currentVersionReleaseDate);
         }
-  
-        consola.warn("Metadata:", JSON.stringify(metadata, null, 2));
+
         // update the database with the metadata information
         if (existingMetadataEntry) {
           await db.codeMetadata.update({

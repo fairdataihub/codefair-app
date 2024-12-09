@@ -70,13 +70,10 @@ export function getCWLFiles(context, owner, repoName) {
             }
           });
   
-          if (existingCWL) {
-            if (existingCWL?.contains_cwl_files) {
-              cwlObject.contains_cwl_files = existingCWL.contains_cwl_files;
-            }
+          if (existingCWL && existingCWL?.contains_cwl_files) {
+            cwlObject.contains_cwl_files = existingCWL.contains_cwl_files;
           }
 
-          consola.info(cwlObject.files);
           cwlObject.contains_cwl_files = cwlObject.files.length > 0;
   
           resolve(cwlObject);

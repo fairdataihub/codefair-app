@@ -33,7 +33,6 @@ export function convertDateToUnix(date) {
  */
 export async function convertCodemetaForDB(codemetaContent, repository) {
   try {
-    consola.info("DFKJSLDKFJ")
     // eslint-disable-next-line prefer-const
     const sortedAuthors = [];
     // eslint-disable-next-line prefer-const
@@ -145,8 +144,6 @@ export async function convertCodemetaForDB(codemetaContent, repository) {
         licenseId = `https://spdx.org/licenses/${license.license_id}`
       }
     }
-
-    consola.warn("TESTING")
   
     return {
       name: codemetaContent?.name || null,
@@ -666,9 +663,7 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
         consola.error("Error parsing codemeta content", error);
         return;
     }
-    consola.info("DFSDKFJL:SD", codemetaContent);
     const convertedCodemeta = await convertCodemetaForDB(codemetaContent, repository);
-    consola.info("convertedCodemeta", convertedCodemeta);
   
     metadata.name = convertedCodemeta.name || metadata.name || "";
     metadata.applicationCategory = convertedCodemeta.applicationCategory || metadata.applicationCategory || null;
@@ -710,7 +705,6 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
             if (!foundAuthor?.roles) {
               foundAuthor.roles = [];
             }
-            consola.info("foundAuthor in codemeta", foundAuthor);
             const mergedRoles = [
               ...foundAuthor.roles,
               ...author.roles.filter(
@@ -822,8 +816,6 @@ export async function applyCitationMetadata(citation, metadata, repository) {
   consola.info("Citation found");
   const citationContent = yaml.load(citation.content);
   const convertedCitation = await convertCitationForDB(citationContent, repository);
-  consola.warn("convertedCitation", convertedCitation.description);
-  consola.warn("convertedCitation", convertedCitation.keywords);
 
   metadata.license = convertedCitation.license || metadata.license || null;
   metadata.codeRepository = convertedCitation.codeRepository || metadata.codeRepository || "";
@@ -843,9 +835,6 @@ export async function applyCitationMetadata(citation, metadata, repository) {
             existingAuthor.familyName === author.familyName &&
             existingAuthor.givenName === author.givenName
         );
-  
-        consola.info("foundAuthor in citation", foundAuthor);
-        consola.info("author", author);
   
         if (foundAuthor) {
           // Update author details, preserving information from convertedCitation
