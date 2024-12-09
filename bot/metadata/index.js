@@ -407,10 +407,8 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
         const data = await response.json();
         consola.info("Codemeta validation response", data);
 
-        let validationMessage = "";
-        if (data.message === "valid") {
-          validationMessage = `The codemeta.json file is valid according to the ${data.version} codemeta.json schema.`;
-        } else {
+        let validationMessage = `The codemeta.json file is valid according to the ${data.version} codemeta.json schema.`;
+        if (data.message !== "valid") {
           validationMessage = data.error;
         }
 

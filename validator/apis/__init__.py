@@ -231,4 +231,5 @@ class ValidateCodemeta(Resource):
             return {
                 "message": "invalid",
                 "error": str(e.message + " at " + str(e.validator_value)),
+                "version": codemeta_version,
             }, 200
