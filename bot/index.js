@@ -21,7 +21,7 @@ import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
 import { getZenodoDepositionInfo, createZenodoMetadata, updateZenodoMetadata, uploadReleaseAssetsToZenodo, parseZenodoInfo, getZenodoToken, publishZenodoDeposition, updateGitHubRelease } from "./archival/index.js";
-import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier, convertCodemetaForDB, convertCitationForDB, gatherMetadata, convertDateToUnix, applyDbMetadata, applyCodemetaMetadata, applyCitationMetadata } from "./metadata/index.js";
+import { validateMetadata, getCitationContent, getCodemetaContent, updateMetadataIdentifier, gatherMetadata, convertDateToUnix, applyDbMetadata, applyCodemetaMetadata, applyCitationMetadata } from "./metadata/index.js";
 
 checkEnvVariable("GH_APP_NAME");
 checkEnvVariable("CODEFAIR_APP_DOMAIN");
@@ -442,7 +442,7 @@ export default async (app, { getRouter }) => {
     }
 
     cwlObject.contains_cwl_files = cwlObject.files.length > 0 || false;
-    cwlObject.files = cwl.filter(file => !removedCWLFiles.includes(file.path));
+    cwlObject.files = cwlObject.files.filter(file => !removedCWLFiles.includes(file.path));
     cwlObject.removed_files = removedCWLFiles;
 
     const cwlExists = await db.cwlValidation.findUnique({
@@ -583,9 +583,6 @@ export default async (app, { getRouter }) => {
         }
 
         // Define the replacement string with the new metadata PR badge
-        consola.info("Updating the metadata PR badge");
-        consola.info("Owner:", owner);
-        consola.info("Repository:", repository.name);
         const metadataPRBadge = `A pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${prLink})`;
 
         // Perform the replacement while preserving the identifier
@@ -593,7 +590,6 @@ export default async (app, { getRouter }) => {
           `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)`,
           `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)\n\n${metadataPRBadge}`
         );
-        consola.info(issueBody);
       }
 
       // Update the issue with the new body
@@ -765,7 +761,10 @@ export default async (app, { getRouter }) => {
         const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
         const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
         await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
-        throw new Error("Error rerunning license validation", error);
+        if (error.cause) {
+          consola.error(error.cause);
+        }
+        throw new Error("Error rerunning full repo validation", error);
       }
     }
 
@@ -881,8 +880,7 @@ export default async (app, { getRouter }) => {
         if (metadata.currentVersionReleaseDate) {
           metadata.currentVersionReleaseDate = convertDateToUnix(metadata.currentVersionReleaseDate);
         }
-  
-        consola.warn("Metadata:", JSON.stringify(metadata, null, 2));
+
         // update the database with the metadata information
         if (existingMetadataEntry) {
           await db.codeMetadata.update({
@@ -920,6 +918,9 @@ export default async (app, { getRouter }) => {
         const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
         const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
         await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+        if (error.cause) {
+          consola.error(error.cause);
+        }
         throw new Error("Error rerunning metadata validation", error);
       }
     }

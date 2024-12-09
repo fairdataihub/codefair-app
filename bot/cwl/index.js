@@ -61,23 +61,25 @@ export function getCWLFiles(context, owner, repoName) {
 
     // Call the async function and handle its promise
     searchDirectory("")
-      .then(async () => {
-        // Check if the db entry exists for the repository
-        const existingCWL = await dbInstance.cwlValidation.findUnique({
-          where: {
-            repository_id: context.payload.repository.id,
-          }
-        });
-
-        if (existingCWL) {
-          if (existingCWL?.contains_cwl_files) {
+      .then(async () => {        
+        try {
+          // Check if the db entry exists for the repository
+          const existingCWL = await dbInstance.cwlValidation.findUnique({
+            where: {
+              repository_id: context.payload.repository.id,
+            }
+          });
+  
+          if (existingCWL && existingCWL?.contains_cwl_files) {
             cwlObject.contains_cwl_files = existingCWL.contains_cwl_files;
           }
+
+          cwlObject.contains_cwl_files = cwlObject.files.length > 0;
+  
+          resolve(cwlObject);
+        } catch (error) {
+          throw new Error("Error fetching CWL files from the repository", { cause: error });
         }
-
-        cwlObject.contains_cwl_files = cwlFiles.files.length > 0;
-
-        resolve(cwlObject);
       })
       .catch(reject);
   });
