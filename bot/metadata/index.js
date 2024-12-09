@@ -895,10 +895,12 @@ export async function applyMetadataTemplate(
   try {
     const githubAction = context.payload?.pusher?.name;
     const identifier = createId();
-  
+
     // TODO: Move the workflow around to get the metadata from github api last
     const url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata`;
     let revalidate = true;
+    let revalidateCitation = true;
+    let revalidateCodemeta = true;
     let containsCitation = subjects.citation,
     containsCodemeta = subjects.codemeta,
     validCitation = false,
@@ -920,14 +922,16 @@ export async function applyMetadataTemplate(
       const updatedFiles = context.payload.head_commit.modified;
       const addedFiles = context.payload.head_commit.added;
       revalidate = false;
-  
-      if (updatedFiles.includes("codemeta.json") || updatedFiles.includes("CITATION.cff")) {
-        consola.info("Codemeta.json or CITATION.cff file was updated");
+      revalidateCitation = false;
+      revalidateCodemeta = false;
+
+      if (updatedFiles.includes("codemeta.json") || addedFiles.includes("codemeta.json")) {
+        revalidateCodemeta = true;
         revalidate = true;
       }
-  
-      if (addedFiles.includes("codemeta.json") || addedFiles.includes("CITATION.cff")) {
-        consola.info("Codemeta.json or CITATION.cff file was added");
+
+      if (updatedFiles.includes("CITATION.cff") || addedFiles.includes("CITATION.cff")) {
+        revalidateCitation = true;
         revalidate = true;
       }
     }
@@ -940,26 +944,20 @@ export async function applyMetadataTemplate(
         containsCitation = existingMetadata.contains_citation;
         containsCodemeta = existingMetadata.contains_metadata;
         metadata = applyDbMetadata(existingMetadata, metadata);
-        consola.info("metadata afer db", JSON.stringify(metadata));
       }
     
-      if (subjects.codemeta) {
+      if (subjects.codemeta && revalidateCodemeta) {
         const codemeta = await getCodemetaContent(context, owner, repository);
-        console.log("HAHAHA")
         containsCodemeta = true;
         validCodemeta = await validateMetadata(codemeta, "codemeta", repository);
-        console.log("hehehehe", validCodemeta)
         metadata = await applyCodemetaMetadata(codemeta, metadata, repository);
-        consola.info("metadata after codemeta", JSON.stringify(metadata));
       }
     
-      if (subjects.citation) {
+      if (subjects.citation && revalidateCitation) {
         const citation = await getCitationContent(context, owner, repository);
         containsCitation = true;
         validCitation = await validateMetadata(citation, "citation", repository);
         metadata = await applyCitationMetadata(citation, metadata, repository);
-        consola.info(metadata);
-        consola.info("metadata above should have the description and keywords");
       }
   
       // Add metadata to database object
