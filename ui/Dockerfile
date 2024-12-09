@@ -16,7 +16,6 @@ COPY package.json yarn.lock ./
 COPY prisma ./prisma/
 
 RUN yarn install --frozen-lockfile \
-  && yarn prisma:migrate:deploy \
   && yarn prisma:generate \
   && yarn cache clean
 
@@ -35,6 +34,7 @@ RUN apk add --no-cache openssl
 WORKDIR /app
 
 # Copy only the necessary files from builder stage
+COPY --from=builder /app/package.json ./
 COPY --from=builder /app/.output ./
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
