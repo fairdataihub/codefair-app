@@ -14,7 +14,6 @@ COPY package.json yarn.lock ./
 COPY prisma ./prisma/
 
 RUN yarn install --frozen-lockfile \
-  && yarn prisma:migrate:deploy \
   && yarn prisma:generate \
   && yarn cache clean
 
