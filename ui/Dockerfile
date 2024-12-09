@@ -8,15 +8,12 @@ WORKDIR /app
 
 # Only needed for prisma build
 ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-ENV NODE_ENV=production
 
 # Copy only necessary files for dependency installation
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
 
 RUN yarn install --frozen-lockfile \
-  && yarn prisma:migrate:deploy \
   && yarn prisma:generate \
   && yarn cache clean
 
@@ -35,13 +32,14 @@ RUN apk add --no-cache openssl
 WORKDIR /app
 
 # Copy only the necessary files from builder stage
+# COPY --from=builder /app/package.json ./
 COPY --from=builder /app/.output ./
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Create startup script that runs migrations before starting the app
 RUN echo '#!/bin/sh' > /app/start.sh && \
-  echo 'npm run prisma:migrate:deploy' >> /app/start.sh && \
+  # echo 'npm run prisma:migrate:deploy' >> /app/start.sh && \
   echo 'exec node /app/server/index.mjs' >> /app/start.sh && \
   chmod +x /app/start.sh
 
