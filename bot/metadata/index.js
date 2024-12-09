@@ -391,7 +391,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
 
       consola.start("Sending content to metadata validator");
       try {
-        const response = await fetch("http://127.0.0.1:5000/validate-codemeta", {
+        const response = await fetch("https://staging-validator.codefair.io/validate-codemeta", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -460,7 +460,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
 
       try {
         // TODO: CHANGE THIS BEFORE DEPLOYING TO MAIN
-        const response = await fetch("http://127.0.0.1:5000/validate-citation", {
+        const response = await fetch("https://staging-validator.codefair.io/validate-citation", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
