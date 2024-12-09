@@ -7,7 +7,7 @@ import {
   createId,
 } from "../utils/tools/index.js";
 import dbInstance from "../db.js";
-import { error } from "../utils/logwatch.js";
+import { logwatch } from "../utils/logwatch.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const { GH_APP_NAME } = process.env;
@@ -428,7 +428,14 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
         );
 
         if (!response.ok) {
-          error(`error parsing the codemeta.json file: ${response.status}`);
+          logwatch.error(
+            {
+              status: response.status,
+              error: response.json(),
+              file: "codemeta.json",
+            },
+            true,
+          );
           throw new Error(
             "Error validating the codemeta.json file",
             response.json(),
@@ -454,7 +461,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
 
         return data.message === "valid";
       } catch (error) {
-        error(`error parsing the codemeta.json file: ${error.message}`);
+        logwatch.error("error parsing the codemeta.json file");
         consola.error("Error validating the codemeta.json file", error);
 
         return false;
