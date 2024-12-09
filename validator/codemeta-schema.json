@@ -378,5 +378,5 @@
       "description": "The type of software."
     }
   },
-  "required": ["@context", "type", "author", "name", "license"]
+  "required": ["@context", "author", "name", "license"]
 }
