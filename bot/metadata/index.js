@@ -914,6 +914,13 @@ export async function applyMetadataTemplate(
       revalidateCitation = false;
       revalidateCodemeta = false;
 
+      if (addedFiles.includes("LICENSE") || updatedFiles.includes("LICENSE")) {
+        // License file was added or updated
+        revalidateCodemeta = true;
+        revalidateCitation = true;
+        revalidate = true;
+      }
+
       if (updatedFiles.includes("codemeta.json") || addedFiles.includes("codemeta.json")) {
         revalidateCodemeta = true;
         revalidate = true;
