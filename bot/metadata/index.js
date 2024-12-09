@@ -388,8 +388,9 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
     try {
       const cleanContent = metadataInfo.content.trim();
       const normalizedContent = cleanContent.replace(/^\uFEFF/, ""); // Remove BOM if present
+      let loaded_file = null;
       try {
-        JSON.parse(normalizedContent);
+        loaded_file = JSON.parse(normalizedContent);
       } catch (error) {
         await dbInstance.codeMetadata.update({
           where: {
@@ -402,7 +403,6 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
         });
         return false;
       }
-      const loaded_file = JSON.parse(normalizedContent);
       // Verify the required fields are present
       if (
         !loaded_file.name ||
