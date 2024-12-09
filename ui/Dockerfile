@@ -8,12 +8,14 @@ WORKDIR /app
 
 # Only needed for prisma build
 ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
 
 # Copy only necessary files for dependency installation
 COPY package.json yarn.lock ./
 COPY prisma ./prisma/
 
 RUN yarn install --frozen-lockfile \
+  && yarn prisma:migrate:deploy \
   && yarn prisma:generate \
   && yarn cache clean
 
