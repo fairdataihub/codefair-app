@@ -203,3 +203,26 @@ jobs:
       # Deploy the app for all other times
       - run: kamal redeploy
       # - run: kamal redeploy --verbose
+
+  migrate-db:
+    runs-on: ubuntu-latest
+    environment: stg
+    defaults:
+      run:
+        working-directory: ui
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'yarn'
+
+      - run: yarn install
+
+      - run: yarn prisma:generate
+
+      - run: yarn prisma:migrate:deploy
