@@ -116,6 +116,12 @@ class Logwatch {
     consola.fatal(message);
     this._sendLog("critical", message, isJson ? "json" : "text");
   }
+
+  /** Explicit JSON logging */
+  json(level = "debug", message) {
+    consola[level](message);
+    this._sendLog(level, message, "json");
+  }
 }
 
 // Create and export a singleton instance
@@ -135,12 +141,13 @@ export { Logwatch };
 // ~Text logging~
 // logwatch.info("This is a text log");
 
-// ~JSON logging~
+// ~JSON logging~ (2 ways to do it)
 // logwatch.debug({
 //   userId: 123,
 //   action: 'login',
 //   timestamp: new Date()
 // }, true);
+// logwatch.json('error', { message: 'Something went wrong' })
 
 // ~Automatic string conversion~
 // logwatch.warn({ key: 'value' });  // Will convert to string
