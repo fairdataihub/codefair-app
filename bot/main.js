@@ -1,9 +1,12 @@
 import { Server, Probot } from "probot";
 import app from "./index.js";
+import { info } from "./utils/logwatch.js";
 // import "dotenv/config";
 const privateKey = process.env.GH_APP_PRIVATE_KEY.replace(/\\n/g, "\n");
 
 async function startServer() {
+  info("Starting server...");
+
   const server = new Server({
     port: process.env.PORT || 3000,
     Probot: Probot.defaults({
