@@ -653,62 +653,73 @@ export default async (app, { getRouter }) => {
     if (
       issueBody.includes("<!-- @codefair-bot rerun-cwl-validation -->")
     ) {
-      consola.start("Rerunning CWL Validation...");
-
-      const cwl = await getCWLFiles(context, owner, repository.name);
-
-      // Remove the section from the issue body starting from ## Language Specific Standards
-      const slicedBody = issueBody.substring(
-        0,
-        issueBody.indexOf("## Language Specific Standards"),
-      );
-
-      const cwlObject = {
-        contains_cwl_files: cwl.length > 0 || false,
-        files: cwl,
-        removed_files: [],
-      };
-
-      const cwlExists = await db.cwlValidation.findUnique({
-        where: {
-          repository_id: repository.id,
-        },
-      });
-
-      if (cwlExists) {
-        cwlObject.contains_cwl_files = cwlExists.contains_cwl_files;
-
-        if (cwlExists.files.length > 0) {
-          // Remove the files that are not in cwlObject
-          const cwlFilePaths = cwlObject.files.map((file) => file.path);
-          cwlObject.removed_files = cwlExists.files.filter((file) => {
-            return !cwlFilePaths.includes(file.path);
-          });
+      try {
+        consola.start("Rerunning CWL Validation...");
+  
+        const cwl = await getCWLFiles(context, owner, repository.name);
+  
+        // Remove the section from the issue body starting from ## Language Specific Standards
+        const slicedBody = issueBody.substring(
+          0,
+          issueBody.indexOf("## Language Specific Standards"),
+        );
+  
+        const cwlObject = {
+          contains_cwl_files: cwl.length > 0 || false,
+          files: cwl,
+          removed_files: [],
+        };
+  
+        const cwlExists = await db.cwlValidation.findUnique({
+          where: {
+            repository_id: repository.id,
+          },
+        });
+  
+        if (cwlExists) {
+          cwlObject.contains_cwl_files = cwlExists.contains_cwl_files;
+  
+          if (cwlExists.files.length > 0) {
+            // Remove the files that are not in cwlObject
+            const cwlFilePaths = cwlObject.files.map((file) => file.path);
+            cwlObject.removed_files = cwlExists.files.filter((file) => {
+              return !cwlFilePaths.includes(file.path);
+            });
+          }
         }
+  
+        const subjects = {
+          cwl: cwlObject,
+        };
+  
+        // This will also update the database
+        const updatedIssueBody = await applyCWLTemplate(
+          subjects,
+          slicedBody,
+          repository,
+          owner,
+          context,
+        );
+  
+        // Update the issue with the new body
+        await context.octokit.issues.update({
+          body: updatedIssueBody,
+          issue_number: context.payload.issue.number,
+          owner,
+          repo: repository.name,
+        });
+  
+        consola.success("CWL Validation rerun successfully!");
+      } catch (error) {
+        // Remove the command from the issue body
+        const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
+        const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
+        await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+        if (error.cause) {
+          consola.error(error.cause);
+        }
+        throw new Error("Error rerunning full repo validation", error);
       }
-
-      const subjects = {
-        cwl: cwlObject,
-      };
-
-      // This will also update the database
-      const updatedIssueBody = await applyCWLTemplate(
-        subjects,
-        slicedBody,
-        repository,
-        owner,
-        context,
-      );
-
-      // Update the issue with the new body
-      await context.octokit.issues.update({
-        body: updatedIssueBody,
-        issue_number: context.payload.issue.number,
-        owner,
-        repo: repository.name,
-      });
-
-      consola.success("CWL Validation rerun successfully!");
     }
 
     if (

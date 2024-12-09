@@ -233,3 +233,8 @@ class ValidateCodemeta(Resource):
                 "error": str(e.message + " at " + str(e.validator_value)),
                 "version": codemeta_version,
             }, 200
+        except Exception as e:
+            return {
+                "message": "Validation Error",
+                "error": f"Unexpected error: {str(e)}",
+            }, 400

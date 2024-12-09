@@ -428,17 +428,18 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
         );
 
         if (!response.ok) {
+          const data = await response.json();
           logwatch.error(
             {
               status: response.status,
-              error: response.json(),
+              error: data,
               file: "codemeta.json",
             },
             true,
           );
           throw new Error(
             "Error validating the codemeta.json file",
-            response.json(),
+            data,
           );
         }
         const data = await response.json();
@@ -461,7 +462,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
 
         return data.message === "valid";
       } catch (error) {
-        logwatch.error("error parsing the codemeta.json file");
+        logwatch.error(`error parsing the codemeta.json file: ${error}`);
         consola.error("Error validating the codemeta.json file", error);
 
         return false;
