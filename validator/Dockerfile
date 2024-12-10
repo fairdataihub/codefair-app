@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
 COPY apis ./apis
-COPY config.py app.py entrypoint.sh ./ 
+COPY config.py app.py entrypoint.sh codemeta-schema.json ./ 
 
 # Optional: Ensure the entrypoint script is executable
 RUN chmod +x entrypoint.sh

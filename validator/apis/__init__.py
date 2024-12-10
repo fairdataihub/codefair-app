@@ -219,7 +219,7 @@ class ValidateCodemeta(Resource):
                 "error": "Unsupported codemeta version",
             }, 400
         try:
-            with open("../codemeta-schema.json", "r", encoding="utf-8") as f:
+            with open("./codemeta-schema.json", "r", encoding="utf-8") as f:
                 schema = json.load(f)
                 jsonschema.validate(file_content, schema)
 
