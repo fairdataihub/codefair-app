@@ -742,6 +742,14 @@ export function applyDbMetadata(existingMetadataEntry, metadata) {
   metadata.uniqueIdentifier =
     existingMetadata.uniqueIdentifier || metadata.uniqueIdentifier || "";
 
+  // Ensure authors and contributors have a role key
+  metadata.authors = metadata.authors.map((author) => {
+    if (!author.roles) {
+      author.roles = [];
+    }
+    return author;
+  });
+
   return metadata;
 }
 
