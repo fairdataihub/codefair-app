@@ -79,7 +79,7 @@ export function getCWLFiles(context, owner, repository) {
           resolve(cwlObject);
         } catch (error) {
           console.log("Error getting CWL files:", error);
-          throw new Error("::::", JSON.stringify(error), { cause: error });
+          throw new Error("Error getting the CWL files: ", JSON.stringify(error), { cause: error });
         }
       })
       .catch(reject);
