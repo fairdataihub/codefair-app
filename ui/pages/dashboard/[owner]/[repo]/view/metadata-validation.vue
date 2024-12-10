@@ -16,8 +16,6 @@ const { data, error } = await useFetch(`/api/${owner}/${repo}/metadata-validatio
   headers: useRequestHeaders(["cookie"]),
 });
 
-console.log(data);
-
 breadcrumbsStore.setFeature({
   id: "view-metadata-validation",
   name: "View metadata Validation",
