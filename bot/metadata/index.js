@@ -282,8 +282,6 @@ export async function gatherMetadata(context, owner, repo) {
     url = repoData.data.homepage;
   }
 
-  consola.success("Metadata gathered!");
-
   const codeMeta = {
     name: repoData.data.name,
     applicationCategory: null,

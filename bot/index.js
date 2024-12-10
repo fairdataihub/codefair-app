@@ -4,7 +4,7 @@ import * as express from "express";
 import { consola } from "consola";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
 import dbInstance from "./db.js";
-import yaml from "js-yaml";
+import { logwatch } from "./utils/logwatch.js";
 import {
   checkEnvVariable,
   isRepoEmpty,
@@ -654,7 +654,7 @@ export default async (app, { getRouter }) => {
       issueBody.includes("<!-- @codefair-bot rerun-cwl-validation -->")
     ) {
       try {
-        consola.start("Rerunning CWL Validation...");
+        logwatch.start("Rerunning CWL Validation...");
   
         const cwl = await getCWLFiles(context, owner, repository.name);
   
@@ -709,14 +709,14 @@ export default async (app, { getRouter }) => {
           repo: repository.name,
         });
   
-        consola.success("CWL Validation rerun successfully!");
+        logwatch.success("CWL Validation rerun successfully!");
       } catch (error) {
         // Remove the command from the issue body
         const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
         const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
         await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
         if (error.cause) {
-          consola.error(error.cause);
+          logwatch.error(error.cause);
         }
         throw new Error("Error rerunning full repo validation", error);
       }
@@ -725,7 +725,7 @@ export default async (app, { getRouter }) => {
     if (
       issueBody.includes("<!-- @codefair-bot rerun-full-repo-validation -->")
     ) {
-      consola.start("Rerunning full repository validation...");
+      logwatch.start("Rerunning full repository validation...");
       try {
         const license = await checkForLicense(context, owner, repository.name);
         const citation = await checkForCitation(context, owner, repository.name);
@@ -773,7 +773,7 @@ export default async (app, { getRouter }) => {
         const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
         await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
         if (error.cause) {
-          consola.error(error.cause);
+          logwatch.error(error.cause);
         }
         throw new Error("Error rerunning full repo validation", error);
       }
@@ -781,7 +781,7 @@ export default async (app, { getRouter }) => {
 
     if (issueBody.includes("<!-- @codefair-bot rerun-license-validation -->")) {
       // Run the license validation again
-      consola.start("Rerunning License Validation...");
+      logwatch.start("Rerunning License Validation...");
       try {
         const licenseRequest = await context.octokit.rest.licenses.getForRepo({
           owner,
@@ -802,7 +802,7 @@ export default async (app, { getRouter }) => {
   
         const { licenseId, licenseContent, licenseContentEmpty } = validateLicense(licenseRequest, existingLicense);
   
-        consola.info("License validation complete:", licenseId, licenseContent, licenseContentEmpty);
+        logwatch.info("License validation complete:", licenseId, licenseContent, licenseContentEmpty);
   
         // Update the database with the license information
         if (existingLicense) {
@@ -838,12 +838,15 @@ export default async (app, { getRouter }) => {
         const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
         const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
         await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+        if (error.cause) {
+          logwatch.error(error.cause);
+        }
         throw new Error("Error rerunning license validation", error);
       }
     }
 
     if (issueBody.includes("<!-- @codefair-bot rerun-metadata-validation -->")) {
-      consola.start("Validating metadata files...");
+      logwatch.start("Validating metadata files...");
       try {
         let metadata = await gatherMetadata(context, owner, repository);
         let containsCitation = false,
@@ -930,20 +933,20 @@ export default async (app, { getRouter }) => {
         const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
         await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
         if (error.cause) {
-          consola.error(error.cause);
+          logwatch.error(error.cause);
         }
         throw new Error("Error rerunning metadata validation", error);
       }
     }
 
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
-      consola.start("Publishing to Zenodo...");
+      logwatch.start("Publishing to Zenodo...");
       const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf("<!-- @codefair-bot publish-zenodo"));
       const issueBodyNoArchiveSection = issueBodyRemovedCommand.substring(0, issueBody.indexOf("## FAIR Software Release"));
       const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
       const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
       const { depositionId, releaseId, tagVersion, userWhoSubmitted } = parseZenodoInfo(issueBody);
-      consola.info("Parsed Zenodo info:", depositionId, releaseId, tagVersion, userWhoSubmitted);
+      logwatch.info("Parsed Zenodo info:", depositionId, releaseId, tagVersion, userWhoSubmitted);
 
       try {
         // 1. Get the metadata from the repository
@@ -1005,9 +1008,6 @@ export default async (app, { getRouter }) => {
         const finalTemplate = await applyLastModifiedTemplate(issueBodyArchiveSection);
         await createIssue(context, owner, repository, ISSUE_TITLE, finalTemplate);
 
-
-        consola.success("Updated the GitHub Issue!");
-
         // Update the database with the Zenodo ID and the status
         await db.zenodoDeposition.update({
           data: {
@@ -1021,7 +1021,7 @@ export default async (app, { getRouter }) => {
           }
         });
 
-        consola.success("Updated the Zenodo deposition in the database!");
+        logwatch.success("Updated the Zenodo deposition in the database!");
 
         await db.analytics.update({
           data: {
@@ -1053,7 +1053,7 @@ export default async (app, { getRouter }) => {
           }
         });
         if (error.cause) {
-          consola.error(`Error causes:`, { cause: error.cause });
+          logwatch.error(`Error causes:`, { cause: error.cause });
         }
         throw new Error(`Error publishing to Zenodo: ${error.message}`, { cause: error });
       }
@@ -1061,7 +1061,7 @@ export default async (app, { getRouter }) => {
 
     if (issueBody.includes("<!-- @codefair-bot re-render-dashboard -->")) {
       // Run database queries in parallel using Promise.all
-      consola.start("Re-rendering issue dashboard...");
+      logwatch.start("Re-rendering issue dashboard...");
       try {
         const [licenseResponse, metadataResponse, cwlResponse] = await Promise.all([
           db.licenseRequest.findUnique({
