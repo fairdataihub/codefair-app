@@ -13,13 +13,15 @@ export default defineEventHandler(async (event) => {
           email: z.string().optional(),
           familyName: z.string().optional(),
           givenName: z.string(),
-          roles: z.array(
-            z.object({
-              endDate: z.number().optional().nullable(),
-              role: z.string().nullable(),
-              startDate: z.number().optional().nullable(),
-            }),
-          ),
+          roles: z
+            .array(
+              z.object({
+                endDate: z.number().optional().nullable(),
+                role: z.string().nullable(),
+                startDate: z.number().optional().nullable(),
+              }),
+            )
+            .optional(),
           uri: z.string().optional(),
         }),
       ),
@@ -31,13 +33,18 @@ export default defineEventHandler(async (event) => {
           email: z.string().optional(),
           familyName: z.string().optional(),
           givenName: z.string(),
-          roles: z.array(
-            z.object({
-              endDate: z.union([z.string(), z.number()]).optional().nullable(),
-              role: z.string().nullable(),
-              startDate: z.number().optional().nullable(),
-            }),
-          ),
+          roles: z
+            .array(
+              z.object({
+                endDate: z
+                  .union([z.string(), z.number()])
+                  .optional()
+                  .nullable(),
+                role: z.string().nullable(),
+                startDate: z.number().optional().nullable(),
+              }),
+            )
+            .optional(),
           uri: z.string().optional(),
         }),
       ),
