@@ -62,7 +62,7 @@ Codefair is your personal assistant when it comes to making your research softwa
 3. Track FAIR compliance issues through the Codefair issue dashboard and address them through the Codefair website.
 
 > [!NOTE]
-> While Codefair is free, installing it via the GitHub Marketplace may still require a credit card to be associated with your (or your organization’s) GitHub account. To circumvent this requirement, you can alternatively install Codefair directly from the [app page](https://github.com/apps/codefair-app).
+> While Codefair is free, installing it via the GitHub Marketplace may still require a credit card to be associated with your (or your organization’s) GitHub account. To circumvent this requirement, you can alternatively install Codefair directly from the [app page](https://github.com/apps/codefair-io).
 
 ### Documentation
 
