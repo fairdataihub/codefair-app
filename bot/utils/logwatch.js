@@ -88,6 +88,16 @@ class Logwatch {
   }
 
   /**
+   * Start level logging
+   * @param {string|object} message - Log message
+   * @param {boolean} [isJson=false] - Whether the message is a JSON object
+   */
+  start(message, isJson = false) {
+    consola.start(message);
+    this._sendLog("info", message, isJson ? "json" : "text");
+  }
+
+  /**
    * Warning level logging
    * @param {string|object} message - Log message
    * @param {boolean} [isJson=false] - Whether the message is a JSON object
