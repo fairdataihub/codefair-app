@@ -19,6 +19,8 @@ const devMode = process.env.NODE_ENV === "development";
 
 const botNotInstalled = ref(false);
 const cwlValidationRerunRequestLoading = ref(false);
+const displayMetadataValidationResults = ref(false);
+const showModal = ref(false);
 
 const renderIcon = (icon: string) => {
   return () => {
@@ -44,6 +46,22 @@ const settingsOptions = [
   },
 ];
 
+const licenseSettingsOptions = [
+  {
+    icon: renderIcon("mdi:github"),
+    key: "re-validate-license",
+    label: "Re-validate license",
+  },
+];
+
+const metadataSettingsOptions = [
+  {
+    icon: renderIcon("mdi:github"),
+    key: "re-validate-metadata",
+    label: "Re-validate metadata files",
+  },
+];
+
 const { data, error } = await useFetch(`/api/${owner}/${repo}/dashboard`, {
   headers: useRequestHeaders(["cookie"]),
 });
@@ -62,6 +80,18 @@ if (error.value) {
     throw createError(error.value);
   }
 }
+
+if ((data.value?.codeMetadataRequest?.codemetaStatus === "invalid" || data.value?.codeMetadataRequest?.citationStatus === "invalid") && (data.value?.codeMetadataRequest?.containsCodemeta || data.value?.codeMetadataRequest?.containsCitation)) {
+  displayMetadataValidationResults.value = true;
+}
+
+const hideConfirmation = () => {
+  showModal.value = false;
+};
+
+const showConfirmation = () => {
+  showModal.value = true;
+};
 
 const rerunCwlValidation = async () => {
   cwlValidationRerunRequestLoading.value = true;
@@ -97,7 +127,8 @@ const rerunCwlValidation = async () => {
     });
 };
 
-const rerunCodefairChecks = async () => {
+const rerunCodefairChecks = async (rerunType: string) => {
+  hideConfirmation();
   push.info({
     title: "Submitting request",
     message:
@@ -106,6 +137,9 @@ const rerunCodefairChecks = async () => {
 
   await $fetch(`/api/${owner}/${repo}/rerun`, {
     headers: useRequestHeaders(["cookie"]),
+    body: {
+      rerunType,
+    },
     method: "POST",
   })
     .then(() => {
@@ -140,7 +174,7 @@ const handleSettingsSelect = (key: any) => {
       },
     });
   } else if (key === "rerun-codefair-on-repo") {
-    rerunCodefairChecks();
+    rerunCodefairChecks("full-repo");
   } else if (key === "view-codefair-settings") {
     if (data.value?.isOrganization) {
       navigateTo(
@@ -161,6 +195,12 @@ const handleSettingsSelect = (key: any) => {
         },
       );
     }
+  } else if (key === "re-validate-license") {
+    // rerunCodefairChecks("license");
+    showConfirmation();
+  } else if (key === "re-validate-metadata") {
+    // rerunCodefairChecks("metadata");
+    showConfirmation();
   }
 };
 </script>
@@ -171,18 +211,12 @@ const handleSettingsSelect = (key: any) => {
       <n-flex justify="space-between" align="start">
         <h1>FAIR Compliance Dashboard</h1>
 
-        <n-dropdown
-          :options="settingsOptions"
-          placement="bottom-end"
-          :show-arrow="true"
-          @select="handleSettingsSelect"
-        >
+        <n-dropdown :options="settingsOptions" placement="bottom-end" :show-arrow="true" @select="handleSettingsSelect">
           <n-button type="info" secondary size="large">
             <template #icon>
               <Icon name="ic:round-settings" size="16" />
             </template>
-            Settings</n-button
-          >
+            Settings</n-button>
         </n-dropdown>
       </n-flex>
 
@@ -200,10 +234,7 @@ const handleSettingsSelect = (key: any) => {
     <div v-else>
       <n-divider />
 
-      <CardDashboard
-        title="License"
-        subheader="The license for the repository is shown here."
-      >
+      <CardDashboard title="License" subheader="The license for the repository is shown here.">
         <template #icon>
           <Icon name="tabler:license" size="40" />
         </template>
@@ -211,7 +242,7 @@ const handleSettingsSelect = (key: any) => {
         <template #header-extra>
           <div
             v-if="data?.licenseRequest?.containsLicense"
-            class="flex flex-wrap space-x-2"
+            class="flex flex-wrap items-center space-x-2"
           >
             <n-tag
               v-if="data?.licenseRequest?.licenseStatus === 'valid'"
@@ -223,10 +254,7 @@ const handleSettingsSelect = (key: any) => {
               Contains a valid license
             </n-tag>
 
-            <n-tooltip
-              v-else-if="data?.licenseRequest?.licenseStatus === 'invalid'"
-              trigger="hover"
-            >
+            <n-tooltip v-else-if="data?.licenseRequest?.licenseStatus === 'invalid'" trigger="hover">
               <template #trigger>
                 <n-tag type="warning">
                   <template #icon>
@@ -238,15 +266,35 @@ const handleSettingsSelect = (key: any) => {
               We couldn't determine if the license for this repository is valid.
             </n-tooltip>
 
-            <n-tag
-              v-if="data?.licenseRequest?.licenseId === 'Custom'"
-              type="warning"
-            >
+            <n-tag v-if="data?.licenseRequest?.licenseId === 'Custom'" type="warning">
               <template #icon>
                 <Icon name="ic:round-warning" size="16" />
               </template>
               This repository uses a custom license.
             </n-tag>
+
+            <!-- <n-button class="border-none"></n-button> -->
+
+            <n-dropdown :options="licenseSettingsOptions" placement="bottom-end" :show-arrow="true"
+              @select="handleSettingsSelect">
+              <n-button quaternary circle size="large">
+                <template #icon>
+                  <Icon name="humbleicons:dots-vertical" size="20" />
+                </template>
+              </n-button>
+            </n-dropdown>
+
+            <n-modal
+              v-model:show="showModal"
+              :mask-closable="false"
+              preset="dialog"
+              title="Are you sure?"
+              content="Doing this action will overwrite any existing draft. Do you want to continue?"
+              positive-text="Confirm"
+              negative-text="Cancel"
+              @positive-click="rerunCodefairChecks('license')"
+              @negative-click="hideConfirmation"
+            />
           </div>
         </template>
 
@@ -268,10 +316,7 @@ const handleSettingsSelect = (key: any) => {
 
       <n-divider />
 
-      <CardDashboard
-        title="Code Metadata"
-        subheader="The code metadata for the repository is shown here."
-      >
+      <CardDashboard title="Code Metadata" subheader="The code metadata for the repository is shown here.">
         <template #icon>
           <Icon name="tabler:code" size="40" />
         </template>
@@ -279,81 +324,112 @@ const handleSettingsSelect = (key: any) => {
         <template #header-extra>
           <n-flex
             v-if="
-              data?.licenseRequest?.containsLicense &&
-              data?.codeMetadataRequest?.containsMetadata
+              data?.licenseRequest?.containsLicense
             "
+            class="items-center align-middle"
           >
-            <n-tag
-              v-if="data?.codeMetadataRequest?.containsCitation"
-              :type="
-                data?.codeMetadataRequest?.citationStatus === 'valid'
-                  ? 'success'
-                  : 'error'
-              "
-            >
-              <template #icon>
-                <Icon
-                  :name="
+            <n-popover trigger="hover">
+              <template #trigger>
+                <n-tag
+                  v-if="data?.codeMetadataRequest?.containsCitation"
+                  :type="
                     data?.codeMetadataRequest?.citationStatus === 'valid'
-                      ? 'icon-park-solid:check-one'
-                      : 'icon-park-solid:close-one'
+                      ? 'success'
+                      : 'error'
                   "
-                  size="16"
-                />
+                >
+                  <template #icon>
+                    <Icon
+                      :name="
+                        data?.codeMetadataRequest?.citationStatus === 'valid'
+                          ? 'icon-park-solid:check-one'
+                          : 'icon-park-solid:close-one'
+                      "
+                      size="16"
+                    />
+                  </template>
+                  citation.CFF
+                </n-tag>
               </template>
-              citation.CFF
-            </n-tag>
+              <span v-if="data?.codeMetadataRequest?.citationStatus === 'valid'">CITATION.cff is valid</span>
+              <span v-else>Errors found in your file. View the report below</span>
+            </n-popover>
 
-            <n-tag
-              v-if="data?.codeMetadataRequest?.codemetaStatus"
-              :type="
-                data?.codeMetadataRequest?.codemetaStatus === 'valid'
-                  ? 'success'
-                  : 'error'
-              "
-            >
-              <template #icon>
-                <Icon
-                  :name="
-                    data?.codeMetadataRequest?.codemetaStatus === 'valid'
-                      ? 'icon-park-solid:check-one'
-                      : 'icon-park-solid:close-one'
-                  "
-                  size="16"
-                />
+            <n-popover trigger="hover">
+              <template #trigger>
+                <span>
+                  <n-tag v-if="data?.codeMetadataRequest?.containsCodemeta" :type="data?.codeMetadataRequest?.codemetaStatus === 'valid'
+                      ? 'success'
+                      : 'error'
+                    ">
+                    <template #icon>
+                      <Icon :name="data?.codeMetadataRequest?.codemetaStatus === 'valid'
+                          ? 'icon-park-solid:check-one'
+                          : 'icon-park-solid:close-one'
+                        " size="16" />
+                    </template>
+                    codemeta.json
+                  </n-tag>
+                </span>
               </template>
-              codemeta.json
-            </n-tag>
+              <span v-if="data?.codeMetadataRequest?.codemetaStatus === 'valid'">codemeta.json is valid</span>
+              <span v-else>Errors found in your file. View the report below</span>
+            </n-popover>
+
+            <n-dropdown v-if="data?.licenseRequest?.containsLicense" :options="metadataSettingsOptions"
+              placement="bottom-end" :show-arrow="true" @select="handleSettingsSelect">
+              <n-button quaternary circle size="large">
+                <template #icon>
+                  <Icon name="humbleicons:dots-vertical" size="20" />
+                </template>
+              </n-button>
+            </n-dropdown>
+
+            <n-modal
+              v-model:show="showModal"
+              :mask-closable="false"
+              preset="dialog"
+              title="Are you sure?"
+              content="Doing this action will overwrite any existing draft. Do you want to continue?"
+              positive-text="Confirm"
+              negative-text="Cancel"
+              @positive-click="rerunCodefairChecks('metadata')"
+              @negative-click="hideConfirmation"
+            />
           </n-flex>
         </template>
 
         <template #content>
-          <n-alert
-            v-if="!data?.licenseRequest?.containsLicense"
-            type="info"
-            class="w-full"
-          >
+          <n-alert v-if="!data?.licenseRequest?.containsLicense" type="info" class="w-full">
             There is no license in this repository. A license needs to be added
             to this repository before the code metadata can be validated.
           </n-alert>
 
-          <p v-else>
-            The code metadata for the repository is shown here. This includes
-            the number of files, the number of lines of code, and the number of
-            commits.
-          </p>
+          <div v-else>
+            <p class="w-full">
+              The code metadata for the repository is shown here. This includes the number of files, the number of lines
+              of code, and the number of commits.
+            </p>
+          </div>
         </template>
 
         <template #action>
-          <a
-            v-if="data?.licenseRequest?.containsLicense"
-            :href="`/dashboard/${owner}/${repo}/edit/code-metadata`"
-          >
+          <a v-if="data?.licenseRequest?.containsLicense" :href="`/dashboard/${owner}/${repo}/edit/code-metadata`">
             <n-button type="primary">
               <template #icon>
                 <Icon name="akar-icons:edit" size="16" />
               </template>
               Edit Code Metadata
+            </n-button>
+          </a>
+          <a v-if="data?.codeMetadataRequest?.citationStatus === 'invalid' || data?.codeMetadataRequest?.codemetaStatus === 'invalid'" :href="`/dashboard/${owner}/${repo}/view/metadata-validation`">
+            <n-button
+              type="primary"
+            >
+            <template #icon>
+              <Icon name="mdi:eye" size="16" />
+            </template>
+              Validation Results
             </n-button>
           </a>
         </template>
@@ -363,30 +439,22 @@ const handleSettingsSelect = (key: any) => {
 
       <h2 class="pb-6">Language Specific Standards</h2>
 
-      <CardDashboard
-        title="CWL Validation"
-        subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them to create workflows."
-      >
+      <CardDashboard title="CWL Validation"
+        subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them to create workflows.">
         <template #icon>
           <Icon name="cib:common-workflow-language" size="40" />
         </template>
 
         <template #header-extra>
           <div v-if="data?.cwlValidation?.containsCWL">
-            <n-tag
-              v-if="data?.cwlValidation?.overallStatus === 'valid'"
-              type="success"
-            >
+            <n-tag v-if="data?.cwlValidation?.overallStatus === 'valid'" type="success">
               <template #icon>
                 <Icon name="icon-park-solid:check-one" size="16" />
               </template>
               Valid CWL file(s)
             </n-tag>
 
-            <n-tag
-              v-else-if="data?.cwlValidation?.overallStatus === 'invalid'"
-              type="error"
-            >
+            <n-tag v-else-if="data?.cwlValidation?.overallStatus === 'invalid'" type="error">
               <template #icon>
                 <Icon name="icon-park-solid:close-one" size="16" />
               </template>
@@ -396,11 +464,7 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #content>
-          <n-alert
-            v-if="!data?.cwlValidation || !data.cwlValidation.containsCWL"
-            type="info"
-            class="w-full"
-          >
+          <n-alert v-if="!data?.cwlValidation || !data.cwlValidation.containsCWL" type="info" class="w-full">
             There are no CWL files in this repository.
           </n-alert>
 
@@ -414,11 +478,7 @@ const handleSettingsSelect = (key: any) => {
           <div v-if="data?.cwlValidation?.containsCWL" class="flex space-x-3">
             <n-tooltip trigger="hover" placement="bottom-start">
               <template #trigger>
-                <n-button
-                  type="warning"
-                  :loading="cwlValidationRerunRequestLoading"
-                  @click="rerunCwlValidation"
-                >
+                <n-button type="warning" :loading="cwlValidationRerunRequestLoading" @click="rerunCwlValidation">
                   <template #icon>
                     <Icon name="mynaui:redo" size="16" />
                   </template>
@@ -431,7 +491,9 @@ const handleSettingsSelect = (key: any) => {
 
             <NuxtLink :to="`/dashboard/${owner}/${repo}/view/cwl-validation`">
               <n-button type="primary">
-                <template #icon> <Icon name="mdi:eye" size="16" /> </template>
+                <template #icon>
+                  <Icon name="mdi:eye" size="16" />
+                </template>
                 View CWL Validation Results
               </n-button>
             </NuxtLink>
@@ -443,22 +505,17 @@ const handleSettingsSelect = (key: any) => {
 
       <h2 class="pb-6">FAIR Software Release</h2>
 
-      <CardDashboard
-        title="Make a FAIR Software Release"
-        subheader="Make a GitHub release and archive the software on a software archival repository."
-      >
+      <CardDashboard title="Make a FAIR Software Release"
+        subheader="Make a GitHub release and archive the software on a software archival repository.">
         <template #icon>
           <Icon name="mingcute:rocket-fill" size="40" />
         </template>
 
         <template #header-extra>
           <n-flex>
-            <NuxtLink
-              v-if="data?.zenodoDeposition?.lastPublishedZenodoDoi"
-              :to="`https://doi.org/${data?.zenodoDeposition?.lastPublishedZenodoDoi}`"
-              target="_blank"
-              class="cursor-pointer"
-            >
+            <NuxtLink v-if="data?.zenodoDeposition?.lastPublishedZenodoDoi"
+              :to="`https://doi.org/${data?.zenodoDeposition?.lastPublishedZenodoDoi}`" target="_blank"
+              class="cursor-pointer">
               <n-tag type="success" class="cursor-pointer">
                 <template #icon>
                   <Icon name="simple-icons:doi" size="16" />
@@ -467,14 +524,8 @@ const handleSettingsSelect = (key: any) => {
               </n-tag>
             </NuxtLink>
 
-            <div
-              v-if="data?.licenseRequest?.containsLicense"
-              class="flex flex-wrap space-x-2"
-            >
-              <n-tag
-                v-if="data?.licenseRequest?.licenseId === 'Custom'"
-                type="warning"
-              >
+            <div v-if="data?.licenseRequest?.containsLicense" class="flex flex-wrap space-x-2">
+              <n-tag v-if="data?.licenseRequest?.licenseId === 'Custom'" type="warning">
                 <template #icon>
                   <Icon name="ic:round-warning" size="16" />
                 </template>
@@ -482,20 +533,14 @@ const handleSettingsSelect = (key: any) => {
               </n-tag>
             </div>
             <div v-if="data?.zenodoDeposition?.zenodoStatus">
-              <n-tag
-                v-if="data?.zenodoDeposition?.zenodoStatus === 'inProgress'"
-                type="info"
-              >
+              <n-tag v-if="data?.zenodoDeposition?.zenodoStatus === 'inProgress'" type="info">
                 <template #icon>
                   <Icon name="icon-park-solid:loading-three" size="16" />
                 </template>
                 Publish in progress
               </n-tag>
 
-              <n-tag
-                v-else-if="data?.zenodoDeposition?.zenodoStatus === 'error'"
-                type="error"
-              >
+              <n-tag v-else-if="data?.zenodoDeposition?.zenodoStatus === 'error'" type="error">
                 <template #icon>
                   <Icon name="icon-park-solid:close-one" size="16" />
                 </template>

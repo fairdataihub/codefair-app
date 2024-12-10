@@ -26,10 +26,28 @@ export default defineEventHandler(async (event) => {
   // Check if the user is authorized to access the codeMetadata request
   await repoWritePermissions(event, owner, repo);
 
-  const rawMetadata = codeMetadataRequest.metadata;
+  const rawMetadata: any = codeMetadataRequest.metadata;
 
   // to do conversions on the metadata if needed
-  // -- none for now --
+  if (rawMetadata.authors) {
+    // Ensure all authors have a roles array
+    rawMetadata.authors.map((author: any) => {
+      if (!author.roles) {
+        author.roles = [];
+      }
+      return author;
+    });
+  }
+
+  if (rawMetadata.contributors) {
+    // Ensure all contributors have a roles array
+    rawMetadata.contributors.map((contributor: any) => {
+      if (!contributor.roles) {
+        contributor.roles = [];
+      }
+      return contributor;
+    });
+  }
 
   const parsedMetadata = rawMetadata as unknown as CodeMetadataRequest;
 
