@@ -129,7 +129,7 @@ export default async (app, { getRouter }) => {
           owner,
           repository.name,
         );
-        const cwlObject = await getCWLFiles(context, owner, repository.name);
+        const cwlObject = await getCWLFiles(context, owner, repository);
 
         // const cwlObject = {
         //   contains_cwl: cwl.length > 0 || false,
@@ -352,7 +352,7 @@ export default async (app, { getRouter }) => {
     let citation = await checkForCitation(context, owner, repository.name);
     let codemeta = await checkForCodeMeta(context, owner, repository.name);
     if (fullCodefairRun) {
-      cwlObject = await getCWLFiles(context, owner, repository.name);
+      cwlObject = await getCWLFiles(context, owner, repository);
     }
 
     // Check if any of the commits added a LICENSE, CITATION, or codemeta file
@@ -656,7 +656,7 @@ export default async (app, { getRouter }) => {
       try {
         logwatch.start("Rerunning CWL Validation...");
   
-        const cwl = await getCWLFiles(context, owner, repository.name);
+        const cwl = await getCWLFiles(context, owner, repository);
   
         // Remove the section from the issue body starting from ## Language Specific Standards
         const slicedBody = issueBody.substring(
@@ -730,7 +730,7 @@ export default async (app, { getRouter }) => {
         const license = await checkForLicense(context, owner, repository.name);
         const citation = await checkForCitation(context, owner, repository.name);
         const codemeta = await checkForCodeMeta(context, owner, repository.name);
-        const cwlObject = await getCWLFiles(context, owner, repository.name);
+        const cwlObject = await getCWLFiles(context, owner, repository);
   
         // If existing cwl validation exists, update the contains_cwl value
         const cwlExists = await db.cwlValidation.findUnique({
@@ -1195,7 +1195,7 @@ export default async (app, { getRouter }) => {
       const license = await checkForLicense(context, owner, repository.name);
       const citation = await checkForCitation(context, owner, repository.name);
       const codemeta = await checkForCodeMeta(context, owner, repository.name);
-      const cwl = await getCWLFiles(context, owner, repository.name); // This variable is an array of cwl files
+      const cwl = await getCWLFiles(context, owner, repository); // This variable is an array of cwl files
 
       const cwlObject = {
         contains_cwl_files: cwl.length > 0 || false,

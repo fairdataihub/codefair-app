@@ -18,7 +18,7 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  * @param {String} repoName - Repository name
  * @returns {Array} - Array of CWL files in the repository
  */
-export function getCWLFiles(context, owner, repoName) {
+export function getCWLFiles(context, owner, repository) {
   return new Promise((resolve, reject) => {
     consola.info("Checking for CWL files in the repository...");
 
@@ -34,7 +34,7 @@ export function getCWLFiles(context, owner, repoName) {
         const repoContent = await context.octokit.repos.getContent({
           owner,
           path,
-          repo: repoName,
+          repo: repository.name,
         });
 
         for (const file of repoContent.data) {
@@ -66,7 +66,7 @@ export function getCWLFiles(context, owner, repoName) {
           // Check if the db entry exists for the repository
           const existingCWL = await dbInstance.cwlValidation.findUnique({
             where: {
-              repository_id: context.payload.repository.id,
+              repository_id: repository.id,
             }
           });
   
@@ -78,7 +78,8 @@ export function getCWLFiles(context, owner, repoName) {
   
           resolve(cwlObject);
         } catch (error) {
-          throw new Error("Error fetching CWL files from the repository", { cause: error });
+          console.log("Error getting CWL files:", error);
+          throw new Error("::::", JSON.stringify(error), { cause: error });
         }
       })
       .catch(reject);
