@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { App } from "octokit";
-import type { User } from "lucia";
 
 export default defineEventHandler(async (event) => {
   protectRoute(event);

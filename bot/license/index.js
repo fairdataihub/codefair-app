@@ -155,7 +155,7 @@ export async function createLicense(context, owner, repo, license) {
   }
 }
 
-function validateLicense(licenseRequest, existingLicense) {
+export function validateLicense(licenseRequest, existingLicense) {
   let licenseId = licenseRequest.data?.license?.spdx_id || null;
   let licenseContent = "";
   let licenseContentEmpty = true;
@@ -175,7 +175,7 @@ function validateLicense(licenseRequest, existingLicense) {
     licenseContent = "";
   }
 
-  console.log("Existing License:", existingLicense?.license_id);
+  // console.log("Existing License:", existingLicense?.license_id);
   // consola.warn(existingLicense?.license_content.trim());
   // consola.info("dfl;aksjdfl;ksajl;dfkjas;ldfjk")
   // consola.warn(licenseContent.trim());

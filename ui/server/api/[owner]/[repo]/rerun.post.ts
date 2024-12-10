@@ -1,7 +1,32 @@
 import { App } from "octokit";
+import { z } from "zod";
 
 export default defineEventHandler(async (event) => {
   protectRoute(event);
+
+  const bodySchema = z.object({
+    rerunType: z.string(),
+  });
+
+  const body = await readBody(event);
+
+  if (!body) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Missing required fields",
+    });
+  }
+
+  const parsedBody = bodySchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    throw createError({
+      statusMessage: "The provided parameters are invalid",
+      statusCode: 400,
+    });
+  }
+
+  const { rerunType } = parsedBody.data;
 
   const { owner, repo } = event.context.params as {
     owner: string;
@@ -77,12 +102,12 @@ export default defineEventHandler(async (event) => {
     const issueBody = issue.body || "";
 
     if (
-      issueBody.includes("<!-- @codefair-bot rerun-full-repo-validation -->")
+      issueBody.includes(`<!-- @codefair-bot rerun-${rerunType}-validation -->`)
     ) {
       throw new Error("Validation already requested");
     }
 
-    const updatedIssueBody = `${issueBody}\n<!-- @codefair-bot rerun-full-repo-validation -->`;
+    const updatedIssueBody = `${issueBody}\n<!-- @codefair-bot rerun-${rerunType}-validation -->`;
 
     await octokit.request("PATCH /repos/{owner}/{repo}/issues/{issue_number}", {
       body: updatedIssueBody,
@@ -107,6 +132,6 @@ export default defineEventHandler(async (event) => {
   }
 
   return {
-    message: "Codfair validation requested",
+    message: "Codefair validation requested",
   };
 });
