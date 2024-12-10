@@ -5,12 +5,18 @@ All notable changes the Codefair App will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## v3.2.0 - 11-22-2024
+## v3.2.0 - 12-10-2024
 
 ### Added
 
-- Introducde metadata and license validation capabilities, allows for re-validation of metadata files and licenses through the UI.
+- Introduce metadata and license validation capabilities, allows for re-validation of metadata files and licenses through the UI.
 - Add support for validation codemeta.json and CITATION.cff files using a new schema and validation endpoints.
+- Improve metadata handling by introducing functions to convert and validate metadata from codemeta.json and CITATION.cff files.
+- Enhance the dashboard UI to display metadata validation results and provide options for re-validation.
+- Add CI workflows for deploying the validator service using Kamal and Docker.
+- Set up deployment configurations for the validator service using Kamal, including Docker and Azure Container Registry integrations.
+- A new schema for codemeta.json validation and implement validation logic for CITATION.cff files.
+- Validator service moved to current repository and integrated with the Codefair app.
 
 ## Fixed
 
