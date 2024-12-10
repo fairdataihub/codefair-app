@@ -149,7 +149,7 @@ jobs:
       
   deploy-validator:
     runs-on: ubuntu-latest
-    environment: stg
+    environment: prd
     defaults:
       run:
         working-directory: validator
@@ -206,7 +206,7 @@ jobs:
 
   migrate-db:
     runs-on: ubuntu-latest
-    environment: stg
+    environment: prd
     defaults:
       run:
         working-directory: ui
