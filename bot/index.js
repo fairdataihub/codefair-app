@@ -709,7 +709,7 @@ export default async (app, { getRouter }) => {
           repo: repository.name,
         });
   
-        logwatch.success("CWL Validation rerun successfully!");
+        logwatch.info("CWL Validation rerun successfully!");
       } catch (error) {
         // Remove the command from the issue body
         const issueBodyRemovedCommand = issueBody.substring(0, issueBody.indexOf(`<sub><span style="color: grey;">Last updated`));
@@ -1021,7 +1021,7 @@ export default async (app, { getRouter }) => {
           }
         });
 
-        logwatch.success("Updated the Zenodo deposition in the database!");
+        logwatch.info("Updated the Zenodo deposition in the database!");
 
         await db.analytics.update({
           data: {
