@@ -500,6 +500,25 @@ const validateZenodoForm = () => {
   });
 };
 
+const loginToZenodo = () => {
+  // Send api request to purge the Zenodo token
+  $fetch(`/api/user/zenodo`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "DELETE",
+  })
+    .then(() => {
+      // Redirect to the Zenodo login page
+      window.location.href = zenodoLoginUrl.value;
+    })
+    .catch((error) => {
+      console.error("Failed to purge Zenodo token:", error);
+      push.error({
+        title: "Failed to purge Zenodo token",
+        message: "Please try again later",
+      });
+    });
+}
+
 const githubReleaseInterval = ref<any>(null);
 
 onMounted(() => {
@@ -760,7 +779,7 @@ onBeforeUnmount(() => {
               login to Zenodo to continue.
             </p>
 
-            <a v-if="!haveValidZenodoToken" :href="zenodoLoginUrl">
+            <a v-if="!haveValidZenodoToken" @click="loginToZenodo">
               <n-button type="primary">
                 <template #icon>
                   <Icon name="simple-icons:zenodo" size="16" />
