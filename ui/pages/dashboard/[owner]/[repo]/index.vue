@@ -414,24 +414,26 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #action>
-          <a v-if="data?.licenseRequest?.containsLicense" :href="`/dashboard/${owner}/${repo}/edit/code-metadata`">
-            <n-button type="primary">
+          <div class="flex space-x-3">
+            <a v-if="data?.codeMetadataRequest?.citationStatus === 'invalid' || data?.codeMetadataRequest?.codemetaStatus === 'invalid'" :href="`/dashboard/${owner}/${repo}/view/metadata-validation`">
+              <n-button
+                type="warning"
+              >
               <template #icon>
-                <Icon name="akar-icons:edit" size="16" />
+                <Icon name="mdi:eye" size="16" />
               </template>
-              Edit Code Metadata
-            </n-button>
-          </a>
-          <a v-if="data?.codeMetadataRequest?.citationStatus === 'invalid' || data?.codeMetadataRequest?.codemetaStatus === 'invalid'" :href="`/dashboard/${owner}/${repo}/view/metadata-validation`">
-            <n-button
-              type="primary"
-            >
-            <template #icon>
-              <Icon name="mdi:eye" size="16" />
-            </template>
-              Validation Results
-            </n-button>
-          </a>
+                Validation Results
+              </n-button>
+            </a>
+            <a v-if="data?.licenseRequest?.containsLicense" :href="`/dashboard/${owner}/${repo}/edit/code-metadata`">
+              <n-button type="primary">
+                <template #icon>
+                  <Icon name="akar-icons:edit" size="16" />
+                </template>
+                Edit Code Metadata
+              </n-button>
+            </a>
+          </div>
         </template>
       </CardDashboard>
 
