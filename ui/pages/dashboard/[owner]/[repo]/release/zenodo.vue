@@ -500,9 +500,9 @@ const validateZenodoForm = () => {
   });
 };
 
-const loginToZenodo = () => {
+const loginToZenodo = async () => {
   // Send api request to purge the Zenodo token
-  $fetch(`/api/user/zenodo`, {
+  await $fetch(`/api/user/zenodo`, {
     headers: useRequestHeaders(["cookie"]),
     method: "DELETE",
   })
