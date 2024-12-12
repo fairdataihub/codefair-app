@@ -5,6 +5,17 @@ All notable changes the Codefair App will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v3.2.1 - 12-12-2024
+
+### Added
+
+- Convert logging from 'consola' to 'logwatch' for improved log management and consistency across the application.
+
+### Fixed
+
+- Update CI and deployment workflows to include new environment variables 'BOT_LOGWATCH_URL' and 'VALIDATOR_URL'.
+- Patch to Zenodo workflow that was causing the user to be notified of a failed Zenodo upload when the upload was successful.
+
 ## v3.2.0 - 12-10-2024
 
 ### Added
