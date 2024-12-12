@@ -54,6 +54,8 @@ env:
     - CODEFAIR_APP_DOMAIN
     - ZENODO_API_ENDPOINT
     - ZENODO_ENDPOINT
+    - VALIDATOR_URL
+    - BOT_LOGWATCH_URL
   clear:
     NODE_ENV: production
 

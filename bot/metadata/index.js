@@ -10,7 +10,7 @@ import dbInstance from "../db.js";
 import { logwatch } from "../utils/logwatch.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
-const { GH_APP_NAME } = process.env;
+const { GH_APP_NAME, VALIDATOR_URL } = process.env;
 
 /**
  * * Converts the date to a Unix timestamp
@@ -254,7 +254,7 @@ export async function convertCitationForDB(citationContent, repository) {
  * @returns {object} - An object containing the metadata for the repository
  */
 export async function gatherMetadata(context, owner, repo) {
-  consola.start("Gathering initial metadata from GitHub API...");
+  logwatch.start("Gathering initial metadata from GitHub API...");
 
   // Get the metadata of the repo
   const repoData = await context.octokit.repos.get({
@@ -410,10 +410,10 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
         return false;
       }
 
-      consola.start("Sending content to metadata validator");
+      logwatch.start("Sending content to metadata validator");
       try {
         const response = await fetch(
-          "https://staging-validator.codefair.io/validate-codemeta",
+          `${VALIDATOR_URL}/validate-codemeta`,
           {
             method: "POST",
             headers: {
@@ -441,7 +441,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
           );
         }
         const data = await response.json();
-        consola.info("Codemeta validation response", data);
+        logwatch.info({message: "Codemeta validation response", data}, true);
 
         let validationMessage = `The codemeta.json file is valid according to the ${data.version} codemeta.json schema.`;
         if (data.message !== "valid") {
@@ -461,8 +461,6 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
         return data.message === "valid";
       } catch (error) {
         logwatch.error(`error parsing the codemeta.json file: ${error}`);
-        consola.error("Error validating the codemeta.json file", error);
-
         return false;
       }
     } catch (error) {
@@ -487,16 +485,15 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
         return false;
       }
       const loaded_file = yaml.load(metadataInfo.content);
-      consola.start("Validating the CITATION.cff file");
+      logwatch.start("Validating the CITATION.cff file");
       // Verify the required fields are present
       if (!loaded_file.title || !loaded_file.authors) {
         return false;
       }
 
       try {
-        // TODO: CHANGE THIS BEFORE DEPLOYING TO MAIN
         const response = await fetch(
-          "https://staging-validator.codefair.io/validate-citation",
+          `${VALIDATOR_URL}/validate-citation`,
           {
             method: "POST",
             headers: {
@@ -514,7 +511,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
 
         const data = await response.json();
 
-        consola.info("Citation validation response", data);
+        logwatch.info({message: "Citation validation response", data}, true);
         let validationMessage = "";
         if (data.message === "valid") {
           validationMessage = data.output;
@@ -534,7 +531,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
 
         return data.message === "valid";
       } catch (error) {
-        consola.error("Error validating the CITATION.cff file", error);
+        logwatch.error({message: "Error validating the CITATION.cff file", error}, true);
         return false;
       }
     } catch (error) {
@@ -615,7 +612,7 @@ export async function updateMetadataIdentifier(
       sha: citationSha,
     });
 
-    consola.success("CITATION.cff file updated with Zenodo identifier");
+    logwatch.success("CITATION.cff file updated with Zenodo identifier");
 
     // Update the codemeta file
     await context.octokit.repos.createOrUpdateFileContents({
@@ -629,7 +626,7 @@ export async function updateMetadataIdentifier(
       sha: codeMetaSha,
     });
 
-    consola.success("codemeta.json file updated with Zenodo identifier");
+    logwatch.success("codemeta.json file updated with Zenodo identifier");
 
     // Get the codemetadata content from the database
     const existingCodemeta = await dbInstance.codeMetadata.findUnique({
@@ -752,14 +749,14 @@ export function applyDbMetadata(existingMetadataEntry, metadata) {
 }
 
 export async function applyCodemetaMetadata(codemeta, metadata, repository) {
-  consola.info("Codemeta found");
+  logwatch.info("Codemeta found");
   try {
     // consola.warn("codemeta", codemeta.content.trim());
     let codemetaContent;
     try {
       codemetaContent = JSON.parse(codemeta.content.trim());
     } catch (error) {
-      consola.error("Error parsing codemeta content", error);
+      logwatch.error({message: "Error parsing codemeta content", error}, true);
       return;
     }
     const convertedCodemeta = await convertCodemetaForDB(
@@ -953,13 +950,13 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
 
     return metadata;
   } catch (error) {
-    consola.error("Error applying codemeta metadata", JSON.stringify(error));
+    logwatch.error({message: "Error applying codemeta metadata", error}, true);
     throw new Error("Error applying codemeta metadata", { cause: error });
   }
 }
 
 export async function applyCitationMetadata(citation, metadata, repository) {
-  consola.info("Citation found");
+  logwatch.info("Citation found");
   const citationContent = yaml.load(citation.content);
   const convertedCitation = await convertCitationForDB(
     citationContent,
@@ -1062,7 +1059,7 @@ export async function applyMetadataTemplate(
 
     if (githubAction && githubAction !== `${GH_APP_NAME}[bot]`) {
       // Push event was made, only update the metadata if the pusher updated the codemeta.json or citation.cff
-      consola.info("Push event detected");
+      logwatch.info("Push event detected, checking for metadata or license changes...");
       const updatedFiles = context.payload.head_commit.modified;
       const addedFiles = context.payload.head_commit.added;
       revalidate = false;
@@ -1171,8 +1168,7 @@ export async function applyMetadataTemplate(
     return baseTemplate;
   } catch (error) {
     if (error.cause) {
-      consola.error("Error applying metadata template", error.cause);
-      // throw new Error("Error applying metadata template", { cause: error.cause });
+      logwatch.error({message: "Error applying metadata template", error: error.cause}, true);
     }
     throw new Error("Error applying metadata template", { cause: error });
   }

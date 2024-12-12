@@ -26,6 +26,7 @@ jobs:
       KAMAL_SERVER_IP: ${{ secrets.KAMAL_SERVER_IP }}
       KAMAL_BOT_DOMAIN: ${{ secrets.KAMAL_BOT_DOMAIN }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      BOT_LOGWATCH_URL: ${{ secrets.BOT_LOGWATCH_URL }}
       APP_ID: ${{ secrets.APP_ID }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
       GH_APP_NAME: ${{ secrets.GH_APP_NAME }}
@@ -36,6 +37,7 @@ jobs:
       CODEFAIR_APP_DOMAIN: ${{ secrets.CODEFAIR_APP_DOMAIN }}
       ZENODO_API_ENDPOINT: ${{ secrets.ZENODO_API_ENDPOINT }}
       ZENODO_ENDPOINT: ${{ secrets.ZENODO_ENDPOINT }}
+      VALIDATOR_URL: ${{ secrets.VALIDATOR_URL }}
 
     steps:
       - uses: actions/checkout@v4
@@ -99,6 +101,7 @@ jobs:
       GH_OAUTH_APP_ID: ${{ secrets.GH_OAUTH_APP_ID }}
       GH_OAUTH_CLIENT_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
       GH_OAUTH_CLIENT_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
+      UI_LOGWATCH_URL: ${{ secrets.UI_LOGWATCH_URL }}
       ZENODO_API_ENDPOINT: ${{ secrets.ZENODO_API_ENDPOINT }}
       ZENODO_ENDPOINT: ${{ secrets.ZENODO_ENDPOINT }}
       ZENODO_CLIENT_ID: ${{ secrets.ZENODO_CLIENT_ID }}

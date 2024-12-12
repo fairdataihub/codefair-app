@@ -50,13 +50,13 @@ export default async (app, { getRouter }) => {
   router.use(express.static("public"));
 
   router.get("/healthcheck", (req, res) => {
-    consola.log('Requested healthcheck');
+    logwatch.info('Requested healthcheck');
     res.status(200).send("Health check passed");
   });
 
   // for kamal
   router.get("/up", (req, res) => {
-    consola.log('Requested healthcheck');
+    logwatch.info('Requested healthcheck');
     res.status(200).send("Health check passed");
   });
 
@@ -76,7 +76,7 @@ export default async (app, { getRouter }) => {
         repoCount++;
 
         if (repoCount > 5) {
-          consola.info(`Applying action limit to ${repository.name}`);
+          logwatch.info(`Applying action limit to ${repository.name}`);
           applyActionLimit = true;
           actionCount = 5;
         }
@@ -247,7 +247,7 @@ export default async (app, { getRouter }) => {
           });
         }
 
-        consola.info("Repository uninstalled:", repository.name);
+        logwatch.info(`Repository uninstalled: ${repository.name}`);
       }
     },
   );
@@ -263,7 +263,7 @@ export default async (app, { getRouter }) => {
       context.payload.ref !==
       `refs/heads/${context.payload.repository.default_branch}`
     ) {
-      consola.warn("Not pushing to default branch, ignoring...");
+      logwatch.info("Not pushing to default branch, ignoring...");
       return;
     }
 
@@ -518,7 +518,7 @@ export default async (app, { getRouter }) => {
     });
 
     if (installation && installation?.action_count > 0) {
-      consola.info("pull_request.opened: Action limit still applied, ignoring...");
+      logwatch.info(`pull_request.opened: Action limit is at ${installation.action_count} still applied, ignoring...`);
       return;
     }
 
@@ -534,7 +534,7 @@ export default async (app, { getRouter }) => {
     const dashboardIssue = issues.data.find(issue => issue.title === "FAIR Compliance Dashboard");
 
     if (!dashboardIssue) {
-      consola.error("FAIR Compliance Dashboard issue not found");
+      logwatch.error("FAIR Compliance Dashboard issue not found");
       return;
     }
 
@@ -553,7 +553,7 @@ export default async (app, { getRouter }) => {
         });
 
         if (!response) {
-          consola.error("Error updating the license request PR URL");
+          logwatch.error("Error updating the license request PR URL");
           return;
         }
 
@@ -578,7 +578,7 @@ export default async (app, { getRouter }) => {
         });
 
         if (!response) {
-          consola.error("Error updating the code metadata PR URL");
+          logwatch.error("Error updating the code metadata PR URL");
           return;
         }
 
@@ -716,7 +716,7 @@ export default async (app, { getRouter }) => {
         const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
         await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
         if (error.cause) {
-          logwatch.error(error.cause);
+          logwatch.error({message: "Error.cause message for CWL Validation", error: error.cause}, true);
         }
         throw new Error("Error rerunning full repo validation", error);
       }
@@ -773,7 +773,7 @@ export default async (app, { getRouter }) => {
         const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
         await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
         if (error.cause) {
-          logwatch.error(error.cause);
+          logwatch.error({message: "Error.cause message for Full Repo Validation", error: error.cause}, true);
         }
         throw new Error("Error rerunning full repo validation", error);
       }
@@ -802,7 +802,7 @@ export default async (app, { getRouter }) => {
   
         const { licenseId, licenseContent, licenseContentEmpty } = validateLicense(licenseRequest, existingLicense);
   
-        logwatch.info("License validation complete:", licenseId, licenseContent, licenseContentEmpty);
+        logwatch.info(`License validation complete: ${licenseId}, ${licenseContent}, ${licenseContentEmpty}`);
   
         // Update the database with the license information
         if (existingLicense) {
@@ -839,7 +839,7 @@ export default async (app, { getRouter }) => {
         const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
         await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
         if (error.cause) {
-          logwatch.error(error.cause);
+          logwatch.error({message: "Error.cause message for License Validation", error: error.cause}, true);
         }
         throw new Error("Error rerunning license validation", error);
       }
@@ -862,7 +862,6 @@ export default async (app, { getRouter }) => {
   
         if (existingMetadataEntry?.metadata) {
           // Update the metadata variable
-          consola.info("Existing metadata in db found");
           containsCitation = existingMetadataEntry.contains_citation;
           containsCodemeta = existingMetadataEntry.contains_codemeta;
           metadata = applyDbMetadata(existingMetadataEntry, metadata);
@@ -933,7 +932,7 @@ export default async (app, { getRouter }) => {
         const lastModified = await applyLastModifiedTemplate(issueBodyRemovedCommand);
         await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
         if (error.cause) {
-          logwatch.error(error.cause);
+          logwatch.error({message: "Error.cause message for Metadata Validation", error: error.cause}, true);
         }
         throw new Error("Error rerunning metadata validation", error);
       }
@@ -946,7 +945,7 @@ export default async (app, { getRouter }) => {
       const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
       const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`
       const { depositionId, releaseId, tagVersion, userWhoSubmitted } = parseZenodoInfo(issueBody);
-      logwatch.info("Parsed Zenodo info:", depositionId, releaseId, tagVersion, userWhoSubmitted);
+      logwatch.info(`Parsed Zenodo info: ${depositionId}, ${releaseId}, ${tagVersion}, ${userWhoSubmitted}`);
 
       try {
         // 1. Get the metadata from the repository
@@ -1037,7 +1036,7 @@ export default async (app, { getRouter }) => {
           }
         });
 
-        consola.success("Updated the analytics in the database!");
+        logwatch.success("Updated the analytics in the database!");
       } catch (error) {
         // Update the issue with the new body
         // Update the GitHub issue with a status report
@@ -1053,7 +1052,7 @@ export default async (app, { getRouter }) => {
           }
         });
         if (error.cause) {
-          logwatch.error(`Error causes:`, { cause: error.cause });
+          logwatch.error({message: "Error.cause message for Zenodo Publishing", error: error.cause}, true);
         }
         throw new Error(`Error publishing to Zenodo: ${error.message}`, { cause: error });
       }
@@ -1252,7 +1251,7 @@ export default async (app, { getRouter }) => {
       const dashboardIssue = issues.data.find(issue => issue.title === "FAIR Compliance Dashboard");
     
       if (!dashboardIssue) {
-        consola.error("FAIR Compliance Dashboard issue not found");
+        logwatch.error("FAIR Compliance Dashboard issue not found");
         return;
       }
     
@@ -1270,7 +1269,7 @@ export default async (app, { getRouter }) => {
         });
   
         if (!response) {
-          consola.error("Error updating the license request PR URL");
+          logwatch.error("Error updating the license request PR URL");
           return;
         }
   

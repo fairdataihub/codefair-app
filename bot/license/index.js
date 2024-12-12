@@ -2,6 +2,7 @@
  * @fileoverview This file contains utility functions for the license bot
  */
 import { consola } from "consola";
+import { logwatch } from "../utils/logwatch.js";
 import dbInstance from "../db.js";
 import { createId } from "../utils/tools/index.js";
 
@@ -22,10 +23,10 @@ export async function checkForLicense(context, owner, repo) {
       repo,
     });
 
-    consola.success("License found in the repository!");
+    logwatch.success("License found in the repository!");
     return true;
   } catch (error) {
-    consola.warn("No license found in the repository");
+    logwatch.warn("No license found in the repository");
     // Errors when no License is found in the repo
     return false;
   }
@@ -97,12 +98,12 @@ export async function createLicense(context, owner, repo, license) {
         });
         defaultBranchName = defaultBranch.data.name;
       } catch (error) {
-        consola.error("Error getting default branch:", error);
+        logwatch.error({message: "Error getting default branch:", error}, true);
         return;
       }
 
       // Create a new branch base off the default branch
-      consola.info("Creating branch...");
+      logwatch.info("Creating branch...");
       await context.octokit.git.createRef({
         owner,
         ref: `refs/heads/${branch}`,
@@ -111,7 +112,7 @@ export async function createLicense(context, owner, repo, license) {
       });
 
       // Create a new file
-      consola.info("Creating file...");
+      logwatch.info("Creating file...");
       await context.octokit.repos.createOrUpdateFileContents({
         branch,
         content: Buffer.from(responseData.licenseText).toString("base64"),
@@ -122,7 +123,7 @@ export async function createLicense(context, owner, repo, license) {
       });
 
       // Create a PR from that branch with the commit of our added file
-      consola.info("Creating PR...");
+      logwatch.info("Creating PR...");
       await context.octokit.pulls.create({
         title: "feat: ✨ LICENSE file added",
         base: defaultBranchName,
@@ -134,7 +135,7 @@ export async function createLicense(context, owner, repo, license) {
       });
 
       // Comment on issue to notify user that license has been added
-      consola.info("Commenting on issue...");
+      logwatch.info("Commenting on issue...");
       await context.octokit.issues.createComment({
         body: `A LICENSE file with ${license} license terms has been added to a new branch and a pull request is awaiting approval. I will close this issue automatically once the pull request is approved.`,
         issue_number: context.payload.issue.number,
@@ -142,7 +143,7 @@ export async function createLicense(context, owner, repo, license) {
         repo,
       });
     } catch (error) {
-      consola.error("Error fetching license file:", error);
+      logwatch.error({message: "Error fetching license file:", error}, true);
     }
   } else {
     // License not found, comment on issue to notify user
@@ -177,22 +178,21 @@ export function validateLicense(licenseRequest, existingLicense) {
 
   // console.log("Existing License:", existingLicense?.license_id);
   // consola.warn(existingLicense?.license_content.trim());
-  // consola.info("dfl;aksjdfl;ksajl;dfkjas;ldfjk")
   // consola.warn(licenseContent.trim());
 
   if (licenseId === "NOASSERTION") {
     if (licenseContent === "") {
       // No assertion and no content indicates no valid license
-      consola.info("No assertion and no content indicates no valid license");
+      logwatch.info("No assertion and no content indicates no valid license");
       licenseId = null;
     } else {
       // Custom license with content provided
       licenseContentEmpty = false;
       if (existingLicense?.license_content.trim() !== licenseContent.trim()) {
-        consola.info("Custom license with new content provided");
+        logwatch.info("No assertion ID with different content from db provided");
         licenseId = "Custom"; // New custom license
       } else if (existingLicense?.license_id) {
-        consola.info("Custom license with existing content provided");
+        logwatch.info("Custom license with existing content provided");
         licenseId = existingLicense.license_id; // Use existing custom license ID if it matches
       }
     }
@@ -240,13 +240,12 @@ export async function applyLicenseTemplate(
 
     ({ licenseId, licenseContent, licenseContentEmpty } = validateLicense(licenseRequest, existingLicense));
 
-    consola.info("License ID:", licenseId);
-    // consola.info("License Content:", licenseContent);
-    consola.info("License Content Empty:", licenseContentEmpty);
+    // logwatch.info("License ID:", licenseId);
+    // logwatch.info("License Content Empty:", licenseContentEmpty);
   }
 
   if (existingLicense) {
-    consola.info("Updating existing license request...");
+    logwatch.info("Updating existing license request...");
     await dbInstance.licenseRequest.update({
       data: {
         contains_license: subjects.license,
@@ -260,7 +259,7 @@ export async function applyLicenseTemplate(
       where: { repository_id: repository.id },
     });
   } else {
-    consola.info("Creating new license request...");
+    logwatch.info("Creating new license request...");
     await dbInstance.licenseRequest.create({
       data: {
         contains_license: subjects.license,
