@@ -10,7 +10,7 @@ import dbInstance from "../db.js";
 import { logwatch } from "../utils/logwatch.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
-const { GH_APP_NAME } = process.env;
+const { GH_APP_NAME, VALIDATOR_URL } = process.env;
 
 /**
  * * Converts the date to a Unix timestamp
@@ -413,7 +413,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
       consola.start("Sending content to metadata validator");
       try {
         const response = await fetch(
-          "https://staging-validator.codefair.io/validate-codemeta",
+          VALIDATOR_URL,
           {
             method: "POST",
             headers: {
@@ -494,9 +494,8 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
       }
 
       try {
-        // TODO: CHANGE THIS BEFORE DEPLOYING TO MAIN
         const response = await fetch(
-          "https://staging-validator.codefair.io/validate-citation",
+          VALIDATOR_URL,
           {
             method: "POST",
             headers: {
