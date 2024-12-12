@@ -1,5 +1,6 @@
 import dbInstance from '../db.js';
 import { consola } from 'consola';
+import { logwatch } from '../utils/logwatch.js';
 import fs from 'fs';
 const licensesJson = JSON.parse(fs.readFileSync('./public/assets/data/licenses.json', 'utf8'));
 
@@ -20,7 +21,7 @@ export async function updateGitHubRelease(context, repositoryName, owner, releas
       release_id: releaseId,
       draft: false,
     });
-    consola.success("Updated release to not be a draft!");
+    logwatch.success("Updated release to not be a draft!");
   } catch (error) {
     throw new Error(`Error updating the GitHub release: ${error}`, { cause: error });
   }
@@ -33,7 +34,7 @@ export async function updateGitHubRelease(context, repositoryName, owner, releas
  */
 export async function publishZenodoDeposition(zenodoToken, depositionId) {
   try {
-    consola.start("Publishing the Zenodo deposition...", depositionId);
+    logwatch.start(`Publishing the Zenodo deposition: ${depositionId}`);
     const publishDeposition = await fetch(
       `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/publish`,
       {
@@ -50,7 +51,7 @@ export async function publishZenodoDeposition(zenodoToken, depositionId) {
     }
 
     const publishedDeposition = await publishDeposition.json();
-    consola.success("Zenodo deposition published successfully at:", publishedDeposition.links.latest_html);
+    logwatch.success(`Zenodo deposition published successfully at: ${publishedDeposition.links.latest_html}`);
   } catch (error) {
     throw new Error(`Error publishing the Zenodo deposition: ${error.message}`, { cause: error });
   }
@@ -251,7 +252,7 @@ export async function createNewVersionOfDeposition(zenodoToken, depositionId) {
       const errorText = await zenodoRecord.text();
       throw new Error(`Failed to create a new version of Zenodo deposition. Status: ${zenodoRecord.status}: ${zenodoRecord.statusText}.`, { cause: errorText});
     }
-    consola.success("New version of Zenodo deposition created successfully!");
+    logwatch.success("New version of Zenodo deposition created successfully!");
   
     const responseText = await zenodoRecord.json();
 
@@ -265,7 +266,7 @@ export async function createNewVersionOfDeposition(zenodoToken, depositionId) {
     });
 
     if (!draftZenodoRecord.ok) {
-      consola.error("Error fetching the latest draft of Zenodo deposition:", draftZenodoRecord);
+      logwatch.error({message: "Error fetching the latest draft of Zenodo deposition:", fetchReponse: draftZenodoRecord}, true);
       const errorText = await draftZenodoRecord.text();
       throw new Error(`Failed to fetch the latest draft of Zenodo deposition. Status: ${draftZenodoRecord.status}: ${draftZenodoRecord.statusText}. Error: ${errorText}`, { cause: errorText });
     }
@@ -295,7 +296,7 @@ export async function getZenodoDepositionInfo(
 
     if (zenodoDepositionInfo.submitted === false){
       // Delete the files in the draft
-      consola.start("Requested deposition is a draft. Deleting the files in the draft...");
+      logwatch.start("Requested deposition is a draft. Deleting the files in the draft...");
       for (const file of zenodoDepositionInfo.files) {
         await deleteFileFromZenodo(depositionId, zenodoToken, file.id);
       }
@@ -307,12 +308,12 @@ export async function getZenodoDepositionInfo(
 
     if (newZenodoVersion.files.length > 0) {
       for (const file of newZenodoVersion.files) {
-        consola.start("Deleting file from newly created draft:", file.links.download);
+        logwatch.start(`Deleting file from newly created draft: ${file.links.download}`);
         await deleteFileFromZenodo(newZenodoVersion.id, zenodoToken, file.id);
       }
     }
 
-    consola.success("New draft version of Zenodo deposition created successfully!");
+    logwatch.success("New draft version of Zenodo deposition created successfully!");
     return newZenodoVersion;
   }
 }
@@ -354,8 +355,8 @@ export async function createZenodoMetadata(codemetadata, repository) {
     });
     if (!codeMetaContent.license) {
       // fetch from the db
-      consola.warn(`No license found in the codemeta.json file. Fetching from the database...`);
-      consola.info(`License found in the database: ${existingLicense?.license_id}`);
+      logwatch.warn(`No license found in the codemeta.json file. Fetching from the database...`);
+      logwatch.info(`License found in the database: ${existingLicense?.license_id}`);
       codeMetaContent.license = `https://spdx.org/licenses/${existingLicense?.license_id}`;
     }
     const license = licensesJson.find((license) => license.detailsUrl === `${codeMetaContent.license}.json`);
@@ -372,7 +373,7 @@ export async function createZenodoMetadata(codemetadata, repository) {
     })
   
     if (!zenodoMetadata) {
-      consola.error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
+      logwatch.error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
       throw new Error("Zenodo metadata not found in the database. Please create a new Zenodo deposition.");
     }
 
@@ -440,7 +441,7 @@ export async function updateZenodoMetadata(depositionId, zenodoToken, metadata) 
     );
 
     const updatedMetadataInfo = await updatedMetadata.json();
-    consola.success("Zenodo deposition metadata updated successfully!");
+    logwatch.success("Zenodo deposition metadata updated successfully!");
     return updatedMetadataInfo;
   } catch (error) {
     throw new Error(`Error updating Zenodo metadata: ${error}`, { cause: error });
@@ -480,7 +481,7 @@ export async function uploadReleaseAssetsToZenodo(
             accept: 'application/octet-stream'
           }
         });
-        consola.success(`Asset data fetched for ${asset.name}, for the release ${tagVersion}, from the GitHub repository: ${repository.name}`);
+        logwatch.success(`Asset data fetched for ${asset.name}, for the release ${tagVersion}, from the GitHub repository: ${repository.name}`);
 
         // Upload the file to Zenodo
         const uploadAsset = await fetch(`${bucket_url}/${asset.name}`,
@@ -493,9 +494,9 @@ export async function uploadReleaseAssetsToZenodo(
         });
   
         if (!uploadAsset.ok) {
-          consola.error(`Failed to upload ${asset.name}. Status: ${uploadAsset.statusText}. Error: ${uploadAsset}`);
+          logwatch.error(`Failed to upload ${asset.name}. Status: ${uploadAsset.statusText}. Error: ${uploadAsset}`);
         } else {
-          consola.success(`${asset.name} successfully uploaded to Zenodo!`);
+          logwatch.success(`${asset.name} successfully uploaded to Zenodo!`);
         }
       } catch (error) {
         throw new Error(`Error uploading assets to Zenodo: ${error}`, { cause: error });
@@ -516,13 +517,13 @@ export async function uploadReleaseAssetsToZenodo(
   );
 
   if (!uploadZip.ok) {
-    consola.error(`Failed to upload zip file. Status: ${uploadZip.statusText}`);
+    logwatch.error(`Failed to upload zip file. Status: ${uploadZip.statusText}`);
     throw new Error(`Failed to upload zip file. Status: ${uploadZip.statusText}`);
   }
 
   const endTime = performance.now();
-  consola.info(`Total duration to upload assets and zip to Zenodo deposition: ${(endTime - startTime) / 1000} seconds`);
-  consola.success("Zip file successfully uploaded to Zenodo!");
+  logwatch.info(`Total duration to upload assets and zip to Zenodo deposition: ${(endTime - startTime) / 1000} seconds`);
+  logwatch.success("Zip file successfully uploaded to Zenodo!");
 }
 
 /**
@@ -543,12 +544,11 @@ export async function deleteFileFromZenodo(depositionId, zenodoToken, fileId) {
     );
   
     if (!deleteFile.ok) {
-      consola.error(deleteFile);
       const errorText = await deleteFile.text();
       throw new Error(`Failed to delete file from Zenodo. Status: ${deleteFile.status}: ${deleteFile.statusText}. Error: ${errorText}`);
     }
   
-    consola.success("File successfully deleted from Zenodo!");
+    logwatch.success("File successfully deleted from Zenodo!");
   } catch (error) {
     throw new Error(`Error deleting file from Zenodo: ${error}`, { cause: error });
   }

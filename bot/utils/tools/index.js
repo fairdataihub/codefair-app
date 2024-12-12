@@ -2,6 +2,7 @@
  * @fileoverview Utility functions for the bot
  */
 import { consola } from "consola";
+import { logwatch } from "../logwatch.js";
 import { init } from "@paralleldrive/cuid2";
 import human from "humanparser";
 import dayjs from "dayjs";
@@ -18,12 +19,12 @@ dayjs.extend(timezone);
  */
 export async function intializeDatabase() {
   try {
-    consola.start("Connecting to database...");
+    logwatch.start("Connecting to database...");
     await dbInstance;
-    consola.success("Connected to database!");
+    logwatch.success("Connected to database!");
     return true;
   } catch (error) {
-    consola.error("Error connecting to database:", error);
+    logwatch.error({message: "Error connecting to database:", error}, true);
   }
 }
 
@@ -42,7 +43,7 @@ export const createId = init({
  */
 export function checkEnvVariable(varName) {
   if (!process.env[varName]) {
-    consola.error(`Please set the ${varName} environment variable`);
+    logwatch.error(`Please set the ${varName} environment variable`);
     process.exit(1);
   }
 }
@@ -63,7 +64,7 @@ export async function getDefaultBranch(context, owner, repositoryName) {
 
     return defaultBranch.data.default_branch;
   } catch (error) {
-    consola.error("Error getting the default branch:", error);
+    logwatch.error({message: "Error getting the default branch:", error}, true);
   }
 }
 
@@ -270,7 +271,7 @@ export async function verifyRepoName(
   collection,
 ) {
   if (dbRepoName !== repository.name) {
-    consola.info(
+    logwatch.info(
       `Repository name for ${owner} has changed from ${dbRepoName} to ${repository.name}`,
     );
 
@@ -305,7 +306,7 @@ export async function isRepoEmpty(context, owner, repoName) {
     if (error.status === 404) {
       return true;
     }
-    consola.error("Error checking if the repository is empty:", error);
+    logwatch.error({message: "Error checking if the repository is empty:", error}, true);
   }
 }
 
@@ -375,7 +376,7 @@ export async function verifyInstallationAnalytics(
     }
 
     if (installation.action_count === 0) {
-      consola.info("Action limit reached, no longer limiting actions");
+      logwatch.info(`Action limit reached for ${installation.repo}, no longer limiting actions`);
       await dbInstance.installation.update({
         data: {
           action_count: 0,
@@ -419,12 +420,12 @@ export async function isRepoPrivate(context, owner, repoName) {
       repo: repoName,
     });
 
-    consola.info(
+    logwatch.info(
       `Repository ${repoName} is private: ${repoDetails.data.private}`,
     );
     return repoDetails.data.private;
   } catch (error) {
-    consola.error("Error verifying if the repository is private:", error);
+    logwatch.error({message: "Error verifying if the repository is private:", error}, true);
   }
 }
 
@@ -484,10 +485,6 @@ export function applyLastModifiedTemplate(baseTemplate) {
     .tz("America/Los_Angeles")
     .format("MMM D YYYY, HH:mm:ss");
 
-  consola.info(
-    `GitHub Issue updated at: ${lastModified} (timezone: America/Los_Angeles)`,
-  );
-
   return `${baseTemplate}\n\n<sub><span style="color: grey;">Last updated ${lastModified} (timezone: America/Los_Angeles)</span></sub>`;
 }
 
@@ -506,7 +503,7 @@ export async function getReleaseById(context, repositoryName, owner, releaseId) 
       release_id: releaseId,
     });
 
-    consola.success(`Fetched the draft release for: ${repositoryName}`);
+    logwatch.success(`Fetched the draft release for: ${repositoryName}`);
 
     return draftRelease;
   } catch (error) {
@@ -532,7 +529,7 @@ export async function downloadRepositoryZip(context, owner, repositoryName, bran
       ref: branch
     });
 
-    consola.success(`Downloaded the repository archive successfully for: ${repositoryName}`);
+    logwatch.success(`Downloaded the repository archive successfully for: ${repositoryName}`);
     return data;
   } catch (error) {
     throw new Error(`Error download the repository archive for ${repositoryName}: ${error}`, { cause: error });

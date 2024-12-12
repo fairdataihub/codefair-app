@@ -2,6 +2,7 @@
  * * This file contains the functions to interact with the CWL files in the repository
  */
 import { consola } from "consola";
+import { logwatch } from "../utils/logwatch.js";
 import {
   isRepoPrivate,
   createId,
@@ -10,6 +11,7 @@ import {
 import dbInstance from "../db.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
+const { VALIDATOR_URL } = process.env;
 
 /**
  * * This function gets the CWL files in the repository
@@ -20,7 +22,7 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  */
 export function getCWLFiles(context, owner, repository) {
   return new Promise((resolve, reject) => {
-    consola.info("Checking for CWL files in the repository...");
+    logwatch.info("Checking for CWL files in the repository...");
 
     const cwlFiles = [];
     const cwlObject = {
@@ -51,9 +53,12 @@ export function getCWLFiles(context, owner, repository) {
           resolve(cwlObject);
           return;
         }
-        consola.error(
-          "Error finding CWL files throughout the repository:",
-          error,
+        logwatch.error(
+          {
+            message: "Error finding CWL files throughout the repository:",
+            error,
+          },
+          true
         );
         reject(error);
       }
@@ -93,7 +98,7 @@ export function getCWLFiles(context, owner, repository) {
  */
 export async function validateCWLFile(downloadUrl) {
   try {
-    const response = await fetch("https://cwl-validate.codefair.io/validate-cwl", {
+    const response = await fetch(`${VALIDATOR_URL}/validate-cwl`, {
       body: JSON.stringify({
         file_path: downloadUrl,
       }),
@@ -108,7 +113,7 @@ export async function validateCWLFile(downloadUrl) {
       return [false, error.error];
     }
     if (!response.ok && response.status === 500) {
-      consola.error("Error validating CWL file:", response);
+      logwatch.error({message: "Error validating CWL file:", validation_response: response}, true);
       return [false, "Error validating CWL file"];
     }
     if (response.ok) {
@@ -116,7 +121,7 @@ export async function validateCWLFile(downloadUrl) {
       return [true, data.output];
     }
   } catch (e) {
-    consola.error("Error validating CWL file:", e);
+    logwatch.error({message: "Error validating CWL file:", error: e}, true);
     return [false, "Error validating CWL file"];
   }
 }
@@ -180,14 +185,14 @@ export async function applyCWLTemplate(
   });
   
   if (subjects.cwl.files.length === 0) {
-    consola.warn(
-      `No new/modified CWL files found in the repository, ${repository.name}`,
+    logwatch.warn(
+      `No CWL files found in the repository, ${repository.name}`,
     );
   }
   
-  consola.start("Validating CWL files for", repository.name);
+  logwatch.start("Validating CWL files for", repository.name);
   // Validate each CWL file from list\
-  consola.info(`Validating ${JSON.stringify(subjects.cwl)} CWL files`);
+  logwatch.info(`Validating ${JSON.stringify(subjects.cwl)} CWL files`);
   if (subjects.cwl.files.length > 0) {
     for (const file of subjects.cwl.files) {
       const fileSplit = file.name.split(".");
@@ -252,7 +257,7 @@ export async function applyCWLTemplate(
         // Add the file to the table content of the issue dashboard
         tableContent += `| ${file.path} | ${isValidCWL ? "✔️" : "❌"} |\n`;
   
-        consola.success(
+        logwatch.success(
           `File: ${file.path} is ${isValidCWL ? "valid" : "invalid"}`,
         );
       }
@@ -276,7 +281,7 @@ export async function applyCWLTemplate(
     });
 
     if (!cwlFiles.length > 0) {
-      consola.warn(
+      logwatch.warn(
         `No CWL files found in the repository, ${repository.name}, skipping CWL section`,
       );
       return baseTemplate;
@@ -317,15 +322,13 @@ export async function applyCWLTemplate(
 
     if (!newFiles.length > 0) {
       // All CWL files were removed from the repository
-      consola.warn(
-        "All CWL files were removed from:",
-        repository.name,
-        "skipping CWL section",
+      logwatch.warn(
+        `All CWL files were removed from: ${repository.name}, skipping CWL section`
       );
       return baseTemplate;
     } else {
       // Recreate the table content to include the new and old cwl files
-      consola.start(
+      logwatch.start(
         "Recreating the table content for the CWL section to include new and old files",
       );
       tableContent = "";
@@ -349,6 +352,6 @@ export async function applyCWLTemplate(
   const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
   baseTemplate += `${overallSection}\n\n### CWL Validations ${validOverall ? "✔️" : "❗"}\n\nCodefair has detected that you are following the Common Workflow Language (CWL) standard to describe your command line tool. Codefair ran the [cwltool validator](https://cwltool.readthedocs.io/en/latest/) and ${validOverall ? `all ***${subjects.cwl.files.length}*** CWL file(s) in your repository are valid.` : `***${failedCount}/${subjects.cwl.files.length}*** CWL file(s) in your repository are not valid.`}\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Validation result |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}`;
 
-  consola.success("CWL template section applied");
+  logwatch.success("CWL template section applied");
   return baseTemplate;
 }

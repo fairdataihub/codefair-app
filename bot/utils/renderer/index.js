@@ -1,4 +1,5 @@
 import { consola } from "consola";
+import { logwatch } from "../logwatch.js";
 import {
   applyGitHubIssueToDatabase,
   applyLastModifiedTemplate,
@@ -33,9 +34,8 @@ export async function renderIssues(
 ) {
   try {
     if (emptyRepo) {
-      consola.success(
-        "Applying empty repo template for repository:",
-        repository.name,
+      logwatch.success(
+        `Applying empty repo template for repository: ${repository.name}`
       );
       let emptyTemplate = `# Check the FAIRness of your software\n\nThis issue is your repository's dashboard for all things FAIR. Keep it open as making and keeping software FAIR is a continuous process that evolves along with the software. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n> [!WARNING]\n> Currently your repository is empty and will not be checked until content is detected within your repository.\n\n## LICENSE\n\nTo make your software reusable a license file is expected at the root level of your repository. Codefair will check for a license file after you add content to your repository.\n\n![License](https://img.shields.io/badge/License_Not_Checked-fbbf24)\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
   
@@ -83,7 +83,7 @@ export async function renderIssues(
         });
         }
       } catch (error) {
-        consola.error("Error fetching pull request:", error);
+        logwatch.error({message: "Error fetching pull request:", error}, true);
       }
     }
   
@@ -117,7 +117,7 @@ export async function renderIssues(
           });
         }
       } catch (error) {
-        consola.error("Error fetching metadata pull request:", error);
+        logwatch.error({message: "Error fetching metadata pull request:", error}, true);
       }
     }
   
@@ -176,7 +176,7 @@ export async function createIssue(context, owner, repository, title, body) {
     }
 
     if (!noIssue) {
-      consola.info("Creating an issue since no open issue was found");
+      logwatch.info("Creating an issue since no open issue was found");
       // Issue has not been created so we create one
       const response = await context.octokit.issues.create({
         title,
@@ -188,7 +188,7 @@ export async function createIssue(context, owner, repository, title, body) {
       await applyGitHubIssueToDatabase(response.data.number, repository.id);
     } else {
       // Update the issue with the new body
-      consola.info("Updating existing issue: " + issueNumber);
+      logwatch.info(`Updating existing issue: ${issueNumber}`);
       await context.octokit.issues.update({
         title,
         body,
@@ -210,7 +210,7 @@ export async function createIssue(context, owner, repository, title, body) {
       repo: repository.name,
     });
 
-    consola.info("Creating an issue since none exist");
+    logwatch.info("Creating an issue since none exist");
 
     await applyGitHubIssueToDatabase(response.data.number, repository.id);
   }

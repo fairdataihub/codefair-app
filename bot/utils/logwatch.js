@@ -1,4 +1,5 @@
 import consola from "consola";
+const { BOT_LOGWATCH_URL } = process.env;
 
 class Logwatch {
   /**
@@ -7,7 +8,7 @@ class Logwatch {
    */
   constructor(endpoint) {
     const BOT_ENDPOINT =
-      "https://logwatch.fairdataihub.org/api/log/cm4hkn79200027r01ya9gij7r";
+    BOT_LOGWATCH_URL;
 
     if (!endpoint) {
       this.endpoint = BOT_ENDPOINT;
@@ -94,6 +95,16 @@ class Logwatch {
    */
   start(message, isJson = false) {
     consola.start(message);
+    this._sendLog("info", message, isJson ? "json" : "text");
+  }
+
+  /**
+   * Success level logging
+   * @param {string|object} message - Log message
+   * @param {boolean} [isJson=false] - Whether the message is a JSON object
+   */
+  success(message, isJson = false) {
+    consola.success(message);
     this._sendLog("info", message, isJson ? "json" : "text");
   }
 
