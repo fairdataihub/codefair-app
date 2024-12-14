@@ -14,39 +14,28 @@ breadcrumbsStore.setFeature({
 
 const { owner } = route.params as { owner: string };
 
-const botNotInstalled = ref(false);
-
-const { data, error } = await useFetch(`/api/${owner}/dashboard`, {
+const { data, error } = await useFetch(`/api/dashboard`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
 if (error.value) {
   console.error(error.value);
 
-  if (error.value.statusMessage === "installation-not-found") {
-    // codefair bot is not installed on the repo.
-    botNotInstalled.value = true;
-  } else {
-    push.error({
-      title: "Something went wrong",
-      message:
-        "Could not fetch the data for the dashboard. Please try again later.",
-    });
+  push.error({
+    title: "Something went wrong",
+    message:
+      "Could not fetch the data for the dashboard. Please try again later.",
+  });
 
-    throw createError(error.value);
-  }
+  throw createError(error.value);
 }
-
-const filteredRepos = computed(() => {
-  return data.value ? data.value.filter((repo) => repo.action_count === 0) : [];
-});
 </script>
 
 <template>
   <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
     <n-flex vertical>
       <div class="flex flex-row justify-between">
-        <h1>Apps being managed by Codefair</h1>
+        <h1>Your dashboard</h1>
 
         <NuxtLink
           to="https://docs.codefair.io/docs/ui-dashboard.html"
@@ -57,52 +46,111 @@ const filteredRepos = computed(() => {
       </div>
 
       <p class="text-base">
-        Some repositories may not appear here if they have not had any actions
-        performed on their main branch yet. Once a couple of actions have been
-        processed, the repositories will appear in the list.
+        These are the accounts and organization that you have access to. You can
+        manage the repositories and actions performed on them from here.
       </p>
 
       <n-divider />
 
+      <h2 class="pb-6">Your Account</h2>
+
+      <n-card class="mt-2 rounded-lg shadow-md">
+        <div class="grid grid-cols-[20%_1px_auto_200px] items-center gap-4">
+          <div id="repo-avatar-and-name" class="flex">
+            <n-avatar
+              size="small"
+              :src="`https://api.dicebear.com/9.x/identicon/svg?seed=${data?.user.id}&backgroundColor=ffffff&bacgroundType=gradientLinear`"
+              class="mr-4 mt-2"
+            />
+
+            <div class="flex flex-col">
+              <NuxtLink
+                :to="`/dashboard/${data?.user.username}`"
+                target="_blank"
+                class="w-max transition-all hover:text-blue-500 hover:underline"
+              >
+                <span class="text-lg font-medium">
+                  {{ data?.user.username }}
+                </span>
+              </NuxtLink>
+
+              <NuxtLink
+                :to="`https://github.com/${data?.user.username}`"
+                target="_blank"
+                class="w-max truncate text-left text-xs text-gray-500 transition-all hover:text-blue-500 hover:underline"
+              >
+                <Icon name="ri:external-link-line" size="13" />
+                {{ data?.user.username }}
+              </NuxtLink>
+            </div>
+          </div>
+
+          <n-divider vertical />
+
+          <div></div>
+
+          <div class="flex justify-end">
+            <NuxtLink :to="`/dashboard/${data?.user.username}`">
+              <n-button type="primary">
+                <template #icon>
+                  <Icon name="ri:settings-4-fill" />
+                </template>
+                View Codefair enabled repositories
+              </n-button>
+            </NuxtLink>
+          </div>
+        </div>
+      </n-card>
+
+      <n-divider />
+
+      <h2 class="pb-6">Your Organizations</h2>
+
       <n-flex vertical>
         <n-card
-          v-for="repo in filteredRepos"
-          :key="repo.repositoryId"
+          v-for="organization in data?.orgs"
+          :key="organization.id"
           class="mt-2 rounded-lg shadow-md"
         >
           <div class="grid grid-cols-[20%_1px_auto_200px] items-center gap-4">
             <div id="repo-avatar-and-name" class="flex">
               <n-avatar
-                size="small"
-                :src="`https://api.dicebear.com/9.x/identicon/svg?seed=${repo.repositoryId}&backgroundColor=ffffff&bacgroundType=gradientLinear`"
+                size="large"
+                :src="
+                  organization.avatar
+                    ? organization.avatar
+                    : `https://api.dicebear.com/9.x/identicon/svg?seed=${organization.id}&backgroundColor=ffffff&bacgroundType=gradientLinear`
+                "
                 class="mr-4 mt-2"
               />
 
               <div class="flex flex-col">
                 <NuxtLink
-                  :to="`/dashboard/${owner}/${repo.repo}`"
+                  :to="`/dashboard/${organization.name}`"
                   target="_blank"
                   class="w-max transition-all hover:text-blue-500 hover:underline"
                 >
                   <span class="text-lg font-medium">
-                    {{ repo.repo }}
+                    {{ organization.name }}
                   </span>
                 </NuxtLink>
 
                 <NuxtLink
-                  :to="`https://github.com/${owner}/${repo.repo}`"
+                  :to="`https://github.com/${organization.name}`"
                   target="_blank"
                   class="w-max truncate text-left text-xs text-gray-500 transition-all hover:text-blue-500 hover:underline"
                 >
                   <Icon name="ri:external-link-line" size="13" />
-                  {{ owner }}/{{ repo.repo }}
+                  {{ organization.name }}
                 </NuxtLink>
               </div>
             </div>
 
             <n-divider vertical />
 
-            <div id="repo-commits" class="truncate pl-4 pr-8">
+            <div></div>
+
+            <!-- <div id="repo-commits" class="truncate pl-4 pr-8">
               <div class="flex flex-col gap-0">
                 <NuxtLink
                   :to="repo?.latestCommitUrl"
@@ -122,25 +170,20 @@ const filteredRepos = computed(() => {
                   {{ repo.latestCommitSha?.substring(0, 7) }}
                 </NuxtLink>
               </div>
-            </div>
+            </div> -->
 
             <div class="flex justify-end">
-              <NuxtLink :to="`/dashboard/${owner}/${repo.repo}`">
+              <NuxtLink :to="`/dashboard/${organization.name}`">
                 <n-button type="primary">
                   <template #icon>
                     <Icon name="ri:settings-4-fill" />
                   </template>
-                  Manage FAIR Compliance
+                  View Codefair enabled repositories
                 </n-button>
               </NuxtLink>
             </div>
           </div>
         </n-card>
-
-        <n-empty
-          v-if="filteredRepos.length === 0"
-          description="Codefair is not enabled on any repositories yet."
-        />
       </n-flex>
     </n-flex>
 

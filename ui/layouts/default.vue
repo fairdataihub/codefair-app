@@ -204,7 +204,7 @@ const toggleMobileMenu = () => {
             v-if="breadcrumbsStore.shouldShowBreadcrumbs"
             class="pb-3"
           >
-            <n-breadcrumb-item>
+            <n-breadcrumb-item :href="`/dashboard`">
               <Icon name="ri:dashboard-fill" />
 
               Dashboard
