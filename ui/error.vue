@@ -52,8 +52,7 @@ if (props.error) {
     } catch (error) {
       console.error("Redirection error:", error);
     }
-  }
-   else {
+  } else {
     push.error({
       title: "Something went wrong",
     });

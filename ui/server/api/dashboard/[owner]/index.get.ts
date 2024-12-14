@@ -17,6 +17,9 @@ export default defineEventHandler(async (event) => {
 
   // Get all installations for the owner
   const installations = await prisma.installation.findMany({
+    orderBy: {
+      updated_at: "desc",
+    },
     where: {
       owner,
     },
