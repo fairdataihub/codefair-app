@@ -19,6 +19,13 @@ export default defineEventHandler(async (event) => {
     },
   });
 
+  if (!responseOne.ok) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Something went wrong",
+    });
+  }
+
   const organizationsOne = await responseOne.json();
 
   const responseTwo = await fetch(
@@ -29,6 +36,13 @@ export default defineEventHandler(async (event) => {
       },
     },
   );
+
+  if (!responseTwo.ok) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Something went wrong",
+    });
+  }
 
   const organizationsTwo = await responseTwo.json();
 
