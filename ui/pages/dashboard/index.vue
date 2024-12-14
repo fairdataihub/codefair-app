@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
-const route = useRoute();
-
 const breadcrumbsStore = useBreadcrumbsStore();
 
 breadcrumbsStore.showBreadcrumbs();
@@ -11,8 +9,6 @@ breadcrumbsStore.setFeature({
   name: "",
   icon: "",
 });
-
-const { owner } = route.params as { owner: string };
 
 const { data, error } = await useFetch(`/api/dashboard`, {
   headers: useRequestHeaders(["cookie"]),
@@ -149,28 +145,6 @@ if (error.value) {
             <n-divider vertical />
 
             <div></div>
-
-            <!-- <div id="repo-commits" class="truncate pl-4 pr-8">
-              <div class="flex flex-col gap-0">
-                <NuxtLink
-                  :to="repo?.latestCommitUrl"
-                  target="_blank"
-                  class="truncate text-left text-base font-medium text-slate-500 transition-all hover:text-blue-500 hover:underline"
-                >
-                  {{ repo?.latestCommitMessage }}
-                </NuxtLink>
-
-                <NuxtLink
-                  v-if="repo?.latestCommitSha"
-                  :to="repo?.latestCommitUrl"
-                  target="_blank"
-                  class="flex items-center gap-1 truncate text-left text-sm text-gray-400 transition-all hover:text-blue-500 hover:underline"
-                >
-                  <Icon name="ri:git-commit-line" size="17" />
-                  {{ repo.latestCommitSha?.substring(0, 7) }}
-                </NuxtLink>
-              </div>
-            </div> -->
 
             <div class="flex justify-end">
               <NuxtLink :to="`/dashboard/${organization.name}`">
