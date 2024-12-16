@@ -136,6 +136,11 @@ const filteredRepos = computed(() => {
             </div>
           </div>
         </n-card>
+
+        <n-empty
+          v-if="filteredRepos.length === 0"
+          description="Codefair is not enabled on any repositories yet."
+        />
       </n-flex>
     </n-flex>
 
