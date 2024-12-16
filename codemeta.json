@@ -65,7 +65,7 @@
   "relatedLink": [
     "https://docs.codefair.io/"
   ],
-  "schema:releaseNotes": "## v3.1.1 - 11-12-2024\n\n### Fixed\n\n- Remove outdated URL links in the template renderer to ensure the correct and current links are used for metadata, CWL, and license templates.",
-  "version": "3.2.0",
+  "schema:releaseNotes": "## v3.2.1 - 12-12-2024\n\n### Added\n- Convert logging from 'consola' to 'logwatch' for improved log management and consistency across the application.\n\n### Fixed\n- Update CI and deployment workflows to include new environment variables 'BOT_LOGWATCH_URL' and 'VALIDATOR_URL'.\n- Patch to Zenodo workflow that was causing the user to be notified of a failed Zenodo upload when the upload was successful.\n- Fix issue with the metadata validation endpoint that was causing the service to return a 405 error.",
+  "version": "3.2.1",
   "type": "SoftwareSourceCode"
 }

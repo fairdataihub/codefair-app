@@ -53,9 +53,12 @@ const purgeTokens = async () => {
         </p>
       </n-card>
 
-      <n-card title="Purge tokens">
-        <p class="m-0">
-          This will remove all tokens associated with your account.
+      <n-card title="Purge Tokens">
+        <n-flex justify="space-between">
+          <p class="">
+            This will remove all Zenodo and GitHub tokens associated with your
+            account.
+          </p>
 
           <n-button type="error" @click="purgeTokens">
             <template #icon>
@@ -63,7 +66,7 @@ const purgeTokens = async () => {
             </template>
             Purge tokens
           </n-button>
-        </p>
+        </n-flex>
       </n-card>
     </n-flex>
   </section>

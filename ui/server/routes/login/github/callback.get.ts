@@ -64,7 +64,9 @@ export default defineEventHandler(async (event) => {
 
       return sendRedirect(
         event,
-        requestedRedirect ? decodeURIComponent(requestedRedirect) : "/",
+        requestedRedirect
+          ? decodeURIComponent(requestedRedirect)
+          : `/dashboard/${githubUser.login}`,
       );
     }
 
