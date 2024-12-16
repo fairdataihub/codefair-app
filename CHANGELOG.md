@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Update CI and deployment workflows to include new environment variables 'BOT_LOGWATCH_URL' and 'VALIDATOR_URL'.
 - Patch to Zenodo workflow that was causing the user to be notified of a failed Zenodo upload when the upload was successful.
+- Fix issue with the metadata validation endpoint that was causing the service to return a 405 error.
 
 ## v3.2.0 - 12-10-2024
 
