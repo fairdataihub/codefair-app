@@ -74,7 +74,7 @@ const toggleMobileMenu = () => {
           <n-badge v-if="user?.username" value="beta" type="warning">
             <!-- Using a here to request a page reload -->
             <a
-              :href="`/dashboard/${user?.username}`"
+              :href="`/dashboard`"
               class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               <span class=""> Dashboard </span>
