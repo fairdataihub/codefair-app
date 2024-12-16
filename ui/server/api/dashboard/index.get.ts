@@ -13,22 +13,22 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get all the organizations the user is a member of
-  const responseOne = await fetch(`https://api.github.com/user/orgs`, {
+  const orgFetch = await fetch(`https://api.github.com/user/orgs`, {
     headers: {
       Authorization: `Bearer ${user.access_token}`,
     },
   });
 
-  if (!responseOne.ok) {
+  if (!orgFetch.ok) {
     throw createError({
       statusCode: 400,
       statusMessage: "Something went wrong",
     });
   }
 
-  const organizationsOne = await responseOne.json();
+  const organizationsOne = await orgFetch.json();
 
-  const responseTwo = await fetch(
+  const orgDetails = await fetch(
     `https://api.github.com/users/${user.username}/orgs`,
     {
       headers: {
@@ -37,14 +37,14 @@ export default defineEventHandler(async (event) => {
     },
   );
 
-  if (!responseTwo.ok) {
+  if (!orgDetails.ok) {
     throw createError({
       statusCode: 400,
       statusMessage: "Something went wrong",
     });
   }
 
-  const organizationsTwo = await responseTwo.json();
+  const organizationsTwo = await orgDetails.json();
 
   const combinedOrgs = [
     ...organizationsOne.map((org: any) => {
