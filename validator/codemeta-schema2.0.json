@@ -69,6 +69,10 @@
       "type": "string",
       "description": "The URL of the code repository"
     },
+    "contIntegration": {
+      "type": "string",
+      "description": "The URL of the continuous integration system"
+    },
     "dateCreated": {
       "type": "string",
       "description": "The date the software was created"

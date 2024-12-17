@@ -1,22 +1,20 @@
 {
   "title": "Codemeta.json Schema",
-  "description": "This schema is used to validate the codemeta.json files.",
+  "description": "This schema is used to validate a subset of Codemeta",
   "type": "object",
   "additionalProperties": false,
+  "required": [
+    "@context",
+    "name",
+    "author",
+    "description"
+  ],
   "properties": {
     "@context": {
       "type": "string",
       "description": "The JSON-LD context for codemeta.",
       "enum": [
-        "https://doi.org/10.5063/schema/codemeta-2.0",
         "https://w3id.org/codemeta/3.0"
-      ]
-    },
-    "@type": {
-      "type": "string",
-      "description": "The type of the software package.",
-      "enum": [
-        "SoftwareSourceCode"
       ]
     },
     "name": {
@@ -32,7 +30,6 @@
         "oneOf": [
           {
             "type": "object",
-            "description": "Person or Organization (common to 2.0 and 3.0)",
             "properties": {
               "id": {
                 "type": "string",
@@ -40,25 +37,11 @@
               },
               "type": {
                 "type": "string",
-                "description": "Type of the entity (Person or Organization)",
+                "description": "Organization or Person",
                 "enum": [
-                  "Person",
-                  "Organization"
+                  "Organization",
+                  "Person"
                 ]
-              },
-              "affiliation": {
-                "type": "object",
-                "description": "The affiliation of the author.",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "The name of the affiliation."
-                  },
-                  "type": {
-                    "type": "string",
-                    "description": "Organization or Person"
-                  }
-                }
               },
               "email": {
                 "type": "string",
@@ -72,81 +55,49 @@
                 "type": "string",
                 "description": "The given name of the author.",
                 "minLength": 1
+              },
+              "affiliation": {
+                "type": "object",
+                "description": "The affiliation of the author.",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The name of the affiliation."
+                  },
+                  "type": {
+                    "type": "string"
+                  }
+                }
               }
-            },
-            "required": [
-              "type"
-            ]
+            }
           },
           {
             "type": "object",
-            "description": "Role (3.0 format)",
+            "description": "Object representing roles of the author.",
+            "required": ["type", "schema:author", "roleName"],
             "properties": {
               "type": {
                 "type": "string",
-                "description": "The type of the role.",
-                "enum": [
-                  "Role"
-                ]
+                "enum": ["Role"],
+                "description": "The type of the author role."
               },
               "schema:author": {
                 "type": "string",
-                "description": "The URI of the author."
+                "description": "Will match with the author's id."
               },
               "roleName": {
                 "type": "string",
-                "description": "The role name."
-              },
-              "startDate": {
-                "type": "string",
-                "format": "date",
-                "description": "Start date of the role."
+                "description": "The name of the author role."
               },
               "endDate": {
                 "type": "string",
-                "format": "date",
-                "description": "End date of the role."
+                "description": "The end date of the author role."
+              },
+              "startDate": {
+                "type": "string",
+                "description": "The start date of the author role."
               }
-            },
-            "required": [
-              "type",
-              "schema:author"
-            ]
-          },
-          {
-            "type": "object",
-            "description": "Role (2.0 format)",
-            "properties": {
-              "type": {
-                "type": "string",
-                "description": "The type of the role.",
-                "enum": [
-                  "schema:Role"
-                ]
-              },
-              "schema:author": {
-                "type": "string",
-                "description": "The URI of the author."
-              },
-              "schema:roleName": {
-                "type": "string",
-                "description": "The role name."
-              },
-              "schema:startDate": {
-                "type": "string",
-                "format": "date",
-                "description": "Start date of the role."
-              },
-              "schema:endDate": {
-                "type": "string",
-                "format": "date",
-                "description": "End date of the role."
-              }
-            },
-            "required": [
-              "type",
-              "schema:author"
-            ]
+            }
           }
         ]
       }
@@ -177,7 +128,7 @@
     },
     "contributor": {
       "type": "array",
-      "description": "The authors of the software package.",
+      "description": "The contributors of the software package.",
       "items": {
         "type": "object",
         "properties": {
@@ -218,10 +169,6 @@
           }
         }
       }
-    },
-    "contIntegration": {
-      "type": "string",
-      "description": "The continuous integration service used for the software."
     },
     "codemeta:continuousIntegration": {
       "type": "object",
@@ -377,6 +324,5 @@
       "type": "string",
       "description": "The type of software."
     }
-  },
-  "required": ["@context", "author", "name", "license"]
+  }
 }
