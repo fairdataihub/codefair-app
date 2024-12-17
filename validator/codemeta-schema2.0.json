@@ -1,0 +1,209 @@
+{
+  "title": "Codemeta.json 2.0 Schema",
+  "description": "Schema to validate a subset of Codemeta.json files, version 2.0",
+  "type": "object",
+  "required": [
+    "@context",
+    "type",
+    "name",
+    "description",
+    "author"
+  ],
+  "properties": {
+    "@context": {
+      "type": "string",
+      "enum": ["https://doi.org/10.5063/schema/codemeta-2.0"]
+    },
+    "type": {
+      "type": "string",
+      "enum": ["SoftwareSourceCode"]
+    },
+    "applicationCategory": {
+      "type": "string",
+      "description": "The category of the application, e.g. 'Geospatial', 'Data analysis', 'Image processing'"
+    },
+    "author": {
+      "type": "array",
+      "description": "The authors of the software",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["@type", "name"],
+        "properties": {
+          "@type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "familyName": {
+            "type": "string"
+          },
+          "givenName": {
+            "type": "string"
+          },
+          "affiliation": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["Organization"]
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "orcid": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "codeRepository": {
+      "type": "string",
+      "description": "The URL of the code repository"
+    },
+    "dateCreated": {
+      "type": "string",
+      "description": "The date the software was created"
+    },
+    "dateModified": {
+      "type": "string",
+      "description": "The date the software was last modified"
+    },
+    "description": {
+      "type": "string",
+      "description": "A description of the software"
+    },
+    "downloadUrl": {
+      "type": "string",
+      "description": "The URL of the download page for the software"
+    },
+    "funder": {
+      "type": "object",
+      "description": "The funder of the software",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "identifier": {
+      "type": "string",
+      "description": "A unique identifier for the software"
+    },
+    "keywords": {
+      "type": "array",
+      "description": "Keywords describing the software",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "license": {
+      "type": "string",
+      "description": "The license under which the software is distributed"
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the software"
+    },
+    "operatingSystem": {
+      "type": "array",
+      "description": "The operating systems on which the software runs",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "programmingLanguage": {
+      "type": "array",
+      "description": "The programming languages used in the software",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "relatedLink": {
+      "type": "array",
+      "description": "Related links to the software",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "schema:releaseNotes": {
+      "type": "string",
+      "description": "Release notes for the software"
+    },
+    "schema:review": {
+      "type": "object",
+      "description": "A review of the software",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "schema:reviewAspect": {
+          "type": "string"
+        },
+        "schema:reviewBody": {
+          "type": "string"
+        }
+      }
+    },
+    "runtimePlatform": {
+      "type": "array",
+      "description": "The runtime platforms on which the software runs",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "softwareRequirements": {
+      "type": "array",
+      "description": "The software requirements for the software",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "version": {
+      "type": "string",
+      "description": "The version of the software"
+    },
+    "developmentStatus": {
+      "type": "string",
+      "description": "The development status of the software, e.g. 'Inactive', 'Active', 'Suspended'"
+    },
+    "funding": {
+      "type": "string",
+      "description": "The funding for the software"
+    },
+    "codemeta:isSourceCodeOf": {
+      "type": "object",
+      "description": "The project for which the software is the source code",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "issueTracker": {
+      "type": "string",
+      "description": "The URL of the issue tracker"
+    },
+    "referencePublication": {
+      "type": "string",
+      "description": "The URL of the reference publication"
+    }
+  }
+}
