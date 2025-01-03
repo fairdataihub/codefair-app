@@ -1226,16 +1226,13 @@ onBeforeUnmount(() => {
             </n-button>
           </NuxtLink>
 
-          <n-button
+            <n-button
+            v-if="zenodoPublishStatus === 'published' || zenodoPublishStatus === 'error'"
             type="success"
-            :disabled="
-              zenodoPublishStatus !== 'published' &&
-              zenodoPublishStatus !== 'error'
-            "
             @click="navigateToDashboard"
-          >
+            >
             Okay
-          </n-button>
+            </n-button>
         </n-flex>
       </template>
     </n-modal>
