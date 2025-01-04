@@ -218,23 +218,46 @@ class ValidateCodemeta(Resource):
                 "message": "Validation Error",
                 "error": "Unsupported codemeta version",
             }, 400
-        try:
-            with open("./codemeta-schema.json", "r", encoding="utf-8") as f:
-                schema = json.load(f)
-                jsonschema.validate(file_content, schema)
 
-            return {
-                "message": "valid",
-                "version": codemeta_version,
-            }, 200
-        except jsonschema.exceptions.ValidationError as e:
-            return {
-                "message": "invalid",
-                "error": str(e.message + " at " + str(e.validator_value)),
-                "version": codemeta_version,
-            }, 200
-        except Exception as e:
-            return {
-                "message": "Validation Error",
-                "error": f"Unexpected error: {str(e)}",
-            }, 400
+        if codemeta_version == "2.0":
+            try:
+                with open("./codemeta-schema2.0.json", "r", encoding="utf-8") as f:
+                    schema = json.load(f)
+                    jsonschema.validate(file_content, schema)
+
+                return {
+                    "message": "valid",
+                    "version": codemeta_version,
+                }, 200
+            except jsonschema.exceptions.ValidationError as e:
+                return {
+                    "message": "invalid",
+                    "error": str(e.message + " at " + str(e.validator_value)),
+                    "version": codemeta_version,
+                }, 200
+            except Exception as e:
+                return {
+                    "message": "Validation Error",
+                    "error": f"Unexpected error: {str(e)}",
+                }, 400
+        elif codemeta_version == "3.0":
+            try:
+                with open("./codemeta-schema.json", "r", encoding="utf-8") as f:
+                    schema = json.load(f)
+                    jsonschema.validate(file_content, schema)
+
+                return {
+                    "message": "valid",
+                    "version": codemeta_version,
+                }, 200
+            except jsonschema.exceptions.ValidationError as e:
+                return {
+                    "message": "invalid",
+                    "error": str(e.message + " at " + str(e.validator_value)),
+                    "version": codemeta_version,
+                }, 200
+            except Exception as e:
+                return {
+                    "message": "Validation Error",
+                    "error": f"Unexpected error: {str(e)}",
+                }, 400
