@@ -15,15 +15,33 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  if (state.split(":").length !== 3) {
+  let parsedState;
+  try {
+    parsedState = JSON.parse(decodeURIComponent(state));
+  } catch (error) {
     throw createError({
       status: 400,
+      statusMessage: "Invalid state format",
     });
   }
 
-  const userId = state?.split(":")[0];
-  const owner = state?.split(":")[1];
-  const repo = state?.split(":")[2];
+  // Extract values from the parsed state
+  const userId = parsedState.userId;
+  const owner = parsedState.owner;
+  const repo = parsedState.repo;
+  const githubDetails = parsedState.githubDetails;
+
+  if (!userId || !owner || !repo || !githubDetails) {
+    throw createError({
+      status: 400,
+      statusMessage: "Missing required state information",
+    });
+  }
+
+  console.log("User ID:", userId);
+  console.log("Owner:", owner);
+  console.log("Repo:", repo);
+  console.log("GitHub Details:", githubDetails);
 
   // Generate a refresh token for the user
   const urlEncoded = new URLSearchParams();
@@ -86,5 +104,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  return sendRedirect(event, `/dashboard/${owner}/${repo}/release/zenodo`);
+  return sendRedirect(
+    event,
+    `/dashboard/${owner}/${repo}/release/zenodo?githubTag=${githubDetails.githubTag || ""}&githubRelease=${githubDetails.githubRelease || ""}`,
+  );
 });

@@ -13,6 +13,9 @@ definePageMeta({
 });
 
 const route = useRoute();
+const githubTag = route.query.githubTag;
+const githubRelease = route.query.githubRelease;
+
 const user = useUser();
 const breadcrumbsStore = useBreadcrumbsStore();
 
@@ -96,7 +99,6 @@ const lastSelectedGithubRelease = ref<number | null>(null);
 const lastSelectedGithubReleaseTitle = ref<string | null>(null);
 
 const zenodoDraftIsReadyForRelease = ref(false);
-
 const { data, error } = await useFetch(`/api/${owner}/${repo}/release/zenodo`, {
   headers: useRequestHeaders(["cookie"]),
   method: "GET",
@@ -272,6 +274,14 @@ const createDraftGithubRelease = () => {
 const checkGithubReleaseSpinner = ref(false);
 const githubReleaseIsDraft = ref(false);
 const showGithubReleaseIsDraftStausBadge = ref(false);
+
+// Set the initial values of the form if the query params are present
+if (githubTag && githubRelease) {
+  githubFormValue.value.tag = githubTag.toString();
+  githubFormValue.value.release = githubRelease.toString();
+  zenodoDraftIsReadyForRelease.value = true;
+  githubReleaseIsDraft.value = true;
+}
 
 const checkIfGithubReleaseIsDraft = async () => {
   const releaseId = githubFormValue.value.release;
@@ -510,8 +520,53 @@ const loginToZenodo = async () => {
     method: "DELETE",
   })
     .then(() => {
-      // Redirect to the Zenodo login page
-      window.location.href = zenodoLoginUrl.value;
+      const githubDetails = {
+        githubTag: githubFormValue.value.tag,
+        githubRelease: githubFormValue.value.release,
+      };
+
+      // Extract the existing state from the Zenodo login URL
+      const existingStateMatch =
+        zenodoLoginUrl.value.match(/[?&]state=([^&]+)/);
+      let originalState;
+
+      if (existingStateMatch) {
+        try {
+          const decodedState = decodeURIComponent(existingStateMatch[1]);
+          const [userId, owner, repo] = decodedState.split(":");
+          originalState = { userId, owner, repo };
+        } catch (error) {
+          console.error("Failed to parse existing state:", error);
+          throw new Error("Invalid state format");
+        }
+      } else {
+        throw new Error("No existing state found in the Zenodo login URL");
+      }
+
+      const updatedState = {
+        ...originalState,
+        githubDetails,
+      };
+
+      // Encode the updated state as a JSON string
+      const encodedState = encodeURIComponent(JSON.stringify(updatedState));
+
+      // Replace the existing state parameter in the Zenodo login URL
+      let zenodoLoginUrlWithState;
+      if (zenodoLoginUrl.value.includes("state=")) {
+        // Replace the existing state parameter with the updated one
+        zenodoLoginUrlWithState = zenodoLoginUrl.value.replace(
+          /([?&]state=)[^&]+/,
+          `$1${encodedState}`,
+        );
+      } else {
+        // Fallback* If no state parameter exists, add it
+        zenodoLoginUrlWithState = `${zenodoLoginUrl.value}${
+          zenodoLoginUrl.value.includes("?") ? "&" : "?"
+        }state=${encodedState}`;
+      }
+
+      window.location.href = zenodoLoginUrlWithState;
     })
     .catch((error) => {
       console.error("Failed to purge Zenodo token:", error);
@@ -940,7 +995,7 @@ onBeforeUnmount(() => {
       </div>
     </n-flex>
 
-    <div v-if="githubReleaseIsDraft">
+    <div v-if="githubReleaseIsDraft && zenodoDraftIsReadyForRelease">
       <n-divider />
 
       <h2 class="pb-6">Zenodo deposition</h2>
