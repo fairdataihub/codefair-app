@@ -1,8 +1,10 @@
 # Name of your application. Used to uniquely configure containers.
-service: codefair-validator
+# service: codefair-validator
+service: <%= ENV["KAMAL_APP_NAME_VALIDATOR"] %>
 
 # Name of the container image.
-image: codefair-validator
+# image: codefair-validator
+image: <%= ENV["KAMAL_APP_NAME_VALIDATOR"] %>
 
 # Deploy to these servers.
 servers:
