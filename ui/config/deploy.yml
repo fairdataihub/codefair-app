@@ -1,8 +1,10 @@
 # Name of your application. Used to uniquely configure containers.
-service: codefair-ui
+# service: codefair-ui
+service: <%= ENV["KAMAL_APP_NAME_UI"] %>
 
 # Name of the container image.
-image: codefair-ui
+# image: codefair-ui
+image: <%= ENV["KAMAL_APP_NAME_UI"] %>
 
 # Deploy to these servers.
 servers:

@@ -25,6 +25,7 @@ jobs:
       KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
       KAMAL_SERVER_IP: ${{ secrets.KAMAL_SERVER_IP }}
       KAMAL_BOT_DOMAIN: ${{ secrets.KAMAL_BOT_DOMAIN }}
+      KAMAL_APP_NAME_BOT: ${{ secrets.KAMAL_APP_NAME_BOT }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       BOT_LOGWATCH_URL: ${{ secrets.BOT_LOGWATCH_URL }}
       APP_ID: ${{ secrets.APP_ID }}
@@ -95,6 +96,7 @@ jobs:
       KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
       KAMAL_SERVER_IP: ${{ secrets.KAMAL_SERVER_IP }}
       KAMAL_APP_DOMAIN: ${{ secrets.KAMAL_APP_DOMAIN }}
+      KAMAL_APP_NAME_UI: ${{ secrets.KAMAL_APP_NAME_UI }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
       GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
@@ -164,6 +166,7 @@ jobs:
       KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
       KAMAL_SERVER_IP: ${{ secrets.KAMAL_SERVER_IP }}
       KAMAL_VALIDATOR_DOMAIN: ${{ secrets.KAMAL_VALIDATOR_DOMAIN }}
+      KAMAL_APP_NAME_VALIDATOR: ${{ secrets.KAMAL_APP_NAME_VALIDATOR }}
 
     steps:
       - uses: actions/checkout@v4
