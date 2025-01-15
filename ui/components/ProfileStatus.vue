@@ -1,7 +1,79 @@
 <script setup lang="ts">
+import { Icon }  from "#components";
 const user = useUser();
+console.log(user);
+
+// get the user access token from the db
+const userToken = await $fetch("/api/user/token", {
+  headers: useRequestHeaders(["cookie"]),
+  method: "GET",
+});
+
+console.log(userToken);
+
 
 const loggedIn = computed(() => !!user.value);
+// // Get all the organizations the user is a member of
+const orgFetch = await fetch(`https://api.github.com/user/orgs`, {
+  headers: {
+    Authorization: `Bearer ${userToken.access_token}`,
+  },
+});
+
+if (!orgFetch.ok) {
+  throw createError({
+    statusCode: 400,
+    statusMessage: "Something went wrong",
+  });
+}
+
+console.log(orgFetch);
+
+const organizationsOne = await orgFetch.json();
+
+const orgDetails = await fetch(
+  `https://api.github.com/users/${user.value?.username}/orgs`,
+  {
+    headers: {
+      Authorization: `Bearer ${userToken.access_token}`,
+    },
+  },
+);
+
+if (!orgDetails.ok) {
+  throw createError({
+    statusCode: 400,
+    statusMessage: "Something went wrong",
+  });
+}
+
+const organizationsTwo = await orgDetails.json();
+
+const combinedOrgs = [
+    ...organizationsOne.map((org: any) => {
+      return {
+        id: org.id,
+        name: org.login,
+        avatar: org.avatar_url,
+        description: org.description,
+      };
+    }),
+    ...organizationsTwo.map((org: any) => {
+      return {
+        id: org.id,
+        name: org.login,
+        avatar: org.avatar_url,
+        description: org.description,
+      };
+    }),
+  ];
+
+  const uniqueOrgs = combinedOrgs.filter(
+    (org, index, self) => index === self.findIndex((t) => t.id === org.id),
+  );
+
+  console.log(uniqueOrgs);
+
 
 async function logout() {
   await $fetch("/api/logout", {
@@ -9,20 +81,71 @@ async function logout() {
   });
   window.location.href = "/";
 }
+
+const renderIcon = (icon: string) => {
+  return () => {
+    return h(Icon, { name: icon });
+  };
+}
+
+const getOrgDetails = () => {
+
+}
+
+const children = uniqueOrgs.map((org: any) => {
+  return {
+    key: org.id,
+    label: org.name,
+    link: `/org/${org.name}`,
+  };
+});
+
+const settingOptions = [
+  {
+    icon: renderIcon("mdi:cog"),
+    key: "switch-org",
+    label: "Switch Organization",
+    children: [
+      { key: "org-1", label: "Organization 1", link: "/org-1" },
+      { key: "org-2", label: "Organization 2", link: "/org-2" },
+      { key: "org-3", label: "Organization 3", link: "/org-3" },
+    ],
+  },
+  {
+    icon: renderIcon("mdi:account"),
+    key: "view-profile",
+    label: "View Profile",
+  },
+  {
+    icon: renderIcon("mdi:logout"),
+    key: "logout",
+    label: "Logout",
+  },
+];
+
+
+const handleSettingsSelect = (key: any) => {
+  console.log(key);
+  switch (key) {
+    case "view-codefair-settings":
+      console.log("View Codefair Settings");
+    case "view-profile":
+      navigateTo("/profile");
+      break;
+    case "logout":
+      logout();
+      break;
+  }
+}
 </script>
 
 <template>
   <n-flex v-if="loggedIn" align="center">
-    <NuxtLink :to="`/profile`" class="flex items-center">
-      <n-avatar
-        round
-        :src="`https://avatars.githubusercontent.com/u/${user?.github_id}?v=4`"
+    <n-dropdown :options="settingOptions" @select="handleSettingsSelect" placement="bottom-end" :show-arrow="true" class="bg-white shadow-md rounded-md">      
+      <n-avatar round :src="`https://avatars.githubusercontent.com/u/${user?.github_id}?v=4`"
         :fallback-src="`https://api.dicebear.com/8.x/adventurer/svg?seed=${user?.github_id}`"
-        class="transition-all hover:opacity-90"
-      />
-    </NuxtLink>
-
-    <n-button color="black" @click="logout"> Sign Out </n-button>
+        class="transition-transform hover:scale-110 hover:shadow-sm hover:shadow-gray-400" />
+    </n-dropdown>
   </n-flex>
 
   <div v-else>
