@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+import { Icon } from "#components";
 
 const route = useRoute();
 
@@ -15,6 +16,11 @@ breadcrumbsStore.setFeature({
 const { owner } = route.params as { owner: string };
 
 const botNotInstalled = ref(false);
+const renderIcon = (icon: string) => {
+  return () => {
+    return h(Icon, { name: icon });
+  };
+};
 
 const { data, error } = await useFetch(`/api/${owner}/dashboard`, {
   headers: useRequestHeaders(["cookie"]),
@@ -38,25 +44,87 @@ if (error.value) {
 }
 
 const filteredRepos = computed(() => {
-  return data.value ? data.value.filter((repo) => repo.action_count === 0) : [];
+  return data.value ? data.value.installations.filter((repo) => repo.action_count === 0) : [];
 });
+
+const settingsOptions = [
+  {
+    icon: renderIcon("mdi:github"),
+    key: "view-org",
+    label: "View Organization",
+  },
+  {
+    icon: renderIcon("mdi:cog"),
+    key: "view-codefair-settings",
+    label: "View Codefair settings",
+  },
+  {
+    key: "need-help-link",
+    label: "Need help?",
+    icon: renderIcon("mdi:help-circle-outline"),
+  },
+];
+
+const handleSettingsSelect = (key: string) => {
+  switch (key) {
+    case "view-org":
+      console.log("Redirect to view organization on github");
+      window.open(`https://github.com/${owner}`, "_blank");
+      break;
+    case "view-codefair-settings":
+      console.log("Navigate to Codefair settings");
+      if (data.value?.isOrganization) {
+        navigateTo(
+          `https://github.com/organizations/${owner}/settings/installations/${data.value?.installationId}`,
+          {
+            open: {
+              target: "_blank",
+            },
+          },
+        );
+      } else {
+        navigateTo(
+          `https://github.com/settings/installations/${data.value?.installationId}`,
+          {
+            open: {
+              target: "_blank",
+            },
+          },
+        );
+      }
+      break;
+    case "need-help-link":
+      window.open("https://docs.codefair.io/docs/ui-dashboard.html", "_blank");
+    default:
+      console.log("Unknown action");
+  }
+};
 </script>
 
 <template>
   <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
     <n-flex vertical>
-      <div class="flex flex-row justify-between">
+      <div class="flex flex-row items-center justify-between">
         <h1>Apps being managed by Codefair</h1>
 
-        <NuxtLink
-          to="https://docs.codefair.io/docs/ui-dashboard.html"
-          target="_blank"
-          class="text-blue-400 underline transition-all hover:text-blue-500"
-          >Need help?</NuxtLink
-        >
+        <div class="flex flex-row items-center gap-4">
+          <n-dropdown
+            :options="settingsOptions"
+            placement="bottom-end"
+            :show-arrow="true"
+            @select="handleSettingsSelect"
+          >
+            <n-button type="info" secondary size="large">
+              <template #icon>
+                <Icon name="ic:round-settings" size="16" />
+              </template>
+              Settings
+            </n-button>
+          </n-dropdown>
+        </div>
       </div>
 
-      <p class="text-base">
+      <p class="mt-4 text-base">
         Some repositories may not appear here if they have not had any actions
         performed on their main branch yet. Once a couple of actions have been
         processed, the repositories will appear in the list.
@@ -143,11 +211,5 @@ const filteredRepos = computed(() => {
         />
       </n-flex>
     </n-flex>
-
-    <!-- <n-collapse class="mt-8" default-expanded-names="data">
-      <n-collapse-item title="data" name="data">
-        <pre>{{ data }}</pre>
-      </n-collapse-item>
-    </n-collapse> -->
   </main>
 </template>
