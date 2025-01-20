@@ -92,11 +92,11 @@ const getOrgDetails = () => {
 
 }
 
-const children = uniqueOrgs.map((org: any) => {
+const orgChildren = uniqueOrgs.map((org: any) => {
   return {
-    key: org.id,
+    key: `/dashboard/${org.name}`,
     label: org.name,
-    link: `/org/${org.name}`,
+    icon: () => h('img', { src: org.avatar ? org.avatar : `https://api.dicebear.com/9.x/identicon/svg?seed=${org.id}&backgroundColor=ffffff&backgroundType=gradientLinear`, alt: org.name, style: 'width: 24px; height: 24px; border-radius: 50%;' }),
   };
 });
 
@@ -105,11 +105,7 @@ const settingOptions = [
     icon: renderIcon("mdi:cog"),
     key: "switch-org",
     label: "Switch Organization",
-    children: [
-      { key: "org-1", label: "Organization 1", link: "/org-1" },
-      { key: "org-2", label: "Organization 2", link: "/org-2" },
-      { key: "org-3", label: "Organization 3", link: "/org-3" },
-    ],
+    children: orgChildren,
   },
   {
     icon: renderIcon("mdi:account"),
@@ -135,6 +131,8 @@ const handleSettingsSelect = (key: any) => {
     case "logout":
       logout();
       break;
+    default:
+      navigateTo(key);
   }
 }
 </script>
