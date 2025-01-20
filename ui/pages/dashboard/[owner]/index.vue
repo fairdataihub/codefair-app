@@ -69,7 +69,7 @@ const handleSettingsSelect = (key: string) => {
   switch (key) {
     case "view-org":
       console.log("Redirect to view organization on github");
-      window.open(`https://github.com/${owner}`, "_blank");
+      navigateTo(`https://github.com/${owner}`, {open: {target: "_blank"}});
       break;
     case "view-codefair-settings":
       console.log("Navigate to Codefair settings");
@@ -94,7 +94,7 @@ const handleSettingsSelect = (key: string) => {
       }
       break;
     case "need-help-link":
-      window.open("https://docs.codefair.io/docs/ui-dashboard.html", "_blank");
+      navigateTo("https://docs.codefair.io/docs/ui-dashboard.html", {open: {target: "_blank"}});
     default:
       console.log("Unknown action");
   }
