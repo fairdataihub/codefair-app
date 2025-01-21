@@ -66,6 +66,7 @@ const toggleMobileMenu = () => {
 
           <NuxtLink
             to="https://github.com/fairdataihub/codefair-app"
+            target="_blank"
             class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
           >
           <span>GitHub</span>
