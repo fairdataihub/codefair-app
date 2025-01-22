@@ -30,50 +30,48 @@ if (error.value) {
 <template>
   <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
     <n-flex vertical>
-      <div class="flex flex-row justify-between">
-        <h1>Your dashboard</h1>
+      <!-- Header Section -->
+      <div class="flex flex-row items-center justify-between">
+        <h1 class="text-2xl font-bold">Your dashboard</h1>
 
         <NuxtLink
           to="https://docs.codefair.io/docs/ui-dashboard.html"
           target="_blank"
-          class="text-blue-400 underline transition-all hover:text-blue-500"
+          class="text-blue-500 underline transition-all hover:text-blue-600"
           >Need help?</NuxtLink
         >
       </div>
 
-      <p class="text-base">
-        These are the accounts and organization that you have access to. You can
-        manage the repositories and actions performed on them from here.
+      <p class="mt-4 text-base">
+        These are the accounts and organizations that you have access to. You
+        can manage the repositories and actions performed on them from here.
       </p>
 
-      <n-divider />
+      <n-divider class="my-6" />
 
-      <h2 class="pb-6">Your Account</h2>
+      <!-- Your Account Section -->
+      <h2 class="pb-4 text-xl font-semibold">Your Account</h2>
 
-      <n-card class="mt-2 rounded-lg shadow-md">
+      <n-card
+        class="rounded-lg bg-gray-50 p-4 shadow-md transition-all hover:shadow-lg"
+      >
         <div class="grid grid-cols-[20%_1px_auto_200px] items-center gap-4">
-          <div id="repo-avatar-and-name" class="flex">
+          <div id="repo-avatar-and-name" class="flex items-center space-x-4">
+            <!-- Adjusted Avatar Size -->
             <n-avatar
-              size="small"
               :src="`https://api.dicebear.com/9.x/identicon/svg?seed=${data?.user.id}&backgroundColor=ffffff&bacgroundType=gradientLinear`"
-              class="mr-4 mt-2"
+              class="h-12 w-12"
             />
 
             <div class="flex flex-col">
-              <NuxtLink
-                :to="`/dashboard/${data?.user.username}`"
-                target="_blank"
-                class="w-max transition-all hover:text-blue-500 hover:underline"
-              >
-                <span class="text-lg font-medium">
-                  {{ data?.user.username }}
-                </span>
-              </NuxtLink>
+              <span class="text-lg font-medium text-gray-700">
+                {{ data?.user.username }}
+              </span>
 
               <NuxtLink
                 :to="`https://github.com/${data?.user.username}`"
                 target="_blank"
-                class="w-max truncate text-left text-xs text-gray-500 transition-all hover:text-blue-500 hover:underline"
+                class="truncate text-sm text-gray-500 transition-all hover:text-blue-600 hover:underline"
               >
                 <Icon name="ri:external-link-line" size="13" />
                 {{ data?.user.username }}
@@ -87,7 +85,7 @@ if (error.value) {
 
           <div class="flex justify-end">
             <NuxtLink :to="`/dashboard/${data?.user.username}`">
-              <n-button type="primary">
+              <n-button type="primary" class="hover:shadow-lg">
                 <template #icon>
                   <Icon name="ri:settings-4-fill" />
                 </template>
@@ -98,73 +96,60 @@ if (error.value) {
         </div>
       </n-card>
 
-      <n-divider />
+      <n-divider class="my-6" />
 
-      <h2 class="pb-6">Your Organizations</h2>
+      <!-- Your Organizations Section -->
+      <h2 class="pb-4 text-xl font-semibold">Your Organizations</h2>
 
-      <n-flex vertical>
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <n-card
           v-for="organization in data?.orgs"
           :key="organization.id"
-          class="mt-2 rounded-lg shadow-md"
+          class="rounded-lg bg-gray-50 p-6 shadow-md transition-all hover:shadow-lg"
         >
-          <div class="grid grid-cols-[20%_1px_auto_200px] items-center gap-4">
-            <div id="repo-avatar-and-name" class="flex">
+          <div class="flex items-start space-x-4">
+            <!-- Organization Avatar -->
+            <div class="h-14 w-14 flex-shrink-0">
               <n-avatar
-                size="large"
                 :src="
                   organization.avatar
                     ? organization.avatar
                     : `https://api.dicebear.com/9.x/identicon/svg?seed=${organization.id}&backgroundColor=ffffff&bacgroundType=gradientLinear`
                 "
-                class="mr-4 mt-2"
+                class="h-full w-full"
               />
-
-              <div class="flex flex-col">
-                <NuxtLink
-                  :to="`/dashboard/${organization.name}`"
-                  target="_blank"
-                  class="w-max transition-all hover:text-blue-500 hover:underline"
-                >
-                  <span class="text-lg font-medium">
-                    {{ organization.name }}
-                  </span>
-                </NuxtLink>
-
-                <NuxtLink
-                  :to="`https://github.com/${organization.name}`"
-                  target="_blank"
-                  class="w-max truncate text-left text-xs text-gray-500 transition-all hover:text-blue-500 hover:underline"
-                >
-                  <Icon name="ri:external-link-line" size="13" />
-                  {{ organization.name }}
-                </NuxtLink>
-              </div>
             </div>
 
-            <n-divider vertical />
+            <!-- Organization Name and Link -->
+            <div class="flex flex-col">
+              <span class="text-lg font-medium text-gray-700">
+                {{ organization.name }}
+              </span>
 
-            <div></div>
-
-            <div class="flex justify-end">
-              <NuxtLink :to="`/dashboard/${organization.name}`">
-                <n-button type="primary">
-                  <template #icon>
-                    <Icon name="ri:settings-4-fill" />
-                  </template>
-                  View Codefair enabled repositories
-                </n-button>
+              <NuxtLink
+                :to="`https://github.com/${organization.name}`"
+                target="_blank"
+                class="truncate text-sm text-gray-500 transition-all hover:text-blue-600 hover:underline"
+              >
+                <Icon name="ri:external-link-line" size="13" />
+                {{ organization.name }}
               </NuxtLink>
             </div>
           </div>
-        </n-card>
-      </n-flex>
-    </n-flex>
 
-    <!-- <n-collapse class="mt-8" default-expanded-names="data">
-      <n-collapse-item title="data" name="data">
-        <pre>{{ data }}</pre>
-      </n-collapse-item>
-    </n-collapse> -->
+          <!-- Button -->
+          <div class="mt-4">
+            <NuxtLink :to="`/dashboard/${organization.name}`">
+              <n-button type="primary" class="hover:shadow-lg">
+                <template #icon>
+                  <Icon name="ri:settings-4-fill" />
+                </template>
+                View Codefair enabled repositories
+              </n-button>
+            </NuxtLink>
+          </div>
+        </n-card>
+      </div>
+    </n-flex>
   </main>
 </template>
