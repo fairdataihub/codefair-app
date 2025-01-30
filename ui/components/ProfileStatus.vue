@@ -25,8 +25,10 @@ type DropdownOption = {
 const settingOptions = ref<DropdownOption[]>([]);
 
 // Fetch user data and organizations if logged in
+// TODO: Consider if there are methods to improve perfomance as this is called on every page load
 if (loggedIn.value) {
   try {
+    // TODO: Convert all this to a api function call
     // Get the user access token from the database
     const userToken = await $fetch("/api/user/token", {
       headers: useRequestHeaders(["cookie"]),
@@ -87,6 +89,14 @@ if (loggedIn.value) {
     const uniqueOrgs = combinedOrgs.filter(
       (org, index, self) => index === self.findIndex((t) => t.id === org.id),
     );
+
+    // Include user information in the uniqueOrgs array
+    uniqueOrgs.unshift({
+      id: user.value?.github_id,
+      name: user.value?.username,
+      avatar: `https://avatars.githubusercontent.com/u/${user.value?.github_id}?v=4`,
+      description: "Your personal account",
+    })
 
     // Map organizations to dropdown options
     const orgChildren = uniqueOrgs.map((org: any) => ({
