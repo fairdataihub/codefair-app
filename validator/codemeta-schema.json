@@ -27,79 +27,60 @@
       "description": "The authors of the software package.",
       "minItems": 1,
       "items": {
+        "type": "object",
         "oneOf": [
           {
-            "type": "object",
+            "properties": {
+              "@id": {
+                "type": "string",
+                "description": "The URI of the author."
+              }
+            },
+            "required": ["@id"]
+          },
+          {
             "properties": {
               "id": {
                 "type": "string",
                 "description": "The URI of the author."
-              },
-              "type": {
-                "type": "string",
-                "description": "Organization or Person",
-                "enum": [
-                  "Organization",
-                  "Person"
-                ]
-              },
-              "email": {
-                "type": "string",
-                "description": "The email address of the author."
-              },
-              "familyName": {
-                "type": "string",
-                "description": "The family name of the author."
-              },
-              "givenName": {
-                "type": "string",
-                "description": "The given name of the author.",
-                "minLength": 1
-              },
-              "affiliation": {
-                "type": "object",
-                "description": "The affiliation of the author.",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "The name of the affiliation."
-                  },
-                  "type": {
-                    "type": "string"
-                  }
-                }
               }
-            }
+            },
+            "required": ["id"]
+          }
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Organization or Person",
+            "enum": ["Organization", "Person"]
           },
-          {
+          "email": {
+            "type": "string",
+            "description": "The email address of the author."
+          },
+          "familyName": {
+            "type": "string",
+            "description": "The family name of the author."
+          },
+          "givenName": {
+            "type": "string",
+            "description": "The given name of the author.",
+            "minLength": 1
+          },
+          "affiliation": {
             "type": "object",
-            "description": "Object representing roles of the author.",
-            "required": ["type", "schema:author", "roleName"],
+            "description": "The affiliation of the author.",
             "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the affiliation."
+              },
               "type": {
-                "type": "string",
-                "enum": ["Role"],
-                "description": "The type of the author role."
-              },
-              "schema:author": {
-                "type": "string",
-                "description": "Will match with the author's id."
-              },
-              "roleName": {
-                "type": "string",
-                "description": "The name of the author role."
-              },
-              "endDate": {
-                "type": "string",
-                "description": "The end date of the author role."
-              },
-              "startDate": {
-                "type": "string",
-                "description": "The start date of the author role."
+                "type": "string"
               }
             }
           }
-        ]
+        }
       }
     },
     "applicationCategory": {
@@ -131,41 +112,57 @@
       "description": "The contributors of the software package.",
       "items": {
         "type": "object",
+        "oneOf": [
+          {
+            "properties": {
+              "@id": {
+                "type": "string",
+                "description": "The URI of the contributor."
+              }
+            },
+            "required": ["@id"]
+          },
+          {
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The URI of the contributor."
+              }
+            },
+            "required": ["id"]
+          }
+        ],
         "properties": {
+          "type": {
+            "type": "string",
+            "description": "Organization or Person",
+            "enum": ["Organization", "Person"]
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address of the contributor."
+          },
+          "familyName": {
+            "type": "string",
+            "description": "The family name of the contributor."
+          },
+          "givenName": {
+            "type": "string",
+            "description": "The given name of the contributor.",
+            "minLength": 1
+          },
           "affiliation": {
             "type": "object",
-            "description": "The affiliation of the author.",
+            "description": "The affiliation of the contributor.",
             "properties": {
               "name": {
                 "type": "string",
                 "description": "The name of the affiliation."
               },
               "type": {
-                "type": "string",
-                "description": "Organization or Person"
+                "type": "string"
               }
             }
-          },
-          "email": {
-            "type": "string",
-            "description": "The email address of the author."
-          },
-          "familyName": {
-            "type": "string",
-            "description": "The family name of the author."
-          },
-          "givenName": {
-            "type": "string",
-            "description": "The given name of the author.",
-            "minLength": 1
-          },
-          "id": {
-            "type": "string",
-            "description": "The URI of the author."
-          },
-          "type": {
-            "type": "string",
-            "description": "Organization or Person"
           }
         }
       }
