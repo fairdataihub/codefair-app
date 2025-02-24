@@ -323,7 +323,7 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #content>
-          <p>A License is required according to the FAIR-BioRS guidelines</p>
+          <p class="text-base">A License is required according to the FAIR-BioRS guidelines</p>
         </template>
 
         <template #action>
@@ -460,7 +460,7 @@ const handleSettingsSelect = (key: any) => {
           </n-alert>
 
           <div v-else>
-            <p class="w-full">
+            <p class="w-full text-base">
               The code metadata for the repository is shown here. This includes
               the number of files, the number of lines of code, and the number
               of commits.
@@ -545,7 +545,7 @@ const handleSettingsSelect = (key: any) => {
             There are no CWL files in this repository.
           </n-alert>
 
-          <p v-else>
+          <p v-else class="text-base">
             Common Workflow Language (CWL) is an open standard for describing
             how to run command line tools and connect them to create workflows.
           </p>
@@ -651,7 +651,7 @@ const handleSettingsSelect = (key: any) => {
 
         <template #content>
           <div class="flex w-full flex-col space-y-2">
-            <p>
+            <p class="text-base">
               To make your software FAIR, it is necessary to archive it in a
               software archival repository like Zenodo every time you make a
               release.

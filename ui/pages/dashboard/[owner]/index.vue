@@ -149,7 +149,7 @@ const handleSettingsSelect = (key: string) => {
           <!-- Repository Name and Link -->
           <div class="flex flex-col">
             <span
-              class="text-base font-medium text-gray-700"
+              class="text-gray-700 text-base"
             >
               {{ repo.repo }}
           </span>
@@ -172,7 +172,7 @@ const handleSettingsSelect = (key: string) => {
             <NuxtLink
               :to="repo?.latestCommitUrl"
               target="_blank"
-              class="truncate text-sm font-medium text-slate-600 transition-all hover:text-blue-600"
+              class="truncate text-base text-slate-600 transition-all hover:text-blue-600"
             >
               {{ repo?.latestCommitMessage }}
             </NuxtLink>
@@ -190,7 +190,7 @@ const handleSettingsSelect = (key: string) => {
           <!-- Manage Button -->
           <div class="flex justify-end">
             <NuxtLink :to="`/dashboard/${owner}/${repo.repo}`">
-              <n-button size="small" type="primary" class="hover:shadow-md">
+              <n-button size="medium" type="primary" class="hover:shadow-md">
                 <template #icon>
                   <Icon name="ri:settings-4-fill" />
                 </template>
