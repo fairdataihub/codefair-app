@@ -521,7 +521,7 @@ const loginToZenodo = async () => {
   })
     .then(() => {
       const githubDetails = {
-        githubTag: githubFormValue.value.tag,
+        githubTag: githubFormValue.value.tag === "new" ? githubFormValue.value.tagTitle : githubFormValue.value.tag,
         githubRelease: githubFormValue.value.release,
       };
 
