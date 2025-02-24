@@ -151,16 +151,19 @@ if (data.value) {
   githubReleaseOptions.value = [];
 
   for (const release of data.value.githubReleases) {
-    githubTagOptions.value.push({
-      disabled: !release.draft,
-      label: release.tagName,
-      value: release.tagName,
-    });
     githubReleaseOptions.value.push({
       disabled: !release.draft,
       label: release.name || "Untitled release",
       prerelease: release.prerelease,
       value: release.id.toString(),
+    });
+  }
+
+  for (const tag of data.value.githubTags) {
+    githubTagOptions.value.push({
+      disabled: tag.released,
+      label: tag.name || "Untitled tag",
+      value: tag.name,
     });
   }
 
@@ -1293,9 +1296,9 @@ onBeforeUnmount(() => {
             "
             type="success"
             @click="navigateToDashboard"
-          >
+            >
             Okay
-          </n-button>
+            </n-button>
         </n-flex>
       </template>
     </n-modal>

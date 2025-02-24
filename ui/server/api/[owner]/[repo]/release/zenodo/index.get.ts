@@ -148,9 +148,27 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Get a list of github tags
+  const gt = await fetch(`https://api.github.com/repos/${owner}/${repo}/tags`, {
+    headers: {
+      Authorization: `Bearer ${githubAccessToken}`,
+    },
+    method: "GET",
+  });
+
+  if (!gt.ok) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Failed to fetch GitHub tags",
+    });
+  }
+
+  const githubTags: GitHubTags = [];
+
   const githubReleases: GitHubReleases = [];
 
   const githubReleasesJson = await gr.json();
+  const githubTagsJson = await gt.json();
 
   for (const release of githubReleasesJson) {
     githubReleases.push({
@@ -165,10 +183,28 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  for (const tag of githubTagsJson) {
+    const isReleased = githubReleases.some((release) => {
+      return release.tagName === tag.name && !release.draft;
+    });
+    githubTags.push({
+      commit: {
+        sha: tag.commit.sha,
+        url: tag.commit.url,
+      },
+      name: tag.name,
+      node_id: tag.node_id,
+      tarballUrl: tag.tarball_url,
+      zipballUrl: tag.zipball_url,
+      released: isReleased,
+    });
+  }
+
   return {
     existingZenodoDepositionId:
       zenodoDeposition?.existing_zenodo_deposition_id || null,
     githubReleases,
+    githubTags,
     haveValidZenodoToken,
     lastPublishedZenodoDoi: zenodoDeposition?.last_published_zenodo_doi || "",
     lastSelectedGithubRelease: zenodoDeposition?.github_release_id || null,
