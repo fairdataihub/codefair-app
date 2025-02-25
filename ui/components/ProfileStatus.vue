@@ -91,6 +91,8 @@ if (loggedIn.value) {
     );
 
     // Include user information in the uniqueOrgs array
+    // Add a border to separate user from organizations
+
     uniqueOrgs.unshift({
       id: user.value?.github_id,
       name: user.value?.username,
@@ -99,18 +101,30 @@ if (loggedIn.value) {
     })
 
     // Map organizations to dropdown options
-    const orgChildren = uniqueOrgs.map((org: any) => ({
-      key: `/dashboard/${org.name}`,
-      label: org.name,
-      icon: () =>
-        h("img", {
-          src: org.avatar
-            ? org.avatar
-            : `https://api.dicebear.com/9.x/identicon/svg?seed=${org.id}&backgroundColor=ffffff&backgroundType=gradientLinear`,
-          alt: org.name,
-          style: "width: 24px; height: 24px; border-radius: 50%;",
-        }),
-    }));
+    let count = 0;
+    const orgChildren: any[] = [];
+    uniqueOrgs.forEach((org: any) => {
+      if (count === 1) {
+        orgChildren.push({
+          key: `d1`,
+          type: "divider",
+        });
+      }
+      orgChildren.push({
+        key: `/dashboard/${org.name}`,
+        label: org.name,
+        icon: () =>
+          h("img", {
+            src: org.avatar
+              ? org.avatar
+              : `https://api.dicebear.com/9.x/identicon/svg?seed=${org.id}&backgroundColor=ffffff&backgroundType=gradientLinear`,
+            alt: org.name,
+            style: "width: 24px; height: 24px; border-radius: 50%;",
+          }),
+      });
+      count++;
+    });
+
 
     // Update settingOptions with organizations
     settingOptions.value = [
