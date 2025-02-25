@@ -177,6 +177,14 @@
         }
       }
     },
+    "continuousIntegration": {
+      "type": "string",
+      "description": "The continuous integration service used for the software."
+    },
+    "contIntegration": {
+      "type": "string",
+      "description": "The continuous integration service used for the software."
+    },
     "codeRepository": {
       "type": "string",
       "description": "The URL of the code repository."
