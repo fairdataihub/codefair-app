@@ -75,6 +75,7 @@ const toggleMobileMenu = () => {
           </NuxtLink>
 
           <NuxtLink
+            v-if="user?.username"
             to="/dashboard"
             class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
           >
