@@ -181,23 +181,55 @@ export default defineEventHandler(async (event) => {
       tagName: release.tag_name,
       targetCommitish: release.target_commitish,
     });
+
+    // if release is draft, add tag to the list of tags
+    if (release.draft) {
+      githubTags.push({
+        commit: {
+          sha: release.target_commitish,
+          url: "",
+        },
+        name: release.tag_name,
+        node_id: "",
+        tarballUrl: "",
+        zipballUrl: "",
+        released: false,
+      });
+    }
   }
 
   for (const tag of githubTagsJson) {
     const isReleased = githubReleases.some((release) => {
       return release.tagName === tag.name && !release.draft;
     });
-    githubTags.push({
-      commit: {
-        sha: tag.commit.sha,
-        url: tag.commit.url,
-      },
-      name: tag.name,
-      node_id: tag.node_id,
-      tarballUrl: tag.tarball_url,
-      zipballUrl: tag.zipball_url,
-      released: isReleased,
-    });
+    // Add tag if it is not already in the list
+    if (githubTags.some((t) => t.name === tag.name)) {
+      githubTags.push({
+        commit: {
+          sha: tag.commit.sha,
+          url: tag.commit.url,
+        },
+        name: tag.name,
+        node_id: tag.node_id,
+        tarballUrl: tag.tarball_url,
+        zipballUrl: tag.zipball_url,
+        released: isReleased,
+      });
+    } else {
+      // Update the element in the list
+      const index = githubTags.findIndex((t) => t.name === tag.name);
+      githubTags[index] = {
+        commit: {
+          sha: tag.commit.sha,
+          url: tag.commit.url,
+        },
+        name: tag.name,
+        node_id: tag.node_id,
+        tarballUrl: tag.tarball_url,
+        zipballUrl: tag.zipball_url,
+        released: isReleased,
+      };
+    }
   }
 
   return {
