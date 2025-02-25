@@ -74,15 +74,12 @@ const toggleMobileMenu = () => {
             
           </NuxtLink>
 
-          <n-badge v-if="user?.username" value="beta" type="warning">
-            <!-- Using a here to request a page reload -->
-            <a
-              :href="`/dashboard`"
-              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-            >
-              <span class=""> Dashboard </span>
-            </a>
-          </n-badge>
+          <NuxtLink
+            to="/dashboard"
+            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+          >
+            Dashboard
+          </NuxtLink>
 
           <div>
             <ProfileStatus />
