@@ -69,12 +69,35 @@ export default defineEventHandler(async (event) => {
     (org, index, self) => index === self.findIndex((t) => t.id === org.id),
   );
 
+  // Count the amount of repositories each organization has from the installation table
+  const RepoCount = await prisma.installation.groupBy({
+    by: ["owner"],
+    _count: {
+      repo: true,
+    },
+  });
+
+  // Store each count in the org object
+  uniqueOrgs.forEach((org) => {
+    const repoCount = RepoCount.find((o) => o.owner === org.name);
+
+    if (repoCount) {
+      org.repoCount = repoCount._count.repo;
+    } else {
+      org.repoCount = 0;
+    }
+  });
+
+  // Determine the amount of repos from user.username
+  const userRepoCount = RepoCount.find((o) => o.owner === user.username);
+
   return {
     orgs: uniqueOrgs,
     user: {
       id: user.id,
       username: user.username,
       github_id: user.github_id,
+      repoCount: userRepoCount ? userRepoCount._count.repo : 0,
     },
   };
 });

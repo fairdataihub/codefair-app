@@ -83,13 +83,20 @@ if (error.value) {
 
           <div></div>
 
-          <div class="flex justify-end">
-            <NuxtLink :to="`/dashboard/${data?.user.username}`">
+          <div class="flex flex-col justify-end">
+            <!-- Repo Count -->
+            <div class="flex flex-row justify-end mb-2">
+              <span class="text-sm text-gray-500">Repositories:&nbsp;</span>
+              <span class="text-sm font-medium text-gray-700">
+                {{ data?.user.repoCount || 0 }}
+            </span>
+            </div>
+            <NuxtLink class="justify-end flex" :to="`/dashboard/${data?.user.username}`">
               <n-button type="primary" class="hover:shadow-lg">
                 <template #icon>
                   <Icon name="ri:settings-4-fill" />
                 </template>
-                View Codefair enabled repositories
+                Manage
               </n-button>
             </NuxtLink>
           </div>
@@ -137,16 +144,24 @@ if (error.value) {
             </div>
           </div>
 
-          <!-- Button -->
-          <div class="mt-4">
+          <div class="mt-4 flex justify-between items-center">
+            <!-- Button -->
             <NuxtLink :to="`/dashboard/${organization.name}`">
               <n-button type="primary" class="hover:shadow-lg">
                 <template #icon>
                   <Icon name="ri:settings-4-fill" />
                 </template>
-                View Codefair enabled repositories
+                Manage
               </n-button>
             </NuxtLink>
+
+            <!-- Repo Count -->
+            <div class="flex flex-row justify-end">
+              <span class="text-sm text-gray-500">Repositories:&nbsp;</span>
+              <span class="text-sm font-medium text-gray-700">
+                {{ organization.repoCount }}
+              </span>
+            </div>
           </div>
         </n-card>
       </div>
