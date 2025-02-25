@@ -27,60 +27,90 @@
       "description": "The authors of the software package.",
       "minItems": 1,
       "items": {
-        "type": "object",
         "oneOf": [
           {
-            "properties": {
-              "@id": {
-                "type": "string",
-                "description": "The URI of the author."
-              }
-            },
-            "required": ["@id"]
-          },
-          {
+            "title": "Person Or Organization",
+            "type": "object",
             "properties": {
               "id": {
                 "type": "string",
                 "description": "The URI of the author."
-              }
-            },
-            "required": ["id"]
-          }
-        ],
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "Organization or Person",
-            "enum": ["Organization", "Person"]
-          },
-          "email": {
-            "type": "string",
-            "description": "The email address of the author."
-          },
-          "familyName": {
-            "type": "string",
-            "description": "The family name of the author."
-          },
-          "givenName": {
-            "type": "string",
-            "description": "The given name of the author.",
-            "minLength": 1
-          },
-          "affiliation": {
-            "type": "object",
-            "description": "The affiliation of the author.",
-            "properties": {
-              "name": {
+              },
+              "@id": {
                 "type": "string",
-                "description": "The name of the affiliation."
+                "description": "The URI of the author."
               },
               "type": {
-                "type": "string"
+                "type": "string",
+                "description": "Organization or Person",
+                "enum": ["Organization", "Person"]
+              },
+              "email": {
+                "type": "string",
+                "description": "The email address of the author."
+              },
+              "familyName": {
+                "type": "string",
+                "description": "The family name of the author."
+              },
+              "givenName": {
+                "type": "string",
+                "description": "The given name of the author.",
+                "minLength": 1
+              },
+              "affiliation": {
+                "type": "object",
+                "description": "The affiliation of the author.",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The name of the affiliation."
+                  },
+                  "type": {
+                    "type": "string"
+                  }
+                }
               }
-            }
+            },
+            "required": ["givenName", "type"],
+            "oneOf": [
+              { "required": ["id"] },
+              { "required": ["@id"] }
+            ],
+            "additionalProperties": false
+          },
+          {
+            "title": "Role",
+            "type": "object",
+            "properties": {
+              "schema:author": {
+                "type": "string",
+                "description": "The URI linking to an author."
+              },
+              "roleName": {
+                "type": "string",
+                "description": "The name of the role."
+              },
+              "startDate": {
+                "type": "string",
+                "format": "date",
+                "description": "The start date of the role."
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date",
+                "description": "The end date of the role."
+              },
+              "type": {
+                "type": "string",
+                "enum": ["Role"],
+                "description": "Indicates that this is a role."
+              }
+            },
+            "required": ["schema:author", "roleName", "type"],
+            "additionalProperties": false
           }
-        }
+        ]
       }
     },
     "applicationCategory": {
@@ -109,62 +139,93 @@
     },
     "contributor": {
       "type": "array",
-      "description": "The contributors of the software package.",
+      "description": "The authors of the software package.",
+      "minItems": 1,
       "items": {
-        "type": "object",
         "oneOf": [
           {
-            "properties": {
-              "@id": {
-                "type": "string",
-                "description": "The URI of the contributor."
-              }
-            },
-            "required": ["@id"]
-          },
-          {
+            "title": "PersonOrOrganization",
+            "type": "object",
             "properties": {
               "id": {
                 "type": "string",
                 "description": "The URI of the contributor."
-              }
-            },
-            "required": ["id"]
-          }
-        ],
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "Organization or Person",
-            "enum": ["Organization", "Person"]
-          },
-          "email": {
-            "type": "string",
-            "description": "The email address of the contributor."
-          },
-          "familyName": {
-            "type": "string",
-            "description": "The family name of the contributor."
-          },
-          "givenName": {
-            "type": "string",
-            "description": "The given name of the contributor.",
-            "minLength": 1
-          },
-          "affiliation": {
-            "type": "object",
-            "description": "The affiliation of the contributor.",
-            "properties": {
-              "name": {
+              },
+              "@id": {
                 "type": "string",
-                "description": "The name of the affiliation."
+                "description": "The URI of the contributor."
               },
               "type": {
-                "type": "string"
+                "type": "string",
+                "description": "Organization or Person",
+                "enum": ["Organization", "Person"]
+              },
+              "email": {
+                "type": "string",
+                "description": "The email address of the contributor."
+              },
+              "familyName": {
+                "type": "string",
+                "description": "The family name of the contributor."
+              },
+              "givenName": {
+                "type": "string",
+                "description": "The given name of the contributor.",
+                "minLength": 1
+              },
+              "affiliation": {
+                "type": "object",
+                "description": "The affiliation of the contributor.",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The name of the affiliation."
+                  },
+                  "type": {
+                    "type": "string"
+                  }
+                }
               }
-            }
+            },
+            "required": ["givenName", "type"],
+            "oneOf": [
+              { "required": ["id"] },
+              { "required": ["@id"] }
+            ],
+            "additionalProperties": false
+          },
+          {
+            "title": "Role",
+            "type": "object",
+            "properties": {
+              "contributor": {
+                "type": "string",
+                "description": "The URI linking to an contributor."
+              },
+              "roleName": {
+                "type": "string",
+                "description": "The name of the role."
+              },
+              "startDate": {
+                "type": "string",
+                "format": "date",
+                "description": "The start date of the role."
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date",
+                "description": "The end date of the role."
+              },
+              "type": {
+                "type": "string",
+                "enum": ["Role"],
+                "description": "Indicates that this is a role."
+              }
+            },
+            "required": ["contributor", "roleName", "type"],
+            "additionalProperties": false
           }
-        }
+        ]
       }
     },
     "codemeta:continuousIntegration": {
