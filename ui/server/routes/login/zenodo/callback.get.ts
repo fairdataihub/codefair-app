@@ -26,10 +26,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Extract values from the parsed state
-  const userId = parsedState.userId;
-  const owner = parsedState.owner;
-  const repo = parsedState.repo;
-  const githubDetails = parsedState.githubDetails;
+  const { userId, owner, repo, githubDetails } = parsedState;
 
   if (!userId || !owner || !repo || !githubDetails) {
     throw createError({
