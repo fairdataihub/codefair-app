@@ -163,12 +163,14 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const githubTags: GitHubTags = [];
+  // const githubTags: GitHubTags = [];
 
   const githubReleases: GitHubReleases = [];
 
   const githubReleasesJson = await gr.json();
   const githubTagsJson = await gt.json();
+  // Create a map for tags keyed by their name
+  const tagMap = new Map();
 
   for (const release of githubReleasesJson) {
     githubReleases.push({
@@ -181,30 +183,64 @@ export default defineEventHandler(async (event) => {
       tagName: release.tag_name,
       targetCommitish: release.target_commitish,
     });
+
+    // Add draft tag to the tag map
+    tagMap.set(release.tag_name, {
+      commit: { sha: release.target_commitish, url: "" },
+      name: release.tag_name,
+      node_id: "",
+      tarballUrl: "",
+      zipballUrl: "",
+      released: !release.draft,
+    });
   }
 
+  // Process GitHub tags JSON, updating or adding each tag
   for (const tag of githubTagsJson) {
-    const isReleased = githubReleases.some((release) => {
-      return release.tagName === tag.name && !release.draft;
-    });
-    githubTags.push({
-      commit: {
-        sha: tag.commit.sha,
-        url: tag.commit.url,
-      },
-      name: tag.name,
-      node_id: tag.node_id,
-      tarballUrl: tag.tarball_url,
-      zipballUrl: tag.zipball_url,
-      released: isReleased,
-    });
+    // Check if the tag is already in the map, if so verify if is attached to a released release
+    const existingTag = tagMap.get(tag.name);
+    if (existingTag && !existingTag.released) {
+      // If the tag is already released, skip it
+      tagMap.set(tag.name, {
+        commit: { sha: tag.commit.sha, url: tag.commit.url },
+        name: tag.name,
+        node_id: tag.node_id,
+        tarballUrl: tag.tarball_url,
+        zipballUrl: tag.zipball_url,
+        released: false,
+      });
+    } else {
+      // If the tag is not in the map, add it but verify it is attached to a released release
+      const isReleased = githubReleasesJson.some(
+        (release: any) => release.tag_name === tag.name && !release.draft,
+      );
+      tagMap.set(tag.name, {
+        commit: { sha: tag.commit.sha, url: tag.commit.url },
+        name: tag.name,
+        node_id: tag.node_id,
+        tarballUrl: tag.tarball_url,
+        zipballUrl: tag.zipball_url,
+        released: isReleased,
+      });
+    }
   }
+
+  // Sort tags and releases by name
+  githubReleases.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Convert the map back to an array
+  const githubTags = Array.from(tagMap.values());
+
+  // sort tags alphabetically
+  const githubTagsSorted = githubTags.sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   return {
     existingZenodoDepositionId:
       zenodoDeposition?.existing_zenodo_deposition_id || null,
     githubReleases,
-    githubTags,
+    githubTags: githubTagsSorted,
     haveValidZenodoToken,
     lastPublishedZenodoDoi: zenodoDeposition?.last_published_zenodo_doi || "",
     lastSelectedGithubRelease: zenodoDeposition?.github_release_id || null,

@@ -612,7 +612,7 @@ const navigateToPR = () => {
                     >
                       <n-input
                         v-model:value="author.uri"
-                        placeholder="https://example.com/bertoltbrecht"
+                        placeholder="https://example.com/bertoltbrecht or https://orcid.org/0000-0002-4306-4464"
                         clearable
                       />
                     </n-form-item>
@@ -825,7 +825,7 @@ const navigateToPR = () => {
                     >
                       <n-input
                         v-model:value="contributor.uri"
-                        placeholder="https://example.com/bertoltbrecht"
+                        placeholder="https://example.com/bertoltbrecht or https://orcid.org/0000-0002-4306-4464"
                         clearable
                       />
                     </n-form-item>

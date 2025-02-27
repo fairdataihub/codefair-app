@@ -66,20 +66,21 @@ const toggleMobileMenu = () => {
 
           <NuxtLink
             to="https://github.com/fairdataihub/codefair-app"
+            target="_blank"
             class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
           >
-            GitHub
+          <span>GitHub</span>
+          <Icon name="ri:external-link-line" size="13" />
+            
           </NuxtLink>
 
-          <n-badge v-if="user?.username" value="beta" type="warning">
-            <!-- Using a here to request a page reload -->
-            <a
-              :href="`/dashboard`"
-              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-            >
-              <span class=""> Dashboard </span>
-            </a>
-          </n-badge>
+          <NuxtLink
+            v-if="user?.username"
+            to="/dashboard"
+            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+          >
+            Dashboard
+          </NuxtLink>
 
           <div>
             <ProfileStatus />

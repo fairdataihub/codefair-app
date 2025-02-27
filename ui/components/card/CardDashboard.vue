@@ -42,7 +42,7 @@ const slots = useSlots();
         </div>
       </div>
 
-      <div class="flex items-center justify-between gap-8 pt-6">
+      <div class="flex items-center justify-between gap-8 pt-4">
         <slot name="content"></slot>
 
         <slot name="action"></slot>
