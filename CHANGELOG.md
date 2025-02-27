@@ -5,6 +5,24 @@ All notable changes the Codefair App will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## v3.3.0 - TBD
+
+### Added
+
+- Updated UI of the dashboards to improve user experience.
+- Rework Zenodo workflow to allow users to create a draft release on GitHub before signing into Zenodo.
+- Update the profile status to include a dropdown of organizations to switch between dashboards.
+- Add a new endpoint to retrieve the user's GitHub token for use in the profile dropdown.
+- Hide "Okay" button on popup that shows Zenodo release status until it is clickable.
+
+### Fixed
+
+- Gather releases and tags independently to ensure accurate data collection for Zenodo workflow.
+- Update placeholder for Contributor and Author URI fields in the metadata template to mention ORCID are valid inputs.
+- Codemeta validation schemas were split in two for version 2.0 and 3.0
+- Codemeta validation schema for version 3.0 was updated to include variations of certain fields.
+
+
 ## v3.2.1 - 12-12-2024
 
 ### Added
