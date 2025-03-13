@@ -159,7 +159,7 @@ export async function applyCWLTemplate(
   let url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/view/cwl-validation`
 
   // Delete file entries from db if they were removed from the repository
-  if (subjects.cwl.removed_files.length > 0) {
+  if (subjects.cwl?.files && subjects.cwl.removed_files.length > 0) {
     // Remove the files from the database
     const existingCWL = await dbInstance.cwlValidation.findUnique({
       where: {
@@ -196,7 +196,7 @@ export async function applyCWLTemplate(
     },
   })
 
-  if (subjects.cwl.files.length === 0) {
+  if (subjects.cwl?.files && subjects.cwl.files.length === 0) {
     logwatch.warn(`No CWL files found in the repository, ${repository.name}`)
 
     if (existingCWL) {

@@ -1,7 +1,7 @@
 'use strict'
 
 import * as express from 'express'
-import { consola } from 'consola'
+import { checkForCompliance } from './utils/compliance-checks/index.js'
 import { renderIssues, createIssue } from './utils/renderer/index.js'
 import dbInstance from './db.js'
 import { logwatch } from './utils/logwatch.js'
@@ -15,6 +15,11 @@ import {
   getDefaultBranch,
   getReleaseById,
   downloadRepositoryZip,
+  iterateCommitDetails,
+  ignoreCommitMessage,
+  gatherCommitDetails,
+  purgeDBEntry,
+  disableCodefairOnRepo,
 } from './utils/tools/index.js'
 import { checkForLicense, validateLicense } from './license/index.js'
 import { checkForCitation } from './citation/index.js'
@@ -48,6 +53,11 @@ checkEnvVariable('CODEFAIR_APP_DOMAIN')
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN
 const ISSUE_TITLE = `FAIR Compliance Dashboard`
 const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`
+const BOT_MADE_PR_TITLES = [
+  'feat: ✨ LICENSE file added',
+  'feat: ✨ Add code metadata files',
+  'feat: ✨ Update code metadata files',
+]
 const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT, GH_APP_NAME } = process.env
 
 /**
@@ -103,27 +113,18 @@ export default async (app, { getRouter }) => {
         // Check if the repository is empty
         const emptyRepo = await isRepoEmpty(context, owner, repository.name)
 
-        const latestCommitInfo = {}
+        let latestCommitInfo = {
+          latest_commit_sha: '',
+          latest_commit_message: '',
+          latest_commit_url: '',
+          latest_commit_date: '',
+        }
         if (!emptyRepo) {
-          // Get the name of the main branch
-          const mainBranch = await getDefaultBranch(
+          latestCommitInfo = await gatherCommitDetails(
             context,
             owner,
-            repository.name
+            repository
           )
-          // Gather the latest commit to main info
-          const latestCommit = await context.octokit.repos.getCommit({
-            owner,
-            ref: mainBranch,
-            repo: repository.name,
-          })
-
-          latestCommitInfo.latest_commit_sha = latestCommit.data.sha || ''
-          latestCommitInfo.latest_commit_message =
-            latestCommit.data.commit.message || ''
-          latestCommitInfo.latest_commit_url = latestCommit.data.html_url || ''
-          latestCommitInfo.latest_commit_date =
-            latestCommit.data.commit.committer.date || ''
         }
 
         // Check if entry in installation and analytics collection
@@ -140,17 +141,11 @@ export default async (app, { getRouter }) => {
         }
 
         // BEGIN CHECKING FOR COMPLIANCE
-        const license = await checkForLicense(context, owner, repository.name)
-        const citation = await checkForCitation(context, owner, repository.name)
-        const codemeta = await checkForCodeMeta(context, owner, repository.name)
-        const cwlObject = await getCWLFiles(context, owner, repository)
-
-        const subjects = {
-          citation,
-          codemeta,
-          cwl: cwlObject,
-          license,
-        }
+        const subjects = await checkForCompliance(
+          context,
+          owner,
+          repository.name
+        )
 
         // Create issue body template
         const issueBody = await renderIssues(
@@ -179,79 +174,7 @@ export default async (app, { getRouter }) => {
       }
 
       for (const repository of repositories) {
-        // Check if the installation is already in the database
-        const installation = await db.installation.findUnique({
-          where: {
-            id: repository.id,
-          },
-        })
-
-        const license = await db.licenseRequest.findUnique({
-          where: {
-            repository_id: repository.id,
-          },
-        })
-
-        const metadata = await db.codeMetadata.findUnique({
-          where: {
-            repository_id: repository.id,
-          },
-        })
-
-        const cwl = await db.cwlValidation.findUnique({
-          where: {
-            repository_id: repository.id,
-          },
-        })
-
-        const zenodoDeposition = await db.zenodoDeposition.findUnique({
-          where: {
-            repository_id: repository.id,
-          },
-        })
-
-        if (license) {
-          await db.licenseRequest.delete({
-            where: {
-              repository_id: repository.id,
-            },
-          })
-        }
-
-        if (metadata) {
-          await db.codeMetadata.delete({
-            where: {
-              repository_id: repository.id,
-            },
-          })
-        }
-
-        if (cwl) {
-          await db.cwlValidation.delete({
-            where: {
-              repository_id: repository.id,
-            },
-          })
-        }
-
-        if (zenodoDeposition) {
-          await db.zenodoDeposition.delete({
-            where: {
-              repository_id: repository.id,
-            },
-          })
-        }
-
-        if (installation) {
-          // Remove from the database
-          await db.installation.delete({
-            where: {
-              id: repository.id,
-            },
-          })
-        }
-
-        logwatch.info(`Repository uninstalled: ${repository.name}`)
+        await purgeDBEntry(repository)
       }
     }
   )
@@ -332,145 +255,28 @@ export default async (app, { getRouter }) => {
 
     // Check if the author of the commit is the bot
     // Ignore pushes when bot updates the metadata files
-    const commitAuthor = context.payload.head_commit.author
-    if (commitAuthor?.name === `${GH_APP_NAME}[bot]`) {
-      const commitMessages = [
-        'chore: 📝 Update CITATION.cff with Zenodo identifier',
-        'chore: 📝 Update codemeta.json with Zenodo identifier',
-      ]
-      if (
-        latestCommitInfo.latest_commit_message === commitMessages[0] ||
-        latestCommitInfo.latest_commit_message === commitMessages[1]
-      ) {
-        return
-      }
+    const ignoreBotEvent = await ignoreCommitMessage(
+      latestCommitInfo.latest_commit_message,
+      context.payload.head_commit.author
+    )
+    if (ignoreBotEvent) {
+      return
     }
 
     // Grab the commits being pushed
     const { commits } = context.payload
 
-    let cwlObject = {
-      contains_cwl_files: false,
-      files: [],
-      removed_files: [],
-    }
-    let license = await checkForLicense(context, owner, repository.name)
-    let citation = await checkForCitation(context, owner, repository.name)
-    let codemeta = await checkForCodeMeta(context, owner, repository.name)
-    if (fullCodefairRun) {
-      cwlObject = await getCWLFiles(context, owner, repository)
-    }
+    let subjects = await checkForCompliance(
+      context,
+      owner,
+      repository.name,
+      fullCodefairRun
+    )
 
     // Check if any of the commits added a LICENSE, CITATION, CWL files, or codemeta file
-    const gatheredCWLFiles = []
-    const removedCWLFiles = []
-    const commitIds = []
     if (commits.length > 0) {
-      for (let i = 0; i < commits.length; i++) {
-        if (commits[i]?.added?.length > 0) {
-          // Iterate through the added files
-          for (let j = 0; j < commits[i]?.added.length; j++) {
-            if (commits[i].added[j] === 'LICENSE') {
-              license = true
-              continue
-            }
-            if (commits[i].added[j] === 'CITATION.cff') {
-              citation = true
-              continue
-            }
-            if (commits[i].added[j] === 'codemeta.json') {
-              codemeta = true
-              continue
-            }
-            const fileSplit = commits[i].added[j].split('.')
-            if (fileSplit.includes('cwl')) {
-              commitIds.push(commits[i].id)
-              gatheredCWLFiles.push({
-                commitId: commits[i].id,
-                filePath: commits[i].added[j],
-              })
-              continue
-            }
-          }
-        }
-        // Iterate through the modified files
-        if (commits[i]?.modified?.length > 0) {
-          for (let j = 0; j < commits[i]?.modified.length; j++) {
-            const fileSplit = commits[i]?.modified[j].split('.')
-            if (fileSplit.includes('cwl')) {
-              commitIds.push(commits[i].id)
-              gatheredCWLFiles.push({
-                commitId: commits[i].id,
-                filePath: commits[i].modified[j],
-              })
-              continue
-            }
-          }
-        }
-
-        // Iterate through the remove files
-        if (commits[i]?.removed?.length > 0) {
-          for (let j = 0; j < commits[i]?.removed.length; j++) {
-            const fileSplit = commits[i]?.removed[j].split('.')
-            if (fileSplit.includes('cwl')) {
-              removedCWLFiles.push(commits[i].removed[j])
-              continue
-            }
-            if (commits[i]?.removed[j] === 'LICENSE') {
-              license = false
-              continue
-            }
-            if (commits[i]?.removed[j] === 'CITATION.cff') {
-              citation = false
-              continue
-            }
-            if (commits[i]?.removed[j] === 'codemeta.json') {
-              codemeta = false
-              continue
-            }
-          }
-        }
-      }
+      subjects = await iterateCommitDetails(commits, subjects, repository)
     }
-
-    if (gatheredCWLFiles.length > 0) {
-      // Begin requesting the file metadata for each file name
-      for (const file of gatheredCWLFiles) {
-        const cwlFile = await context.octokit.repos.getContent({
-          owner,
-          path: file.filePath,
-          repo: repository.name,
-        })
-
-        cwlFile.data.commitId = file.commitId
-        cwlObject.files.push(cwlFile.data)
-      }
-    }
-
-    cwlObject.contains_cwl_files = cwlObject.files.length > 0 || false
-    cwlObject.files = cwlObject.files.filter(
-      (file) => !removedCWLFiles.includes(file.path)
-    )
-    cwlObject.removed_files = removedCWLFiles
-
-    const cwlExists = await db.cwlValidation.findUnique({
-      where: {
-        repository_id: repository.id,
-      },
-    })
-
-    // Does the repository already contain CWL files
-    if (cwlExists) {
-      cwlObject.contains_cwl_files = cwlExists.contains_cwl_files
-    }
-
-    const subjects = {
-      citation,
-      codemeta,
-      cwl: cwlObject,
-      license,
-    }
-
     const issueBody = await renderIssues(
       context,
       owner,
@@ -489,32 +295,18 @@ export default async (app, { getRouter }) => {
     const { repository } = context.payload
     const prTitle = context.payload.pull_request.title
     const prLink = context.payload.pull_request.html_url
-    const definedPRTitles = [
-      'feat: ✨ LICENSE file added',
-      'feat: ✨ Add code metadata files',
-      'feat: ✨ Update code metadata files',
-    ]
 
     const emptyRepo = await isRepoEmpty(context, owner, repository.name)
 
     // Get the latest commit information if repo is not empty
-    const latestCommitInfo = {}
+    let latestCommitInfo = {
+      latest_commit_sha: '',
+      latest_commit_message: '',
+      latest_commit_url: '',
+      latest_commit_date: '',
+    }
     if (!emptyRepo) {
-      // Get the name of the main branch
-      const mainBranch = await getDefaultBranch(context, owner, repository.name)
-      // Gather the latest commit to main info
-      const latestCommit = await context.octokit.repos.getCommit({
-        owner,
-        ref: mainBranch,
-        repo: repository.name,
-      })
-
-      latestCommitInfo.latest_commit_sha = latestCommit.data.sha || ''
-      latestCommitInfo.latest_commit_message =
-        latestCommit.data.commit.message || ''
-      latestCommitInfo.latest_commit_url = latestCommit.data.html_url || ''
-      latestCommitInfo.latest_commit_date =
-        latestCommit.data.commit.committer.date || ''
+      latestCommitInfo = await gatherCommitDetails(context, owner, repository)
     }
 
     await verifyInstallationAnalytics(context, repository, 0, latestCommitInfo)
@@ -553,7 +345,7 @@ export default async (app, { getRouter }) => {
     // Get the current body of the issue
     let issueBody = dashboardIssue.body
 
-    if (definedPRTitles.includes(prTitle)) {
+    if (BOT_MADE_PR_TITLES.includes(prTitle)) {
       if (prTitle === 'feat: ✨ LICENSE file added') {
         // Add pr link to db
         const response = await db.licenseRequest.update({
@@ -742,10 +534,7 @@ export default async (app, { getRouter }) => {
     ) {
       logwatch.start('Rerunning full repository validation...')
       try {
-        const license = await checkForLicense(context, owner, repository.name)
-        const citation = await checkForCitation(context, owner, repository.name)
-        const codemeta = await checkForCodeMeta(context, owner, repository.name)
-        const cwlObject = await getCWLFiles(context, owner, repository)
+        let subjects = await checkForCompliance(context, owner, repository.name)
 
         // If existing cwl validation exists, update the contains_cwl value
         const cwlExists = await db.cwlValidation.findUnique({
@@ -766,12 +555,7 @@ export default async (app, { getRouter }) => {
           }
         }
 
-        const subjects = {
-          citation,
-          codemeta,
-          cwl: cwlObject,
-          license,
-        }
+        subjects.cwl = cwlObject
 
         const issueBody = await renderIssues(
           context,
@@ -1283,35 +1067,11 @@ export default async (app, { getRouter }) => {
 
   // When an issue is deleted or closed
   app.on(['issues.deleted', 'issues.closed'], async (context) => {
-    const { repository } = context.payload
     const issueTitle = context.payload.issue.title
 
     // Verify the issue dashboard is the one that got close/deleted
     if (issueTitle === ISSUE_TITLE) {
-      const installation = await db.installation.findUnique({
-        where: {
-          id: repository.id,
-        },
-      })
-
-      // Update installation table to disable the repository
-      if (installation) {
-        await db.installation.update({
-          data: { disabled: true },
-          where: { id: repository.id },
-        })
-      }
-
-      // If the action was just closing the issue, update the issue body
-      if (context.payload.action === 'closed') {
-        // Update the body of the issue to reflect that the repository is disabled
-        await context.octokit.issues.update({
-          body: CLOSED_ISSUE_BODY,
-          issue_number: context.payload.issue.number,
-          owner: repository.owner.login,
-          repo: repository.name,
-        })
-      }
+      await disableCodefairOnRepo(context)
     }
   })
 
@@ -1325,29 +1085,16 @@ export default async (app, { getRouter }) => {
       // Check if the repository is empty
       const emptyRepo = await isRepoEmpty(context, owner, repository.name)
 
-      const latestCommitInfo = {}
+      let latestCommitInfo = {
+        latest_commit_sha: '',
+        latest_commit_message: '',
+        latest_commit_url: '',
+        latest_commit_date: '',
+      }
       // Get latest commit info if repository isn't empty
       if (!emptyRepo) {
         // Get the name of the main branch
-        const defaultBranch = await context.octokit.repos.get({
-          owner,
-          repo: repository.name,
-        })
-
-        const mainBranch = defaultBranch.data.default_branch
-        // Gather the latest commit to main info
-        const latestCommit = await context.octokit.repos.getCommit({
-          owner,
-          ref: mainBranch,
-          repo: repository.name,
-        })
-
-        latestCommitInfo.latest_commit_sha = latestCommit.data.sha || ''
-        latestCommitInfo.latest_commit_message =
-          latestCommit.data.commit.message || ''
-        latestCommitInfo.latest_commit_url = latestCommit.data.html_url || ''
-        latestCommitInfo.latest_commit_date =
-          latestCommit.data.commit.committer.date || ''
+        latestCommitInfo = await gatherCommitDetails(context, owner, repository)
       }
 
       // Check if entry in installation and analytics collection
@@ -1359,17 +1106,7 @@ export default async (app, { getRouter }) => {
       )
 
       // Begin fair compliance checks
-      const license = await checkForLicense(context, owner, repository.name)
-      const citation = await checkForCitation(context, owner, repository.name)
-      const codemeta = await checkForCodeMeta(context, owner, repository.name)
-      const cwlObject = await getCWLFiles(context, owner, repository) // This variable is an array of cwl files
-
-      const subjects = {
-        citation,
-        codemeta,
-        cwl: cwlObject,
-        license,
-      }
+      const subjects = await checkForCompliance(context, owner, repository.name)
 
       const issueBody = await renderIssues(
         context,

@@ -13,6 +13,13 @@ import dbInstance from '../../db.js'
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
+const IGNORED_COMMIT_MESSAGES = [
+  'chore: 📝 Update CITATION.cff with Zenodo identifier',
+  'chore: 📝 Update codemeta.json with Zenodo identifier',
+]
+
+const { GH_APP_NAME } = process.env
+
 /**
  * * Initialize the database connection
  * @returns {Promise<boolean>} - Returns true if the database is connected, false otherwise
@@ -568,5 +575,243 @@ export async function downloadRepositoryZip(
       `Error download the repository archive for ${repositoryName}: ${error}`,
       { cause: error }
     )
+  }
+}
+
+export async function iterateCommitDetails(commits, subjects, repository) {
+  const gatheredCWLFiles = []
+  const removedCWLFiles = []
+  for (let i = 0; i < commits.length; i++) {
+    if (commits[i]?.added?.length > 0) {
+      // Iterate through the added files
+      for (let j = 0; j < commits[i]?.added.length; j++) {
+        if (commits[i].added[j] === 'LICENSE') {
+          subjects.license = true
+          continue
+        }
+        if (commits[i].added[j] === 'CITATION.cff') {
+          subjects.citation = true
+          continue
+        }
+        if (commits[i].added[j] === 'codemeta.json') {
+          subjects.codemeta = true
+          continue
+        }
+        const fileSplit = commits[i].added[j].split('.')
+        if (fileSplit.includes('cwl')) {
+          gatheredCWLFiles.push({
+            commitId: commits[i].id,
+            filePath: commits[i].added[j],
+          })
+          continue
+        }
+      }
+    }
+    // Iterate through the modified files
+    if (commits[i]?.modified?.length > 0) {
+      for (let j = 0; j < commits[i]?.modified.length; j++) {
+        const fileSplit = commits[i]?.modified[j].split('.')
+        if (fileSplit.includes('cwl')) {
+          gatheredCWLFiles.push({
+            commitId: commits[i].id,
+            filePath: commits[i].modified[j],
+          })
+          continue
+        }
+      }
+    }
+
+    // Iterate through the remove files
+    if (commits[i]?.removed?.length > 0) {
+      for (let j = 0; j < commits[i]?.removed.length; j++) {
+        const fileSplit = commits[i]?.removed[j].split('.')
+        if (fileSplit.includes('cwl')) {
+          removedCWLFiles.push(commits[i].removed[j])
+          continue
+        }
+        if (commits[i]?.removed[j] === 'LICENSE') {
+          subjects.license = false
+          continue
+        }
+        if (commits[i]?.removed[j] === 'CITATION.cff') {
+          subjects.citation = false
+          continue
+        }
+        if (commits[i]?.removed[j] === 'codemeta.json') {
+          subjects.codemeta = false
+          continue
+        }
+      }
+    }
+  }
+
+  if (gatheredCWLFiles.length > 0) {
+    // Begin requesting the file metadata for each file name
+    for (const file of gatheredCWLFiles) {
+      const cwlFile = await context.octokit.repos.getContent({
+        owner,
+        path: file.filePath,
+        repo: repository.name,
+      })
+
+      cwlFile.data.commitId = file.commitId
+      subjects.cwl.files.push(cwlFile.data)
+    }
+  }
+
+  subjects.cwl.contains_cwl_files = subjects.cwl.files.length > 0 || false
+  subjects.cwl.files = subjects.cwl.files.filter(
+    (file) => !removedCWLFiles.includes(file.path)
+  )
+  subjects.cwl.removed_files = removedCWLFiles
+
+  const cwlExists = await db.cwlValidation.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  })
+
+  // Does the repository already contain CWL files
+  if (cwlExists) {
+    subjects.cwl.contains_cwl_files = cwlExists.contains_cwl_files
+  }
+
+  subjects.cwl = cwlObject
+
+  return subjects
+}
+
+export async function ignoreCommitMessage(commitMessage, author) {
+  if (
+    IGNORED_COMMIT_MESSAGES.includes(commitMessage) &&
+    author === `${GH_APP_NAME}[bot]`
+  ) {
+    logwatch.info(
+      `Ignoring commit message: ${commitMessage} by ${author} as it is a known commit message`
+    )
+    return true
+  }
+  return false
+}
+
+export async function gatherCommitDetails(context, owner, repository) {
+  // Get the name of the main branch
+  const mainBranch = await getDefaultBranch(context, owner, repository.name)
+  // Gather the latest commit to main info
+  const latestCommit = await context.octokit.repos.getCommit({
+    owner,
+    ref: mainBranch,
+    repo: repository.name,
+  })
+
+  return {
+    latest_commit_sha: latestCommit.data.sha || '',
+    latest_commit_message: latestCommit.data.commit.message || '',
+    latest_commit_url: latestCommit.data.html_url || '',
+    latest_commit_date: latestCommit.data.commit.committer.date || '',
+  }
+}
+
+export async function purgeDBEntry(repository) {
+  // Check if the installation is already in the database
+  const installation = await db.installation.findUnique({
+    where: {
+      id: repository.id,
+    },
+  })
+
+  const license = await db.licenseRequest.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  })
+
+  const metadata = await db.codeMetadata.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  })
+
+  const cwl = await db.cwlValidation.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  })
+
+  const zenodoDeposition = await db.zenodoDeposition.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  })
+
+  if (license) {
+    await db.licenseRequest.delete({
+      where: {
+        repository_id: repository.id,
+      },
+    })
+  }
+
+  if (metadata) {
+    await db.codeMetadata.delete({
+      where: {
+        repository_id: repository.id,
+      },
+    })
+  }
+
+  if (cwl) {
+    await db.cwlValidation.delete({
+      where: {
+        repository_id: repository.id,
+      },
+    })
+  }
+
+  if (zenodoDeposition) {
+    await db.zenodoDeposition.delete({
+      where: {
+        repository_id: repository.id,
+      },
+    })
+  }
+
+  if (installation) {
+    // Remove from the database
+    await db.installation.delete({
+      where: {
+        id: repository.id,
+      },
+    })
+  }
+
+  logwatch.info(`Repository uninstalled: ${repository.name}`)
+}
+
+export async function disableCodefairOnRepo(context) {
+  const { repository } = context.payload
+  const installation = await db.installation.findUnique({
+    where: {
+      id: repository.id,
+    },
+  })
+
+  // Update installation table to disable the repository
+  if (installation) {
+    await db.installation.update({
+      data: { disabled: true },
+      where: { id: repository.id },
+    })
+  }
+
+  // If the action was just closing the issue, update the issue body
+  if (context.payload.action === 'closed') {
+    // Update the body of the issue to reflect that the repository is disabled
+    await context.octokit.issues.update({
+      body: CLOSED_ISSUE_BODY,
+      issue_number: context.payload.issue.number,
+      owner: repository.owner.login,
+      repo: repository.name,
+    })
   }
 }
