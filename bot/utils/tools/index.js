@@ -676,8 +676,6 @@ export async function iterateCommitDetails(commits, subjects, repository) {
     subjects.cwl.contains_cwl_files = cwlExists.contains_cwl_files
   }
 
-  subjects.cwl = cwlObject
-
   return subjects
 }
 
