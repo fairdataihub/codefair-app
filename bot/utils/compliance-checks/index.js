@@ -9,7 +9,7 @@ export async function checkForCompliance(
   repositoryName,
   fullCodefairRun = true
 ) {
-  const cwlObject = {
+  let cwlObject = {
     contains_cwl_files: false,
     files: [],
     removed_files: [],
