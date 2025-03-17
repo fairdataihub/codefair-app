@@ -45,6 +45,7 @@ export default defineEventHandler(async (event) => {
     client_id: ZENODO_CLIENT_ID,
     client_secret: ZENODO_CLIENT_SECRET,
     redirect_uri: ZENODO_REDIRECT_URI,
+    scope: "deposit:actions deposit:write",
   });
 
   const oauthTokenRes = await fetch(`${ZENODO_ENDPOINT}/oauth/token`, {
