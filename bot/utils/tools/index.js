@@ -665,7 +665,7 @@ export async function iterateCommitDetails(commits, subjects, repository) {
   )
   subjects.cwl.removed_files = removedCWLFiles
 
-  const cwlExists = await db.cwlValidation.findUnique({
+  const cwlExists = await dbInstance.cwlValidation.findUnique({
     where: {
       repository_id: repository.id,
     },
@@ -712,38 +712,38 @@ export async function gatherCommitDetails(context, owner, repository) {
 
 export async function purgeDBEntry(repository) {
   // Check if the installation is already in the database
-  const installation = await db.installation.findUnique({
+  const installation = await dbInstance.installation.findUnique({
     where: {
       id: repository.id,
     },
   })
 
-  const license = await db.licenseRequest.findUnique({
+  const license = await dbInstance.licenseRequest.findUnique({
     where: {
       repository_id: repository.id,
     },
   })
 
-  const metadata = await db.codeMetadata.findUnique({
+  const metadata = await dbInstance.codeMetadata.findUnique({
     where: {
       repository_id: repository.id,
     },
   })
 
-  const cwl = await db.cwlValidation.findUnique({
+  const cwl = await dbInstance.cwlValidation.findUnique({
     where: {
       repository_id: repository.id,
     },
   })
 
-  const zenodoDeposition = await db.zenodoDeposition.findUnique({
+  const zenodoDeposition = await dbInstance.zenodoDeposition.findUnique({
     where: {
       repository_id: repository.id,
     },
   })
 
   if (license) {
-    await db.licenseRequest.delete({
+    await dbInstance.licenseRequest.delete({
       where: {
         repository_id: repository.id,
       },
@@ -751,7 +751,7 @@ export async function purgeDBEntry(repository) {
   }
 
   if (metadata) {
-    await db.codeMetadata.delete({
+    await dbInstance.codeMetadata.delete({
       where: {
         repository_id: repository.id,
       },
@@ -759,7 +759,7 @@ export async function purgeDBEntry(repository) {
   }
 
   if (cwl) {
-    await db.cwlValidation.delete({
+    await dbInstance.cwlValidation.delete({
       where: {
         repository_id: repository.id,
       },
@@ -767,7 +767,7 @@ export async function purgeDBEntry(repository) {
   }
 
   if (zenodoDeposition) {
-    await db.zenodoDeposition.delete({
+    await dbInstance.zenodoDeposition.delete({
       where: {
         repository_id: repository.id,
       },
@@ -776,7 +776,7 @@ export async function purgeDBEntry(repository) {
 
   if (installation) {
     // Remove from the database
-    await db.installation.delete({
+    await dbInstance.installation.delete({
       where: {
         id: repository.id,
       },
@@ -788,7 +788,7 @@ export async function purgeDBEntry(repository) {
 
 export async function disableCodefairOnRepo(context) {
   const { repository } = context.payload
-  const installation = await db.installation.findUnique({
+  const installation = await dbInstance.installation.findUnique({
     where: {
       id: repository.id,
     },
@@ -796,7 +796,7 @@ export async function disableCodefairOnRepo(context) {
 
   // Update installation table to disable the repository
   if (installation) {
-    await db.installation.update({
+    await dbInstance.installation.update({
       data: { disabled: true },
       where: { id: repository.id },
     })
