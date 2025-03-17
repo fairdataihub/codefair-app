@@ -1,17 +1,24 @@
 /**
  * @fileoverview Utility functions for the bot
  */
-import { consola } from "consola";
-import { logwatch } from "../logwatch.js";
-import { init } from "@paralleldrive/cuid2";
-import human from "humanparser";
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone.js";
-import utc from "dayjs/plugin/utc.js";
-import dbInstance from "../../db.js";
+import { consola } from 'consola'
+import { logwatch } from '../logwatch.js'
+import { init } from '@paralleldrive/cuid2'
+import human from 'humanparser'
+import dayjs from 'dayjs'
+import timezone from 'dayjs/plugin/timezone.js'
+import utc from 'dayjs/plugin/utc.js'
+import dbInstance from '../../db.js'
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+const IGNORED_COMMIT_MESSAGES = [
+  'chore: 📝 Update CITATION.cff with Zenodo identifier',
+  'chore: 📝 Update codemeta.json with Zenodo identifier',
+]
+
+const { GH_APP_NAME } = process.env
 
 /**
  * * Initialize the database connection
@@ -19,12 +26,12 @@ dayjs.extend(timezone);
  */
 export async function intializeDatabase() {
   try {
-    logwatch.start("Connecting to database...");
-    await dbInstance;
-    logwatch.success("Connected to database!");
-    return true;
+    logwatch.start('Connecting to database...')
+    await dbInstance
+    logwatch.success('Connected to database!')
+    return true
   } catch (error) {
-    logwatch.error({message: "Error connecting to database:", error}, true);
+    logwatch.error({ message: 'Error connecting to database:', error }, true)
   }
 }
 
@@ -32,10 +39,10 @@ export async function intializeDatabase() {
  * * Create a unique identifier for database entries
  */
 export const createId = init({
-  fingerprint: "a-custom-host-fingerprint",
+  fingerprint: 'a-custom-host-fingerprint',
   length: 10,
   random: Math.random,
-});
+})
 
 /**
  * * Verify that the required environment variables are set
@@ -43,8 +50,8 @@ export const createId = init({
  */
 export function checkEnvVariable(varName) {
   if (!process.env[varName]) {
-    logwatch.error(`Please set the ${varName} environment variable`);
-    process.exit(1);
+    logwatch.error(`Please set the ${varName} environment variable`)
+    process.exit(1)
   }
 }
 
@@ -60,11 +67,14 @@ export async function getDefaultBranch(context, owner, repositoryName) {
     const defaultBranch = await context.octokit.repos.get({
       owner,
       repo: repositoryName,
-    });
+    })
 
-    return defaultBranch.data.default_branch;
+    return defaultBranch.data.default_branch
   } catch (error) {
-    logwatch.error({message: "Error getting the default branch:", error}, true);
+    logwatch.error(
+      { message: 'Error getting the default branch:', error },
+      true
+    )
   }
 }
 
@@ -83,23 +93,23 @@ export async function verifyFirstIssue(context, owner, repo, title) {
     creator: `${GH_APP_NAME}[bot]`,
     owner,
     repo,
-    state: "all",
-  });
+    state: 'all',
+  })
 
   if (issues.data.length > 0) {
     // iterate through issues to see if there is an issue with the same title
-    let noIssue = false;
+    let noIssue = false
     for (let i = 0; i < issues.data.length; i++) {
       if (issues.data[i].title === title) {
-        noIssue = true;
-        break;
+        noIssue = true
+        break
       }
     }
 
     if (!noIssue) {
-      return false;
+      return false
     } else {
-      return true;
+      return true
     }
   }
 }
@@ -118,8 +128,8 @@ export async function closeOpenIssue(context, owner, repo, title) {
     creator: `${GH_APP_NAME}[bot]`,
     owner,
     repo,
-    state: "open",
-  });
+    state: 'open',
+  })
 
   if (issue.data.length > 0) {
     // If title if issue is found, close the issue
@@ -129,8 +139,8 @@ export async function closeOpenIssue(context, owner, repo, title) {
           issue_number: issue.data[i].number,
           owner,
           repo,
-          state: "closed",
-        });
+          state: 'closed',
+        })
       }
     }
   }
@@ -151,57 +161,57 @@ export async function gatherRepoAuthors(context, owner, repo, fileType) {
   const contributors = await context.octokit.repos.listContributors({
     owner,
     repo,
-  });
+  })
 
   // Get user information for each contributors
   const userInfo = await Promise.all(
     contributors.data.map(async (contributor) => {
       return await context.octokit.users.getByUsername({
         username: contributor.login,
-      });
-    }),
-  );
+      })
+    })
+  )
 
-  const parsedAuthors = [];
+  const parsedAuthors = []
   if (userInfo.length > 0) {
     for (const author of userInfo) {
       // Skip bots
-      if (author.data.type === "Bot") {
-        continue;
+      if (author.data.type === 'Bot') {
+        continue
       }
 
-      const parsedNames = human.parseName(author.data.name);
+      const parsedNames = human.parseName(author.data.name)
       const authorObj = {
-        orcid: "",
+        orcid: '',
         roles: [],
-        uri: "",
-      };
-
-      if (author.data.company && fileType === "citation") {
-        authorObj.affiliation = author.data.company;
+        uri: '',
       }
 
-      if (author.data.company && fileType === "codemeta") {
+      if (author.data.company && fileType === 'citation') {
+        authorObj.affiliation = author.data.company
+      }
+
+      if (author.data.company && fileType === 'codemeta') {
         authorObj.affiliation = {
           name: author.data.company,
-          "@type": "Organization",
-        };
+          '@type': 'Organization',
+        }
       }
 
       if (parsedNames.firstName) {
-        authorObj.givenName = parsedNames.firstName;
+        authorObj.givenName = parsedNames.firstName
       }
       if (parsedNames.lastName) {
-        authorObj.familyName = parsedNames.lastName;
+        authorObj.familyName = parsedNames.lastName
       }
       if (author.data.email) {
-        authorObj.email = author.data.email;
+        authorObj.email = author.data.email
       }
-      parsedAuthors.push(authorObj);
+      parsedAuthors.push(authorObj)
     }
   }
 
-  return parsedAuthors;
+  return parsedAuthors
 }
 
 /**
@@ -217,15 +227,15 @@ export async function gatherLanguagesUsed(context, owner, repo) {
   const languages = await context.octokit.repos.listLanguages({
     owner,
     repo,
-  });
+  })
 
   // Parse the data for languages used
-  let languagesUsed = [];
+  let languagesUsed = []
   if (Object.keys(languages.data).length > 0) {
-    languagesUsed = Object.keys(languages.data);
+    languagesUsed = Object.keys(languages.data)
   }
 
-  return languagesUsed;
+  return languagesUsed
 }
 
 /**
@@ -241,19 +251,19 @@ export async function getDOI(context, owner, repoName) {
     const readme = await context.octokit.repos.getContent({
       owner,
       repo: repoName,
-    });
+    })
 
-    const readmeContent = Buffer.from(readme.data.content, "base64").toString(
-      "utf-8",
-    );
-    const doiRegex = /10.\d{4,9}\/[-._;()/:A-Z0-9]+/i;
-    const doi = doiRegex.exec(readmeContent);
+    const readmeContent = Buffer.from(readme.data.content, 'base64').toString(
+      'utf-8'
+    )
+    const doiRegex = /10.\d{4,9}\/[-._;()/:A-Z0-9]+/i
+    const doi = doiRegex.exec(readmeContent)
 
     if (doi) {
-      return [true, doi[0]];
+      return [true, doi[0]]
     }
   } catch (error) {
-    return [false, ""];
+    return [false, '']
   }
 }
 
@@ -268,12 +278,12 @@ export async function verifyRepoName(
   dbRepoName,
   repository,
   owner,
-  collection,
+  collection
 ) {
   if (dbRepoName !== repository.name) {
     logwatch.info(
-      `Repository name for ${owner} has changed from ${dbRepoName} to ${repository.name}`,
-    );
+      `Repository name for ${owner} has changed from ${dbRepoName} to ${repository.name}`
+    )
 
     // Check if the installation is already in the database
     await collection.update({
@@ -283,7 +293,7 @@ export async function verifyRepoName(
       where: {
         id: repository.id,
       },
-    });
+    })
   }
 }
 
@@ -299,14 +309,17 @@ export async function isRepoEmpty(context, owner, repoName) {
     const repoContent = await context.octokit.repos.getContent({
       owner,
       repo: repoName,
-    });
+    })
 
-    return repoContent.data.length === 0;
+    return repoContent.data.length === 0
   } catch (error) {
     if (error.status === 404) {
-      return true;
+      return true
     }
-    logwatch.error({message: "Error checking if the repository is empty:", error}, true);
+    logwatch.error(
+      { message: 'Error checking if the repository is empty:', error },
+      true
+    )
   }
 }
 
@@ -321,25 +334,32 @@ export async function verifyInstallationAnalytics(
   context,
   repository,
   actionCount = 5,
-  latestCommitInfo = {},
+  latestCommitInfo = {}
 ) {
+  const installationId = context.payload.installation.id
   const owner =
     context.payload?.installation?.account?.login ||
-    context.payload?.repository?.owner?.login;
+    context.payload?.repository?.owner?.login
 
-  const installationId = context.payload.installation.id;
+  if (!installationId) {
+    throw new Error('Installation ID is missing')
+  }
+
+  if (!owner) {
+    throw new Error('Owner information is missing')
+  }
 
   const installation = await dbInstance.installation.findUnique({
     where: {
       id: repository.id,
     },
-  });
+  })
 
   const analytics = await dbInstance.analytics.findUnique({
     where: {
       id: repository.id,
     },
-  });
+  })
 
   if (!installation) {
     // If the installation is not in the database, add it
@@ -348,15 +368,16 @@ export async function verifyInstallationAnalytics(
         id: repository.id,
         action_count: actionCount,
         installation_id: installationId,
-        latest_commit_date: latestCommitInfo.latest_commit_date || "",
-        latest_commit_message: latestCommitInfo.latest_commit_message || "",
-        latest_commit_sha: latestCommitInfo.latest_commit_sha || "",
-        latest_commit_url: latestCommitInfo.latest_commit_url || "",
+        latest_commit_date: latestCommitInfo.latest_commit_date || '',
+        latest_commit_message: latestCommitInfo.latest_commit_message || '',
+        latest_commit_sha: latestCommitInfo.latest_commit_sha || '',
+        latest_commit_url: latestCommitInfo.latest_commit_url || '',
         owner,
         repo: repository.name,
       },
-    });
+    })
   } else {
+    // If the installation is in the database, check the action count to determine if the limit has been reached
     if (installation.action_count > 0) {
       await dbInstance.installation.update({
         data: {
@@ -366,34 +387,35 @@ export async function verifyInstallationAnalytics(
                 ? 0
                 : installation.action_count - 1,
           },
-          latest_commit_date: latestCommitInfo.latest_commit_date || "",
-          latest_commit_message: latestCommitInfo.latest_commit_message || "",
-          latest_commit_sha: latestCommitInfo.latest_commit_sha || "",
-          latest_commit_url: latestCommitInfo.latest_commit_url || "",
+          latest_commit_date: latestCommitInfo.latest_commit_date || '',
+          latest_commit_message: latestCommitInfo.latest_commit_message || '',
+          latest_commit_sha: latestCommitInfo.latest_commit_sha || '',
+          latest_commit_url: latestCommitInfo.latest_commit_url || '',
         },
         where: { id: repository.id },
-      });
+      })
     }
 
     if (installation.action_count === 0) {
-      logwatch.info(`Action limit reached for ${installation.repo}, no longer limiting actions`);
       await dbInstance.installation.update({
         data: {
           action_count: 0,
-          latest_commit_date: latestCommitInfo.latest_commit_date || "",
-          latest_commit_message: latestCommitInfo.latest_commit_message || "",
-          latest_commit_sha: latestCommitInfo.latest_commit_sha || "",
-          latest_commit_url: latestCommitInfo.latest_commit_url || "",
+          latest_commit_date: latestCommitInfo.latest_commit_date || '',
+          latest_commit_message: latestCommitInfo.latest_commit_message || '',
+          latest_commit_sha: latestCommitInfo.latest_commit_sha || '',
+          latest_commit_url: latestCommitInfo.latest_commit_url || '',
         },
         where: { id: repository.id },
-      });
+      })
     }
-    verifyRepoName(
+
+    // Verify if the repository name has changed
+    await verifyRepoName(
       installation.repo,
       repository,
       owner,
-      dbInstance.installation,
-    );
+      dbInstance.installation
+    )
   }
 
   if (!analytics) {
@@ -402,7 +424,7 @@ export async function verifyInstallationAnalytics(
       data: {
         id: repository.id,
       },
-    });
+    })
   }
 }
 
@@ -418,14 +440,17 @@ export async function isRepoPrivate(context, owner, repoName) {
     const repoDetails = await context.octokit.repos.get({
       owner,
       repo: repoName,
-    });
+    })
 
     logwatch.info(
-      `Repository ${repoName} is private: ${repoDetails.data.private}`,
-    );
-    return repoDetails.data.private;
+      `Repository ${repoName} is private: ${repoDetails.data.private}`
+    )
+    return repoDetails.data.private
   } catch (error) {
-    logwatch.error({message: "Error verifying if the repository is private:", error}, true);
+    logwatch.error(
+      { message: 'Error verifying if the repository is private:', error },
+      true
+    )
   }
 }
 
@@ -441,7 +466,7 @@ export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
       issue_number: issueNumber,
     },
     where: { id: repoId },
-  });
+  })
 }
 
 /**
@@ -453,26 +478,26 @@ export async function applyGitHubIssueToDatabase(issueNumber, repoId) {
 export function replaceRawGithubUrl(inputString, oldUrl, newUrl) {
   // Regex to find the oldUrl with optional line numbers in the format :line:column
   const urlRegex = new RegExp(
-    `(${oldUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})(:\\d+:\\d+)?`,
-    "g",
-  );
+    `(${oldUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(:\\d+:\\d+)?`,
+    'g'
+  )
 
-  let firstLineNumber = null;
-  let secondLineNumber = null;
+  let firstLineNumber = null
+  let secondLineNumber = null
 
   // Replace each found URL in the string with newUrl
   const modifiedString = inputString.replace(urlRegex, (match, p1, p2) => {
     if (p2) {
-      const lineNumbers = p2.split(":");
+      const lineNumbers = p2.split(':')
       if (!firstLineNumber) {
-        firstLineNumber = lineNumbers[1];
-        secondLineNumber = lineNumbers[2];
+        firstLineNumber = lineNumbers[1]
+        secondLineNumber = lineNumbers[2]
       }
     }
-    return p2 ? `${newUrl}${p2}` : newUrl;
-  });
+    return p2 ? `${newUrl}${p2}` : newUrl
+  })
 
-  return [modifiedString, firstLineNumber, secondLineNumber];
+  return [modifiedString, firstLineNumber, secondLineNumber]
 }
 
 /**
@@ -482,10 +507,10 @@ export function replaceRawGithubUrl(inputString, oldUrl, newUrl) {
  */
 export function applyLastModifiedTemplate(baseTemplate) {
   const lastModified = dayjs()
-    .tz("America/Los_Angeles")
-    .format("MMM D YYYY, HH:mm:ss");
+    .tz('America/Los_Angeles')
+    .format('MMM D YYYY, HH:mm:ss')
 
-  return `${baseTemplate}\n\n<sub><span style="color: grey;">Last updated ${lastModified} (timezone: America/Los_Angeles)</span></sub>`;
+  return `${baseTemplate}\n\n<sub><span style="color: grey;">Last updated ${lastModified} (timezone: America/Los_Angeles)</span></sub>`
 }
 
 /**
@@ -495,19 +520,26 @@ export function applyLastModifiedTemplate(baseTemplate) {
  * @param {String} releaseId - ID of the release being requested
  * @returns {Object} - Release information
  */
-export async function getReleaseById(context, repositoryName, owner, releaseId) {
+export async function getReleaseById(
+  context,
+  repositoryName,
+  owner,
+  releaseId
+) {
   try {
     const draftRelease = await context.octokit.repos.getRelease({
       owner,
       repo: repositoryName,
       release_id: releaseId,
-    });
+    })
 
-    logwatch.success(`Fetched the draft release for: ${repositoryName}`);
+    logwatch.success(`Fetched the draft release for: ${repositoryName}`)
 
-    return draftRelease;
+    return draftRelease
   } catch (error) {
-    throw new Error(`Error fetching the draft release: ${error}`, { cause: error });
+    throw new Error(`Error fetching the draft release: ${error}`, {
+      cause: error,
+    })
   }
 }
 
@@ -518,20 +550,266 @@ export async function getReleaseById(context, repositoryName, owner, releaseId) 
  * @param {String} branch - Branch to download from (optional)
  * @returns {Object} - Data of the Zipball archive
  */
-export async function downloadRepositoryZip(context, owner, repositoryName, branch="") {
+export async function downloadRepositoryZip(
+  context,
+  owner,
+  repositoryName,
+  branch = ''
+) {
   try {
     if (!branch) {
-      branch = await getDefaultBranch(context, owner, repositoryName);
+      branch = await getDefaultBranch(context, owner, repositoryName)
     }
     const { data } = await context.octokit.repos.downloadZipballArchive({
       owner,
       repo: repositoryName,
-      ref: branch
-    });
+      ref: branch,
+    })
 
-    logwatch.success(`Downloaded the repository archive successfully for: ${repositoryName}`);
-    return data;
+    logwatch.success(
+      `Downloaded the repository archive successfully for: ${repositoryName}`
+    )
+    return data
   } catch (error) {
-    throw new Error(`Error download the repository archive for ${repositoryName}: ${error}`, { cause: error });
+    throw new Error(
+      `Error download the repository archive for ${repositoryName}: ${error}`,
+      { cause: error }
+    )
+  }
+}
+
+export async function iterateCommitDetails(commits, subjects, repository) {
+  const gatheredCWLFiles = []
+  const removedCWLFiles = []
+  for (let i = 0; i < commits.length; i++) {
+    if (commits[i]?.added?.length > 0) {
+      // Iterate through the added files
+      for (let j = 0; j < commits[i]?.added.length; j++) {
+        if (commits[i].added[j] === 'LICENSE') {
+          subjects.license = true
+          continue
+        }
+        if (commits[i].added[j] === 'CITATION.cff') {
+          subjects.citation = true
+          continue
+        }
+        if (commits[i].added[j] === 'codemeta.json') {
+          subjects.codemeta = true
+          continue
+        }
+        const fileSplit = commits[i].added[j].split('.')
+        if (fileSplit.includes('cwl')) {
+          gatheredCWLFiles.push({
+            commitId: commits[i].id,
+            filePath: commits[i].added[j],
+          })
+          continue
+        }
+      }
+    }
+    // Iterate through the modified files
+    if (commits[i]?.modified?.length > 0) {
+      for (let j = 0; j < commits[i]?.modified.length; j++) {
+        const fileSplit = commits[i]?.modified[j].split('.')
+        if (fileSplit.includes('cwl')) {
+          gatheredCWLFiles.push({
+            commitId: commits[i].id,
+            filePath: commits[i].modified[j],
+          })
+          continue
+        }
+      }
+    }
+
+    // Iterate through the remove files
+    if (commits[i]?.removed?.length > 0) {
+      for (let j = 0; j < commits[i]?.removed.length; j++) {
+        const fileSplit = commits[i]?.removed[j].split('.')
+        if (fileSplit.includes('cwl')) {
+          removedCWLFiles.push(commits[i].removed[j])
+          continue
+        }
+        if (commits[i]?.removed[j] === 'LICENSE') {
+          subjects.license = false
+          continue
+        }
+        if (commits[i]?.removed[j] === 'CITATION.cff') {
+          subjects.citation = false
+          continue
+        }
+        if (commits[i]?.removed[j] === 'codemeta.json') {
+          subjects.codemeta = false
+          continue
+        }
+      }
+    }
+  }
+
+  if (gatheredCWLFiles.length > 0) {
+    // Begin requesting the file metadata for each file name
+    for (const file of gatheredCWLFiles) {
+      const cwlFile = await context.octokit.repos.getContent({
+        owner,
+        path: file.filePath,
+        repo: repository.name,
+      })
+
+      cwlFile.data.commitId = file.commitId
+      subjects.cwl.files.push(cwlFile.data)
+    }
+  }
+
+  subjects.cwl.contains_cwl_files = subjects.cwl.files.length > 0 || false
+  subjects.cwl.files = subjects.cwl.files.filter(
+    (file) => !removedCWLFiles.includes(file.path)
+  )
+  subjects.cwl.removed_files = removedCWLFiles
+
+  const cwlExists = await db.cwlValidation.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  })
+
+  // Does the repository already contain CWL files
+  if (cwlExists) {
+    subjects.cwl.contains_cwl_files = cwlExists.contains_cwl_files
+  }
+
+  return subjects
+}
+
+export async function ignoreCommitMessage(commitMessage, author) {
+  if (
+    IGNORED_COMMIT_MESSAGES.includes(commitMessage) &&
+    author === `${GH_APP_NAME}[bot]`
+  ) {
+    logwatch.info(
+      `Ignoring commit message: ${commitMessage} by ${author} as it is a known commit message`
+    )
+    return true
+  }
+  return false
+}
+
+export async function gatherCommitDetails(context, owner, repository) {
+  // Get the name of the main branch
+  const mainBranch = await getDefaultBranch(context, owner, repository.name)
+  // Gather the latest commit to main info
+  const latestCommit = await context.octokit.repos.getCommit({
+    owner,
+    ref: mainBranch,
+    repo: repository.name,
+  })
+
+  return {
+    latest_commit_sha: latestCommit.data.sha || '',
+    latest_commit_message: latestCommit.data.commit.message || '',
+    latest_commit_url: latestCommit.data.html_url || '',
+    latest_commit_date: latestCommit.data.commit.committer.date || '',
+  }
+}
+
+export async function purgeDBEntry(repository) {
+  // Check if the installation is already in the database
+  const installation = await db.installation.findUnique({
+    where: {
+      id: repository.id,
+    },
+  })
+
+  const license = await db.licenseRequest.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  })
+
+  const metadata = await db.codeMetadata.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  })
+
+  const cwl = await db.cwlValidation.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  })
+
+  const zenodoDeposition = await db.zenodoDeposition.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  })
+
+  if (license) {
+    await db.licenseRequest.delete({
+      where: {
+        repository_id: repository.id,
+      },
+    })
+  }
+
+  if (metadata) {
+    await db.codeMetadata.delete({
+      where: {
+        repository_id: repository.id,
+      },
+    })
+  }
+
+  if (cwl) {
+    await db.cwlValidation.delete({
+      where: {
+        repository_id: repository.id,
+      },
+    })
+  }
+
+  if (zenodoDeposition) {
+    await db.zenodoDeposition.delete({
+      where: {
+        repository_id: repository.id,
+      },
+    })
+  }
+
+  if (installation) {
+    // Remove from the database
+    await db.installation.delete({
+      where: {
+        id: repository.id,
+      },
+    })
+  }
+
+  logwatch.info(`Repository uninstalled: ${repository.name}`)
+}
+
+export async function disableCodefairOnRepo(context) {
+  const { repository } = context.payload
+  const installation = await db.installation.findUnique({
+    where: {
+      id: repository.id,
+    },
+  })
+
+  // Update installation table to disable the repository
+  if (installation) {
+    await db.installation.update({
+      data: { disabled: true },
+      where: { id: repository.id },
+    })
+  }
+
+  // If the action was just closing the issue, update the issue body
+  if (context.payload.action === 'closed') {
+    // Update the body of the issue to reflect that the repository is disabled
+    await context.octokit.issues.update({
+      body: CLOSED_ISSUE_BODY,
+      issue_number: context.payload.issue.number,
+      owner: repository.owner.login,
+      repo: repository.name,
+    })
   }
 }

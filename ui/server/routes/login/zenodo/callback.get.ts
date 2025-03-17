@@ -6,26 +6,26 @@ export default defineEventHandler(async (event) => {
   const ZENODO_CLIENT_SECRET = process.env.ZENODO_CLIENT_SECRET || "";
   const ZENODO_REDIRECT_URI = process.env.ZENODO_REDIRECT_URI || "";
 
-  const code = query.code?.toString() ?? null;
-  const state = query.state?.toString() ?? null;
+  const { code, state } = query;
 
   if (!code || !state) {
     throw createError({
       status: 400,
+      statusMessage: "Missing code or state parameter",
     });
   }
 
   let parsedState;
   try {
-    parsedState = JSON.parse(decodeURIComponent(state));
+    parsedState = JSON.parse(decodeURIComponent(state as string));
   } catch (error) {
+    console.error("Error parsing state:", error);
     throw createError({
       status: 400,
       statusMessage: "Invalid state format",
     });
   }
 
-  // Extract values from the parsed state
   const { userId, owner, repo, githubDetails } = parsedState;
 
   if (!userId || !owner || !repo || !githubDetails) {
@@ -39,65 +39,50 @@ export default defineEventHandler(async (event) => {
   console.log("Owner:", owner);
   console.log("Repo:", repo);
   console.log("GitHub Details:", githubDetails);
-
-  // Generate a refresh token for the user
-  const urlEncoded = new URLSearchParams();
-  urlEncoded.append("grant_type", "authorization_code");
-  urlEncoded.append("code", code);
-  urlEncoded.append("client_id", ZENODO_CLIENT_ID);
-  urlEncoded.append("client_secret", ZENODO_CLIENT_SECRET);
-  urlEncoded.append("redirect_uri", ZENODO_REDIRECT_URI);
-  urlEncoded.append(
-    "scope",
-    encodeURIComponent("deposit:write deposit:actions"),
-  );
-
-  const oauthToken = await fetch(`${ZENODO_ENDPOINT}/oauth/token`, {
-    body: urlEncoded,
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    method: "POST",
+  const urlEncoded = new URLSearchParams({
+    grant_type: "authorization_code",
+    code: code as string,
+    client_id: ZENODO_CLIENT_ID,
+    client_secret: ZENODO_CLIENT_SECRET,
+    redirect_uri: ZENODO_REDIRECT_URI,
+    scope: "deposit:actions deposit:write",
   });
 
-  if (!oauthToken.ok) {
+  const oauthTokenRes = await fetch(`${ZENODO_ENDPOINT}/oauth/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: urlEncoded,
+  });
+
+  if (!oauthTokenRes.ok) {
+    console.error("OAuth token request failed:", oauthTokenRes.statusText);
     throw createError({
       status: 500,
       statusMessage: "Failed to fetch OAuth token",
     });
   }
 
-  const oauthTokenJson = await oauthToken.json();
+  const { access_token, refresh_token } = await oauthTokenRes.json();
 
-  const accessToken = oauthTokenJson.access_token;
-  const refreshToken = oauthTokenJson.refresh_token;
+  const tokenData = {
+    token: access_token,
+    refresh_token,
+    expires_at: new Date(Date.now() + 3600 * 1000),
+    user_id: userId,
+  };
 
   const existingToken = await prisma.zenodoToken.findFirst({
-    where: {
-      user_id: userId,
-    },
+    where: { user_id: userId },
   });
 
   if (existingToken) {
-    // update the token
     await prisma.zenodoToken.update({
-      data: {
-        expires_at: new Date(Date.now() + 3600 * 1000),
-        refresh_token: refreshToken,
-        token: accessToken,
-      },
-      where: {
-        user_id: userId,
-      },
+      where: { id: existingToken.id },
+      data: tokenData,
     });
   } else {
     await prisma.zenodoToken.create({
-      data: {
-        expires_at: new Date(Date.now() + 3600 * 1000),
-        refresh_token: refreshToken,
-        token: accessToken,
-        user_id: userId,
-      },
+      data: { ...tokenData, user_id: userId },
     });
   }
 

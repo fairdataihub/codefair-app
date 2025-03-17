@@ -524,14 +524,16 @@ const loginToZenodo = async () => {
   })
     .then(() => {
       const githubDetails = {
-        githubTag: githubFormValue.value.tag === "new" ? githubFormValue.value.tagTitle : githubFormValue.value.tag,
+        githubTag:
+          githubFormValue.value.tag === "new"
+            ? githubFormValue.value.tagTitle
+            : githubFormValue.value.tag,
         githubRelease: githubFormValue.value.release,
       };
-
       // Extract the existing state from the Zenodo login URL
       const existingStateMatch =
         zenodoLoginUrl.value.match(/[?&]state=([^&]+)/);
-      let originalState;
+      let originalState = {};
 
       if (existingStateMatch) {
         try {
@@ -550,12 +552,11 @@ const loginToZenodo = async () => {
         ...originalState,
         githubDetails,
       };
-
       // Encode the updated state as a JSON string
       const encodedState = encodeURIComponent(JSON.stringify(updatedState));
-
       // Replace the existing state parameter in the Zenodo login URL
       let zenodoLoginUrlWithState;
+
       if (zenodoLoginUrl.value.includes("state=")) {
         // Replace the existing state parameter with the updated one
         zenodoLoginUrlWithState = zenodoLoginUrl.value.replace(
@@ -569,6 +570,15 @@ const loginToZenodo = async () => {
         }state=${encodedState}`;
       }
 
+      // Check for the state parameter and throw a 404 error page if it is missing
+      if (!zenodoLoginUrlWithState.includes("state=")) {
+        throw createError({
+          statusCode: 404,
+          statusMessage: "Zenodo login URL not found",
+        });
+      }
+
+      // Redirect to the updated URL
       window.location.href = zenodoLoginUrlWithState;
     })
     .catch((error) => {
@@ -664,7 +674,7 @@ onBeforeUnmount(() => {
           :to="`https://doi.org/${data?.lastPublishedZenodoDoi}`"
           target="_blank"
           class="text-blue-500 underline transition-all hover:text-blue-700"
-          >{{ data?.lastPublishedZenodoDoi }}</NuxtLink
+          >{{ data?.lastPublishedZenodoDoi }} </NuxtLink
         >.
       </n-alert>
 
@@ -1296,9 +1306,9 @@ onBeforeUnmount(() => {
             "
             type="success"
             @click="navigateToDashboard"
-            >
+          >
             Okay
-            </n-button>
+          </n-button>
         </n-flex>
       </template>
     </n-modal>
