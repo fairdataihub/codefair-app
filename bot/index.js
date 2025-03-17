@@ -237,9 +237,6 @@ export default async (app, { getRouter }) => {
         if (installation?.action_count === 0) {
           fullCodefairRun = true
         }
-
-        // TODO: Fix, this will never trigger the fullCodefairRun
-        return
       } else {
         await db.installation.update({
           data: {
@@ -604,7 +601,7 @@ export default async (app, { getRouter }) => {
           },
         })
 
-        const license = licenseRequest.data.license ? true : false
+        const license = !!licenseRequest.data.license
 
         if (!license) {
           throw new Error('License not found in the repository')
