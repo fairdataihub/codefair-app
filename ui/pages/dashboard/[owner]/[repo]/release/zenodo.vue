@@ -570,6 +570,14 @@ const loginToZenodo = async () => {
         }state=${encodedState}`;
       }
 
+      // Check for the state parameter and throw a 404 error page if it is missing
+      if (!zenodoLoginUrlWithState.includes("state=")) {
+        throw createError({
+          statusCode: 404,
+          statusMessage: "Zenodo login URL not found",
+        });
+      }
+
       // Redirect to the updated URL
       window.location.href = zenodoLoginUrlWithState;
     })
