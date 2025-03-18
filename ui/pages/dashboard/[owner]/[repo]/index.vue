@@ -23,6 +23,7 @@ const displayMetadataValidationResults = ref(false);
 const showModal = ref(false);
 const showLicenseModal = ref(false);
 const showMetadataModal = ref(false);
+const loading = ref(false);
 
 const renderIcon = (icon: string) => {
   return () => {
@@ -98,6 +99,13 @@ const hideConfirmation = () => {
 
 const showConfirmation = () => {
   showModal.value = true;
+};
+
+const handlePositiveClick = async (reRunType: string) => {
+  loading.value = true;
+  await rerunCodefairChecks(reRunType);
+  loading.value = false;
+  showLicenseModal.value = false;
 };
 
 const rerunCwlValidation = async () => {
@@ -318,8 +326,9 @@ const handleSettingsSelect = (key: any) => {
               content="Doing this action will overwrite any existing draft. Do you want to continue?"
               positive-text="Confirm"
               negative-text="Cancel"
-              @positive-click="rerunCodefairChecks('license')"
+              @positive-click="handlePositiveClick('license')"
               @negative-click="showLicenseModal = false"
+              :loading="loading"
             />
           </div>
         </template>
@@ -447,8 +456,9 @@ const handleSettingsSelect = (key: any) => {
               content="Doing this action will overwrite any existing draft. Do you want to continue?"
               positive-text="Confirm"
               negative-text="Cancel"
-              @positive-click="rerunCodefairChecks('metadata')"
+              @positive-click="handlePositiveClick('metadata')"
               @negative-click="showMetadataModal = false"
+              :loading="loading"
             />
           </n-flex>
         </template>
