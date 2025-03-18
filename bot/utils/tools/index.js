@@ -399,7 +399,6 @@ export async function verifyInstallationAnalytics(
     if (installation.action_count === 0) {
       await dbInstance.installation.update({
         data: {
-          action_count: 0,
           latest_commit_date: latestCommitInfo.latest_commit_date || "",
           latest_commit_message: latestCommitInfo.latest_commit_message || "",
           latest_commit_sha: latestCommitInfo.latest_commit_sha || "",
