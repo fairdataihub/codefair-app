@@ -21,6 +21,8 @@ const botNotInstalled = ref(false);
 const cwlValidationRerunRequestLoading = ref(false);
 const displayMetadataValidationResults = ref(false);
 const showModal = ref(false);
+const showLicenseModal = ref(false);
+const showMetadataModal = ref(false);
 
 const renderIcon = (icon: string) => {
   return () => {
@@ -202,10 +204,10 @@ const handleSettingsSelect = (key: any) => {
     }
   } else if (key === "re-validate-license") {
     // rerunCodefairChecks("license");
-    showConfirmation();
+    showLicenseModal.value = true;
   } else if (key === "re-validate-metadata") {
     // rerunCodefairChecks("metadata");
-    showConfirmation();
+    showMetadataModal.value = true;
   }
 };
 </script>
@@ -309,7 +311,7 @@ const handleSettingsSelect = (key: any) => {
             </n-dropdown>
 
             <n-modal
-              v-model:show="showModal"
+              v-model:show="showLicenseModal"
               :mask-closable="false"
               preset="dialog"
               title="Are you sure?"
@@ -317,13 +319,15 @@ const handleSettingsSelect = (key: any) => {
               positive-text="Confirm"
               negative-text="Cancel"
               @positive-click="rerunCodefairChecks('license')"
-              @negative-click="hideConfirmation"
+              @negative-click="showLicenseModal = false"
             />
           </div>
         </template>
 
         <template #content>
-          <p class="text-base">A License is required according to the FAIR-BioRS guidelines</p>
+          <p class="text-base">
+            A License is required according to the FAIR-BioRS guidelines
+          </p>
         </template>
 
         <template #action>
@@ -436,7 +440,7 @@ const handleSettingsSelect = (key: any) => {
             </n-dropdown>
 
             <n-modal
-              v-model:show="showModal"
+              v-model:show="showMetadataModal"
               :mask-closable="false"
               preset="dialog"
               title="Are you sure?"
@@ -444,7 +448,7 @@ const handleSettingsSelect = (key: any) => {
               positive-text="Confirm"
               negative-text="Cancel"
               @positive-click="rerunCodefairChecks('metadata')"
-              @negative-click="hideConfirmation"
+              @negative-click="showMetadataModal = false"
             />
           </n-flex>
         </template>
