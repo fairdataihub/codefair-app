@@ -395,9 +395,6 @@ export default async (app, { getRouter }) => {
           `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)`,
           `(${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-metadata)\n\n${metadataPRBadge}`
         );
-      } else {
-        logwatch.error("PR title not recognized");
-        return;
       }
 
       // Update the issue with the new body
