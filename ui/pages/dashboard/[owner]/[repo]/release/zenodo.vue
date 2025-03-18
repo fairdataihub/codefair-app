@@ -1169,7 +1169,8 @@ onBeforeUnmount(() => {
           <div
             v-if="
               (githubFormIsValid || githubReleaseIsDraft) &&
-              zenodoDraftIsReadyForRelease
+              zenodoDraftIsReadyForRelease &&
+              zenodoFormIsValid
             "
           >
             <n-divider />
