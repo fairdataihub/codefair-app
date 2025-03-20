@@ -636,7 +636,7 @@ export default async (app, { getRouter }) => {
             data: {
               license_id: licenseId,
               license_content: licenseContent,
-              license_status: licenseContentEmpty ? "valid" : "invalid",
+              license_status: licenseContentEmpty ? "invalid" : "valid",
             },
             where: {
               repository_id: repository.id,
