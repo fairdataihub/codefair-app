@@ -623,9 +623,12 @@ export default async (app, { getRouter }) => {
         const { licenseId, licenseContent, licenseContentEmpty } =
           validateLicense(licenseRequest, existingLicense);
 
-        logwatch.info(
-          `License validation complete: ${licenseId}, ${licenseContent}, ${licenseContentEmpty}`
-        );
+        logwatch.info({
+          message: `License validation complete`,
+          licenseId,
+          licenseContent,
+          licenseContentEmpty,
+        });
 
         // Update the database with the license information
         if (existingLicense) {

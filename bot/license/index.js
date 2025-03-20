@@ -161,6 +161,9 @@ export async function createLicense(context, owner, repo, license) {
 
 export function validateLicense(licenseRequest, existingLicense) {
   let licenseId = licenseRequest.data?.license?.spdx_id || null;
+  if (typeof licenseRequest !== "object") {
+    licenseId = licenseRequest;
+  }
   let licenseContent = "";
   let licenseContentEmpty = true;
 
@@ -170,7 +173,10 @@ export function validateLicense(licenseRequest, existingLicense) {
         .toString("utf-8")
         .trim();
     } catch (error) {
-      console.error("Error decoding license content:", error);
+      logwatch.error(
+        { message: "Error decoding license content:", error },
+        true
+      );
       licenseContent = "";
     }
   }
