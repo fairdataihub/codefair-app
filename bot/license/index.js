@@ -161,9 +161,6 @@ export async function createLicense(context, owner, repo, license) {
 
 export function validateLicense(licenseRequest, existingLicense) {
   let licenseId = licenseRequest.data?.license?.spdx_id || null;
-  if (typeof licenseRequest !== "object") {
-    licenseId = licenseRequest;
-  }
   let licenseContent = "";
   let licenseContentEmpty = true;
 
