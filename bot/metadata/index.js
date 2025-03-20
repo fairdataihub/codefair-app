@@ -578,7 +578,7 @@ export async function updateMetadataIdentifier(
     citationFile["date-released"] = updated_date;
     citationFile.version = zenodoMetadata?.zenodo_metadata?.version || version;
     codeMetaFile.identifier = identifier;
-    codeMetaFile.version = zenodoMetadata?.zenodo_metadata?.version || version;
+    codeMetaFile.version = zenodoMetadata.zenodo_metadata?.version || version;
     codeMetaFile.dateModified = updated_date;
 
     const response = await dbInstance.licenseRequest.findUnique({
@@ -636,7 +636,7 @@ export async function updateMetadataIdentifier(
     // Update the codemetadata content with the new Zenodo identifier
     existingCodemeta.metadata.uniqueIdentifier = identifier;
     existingCodemeta.metadata.currentVersion =
-      zenodoMetadata?.zenodo_metadata?.version || version;
+      zenodoMetadata.zenodo_metadata?.version || version;
 
     // Update the database with the latest metadata
     await dbInstance.codeMetadata.update({

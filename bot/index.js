@@ -854,7 +854,14 @@ export default async (app, { getRouter }) => {
       const { depositionId, releaseId, tagVersion, userWhoSubmitted } =
         parseZenodoInfo(issueBody);
       logwatch.info(
-        `Parsed Zenodo info: ${depositionId}, ${releaseId}, ${tagVersion}, ${userWhoSubmitted}`
+        {
+          message: `Parsed Zenodo info:`,
+          depositionId,
+          releaseId,
+          tagVersion,
+          userWhoSubmitted,
+        },
+        true
       );
 
       try {
@@ -879,8 +886,18 @@ export default async (app, { getRouter }) => {
           zenodoToken
         );
 
+        // Sending the Zenodo deposition info to the log in the case of an error
+        logwatch.info(
+          {
+            message: "Zenodo Deposition Info: ",
+            zenodoDepositionInfo,
+          },
+          true
+        );
+
         // 4.5 Set the bucket URL and DOI
-        const newDepositionId = zenodoDepositionInfo.id;
+        // using record_id over id because it the id of the current deposition
+        const newDepositionId = zenodoDepositionInfo.record_id;
         const bucket_url = zenodoDepositionInfo.links.bucket;
         const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
 
@@ -923,11 +940,6 @@ export default async (app, { getRouter }) => {
           repository.name,
           owner,
           releaseId
-        );
-        const mainBranch = await getDefaultBranch(
-          context,
-          owner,
-          repository.name
         );
 
         const repositoryArchive = await downloadRepositoryZip(
