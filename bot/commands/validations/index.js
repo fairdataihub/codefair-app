@@ -230,73 +230,6 @@ export async function rerunLicenseValidation(
   }
 }
 
-export async function rerunFullRepoValidation(
-  context,
-  owner,
-  repository,
-  issueBody
-) {
-  logwatch.start("Rerunning full repository validation...");
-  try {
-    let subjects = await checkForCompliance(context, owner, repository.name);
-    console.log(subjects);
-
-    // If existing cwl validation exists, update the contains_cwl value
-    console.log(repository.id);
-    const repoId = repository.id;
-    console.log(repoId);
-    const cwlExists = await db.cwlValidation.findUnique({
-      where: {
-        repository_id: repoId,
-      },
-    });
-
-    if (cwlExists?.contains_cwl_files) {
-      cwlObject.contains_cwl_files = cwlExists.contains_cwl_files;
-
-      if (cwlExists.files.length > 0) {
-        // Remove the files that are not in cwlObject
-        const cwlFilePaths = cwlObject.files.map((file) => file.path);
-        cwlObject.removed_files = cwlExists.files.filter((file) => {
-          return !cwlFilePaths.includes(file.path);
-        });
-      }
-    }
-
-    subjects.cwl = cwlObject;
-
-    const issueBody = await renderIssues(
-      context,
-      owner,
-      repository,
-      false,
-      subjects
-    );
-
-    await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
-  } catch (error) {
-    // Remove the command from the issue body
-    const issueBodyRemovedCommand = issueBody.substring(
-      0,
-      issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
-    );
-    const lastModified = await applyLastModifiedTemplate(
-      issueBodyRemovedCommand
-    );
-    await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
-    if (error.cause) {
-      logwatch.error(
-        {
-          message: "Error.cause message for Full Repo Validation",
-          error: error.cause,
-        },
-        true
-      );
-    }
-    throw new Error("Error rerunning full repo validation", error);
-  }
-}
-
 export async function rerunCWLValidation(
   context,
   owner,
@@ -367,5 +300,46 @@ export async function rerunCWLValidation(
       );
     }
     throw new Error("Error rerunning cwl validation", error);
+  }
+}
+
+export async function rerunFullRepoValidation(
+  context,
+  owner,
+  repository,
+  issueBody
+) {
+  logwatch.start("Rerunning full repository validation...");
+  try {
+    let subjects = await checkForCompliance(context, owner, repository);
+
+    const issueBody = await renderIssues(
+      context,
+      owner,
+      repository,
+      false,
+      subjects
+    );
+
+    await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+  } catch (error) {
+    // Remove the command from the issue body
+    const issueBodyRemovedCommand = issueBody.substring(
+      0,
+      issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
+    );
+    const lastModified = await applyLastModifiedTemplate(
+      issueBodyRemovedCommand
+    );
+    await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+    logwatch.error(
+      {
+        message: "Error for Full Repo Validation",
+        error: error,
+        error_cause: error?.cause,
+      },
+      true
+    );
+    throw new Error("Error rerunning full repo validation", error);
   }
 }

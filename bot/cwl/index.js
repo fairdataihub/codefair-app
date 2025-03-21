@@ -78,6 +78,16 @@ export function getCWLFiles(context, owner, repository) {
 
           if (existingCWL && existingCWL?.contains_cwl_files) {
             cwlObject.contains_cwl_files = existingCWL.contains_cwl_files;
+            if (cwlObject.files.length > 0) {
+              // Remove the files that are not in the cwlObject.files array
+              const cwlFilePaths = cwlObject.files.map((file) => {
+                file.path;
+              });
+
+              cwlObject.removed_files = cwlExists.files.filter((file) => {
+                return !cwlFilePaths.includes(file.path);
+              });
+            }
           }
 
           cwlObject.contains_cwl_files = cwlObject.files.length > 0;

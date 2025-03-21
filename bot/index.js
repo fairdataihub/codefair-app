@@ -122,11 +122,7 @@ export default async (app, { getRouter }) => {
         }
 
         // BEGIN CHECKING FOR COMPLIANCE
-        const subjects = await checkForCompliance(
-          context,
-          owner,
-          repository.name
-        );
+        const subjects = await checkForCompliance(context, owner, repository);
 
         // Create issue body template
         const issueBody = await renderIssues(
@@ -247,7 +243,7 @@ export default async (app, { getRouter }) => {
     let subjects = await checkForCompliance(
       context,
       owner,
-      repository.name,
+      repository,
       fullCodefairRun
     );
 
@@ -504,11 +500,7 @@ export default async (app, { getRouter }) => {
       );
 
       // Begin fair compliance checks
-      const subjects = await checkForCompliance(
-        context,
-        owner,
-        repository.name
-      );
+      const subjects = await checkForCompliance(context, owner, repository);
 
       const issueBody = await renderIssues(
         context,

@@ -6,7 +6,7 @@ import { getCWLFiles } from "../../cwl/index.js";
 export async function checkForCompliance(
   context,
   owner,
-  repositoryName,
+  repository,
   fullCodefairRun = true
 ) {
   let cwlObject = {
@@ -14,11 +14,11 @@ export async function checkForCompliance(
     files: [],
     removed_files: [],
   };
-  const license = await checkForLicense(context, owner, repositoryName);
-  const citation = await checkForCitation(context, owner, repositoryName);
-  const codemeta = await checkForCodeMeta(context, owner, repositoryName);
+  const license = await checkForLicense(context, owner, repository.name);
+  const citation = await checkForCitation(context, owner, repository.name);
+  const codemeta = await checkForCodeMeta(context, owner, repository.name);
   if (fullCodefairRun) {
-    cwlObject = await getCWLFiles(context, owner, repositoryName);
+    cwlObject = await getCWLFiles(context, owner, repository);
   }
 
   return {
