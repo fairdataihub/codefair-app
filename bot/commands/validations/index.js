@@ -239,12 +239,15 @@ export async function rerunFullRepoValidation(
   logwatch.start("Rerunning full repository validation...");
   try {
     let subjects = await checkForCompliance(context, owner, repository.name);
+    console.log(subjects);
 
     // If existing cwl validation exists, update the contains_cwl value
     console.log(repository.id);
+    const repoId = repository.id;
+    console.log(repoId);
     const cwlExists = await db.cwlValidation.findUnique({
       where: {
-        repository_id: repository.id,
+        repository_id: repoId,
       },
     });
 

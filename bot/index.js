@@ -11,41 +11,12 @@ import {
   verifyInstallationAnalytics,
   intializeDatabase,
   verifyRepoName,
-  applyLastModifiedTemplate,
-  getDefaultBranch,
-  getReleaseById,
-  downloadRepositoryZip,
   iterateCommitDetails,
   ignoreCommitMessage,
   gatherCommitDetails,
   purgeDBEntry,
   disableCodefairOnRepo,
 } from "./utils/tools/index.js";
-import { checkForLicense, validateLicense } from "./license/index.js";
-import { checkForCitation } from "./citation/index.js";
-import { checkForCodeMeta } from "./codemeta/index.js";
-import { getCWLFiles, applyCWLTemplate } from "./cwl/index.js";
-import {
-  getZenodoDepositionInfo,
-  createZenodoMetadata,
-  updateZenodoMetadata,
-  uploadReleaseAssetsToZenodo,
-  parseZenodoInfo,
-  getZenodoToken,
-  publishZenodoDeposition,
-  updateGitHubRelease,
-} from "./archival/index.js";
-import {
-  validateMetadata,
-  getCitationContent,
-  getCodemetaContent,
-  updateMetadataIdentifier,
-  gatherMetadata,
-  convertDateToUnix,
-  applyDbMetadata,
-  applyCodemetaMetadata,
-  applyCitationMetadata,
-} from "./metadata/index.js";
 import {
   publishToZenodo,
   reRenderDashboard,
@@ -88,13 +59,13 @@ export default async (app, { getRouter }) => {
 
   router.use(express.static("public"));
 
-  router.get("/healthcheck", (req, res) => {
+  router.get("/healthcheck", (_req, res) => {
     logwatch.info("Requested healthcheck");
     res.status(200).send("Health check passed");
   });
 
   // for kamal
-  router.get("/up", (req, res) => {
+  router.get("/up", (_req, res) => {
     logwatch.info("Requested healthcheck");
     res.status(200).send("Health check passed");
   });
