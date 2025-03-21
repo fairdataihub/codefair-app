@@ -460,47 +460,23 @@ export default async (app, { getRouter }) => {
 
     // "API" using comments to trigger workflows
     if (issueBody.includes("<!-- @codefair-bot rerun-cwl-validation -->")) {
-      await rerunCWLValidation(
-        context,
-        owner,
-        repository,
-        issueBody,
-        ISSUE_TITLE
-      );
+      await rerunCWLValidation(context, owner, repository, issueBody);
     }
 
     if (
       issueBody.includes("<!-- @codefair-bot rerun-full-repo-validation -->")
     ) {
-      await rerunFullRepoValidation(
-        context,
-        owner,
-        repository,
-        issueBody,
-        ISSUE_TITLE
-      );
+      await rerunFullRepoValidation(context, owner, repository, issueBody);
     }
 
     if (issueBody.includes("<!-- @codefair-bot rerun-license-validation -->")) {
-      await rerunLicenseValidation(
-        context,
-        owner,
-        repository,
-        issueBody,
-        ISSUE_TITLE
-      );
+      await rerunLicenseValidation(context, owner, repository, issueBody);
     }
 
     if (
       issueBody.includes("<!-- @codefair-bot rerun-metadata-validation -->")
     ) {
-      await rerunMetadataValidation(
-        context,
-        owner,
-        repository,
-        issueBody,
-        ISSUE_TITLE
-      );
+      await rerunMetadataValidation(context, owner, repository, issueBody);
     }
 
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
@@ -508,13 +484,7 @@ export default async (app, { getRouter }) => {
     }
 
     if (issueBody.includes("<!-- @codefair-bot re-render-dashboard -->")) {
-      await reRenderDashboard(
-        context,
-        owner,
-        repository,
-        issueBody,
-        ISSUE_TITLE
-      );
+      await reRenderDashboard(context, owner, repository, issueBody);
     }
   });
 

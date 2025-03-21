@@ -1,4 +1,4 @@
-import { checkForCompliance } from "../../utils/compliance-checks/index.js";
+// Description: This file contains the main functions that are called by the UI to trigger bot actions.
 import { renderIssues, createIssue } from "../../utils/renderer/index.js";
 import dbInstance from "../../db.js";
 import { logwatch } from "../../utils/logwatch.js";
@@ -7,8 +7,6 @@ import {
   getReleaseById,
   downloadRepositoryZip,
 } from "../../utils/tools/index.js";
-import { validateLicense } from "../../license/index.js";
-import { getCWLFiles } from "../../cwl/index.js";
 import {
   getZenodoDepositionInfo,
   createZenodoMetadata,
@@ -24,24 +22,13 @@ import {
   getCitationContent,
   getCodemetaContent,
   updateMetadataIdentifier,
-  gatherMetadata,
-  convertDateToUnix,
-  applyDbMetadata,
-  applyCodemetaMetadata,
-  applyCitationMetadata,
 } from "../../metadata/index.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const { ZENODO_ENDPOINT } = process.env;
 
-export async function reRenderDashboard(
-  context,
-  owner,
-  repository,
-  issueBody,
-  ISSUE_TITLE
-) {
+export async function reRenderDashboard(context, owner, repository, issueBody) {
   // Run database queries in parallel using Promise.all
   logwatch.start("Re-rendering issue dashboard...");
   try {

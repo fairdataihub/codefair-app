@@ -16,6 +16,9 @@ import {
   applyCitationMetadata,
 } from "../../metadata/index.js";
 
+const ISSUE_TITLE = `FAIR Compliance Dashboard`;
+const db = dbInstance;
+
 export async function rerunMetadataValidation(
   context,
   owner,
@@ -30,7 +33,7 @@ export async function rerunMetadataValidation(
       validCitation = false,
       validCodemeta = false;
 
-    const existingMetadataEntry = await dbInstance.codeMetadata.findUnique({
+    const existingMetadataEntry = await db.codeMetadata.findUnique({
       where: {
         repository_id: repository.id,
       },
@@ -74,7 +77,7 @@ export async function rerunMetadataValidation(
 
     // update the database with the metadata information
     if (existingMetadataEntry) {
-      await dbInstance.codeMetadata.update({
+      await db.codeMetadata.update({
         data: {
           codemeta_status: validCodemeta ? "valid" : "invalid",
           citation_status: validCitation ? "valid" : "invalid",
@@ -87,7 +90,7 @@ export async function rerunMetadataValidation(
         },
       });
     } else {
-      await dbInstance.codeMetadata.create({
+      await db.codeMetadata.create({
         data: {
           codemeta_status: validCodemeta ? "valid" : "invalid",
           citation_status: validCitation ? "valid" : "invalid",
@@ -146,7 +149,7 @@ export async function rerunLicenseValidation(
       repo: repository.name,
     });
 
-    const existingLicense = await dbInstance.licenseRequest.findUnique({
+    const existingLicense = await db.licenseRequest.findUnique({
       where: {
         repository_id: repository.id,
       },
@@ -172,7 +175,7 @@ export async function rerunLicenseValidation(
 
     // Update the database with the license information
     if (existingLicense) {
-      await dbInstance.licenseRequest.update({
+      await db.licenseRequest.update({
         data: {
           license_id: licenseId,
           license_content: licenseContent,
@@ -183,7 +186,7 @@ export async function rerunLicenseValidation(
         },
       });
     } else {
-      await dbInstance.licenseRequest.create({
+      await db.licenseRequest.create({
         data: {
           license_id: licenseId,
           license_content: licenseContent,
@@ -231,15 +234,15 @@ export async function rerunFullRepoValidation(
   context,
   owner,
   repository,
-  issueBody,
-  ISSUE_TITLE
+  issueBody
 ) {
   logwatch.start("Rerunning full repository validation...");
   try {
     let subjects = await checkForCompliance(context, owner, repository.name);
 
     // If existing cwl validation exists, update the contains_cwl value
-    const cwlExists = await dbInstance.cwlValidation.findUnique({
+    console.log(repository.id);
+    const cwlExists = await db.cwlValidation.findUnique({
       where: {
         repository_id: repository.id,
       },
@@ -301,12 +304,12 @@ export async function rerunCWLValidation(
     logwatch.start("Rerunning CWL Validation...");
 
     const [licenseResponse, metadataResponse, cwlResponse] = await Promise.all([
-      dbInstance.licenseRequest.findUnique({
+      db.licenseRequest.findUnique({
         where: {
           repository_id: repository.id,
         },
       }),
-      dbInstance.codeMetadata.findUnique({
+      db.codeMetadata.findUnique({
         where: {
           repository_id: repository.id,
         },
