@@ -1,4 +1,3 @@
-import { log } from "console";
 import dbInstance from "../db.js";
 import { logwatch } from "../utils/logwatch.js";
 import fs from "fs";
