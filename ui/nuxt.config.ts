@@ -87,6 +87,12 @@ export default defineNuxtConfig({
     position: "bottom-right",
   },
 
+  runtimeConfig: {
+    public: {
+      codefairDomain: process.env.CODEFAIR_APP_DOMAIN,
+    },
+  },
+
   vite: {
     optimizeDeps: {
       include:
