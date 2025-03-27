@@ -84,7 +84,7 @@ export function getCWLFiles(context, owner, repository) {
                 file.path;
               });
 
-              cwlObject.removed_files = cwlExists.files.filter((file) => {
+              cwlObject.removed_files = existingCWL?.files.filter((file) => {
                 return !cwlFilePaths.includes(file.path);
               });
             }
