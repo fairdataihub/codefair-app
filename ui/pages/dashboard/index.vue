@@ -3,12 +3,7 @@ import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 const breadcrumbsStore = useBreadcrumbsStore();
 
-breadcrumbsStore.showBreadcrumbs();
-breadcrumbsStore.setFeature({
-  id: "",
-  name: "",
-  icon: "",
-});
+breadcrumbsStore.hideBreadcrumbs();
 
 const { data, error } = await useFetch(`/api/dashboard`, {
   headers: useRequestHeaders(["cookie"]),

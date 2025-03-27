@@ -7,8 +7,7 @@ class Logwatch {
    * @param {string} endpoint - Log endpoint URL
    */
   constructor(endpoint) {
-    const BOT_ENDPOINT =
-    BOT_LOGWATCH_URL;
+    const BOT_ENDPOINT = BOT_LOGWATCH_URL;
 
     if (!endpoint) {
       this.endpoint = BOT_ENDPOINT;

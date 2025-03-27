@@ -122,7 +122,7 @@ export async function createCodeMetaFile(context, owner, repo, codeMetaText) {
   await context.octokit.repos.createOrUpdateFileContents({
     branch,
     content: Buffer.from(JSON.stringify(codeMetaText, null, 2)).toString(
-      "base64",
+      "base64"
     ),
     message: `feat: ✨ add codemeta.json file`,
     owner,
@@ -165,7 +165,6 @@ export async function createCodeMetaFile(context, owner, repo, codeMetaText) {
   });
 }
 
-
 /**
  * * Applies the codemeta template to the base template
  *
@@ -182,7 +181,7 @@ export async function applyCodemetaTemplate(
   baseTemplate,
   db,
   repository,
-  owner,
+  owner
 ) {
   if (!subjects.codemeta && subjects.license) {
     // License was found but no codemeta.json exists

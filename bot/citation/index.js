@@ -58,7 +58,7 @@ async function gatherCitationInfo(context, owner, repo) {
     context,
     owner,
     repo,
-    "citation",
+    "citation"
   );
   // Get DOI of repo (if it exists)
   const doi = await getDOI(context, owner, repo);
@@ -216,7 +216,6 @@ export async function createCitationFile(context, owner, repo, citationText) {
   });
 }
 
-
 /**
  * * Applies the citation template to the base template
  *
@@ -233,7 +232,7 @@ export async function applyCitationTemplate(
   baseTemplate,
   db,
   repository,
-  owner,
+  owner
 ) {
   if (!subjects.citation && subjects.license) {
     // License was found but no citation file was found
