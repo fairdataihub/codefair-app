@@ -12,6 +12,9 @@ definePageMeta({
   middleware: ["protected"],
 });
 
+const config = useRuntimeConfig();
+const codefairDomain = config.public.codefairDomain;
+
 const route = useRoute();
 const githubTag = route.query.githubTag;
 const githubRelease = route.query.githubRelease;
@@ -375,6 +378,8 @@ const showZenodoPublishProgressModal = ref(false);
 const zenodoPublishProgressInterval = ref<any>(null);
 const zenodoPublishStatus = ref<string>("");
 const zenodoPublishDOI = ref<string>("");
+const zenodoBadgeShield = ref<string>("");
+const showZenodoBadgeModal = ref(false);
 
 const checkForZenodoPublishProgress = async () => {
   await $fetch(`/api/${owner}/${repo}/release/zenodo/status`, {
@@ -469,9 +474,50 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         message: "Please try again later",
       });
     })
-    .finally(() => {
+    .finally(async () => {
       zenodoPublishSpinner.value = false;
       zenodoDraftSpinner.value = false;
+
+      // Make API call to get the DOI badge for the user
+      await fetchZenodoBadge();
+    });
+};
+
+const requestZenodoBadge = async () => {
+  await fetchZenodoBadge().then(() => {
+    showZenodoBadgeModal.value = true;
+  });
+  // showZenodoBadgeModal.value = true;
+};
+
+const copyBadge = () => {
+  const markdownSnippet = `[![DOI](${codefairDomain}/api/badge/${owner}/${repo})](${codefairDomain}/doi/${owner}/${repo})`;
+  navigator.clipboard
+    .writeText(markdownSnippet)
+    .then(() => {
+      console.log("Badge markdown copied to clipboard");
+    })
+    .catch((err) => {
+      console.error("Failed to copy:", err);
+    });
+};
+
+const fetchZenodoBadge = async () => {
+  zenodoBadgeShield.value = "";
+  $fetch(`/api/badge/${owner}/${repo}`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "GET",
+    responseType: "text",
+  })
+    .then((badge) => {
+      if (badge) {
+        // Provide a modal to show the badge
+        console.log(badge);
+        zenodoBadgeShield.value = badge;
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching badge:", error);
     });
 };
 
@@ -617,7 +663,12 @@ onBeforeUnmount(() => {
     <n-flex vertical>
       <div class="flex flex-row items-center justify-between">
         <h1>FAIR Software Release</h1>
-
+        <n-button
+          type="primary"
+          @click="requestZenodoBadge"
+          class="flex items-center"
+          >Request Zenodo badge</n-button
+        >
         <NuxtLink
           to="https://docs.codefair.io/docs/archive.html"
           target="_blank"
@@ -1239,6 +1290,54 @@ onBeforeUnmount(() => {
     </n-collapse>
 
     <n-modal
+      v-model:show="showZenodoBadgeModal"
+      preset="card"
+      title="Zenodo Badge"
+      :bordered="false"
+      size="huge"
+      :mask-closable="true"
+      :close-on-esc="true"
+      class="w-[600px]"
+    >
+      <div class="flex flex-col gap-4">
+        <p>
+          Your software was successfully archived on Zenodo. We recommend
+          reviewing the deposition and adding additional metadata supported by
+          Zenodo to make your software more FAIR.
+        </p>
+        <p>
+          Below is your Zenodo badge. Copy the markdown snippet below and paste
+          it into your README file to display the badge.
+        </p>
+        <div class="text-center">
+          <NuxtLink
+            :to="`/doi/${owner}/${repo}`"
+            target="_blank"
+            class="inline-block"
+          >
+            <div v-html="zenodoBadgeShield" />
+          </NuxtLink>
+        </div>
+        <pre
+          class="whitespace-pre-wrap rounded bg-gray-100 p-4 font-mono text-sm"
+        >
+          [![DOI]({{ codefairDomain }}/api/badge/{{ owner }}/{{ repo }})]({{
+            codefairDomain
+          }}/doi/{{ owner }}/{{ repo }})
+      </pre
+        >
+
+        <button
+          @click="copyBadge"
+          class="flex items-center justify-center gap-2 rounded border border-blue-500 px-4 py-2 text-blue-500 transition hover:bg-blue-50"
+        >
+          <Icon name="mdi:content-copy" class="h-5 w-5" />
+          Copy Markdown
+        </button>
+      </div>
+    </n-modal>
+
+    <n-modal
       v-model:show="showZenodoPublishProgressModal"
       preset="card"
       :title="
@@ -1272,12 +1371,46 @@ onBeforeUnmount(() => {
         </p>
       </n-flex>
 
-      <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
-        <p>
-          Your software was successfully archived on Zenodo. We recommend
-          reviewing the deposition and adding additional metadata supported by
-          Zenodo to make your software more FAIR.
-        </p>
+      <n-flex
+        v-else-if="zenodoPublishStatus === 'published' && showZenodoBadgeModal"
+        vertical
+      >
+        <div class="flex flex-col gap-4">
+          <p>
+            Your software was successfully archived on Zenodo. We recommend
+            reviewing the deposition and adding additional metadata supported by
+            Zenodo to make your software more FAIR.
+          </p>
+          <p>
+            Below is your Zenodo badge. Copy the markdown snippet below and
+            paste it into your README file to display the badge.
+          </p>
+          <div class="text-center">
+            <NuxtLink
+              :to="`/doi/${owner}/${repo}`"
+              target="_blank"
+              class="inline-block"
+            >
+              <div v-html="zenodoBadgeShield" />
+            </NuxtLink>
+          </div>
+          <pre
+            class="whitespace-pre-wrap rounded bg-gray-100 p-4 font-mono text-sm"
+          >
+          [![DOI]({{ codefairDomain }}/api/badge/{{ owner }}/{{ repo }})]({{
+              codefairDomain
+            }}/doi/{{ owner }}/{{ repo }})
+      </pre
+          >
+
+          <button
+            @click="copyBadge"
+            class="flex items-center justify-center gap-2 rounded border border-blue-500 px-4 py-2 text-blue-500 transition hover:bg-blue-50"
+          >
+            <Icon name="mdi:content-copy" class="h-5 w-5" />
+            Copy Markdown
+          </button>
+        </div>
       </n-flex>
 
       <n-flex v-else>
