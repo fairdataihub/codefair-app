@@ -57,6 +57,7 @@ COPY migrations ./migrations
 COPY public ./public
 COPY scripts ./scripts
 COPY utils ./utils
+COPY commands ./commands
 
 # Copy configuration files
 COPY app.yml db.js main.js index.js ./

@@ -5,6 +5,24 @@ All notable changes the Codefair App will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v3.4.0] - TBD
+
+### Added
+
+- Add a new endpoint to retrieve the user's GitHub token for use in the profile dropdown.
+- Abstracted FAIR compliance checks into one call to allow plugability of different checks.
+
+### Removed
+
+- Bread crumb in /dashboard page.
+
+### Fixed
+
+- Configure redirect URL for Zenodo OAuth to try and prevent blank page after successful login. Better error handling for Zenodo OAuth when redirect URL is not successful.
+- Full Codefair run will trigger after action state is set to 0.
+- Fix to load re-validate option as it was using the same variable to load both.
+-
+
 ## v3.3.0 - TBD
 
 ### Added
