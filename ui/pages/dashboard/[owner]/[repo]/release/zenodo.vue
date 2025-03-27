@@ -13,7 +13,6 @@ definePageMeta({
 });
 
 const config = useRuntimeConfig();
-console.log(config);
 const codefairDomain = config.public.codefairDomain;
 
 const route = useRoute();
@@ -488,12 +487,11 @@ const requestZenodoBadge = async () => {
   await fetchZenodoBadge().then(() => {
     showZenodoBadgeModal.value = true;
   });
-  console.log(codefairDomain);
   // showZenodoBadgeModal.value = true;
 };
 
 const copyBadge = () => {
-  const markdownSnippet = `[![DOI](https://${codefairDomain}/api/badge/${owner}/${repo})](https://${codefairDomain}/doi/${owner}/${repo})`;
+  const markdownSnippet = `[![DOI](${codefairDomain}/api/badge/${owner}/${repo})](${codefairDomain}/doi/${owner}/${repo})`;
   navigator.clipboard
     .writeText(markdownSnippet)
     .then(() => {
@@ -510,13 +508,17 @@ const fetchZenodoBadge = async () => {
     headers: useRequestHeaders(["cookie"]),
     method: "GET",
     responseType: "text",
-  }).then((badge) => {
-    if (badge) {
-      // provide a modal to show the badge
-      console.log(badge);
-      zenodoBadgeShield.value = badge;
-    }
-  });
+  })
+    .then((badge) => {
+      if (badge) {
+        // Provide a modal to show the badge
+        console.log(badge);
+        zenodoBadgeShield.value = badge;
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching badge:", error);
+    });
 };
 
 const validateZenodoForm = () => {
