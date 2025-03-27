@@ -23,12 +23,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  console.log(
-    "zenodo.last_published_zenodo_doi",
-    zenodo.last_published_zenodo_doi,
-  );
-  console.log("Creating badge");
-
   const format = {
     label: "DOI",
     message: `${zenodo.last_published_zenodo_doi}`,
@@ -38,6 +32,7 @@ export default defineEventHandler(async (event) => {
   // Create the badge with badge-maker
   // Svg string is stored in the badge variable
   const badge = makeBadge(format);
+  console.log("Badge created");
 
   // Set the response header to indicate SVG content
   setHeader(event, "Content-Type", "image/svg+xml");
