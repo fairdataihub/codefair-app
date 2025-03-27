@@ -43,6 +43,13 @@ module.exports = {
       },
     ],
 
+    "prettier/prettier": [
+      "error",
+      {
+        endOfLine: "auto",
+      },
+    ],
+
     "vue/padding-line-between-tags": [
       "error",
       [{ blankLine: "always", next: "*", prev: "*" }],

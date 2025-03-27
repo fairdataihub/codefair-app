@@ -474,20 +474,18 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         message: "Please try again later",
       });
     })
-    .finally(async () => {
+    .finally(() => {
       zenodoPublishSpinner.value = false;
       zenodoDraftSpinner.value = false;
 
       // Make API call to get the DOI badge for the user
-      await fetchZenodoBadge();
+      fetchZenodoBadge();
     });
 };
 
-const requestZenodoBadge = async () => {
-  await fetchZenodoBadge().then(() => {
-    showZenodoBadgeModal.value = true;
-  });
-  // showZenodoBadgeModal.value = true;
+const requestZenodoBadge = () => {
+  fetchZenodoBadge();
+  showZenodoBadgeModal.value = true;
 };
 
 const copyBadge = () => {
@@ -502,7 +500,7 @@ const copyBadge = () => {
     });
 };
 
-const fetchZenodoBadge = async () => {
+const fetchZenodoBadge = () => {
   zenodoBadgeShield.value = "";
   $fetch(`/api/badge/${owner}/${repo}`, {
     headers: useRequestHeaders(["cookie"]),
@@ -570,11 +568,11 @@ const loginToZenodo = async () => {
   })
     .then(() => {
       const githubDetails = {
+        githubRelease: githubFormValue.value.release,
         githubTag:
           githubFormValue.value.tag === "new"
             ? githubFormValue.value.tagTitle
             : githubFormValue.value.tag,
-        githubRelease: githubFormValue.value.release,
       };
       // Extract the existing state from the Zenodo login URL
       const existingStateMatch =
@@ -585,7 +583,7 @@ const loginToZenodo = async () => {
         try {
           const decodedState = decodeURIComponent(existingStateMatch[1]);
           const [userId, owner, repo] = decodedState.split(":");
-          originalState = { userId, owner, repo };
+          originalState = { owner, repo, userId };
         } catch (error) {
           console.error("Failed to parse existing state:", error);
           throw new Error("Invalid state format");
@@ -663,12 +661,14 @@ onBeforeUnmount(() => {
     <n-flex vertical>
       <div class="flex flex-row items-center justify-between">
         <h1>FAIR Software Release</h1>
+
         <n-button
           type="primary"
-          @click="requestZenodoBadge"
           class="flex items-center"
+          @click="requestZenodoBadge"
           >Request Zenodo badge</n-button
         >
+
         <NuxtLink
           to="https://docs.codefair.io/docs/archive.html"
           target="_blank"
@@ -815,8 +815,8 @@ onBeforeUnmount(() => {
 
             <n-checkbox
               :checked="licenseChecked && license.id !== 'Custom'"
-              @update:checked="(val) => (licenseChecked = val)"
               :disabled="license.id === 'Custom'"
+              @update:checked="(val: any) => (licenseChecked = val)"
             >
               I have added and reviewed the license file that is required for
               the repository to be released on Zenodo.
@@ -1305,10 +1305,12 @@ onBeforeUnmount(() => {
           reviewing the deposition and adding additional metadata supported by
           Zenodo to make your software more FAIR.
         </p>
+
         <p>
           Below is your Zenodo badge. Copy the markdown snippet below and paste
           it into your README file to display the badge.
         </p>
+
         <div class="text-center">
           <NuxtLink
             :to="`/doi/${owner}/${repo}`"
@@ -1318,18 +1320,17 @@ onBeforeUnmount(() => {
             <div v-html="zenodoBadgeShield" />
           </NuxtLink>
         </div>
-        <pre
+
+        <code
           class="whitespace-pre-wrap rounded bg-gray-100 p-4 font-mono text-sm"
-        >
-          [![DOI]({{ codefairDomain }}/api/badge/{{ owner }}/{{ repo }})]({{
+          >[![DOI]({{ codefairDomain }}/api/badge/{{ owner }}/{{ repo }})]({{
             codefairDomain
           }}/doi/{{ owner }}/{{ repo }})
-      </pre
-        >
+        </code>
 
         <button
-          @click="copyBadge"
           class="flex items-center justify-center gap-2 rounded border border-blue-500 px-4 py-2 text-blue-500 transition hover:bg-blue-50"
+          @click="copyBadge"
         >
           <Icon name="mdi:content-copy" class="h-5 w-5" />
           Copy Markdown
@@ -1381,10 +1382,12 @@ onBeforeUnmount(() => {
             reviewing the deposition and adding additional metadata supported by
             Zenodo to make your software more FAIR.
           </p>
+
           <p>
             Below is your Zenodo badge. Copy the markdown snippet below and
             paste it into your README file to display the badge.
           </p>
+
           <div class="text-center">
             <NuxtLink
               :to="`/doi/${owner}/${repo}`"
@@ -1394,6 +1397,7 @@ onBeforeUnmount(() => {
               <div v-html="zenodoBadgeShield" />
             </NuxtLink>
           </div>
+
           <pre
             class="whitespace-pre-wrap rounded bg-gray-100 p-4 font-mono text-sm"
           >
@@ -1404,8 +1408,8 @@ onBeforeUnmount(() => {
           >
 
           <button
-            @click="copyBadge"
             class="flex items-center justify-center gap-2 rounded border border-blue-500 px-4 py-2 text-blue-500 transition hover:bg-blue-50"
+            @click="copyBadge"
           >
             <Icon name="mdi:content-copy" class="h-5 w-5" />
             Copy Markdown

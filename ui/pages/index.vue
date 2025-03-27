@@ -39,20 +39,20 @@ breadcrumbsStore.hideBreadcrumbs();
       </div>
 
       <div
-        class="animate-float-item relative hidden h-48 lg:flex lg:h-auto xl:w-5/12"
+        class="relative hidden h-48 animate-float-item lg:flex lg:h-auto xl:w-5/12"
       >
         <img
           src="/assets/images/second_layer_hero.png"
           loading="lazy"
           alt="Hero image"
-          class="animate-float-opposite absolute left-24 top-8 h-[25rem] w-[25rem] object-cover object-center"
+          class="absolute left-24 top-8 h-[25rem] w-[25rem] animate-float-opposite object-cover object-center"
         />
 
         <img
           src="/assets/images/first_layer_hero.png"
           loading="lazy"
           alt="Hero image"
-          class="animate-float-item h[25rem]- absolute -left-[4rem] top-10 w-[25rem] object-cover object-center"
+          class="h[25rem]- absolute -left-[4rem] top-10 w-[25rem] animate-float-item object-cover object-center"
         />
       </div>
     </section>
