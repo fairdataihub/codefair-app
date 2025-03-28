@@ -105,6 +105,13 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
   const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`;
   const { depositionId, releaseId, tagVersion, userWhoSubmitted } =
     parseZenodoInfo(issueBody);
+
+  console.log("Parsed Zenodo info:", {
+    depositionId,
+    releaseId,
+    tagVersion,
+    userWhoSubmitted,
+  });
   logwatch.info(
     {
       message: `Parsed Zenodo info:`,
@@ -127,14 +134,17 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
 
     // 3. Fetch the Zenodo token from the database and verify it is valid
     const zenodoToken = await getZenodoToken(userWhoSubmitted);
+    console.log("Zenodo token:", zenodoToken);
 
     // 4. Create the Zenodo record or get the existing one and create a new draft deposition if none exist
+    logwatch.info("Creating a new Zenodo deposition...");
     const zenodoDepositionInfo = await getZenodoDepositionInfo(
       depositionId,
       zenodoToken
     );
 
     // Sending the Zenodo deposition info to the log in the case of an error
+    console.log("Zenodo Deposition Info:", zenodoDepositionInfo);
     logwatch.info(
       {
         message: "Zenodo Deposition Info: ",
@@ -145,6 +155,7 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
 
     // 4.5 Set the bucket URL and DOI
     // using record_id over id because it the id of the current deposition
+    const addUploadType = !!zenodoDepositionInfo?.metadata?.upload_type;
     const newDepositionId = zenodoDepositionInfo.record_id;
     const bucket_url = zenodoDepositionInfo.links.bucket;
     const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
@@ -166,8 +177,11 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
     // 6. Gather metadata for Zenodo deposition
     const newZenodoMetadata = await createZenodoMetadata(
       updatedMetadataFile,
-      repository
+      repository,
+      addUploadType
     );
+
+    console.log("New Zenodo metadata:", newZenodoMetadata);
 
     // 7. Update the Zenodo deposition's metadata
     await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
@@ -198,7 +212,8 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
     );
 
     // Update the GitHub issue with a status report
-    const afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. All assets from the GitHub repository's draft release have been successfully uploaded to the Zenodo deposition draft.`;
+    logwatch.info("Updating the GitHub issue with a status report...");
+    const afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo under the version ${newZenodoMetadata.metadata.version}. All assets from the GitHub repository's draft release have been successfully uploaded to the Zenodo deposition draft.`;
     const finalUploadString =
       await applyLastModifiedTemplate(afterUploadString);
     await createIssue(
@@ -210,13 +225,16 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
     );
 
     // 8. Publish the Zenodo deposition
+    logwatch.info("Publishing the Zenodo deposition...");
     await publishZenodoDeposition(zenodoToken, newDepositionId);
 
     // Update the release to not be a draft
+    logwatch.info("Releasing GitHub draft...");
     await updateGitHubRelease(context, repository.name, owner, releaseId);
 
     // 9. Append to the issueBody that the deposition has been published
     // Update the issue with the new body
+    logwatch.success("Successful release, updating the issue body...");
     const badge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${newDepositionId})`;
     const issueBodyArchiveSection = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
     const finalTemplate = await applyLastModifiedTemplate(
@@ -237,7 +255,7 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
       },
     });
 
-    logwatch.info("Updated the Zenodo deposition in the database!");
+    logwatch.success("Updated the Zenodo deposition in the database!");
 
     await dbInstance.analytics.update({
       data: {
@@ -254,6 +272,7 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
     });
 
     logwatch.success("Updated the analytics in the database!");
+    logwatch.success("Zenodo publication process completed successfully!");
   } catch (error) {
     // Update the issue with the new body
     // Update the GitHub issue with a status report
