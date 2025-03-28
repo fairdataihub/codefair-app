@@ -249,7 +249,13 @@ export default async (app, { getRouter }) => {
 
     // Check if any of the commits added a LICENSE, CITATION, CWL files, or codemeta file
     if (commits.length > 0) {
-      subjects = await iterateCommitDetails(commits, subjects, repository);
+      subjects = await iterateCommitDetails(
+        commits,
+        subjects,
+        repository,
+        context,
+        owner
+      );
     }
     const issueBody = await renderIssues(
       context,
