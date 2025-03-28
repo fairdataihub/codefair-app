@@ -186,41 +186,49 @@ export default defineEventHandler(async (event) => {
 
     // Add draft tag to the tag map
     tagMap.set(release.tag_name, {
-      commit: { sha: release.target_commitish, url: "" },
       name: release.tag_name,
+      commit: { sha: release.target_commitish, url: "" },
       node_id: "",
+      released: !release.draft,
       tarballUrl: "",
       zipballUrl: "",
-      released: !release.draft,
     });
   }
 
   // Process GitHub tags JSON, updating or adding each tag
+  // console.log("githubTagsJson", githubTagsJson);
   for (const tag of githubTagsJson) {
-    // Check if the tag is already in the map, if so verify if is attached to a released release
     const existingTag = tagMap.get(tag.name);
-    if (existingTag && !existingTag.released) {
-      // If the tag is already released, skip it
+
+    if (existingTag) {
+      // Only update unreleased tags, leave released ones untouched
+      // console.log("existingTag name", existingTag.name);
       tagMap.set(tag.name, {
-        commit: { sha: tag.commit.sha, url: tag.commit.url },
         name: tag.name,
+        commit: { sha: tag.commit.sha, url: tag.commit.url },
         node_id: tag.node_id,
+        released: existingTag.released,
         tarballUrl: tag.tarball_url,
         zipballUrl: tag.zipball_url,
-        released: false,
       });
     } else {
-      // If the tag is not in the map, add it but verify it is attached to a released release
-      const isReleased = githubReleasesJson.some(
-        (release: any) => release.tag_name === tag.name && !release.draft,
+      // Add new tag with proper release status
+      const matchingRelease = githubReleasesJson.find(
+        (release: any) => release.tag_name === tag.name,
       );
+      if (matchingRelease) {
+        console.log("Matching release:", matchingRelease);
+      }
+      const isReleased = matchingRelease ? matchingRelease.draft : false;
+      console.log("isReleased", isReleased);
+
       tagMap.set(tag.name, {
-        commit: { sha: tag.commit.sha, url: tag.commit.url },
         name: tag.name,
+        commit: { sha: tag.commit.sha, url: tag.commit.url },
         node_id: tag.node_id,
+        released: !isReleased,
         tarballUrl: tag.tarball_url,
         zipballUrl: tag.zipball_url,
-        released: isReleased,
       });
     }
   }
