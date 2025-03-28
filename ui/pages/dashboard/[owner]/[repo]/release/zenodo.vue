@@ -12,12 +12,13 @@ definePageMeta({
   middleware: ["protected"],
 });
 
-const config = useRuntimeConfig();
-const codefairDomain = config.public.codefairDomain;
+// const config = useRuntimeConfig();
+// const codefairDomain = config.public.codefairDomain;
 
 const route = useRoute();
 const githubTag = route.query.githubTag;
 const githubRelease = route.query.githubRelease;
+const codefairDomain = window.location.origin;
 
 const user = useUser();
 const breadcrumbsStore = useBreadcrumbsStore();
@@ -488,16 +489,14 @@ const requestZenodoBadge = () => {
   showZenodoBadgeModal.value = true;
 };
 
-const copyBadge = () => {
-  const markdownSnippet = `[![DOI](${codefairDomain}/api/badge/${owner}/${repo})](${codefairDomain}/doi/${owner}/${repo})`;
+const copyText = (text: string) => {
   navigator.clipboard
-    .writeText(markdownSnippet)
+    .writeText(text)
     .then(() => {
-      console.log("Badge markdown copied to clipboard");
+      // Optionally notify the user of success
+      console.log("Text copied to clipboard");
     })
-    .catch((err) => {
-      console.error("Failed to copy:", err);
-    });
+    .catch((err) => console.error("Failed to copy text: ", err));
 };
 
 const fetchZenodoBadge = () => {
@@ -634,6 +633,29 @@ const loginToZenodo = async () => {
 };
 
 const githubReleaseInterval = ref<any>(null);
+
+const snippets = computed(() => [
+  {
+    title: "reStructuredText",
+    content: `.. image:: ${codefairDomain}/badge/${owner}/${repo}\n   :target: ${codefairDomain}/badge/${owner}/${repo}`,
+  },
+  {
+    title: "Markdown",
+    content: `[![FAIR Software Release](${codefairDomain}/badge/${owner}/${repo})](${codefairDomain}/badge/${owner}/${repo})`,
+  },
+  {
+    title: "HTML",
+    content: `<a href="${codefairDomain}/badge/${owner}/${repo}"><img src="${codefairDomain}/badge/${owner}/${repo}" alt="FAIR Software Release"></a>`,
+  },
+  {
+    title: "Image URL",
+    content: `${codefairDomain}/badge/${owner}/${repo}`,
+  },
+  {
+    title: "Target URL",
+    content: `${codefairDomain}/doi/${owner}/${repo}`,
+  },
+]);
 
 onMounted(() => {
   // if there are items in the zenodoMetadata object, validate the zenodoForm
@@ -1297,44 +1319,39 @@ onBeforeUnmount(() => {
       size="huge"
       :mask-closable="true"
       :close-on-esc="true"
-      class="w-[600px]"
+      class="max-h-[40rem] w-[600px] overflow-scroll"
     >
-      <div class="flex flex-col gap-4">
-        <p>
+      <div class="-mt-6 flex flex-col gap-6 p-0">
+        <p class="text-base">
           Your software was successfully archived on Zenodo. We recommend
           reviewing the deposition and adding additional metadata supported by
-          Zenodo to make your software more FAIR.
+          Zenodo to make your software more FAIR. Below is your Zenodo badge.
+          Copy the markdown snippet below and paste it into your README file to
+          display the badge.
         </p>
 
-        <p>
-          Below is your Zenodo badge. Copy the markdown snippet below and paste
-          it into your README file to display the badge.
-        </p>
+        <!-- Version DOI Badge Section -->
+        <h3 class="-mt-2 text-xl font-bold">Latest Version DOI Badge</h3>
+        <!-- Snippet Template -->
+        <div v-for="(snippet, index) in snippets" :key="index" class="-mt-4">
+          <h4 class="mb-1 font-medium">{{ snippet.title }}</h4>
 
-        <div class="text-center">
-          <NuxtLink
-            :to="`/doi/${owner}/${repo}`"
-            target="_blank"
-            class="inline-block"
-          >
-            <div v-html="zenodoBadgeShield" />
-          </NuxtLink>
+          <div class="group relative">
+            <pre
+              class="overflow-auto rounded border border-gray-200 bg-gray-50 p-4 font-mono text-sm"
+            ><code>{{ snippet.content }}</code></pre>
+
+            <button
+              class="absolute inset-y-0 right-0 flex items-center justify-center px-3 opacity-0 transition group-hover:opacity-100"
+              @click="copyText(snippet.content)"
+            >
+              <Icon
+                name="mdi:content-copy"
+                class="h-5 w-5 text-gray-400 hover:text-gray-700"
+              />
+            </button>
+          </div>
         </div>
-
-        <code
-          class="whitespace-pre-wrap rounded bg-gray-100 p-4 font-mono text-sm"
-          >[![DOI]({{ codefairDomain }}/api/badge/{{ owner }}/{{ repo }})]({{
-            codefairDomain
-          }}/doi/{{ owner }}/{{ repo }})
-        </code>
-
-        <button
-          class="flex items-center justify-center gap-2 rounded border border-blue-500 px-4 py-2 text-blue-500 transition hover:bg-blue-50"
-          @click="copyBadge"
-        >
-          <Icon name="mdi:content-copy" class="h-5 w-5" />
-          Copy Markdown
-        </button>
       </div>
     </n-modal>
 
@@ -1388,24 +1405,61 @@ onBeforeUnmount(() => {
             paste it into your README file to display the badge.
           </p>
 
-          <div class="text-center">
-            <NuxtLink
-              :to="`/doi/${owner}/${repo}`"
-              target="_blank"
-              class="inline-block"
-            >
-              <div v-html="zenodoBadgeShield" />
-            </NuxtLink>
-          </div>
+          <div class="flex flex-col gap-8 p-0">
+            <!-- Version DOI Badge Section -->
+            <div>
+              <h3 class="mb-2 text-xl font-bold">Version DOI Badge</h3>
 
-          <pre
-            class="whitespace-pre-wrap rounded bg-gray-100 p-4 font-mono text-sm"
-          >
-          [![DOI]({{ codefairDomain }}/api/badge/{{ owner }}/{{ repo }})]({{
-              codefairDomain
-            }}/doi/{{ owner }}/{{ repo }})
-      </pre
-          >
+              <div class="mb-4">
+                <h4 class="font-semibold">reStructuredText:</h4>
+
+                <code class="block rounded bg-gray-100 p-2"
+                  >.. image:: {{ codefairDomain }}/api/badge/{{ owner }}/{{
+                    repo
+                  }}
+                  :target: {{ codefairDomain }}/doi/{{ owner }}/{{ repo }}</code
+                >
+              </div>
+
+              <div class="mb-4">
+                <h4 class="font-semibold">Markdown:</h4>
+
+                <code class="block rounded bg-gray-100 p-2"
+                  >[![DOI]({{ codefairDomain }}/api/badge/{{ owner }}/{{
+                    repo
+                  }})]({{ codefairDomain }}/doi/{{ owner }}/{{ repo }})</code
+                >
+              </div>
+
+              <div class="mb-4">
+                <h4 class="font-semibold">HTML:</h4>
+
+                <code class="block rounded bg-gray-100 p-2"
+                  >&lt;a href="{{ codefairDomain }}/doi/{{ owner }}/{{
+                    repo
+                  }}"&gt; &lt;img src="{{ codefairDomain }}/api/badge/{{
+                    owner
+                  }}/{{ repo }}" alt="DOI"&gt; &lt;/a&gt;</code
+                >
+              </div>
+
+              <div class="mb-2">
+                <h4 class="font-semibold">Image URL:</h4>
+
+                <code class="block rounded bg-gray-100 p-2">
+                  {{ codefairDomain }}/api/badge/{{ owner }}/{{ repo }}
+                </code>
+              </div>
+
+              <div>
+                <h4 class="font-semibold">Target URL:</h4>
+
+                <code class="block rounded bg-gray-100 p-2">
+                  {{ codefairDomain }}/doi/{{ owner }}/{{ repo }}
+                </code>
+              </div>
+            </div>
+          </div>
 
           <button
             class="flex items-center justify-center gap-2 rounded border border-blue-500 px-4 py-2 text-blue-500 transition hover:bg-blue-50"

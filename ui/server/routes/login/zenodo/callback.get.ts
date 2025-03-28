@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { userId, owner, repo, githubDetails } = parsedState;
+  const { githubDetails, owner, repo, userId } = parsedState;
 
   if (!userId || !owner || !repo || !githubDetails) {
     throw createError({
@@ -40,21 +40,24 @@ export default defineEventHandler(async (event) => {
   console.log("Repo:", repo);
   console.log("GitHub Details:", githubDetails);
   const urlEncoded = new URLSearchParams({
-    grant_type: "authorization_code",
-    code: code as string,
     client_id: ZENODO_CLIENT_ID,
     client_secret: ZENODO_CLIENT_SECRET,
+    code: code as string,
+    grant_type: "authorization_code",
     redirect_uri: ZENODO_REDIRECT_URI,
     scope: "deposit:actions deposit:write",
   });
 
   const oauthTokenRes = await fetch(`${ZENODO_ENDPOINT}/oauth/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: urlEncoded,
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    method: "POST",
   });
 
   if (!oauthTokenRes.ok) {
+    console.log(oauthTokenRes);
+    console.log(oauthTokenRes.json());
+    console.log(oauthTokenRes.body);
     console.error("OAuth token request failed:", oauthTokenRes.statusText);
     throw createError({
       status: 500,
@@ -65,9 +68,9 @@ export default defineEventHandler(async (event) => {
   const { access_token, refresh_token } = await oauthTokenRes.json();
 
   const tokenData = {
-    token: access_token,
-    refresh_token,
     expires_at: new Date(Date.now() + 3600 * 1000),
+    refresh_token,
+    token: access_token,
     user_id: userId,
   };
 
@@ -77,8 +80,8 @@ export default defineEventHandler(async (event) => {
 
   if (existingToken) {
     await prisma.zenodoToken.update({
-      where: { id: existingToken.id },
       data: tokenData,
+      where: { id: existingToken.id },
     });
   } else {
     await prisma.zenodoToken.create({

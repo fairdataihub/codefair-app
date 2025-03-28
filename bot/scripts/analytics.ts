@@ -13,7 +13,6 @@ async function countInstallations() {
     );
     const uniqueOwnerCount = uniqueOwners.size;
 
-    // Each record represents one repository (via the "repo" field), so the total repo count is:
     const totalRepoCount = installations.length;
 
     console.log(`Unique owner count: ${uniqueOwnerCount}`);
