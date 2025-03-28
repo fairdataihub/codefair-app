@@ -20,7 +20,7 @@ const { VALIDATOR_URL } = process.env;
  * @param {String} repoName - Repository name
  * @returns {Array} - Array of CWL files in the repository
  */
-export function getCWLFiles(context, owner, repository) {
+export async function getCWLFiles(context, owner, repository) {
   return new Promise((resolve, reject) => {
     logwatch.info("Checking for CWL files in the repository...");
 
@@ -169,6 +169,7 @@ export async function applyCWLTemplate(
   let url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/view/cwl-validation`;
 
   // Delete file entries from db if they were removed from the repository
+  console.log(subjects.cwl?.removed_files);
   if (subjects.cwl?.files && subjects.cwl.removed_files.length > 0) {
     // Remove the files from the database
     const existingCWL = await dbInstance.cwlValidation.findUnique({
@@ -182,7 +183,9 @@ export async function applyCWLTemplate(
         return !subjects.cwl.removed_files.includes(file.path);
       });
 
-      logwatch.info(`New files after removed_files filter: ${newFiles}`);
+      logwatch.info(
+        `New files after removed_files filter: ${JSON.stringify(newFiles)}`
+      );
 
       await dbInstance.cwlValidation.update({
         data: {
