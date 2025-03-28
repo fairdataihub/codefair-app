@@ -25,7 +25,8 @@
     "lint:fix": "prettier --write --list-different . && yarn lint:js --fix",
     "prune:branches": "npx git-removed-branches --prune --force",
     "reset": "rm -rf node_modules && rm -rf .nuxt && rm -rf .output && rm -rf dist && yarn install",
-    "test": "jest"
+    "test": "jest",
+    "analytics": "tsx ./scripts/analytics.ts"
   },
   "dependencies": {
     "@lucia-auth/adapter-mongodb": "^1.0.3",
