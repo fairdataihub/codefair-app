@@ -113,6 +113,7 @@ export async function getCWLFiles(context, owner, repository) {
  */
 export async function validateCWLFile(downloadUrl) {
   try {
+    console.log(downloadUrl);
     const response = await fetch(`${VALIDATOR_URL}/validate-cwl`, {
       body: JSON.stringify({
         file_path: downloadUrl,
