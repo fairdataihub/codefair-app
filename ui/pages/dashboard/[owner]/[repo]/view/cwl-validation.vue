@@ -90,9 +90,9 @@ if (error.value) {
 
           <p class="pt-2 text-sm">
             <time>{{
-              dayjs
-                .unix(parseInt(file.last_validated.toString()) / 1000)
-                .format("MMMM DD, YYYY [at] hh:mmA")
+              dayjs(parseInt(file.last_validated.toString()) * 1000).format(
+                "MMMM DD, YYYY [at] hh:mmA",
+              )
             }}</time>
           </p>
 
