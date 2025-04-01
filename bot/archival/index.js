@@ -296,7 +296,7 @@ export async function fetchExistingZenodoDeposition(zenodoToken, depositionId) {
       }
 
       const draftDepositionInfo = await draftDeposition.json();
-      console.log("Draft depo fetched: ", draftDepositionInfo);
+      // console.log("Draft depo fetched: ", draftDepositionInfo);
       return draftDepositionInfo;
     } else if (!zenodoDeposition.ok) {
       const errorText = await zenodoDeposition.text();
@@ -417,7 +417,7 @@ export async function getZenodoDepositionInfo(depositionId, zenodoToken) {
     );
 
     if (newZenodoVersion.files.length > 0) {
-      console.log("Files to delete: ", newZenodoVersion.files);
+      // console.log("Files to delete: ", newZenodoVersion.files);
       for (const file of newZenodoVersion.files) {
         logwatch.start(
           `Deleting file from newly created draft: ${file.links.download}`
@@ -514,7 +514,7 @@ export async function createZenodoMetadata(
       );
     }
 
-    console.log("fetched zenodo metadata: ", zenodoMetadata);
+    // console.log("fetched zenodo metadata: ", zenodoMetadata);
 
     if (licenseId === "Custom") {
       throw new Error("Custom licenses are not supported yet.");
@@ -613,7 +613,7 @@ export async function updateZenodoMetadata(
 
     const updatedMetadataInfo = await response.json();
     logwatch.success("Zenodo deposition metadata updated successfully!");
-    console.log("Updated metadata:", updatedMetadataInfo);
+    // console.log("Updated metadata:", updatedMetadataInfo);
 
     // If the metadata does not have an upload_type, add it and update the metadata again.
     if (!updatedMetadataInfo?.metadata?.upload_type) {

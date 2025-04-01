@@ -193,7 +193,6 @@ export async function applyCWLTemplate(
   let url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/view/cwl-validation`;
 
   // Delete file entries from db if they were removed from the repository
-  console.log(subjects.cwl?.removed_files);
   if (subjects.cwl?.files && subjects.cwl.removed_files.length > 0) {
     // Remove the files from the database
     const existingCWL = await dbInstance.cwlValidation.findUnique({
@@ -274,7 +273,7 @@ export async function applyCWLTemplate(
         if (!isValidCWL) {
           failedCount += 1;
         }
-        console.log("validationMessage", validationMessage);
+
         logwatch.info(
           `Validation message for ${file.path}: ${validationMessage}`
         );

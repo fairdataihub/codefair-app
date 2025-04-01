@@ -35,10 +35,10 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  console.log("User ID:", userId);
-  console.log("Owner:", owner);
-  console.log("Repo:", repo);
-  console.log("GitHub Details:", githubDetails);
+  // console.log("User ID:", userId);
+  // console.log("Owner:", owner);
+  // console.log("Repo:", repo);
+  // console.log("GitHub Details:", githubDetails);
   const urlEncoded = new URLSearchParams({
     client_id: ZENODO_CLIENT_ID,
     client_secret: ZENODO_CLIENT_SECRET,
@@ -55,9 +55,9 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!oauthTokenRes.ok) {
-    console.log(oauthTokenRes);
-    console.log(oauthTokenRes.json());
-    console.log(oauthTokenRes.body);
+    // console.log(oauthTokenRes);
+    // console.log(oauthTokenRes.json());
+    // console.log(oauthTokenRes.body);
     console.error("OAuth token request failed:", oauthTokenRes.statusText);
     throw createError({
       status: 500,

@@ -574,7 +574,7 @@ export async function updateMetadataIdentifier(
       );
     }
 
-    console.log("Zenodo metadata", zenodoMetadata);
+    // console.log("Zenodo metadata", zenodoMetadata);
 
     citationFile.doi = identifier;
     citationFile["date-released"] = updated_date;

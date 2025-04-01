@@ -106,12 +106,12 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
   const { depositionId, releaseId, tagVersion, userWhoSubmitted } =
     parseZenodoInfo(issueBody);
 
-  console.log("Parsed Zenodo info:", {
-    depositionId,
-    releaseId,
-    tagVersion,
-    userWhoSubmitted,
-  });
+  // console.log("Parsed Zenodo info:", {
+  //   depositionId,
+  //   releaseId,
+  //   tagVersion,
+  //   userWhoSubmitted,
+  // });
   logwatch.info(
     {
       message: `Parsed Zenodo info:`,
@@ -134,7 +134,7 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
 
     // 3. Fetch the Zenodo token from the database and verify it is valid
     const zenodoToken = await getZenodoToken(userWhoSubmitted);
-    console.log("Zenodo token:", zenodoToken);
+    // console.log("Zenodo token:", zenodoToken);
 
     // 4. Create the Zenodo record or get the existing one and create a new draft deposition if none exist
     logwatch.info("Creating a new Zenodo deposition...");
@@ -144,7 +144,7 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
     );
 
     // Sending the Zenodo deposition info to the log in the case of an error
-    console.log("Zenodo Deposition Info:", zenodoDepositionInfo);
+    // console.log("Zenodo Deposition Info:", zenodoDepositionInfo);
     logwatch.info(
       {
         message: "Zenodo Deposition Info: ",
@@ -181,7 +181,7 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
       addUploadType
     );
 
-    console.log("New Zenodo metadata:", newZenodoMetadata);
+    // console.log("New Zenodo metadata:", newZenodoMetadata);
 
     // 7. Update the Zenodo deposition's metadata
     await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
