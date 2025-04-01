@@ -14,136 +14,159 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const { VALIDATOR_URL } = process.env;
 
 /**
- * * This function gets the CWL files in the repository
+ * This function gets the CWL files in the repository
  * @param {Object} context - GitHub Event Context
- * @param {String} owner  - Repository owner
- * @param {String} repoName - Repository name
- * @returns {Array} - Array of CWL files in the repository
+ * @param {String} owner - Repository owner
+ * @param {Object} repository - Repository object
+ * @returns {Promise<Object>} - An object containing CWL file details
  */
 export async function getCWLFiles(context, owner, repository) {
-  return new Promise((resolve, reject) => {
-    logwatch.info("Checking for CWL files in the repository...");
+  logwatch.info("Checking for CWL files in the repository...");
 
-    const cwlFiles = [];
-    const cwlObject = {
-      contains_cwl_files: false,
-      files: [],
-      removed_files: [],
-    };
+  const cwlObject = {
+    contains_cwl_files: false,
+    files: [],
+    removed_files: [],
+  };
 
-    const searchDirectory = async function (path) {
-      try {
-        const repoContent = await context.octokit.repos.getContent({
-          owner,
-          path,
-          repo: repository.name,
-        });
+  // Recursive function to search for CWL files throughout repository directories
+  async function searchDirectory(path) {
+    try {
+      const repoContent = await context.octokit.repos.getContent({
+        owner,
+        path,
+        repo: repository.name,
+      });
 
-        for (const file of repoContent.data) {
-          if (file.type === "file" && file.name.endsWith(".cwl")) {
-            logwatch.info(`CWL file found: ${file.name}`);
-            cwlObject.files.push(file);
-          }
-          if (file.type === "dir") {
-            await searchDirectory(file.path);
-          }
+      for (const file of repoContent.data) {
+        if (file.type === "file" && file.name.endsWith(".cwl")) {
+          logwatch.info({ message: "CWL file found", file: file.name }, true);
+          cwlObject.files.push(file);
         }
-      } catch (error) {
-        if (error.status === 404) {
-          // Repository is empty
-          resolve(cwlObject);
-          return;
+        if (file.type === "dir") {
+          await searchDirectory(file.path);
         }
-        logwatch.error(
-          {
-            message: "Error finding CWL files throughout the repository:",
-            error,
-          },
-          true
-        );
-        reject(error);
       }
-    };
-
-    // Call the async function and handle its promise
-    searchDirectory("")
-      .then(async () => {
-        try {
-          // Check if the db entry exists for the repository
-          const existingCWL = await dbInstance.cwlValidation.findUnique({
-            where: {
-              repository_id: repository.id,
-            },
-          });
-
-          if (existingCWL && existingCWL?.contains_cwl_files) {
-            cwlObject.contains_cwl_files = existingCWL.contains_cwl_files;
-            if (cwlObject.files.length > 0) {
-              // Remove the files that are not in the cwlObject.files array
-              const cwlFilePaths = cwlObject.files.map((file) => {
-                file.path;
-              });
-
-              cwlObject.removed_files = existingCWL?.files.filter((file) => {
-                return !cwlFilePaths.includes(file.path);
-              });
-            }
-          }
-
-          cwlObject.contains_cwl_files = cwlObject.files.length > 0;
-
-          resolve(cwlObject);
-        } catch (error) {
-          console.log("Error getting CWL files:", error);
-          throw new Error(
-            "Error getting the CWL files: ",
-            JSON.stringify(error),
-            { cause: error }
-          );
-        }
-      })
-      .catch(reject);
-  });
-}
-
-/**
- * * This function validates the CWL file using the cwltool validator
- * @param {String} downloadUrl - The download URL of the CWL file
- * @returns {Array} - Array containing the validation status and message
- */
-export async function validateCWLFile(downloadUrl) {
-  try {
-    console.log(downloadUrl);
-    const response = await fetch(`${VALIDATOR_URL}/validate-cwl`, {
-      body: JSON.stringify({
-        file_path: downloadUrl,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-    });
-    if (!response.ok && response.status === 400) {
-      const error = await response.json();
-      // consola.warn("Validation error:", error.error);
-      return [false, error.error];
-    }
-    if (!response.ok && response.status === 500) {
+    } catch (error) {
+      if (error.status === 404) {
+        // Directory not found; likely an empty repository or directory, so we simply return
+        return;
+      }
       logwatch.error(
         {
-          message: "Error validating CWL file:",
-          validation_response: response,
+          message: "Error searching for CWL files",
+          path,
+          error,
         },
         true
       );
-      return [false, "Error validating CWL file"];
+      throw new Error(`Error searching directory "${path}": ${error.message}`, {
+        cause: error,
+      });
     }
-    if (response.ok) {
-      const data = await response.json();
-      return [true, data.output];
+  }
+
+  // Execute the directory search
+  try {
+    await searchDirectory("");
+  } catch (error) {
+    throw new Error(
+      `Failed to search repository for CWL files: ${error.message}`,
+      {
+        cause: error,
+      }
+    );
+  }
+
+  // Process the database entry for removed files if it exists
+  try {
+    const existingCWL = await dbInstance.cwlValidation.findUnique({
+      where: { repository_id: repository.id },
+    });
+
+    // Map current file paths correctly
+    const cwlFilePaths = cwlObject.files.map((file) => file.path);
+
+    if (existingCWL && existingCWL.contains_cwl_files) {
+      cwlObject.removed_files = existingCWL.files.filter((file) => {
+        return !cwlFilePaths.includes(file.path);
+      });
     }
-  } catch (e) {
-    logwatch.error({ message: "Error validating CWL file:", error: e }, true);
+
+    cwlObject.contains_cwl_files = cwlObject.files.length > 0;
+    return cwlObject;
+  } catch (error) {
+    logwatch.error(
+      { message: "Error retrieving CWL files from the database", error },
+      true
+    );
+    throw new Error(`Error getting CWL files: ${error.message}`, {
+      cause: error,
+    });
+  }
+}
+
+/**
+ * Validates a CWL file using the cwltool validator.
+ * @param {String} downloadUrl - The download URL of the CWL file.
+ * @returns {Array} - Array containing a boolean status and a message.
+ */
+export async function validateCWLFile(downloadUrl) {
+  try {
+    logwatch.info({ message: "Starting CWL file validation", downloadUrl });
+    const response = await fetch(`${VALIDATOR_URL}/validate-cwl`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file_path: downloadUrl }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      if (response.status === 400) {
+        logwatch.warn({
+          message: "Validation error from API",
+          status: response.status,
+          error: errorData.error,
+          downloadUrl,
+        });
+        return [false, errorData.error];
+      } else if (response.status === 500) {
+        logwatch.error(
+          {
+            message: "Server error during CWL validation",
+            status: response.status,
+            error: errorData.error,
+            downloadUrl,
+          },
+          true
+        );
+        return [false, "Error validating CWL file"];
+      } else {
+        logwatch.error(
+          {
+            message: "Unexpected response status during CWL validation",
+            status: response.status,
+            error: errorData.error,
+            downloadUrl,
+          },
+          true
+        );
+        return [false, "Unexpected error during CWL file validation"];
+      }
+    }
+
+    const data = await response.json();
+    logwatch.info({
+      message: "CWL file validated successfully",
+      output: data.output,
+      downloadUrl,
+    });
+    return [true, data.output];
+  } catch (error) {
+    logwatch.error(
+      { message: "Exception during CWL file validation", error, downloadUrl },
+      true
+    );
     return [false, "Error validating CWL file"];
   }
 }
@@ -251,6 +274,10 @@ export async function applyCWLTemplate(
         if (!isValidCWL) {
           failedCount += 1;
         }
+        console.log("validationMessage", validationMessage);
+        logwatch.info(
+          `Validation message for ${file.path}: ${validationMessage}`
+        );
 
         const [modifiedValidationMessage, lineNumber1, lineNumber2] =
           replaceRawGithubUrl(validationMessage, downloadUrl, file.html_url);
