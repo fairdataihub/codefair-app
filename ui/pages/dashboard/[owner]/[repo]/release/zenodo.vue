@@ -12,12 +12,14 @@ definePageMeta({
   middleware: ["protected"],
 });
 
-const config = useRuntimeConfig();
-const codefairDomain = config.public.codefairDomain;
+// const config = useRuntimeConfig();
+// const codefairDomain = config.public.codefairDomain;
 
 const route = useRoute();
 const githubTag = route.query.githubTag;
 const githubRelease = route.query.githubRelease;
+const codefairDomain =
+  typeof window !== "undefined" ? window.location.origin : "";
 
 const user = useUser();
 const breadcrumbsStore = useBreadcrumbsStore();
@@ -121,10 +123,10 @@ if (data.value) {
   selectedDeposition.value = data.value.zenodoDepositionId?.toString() || null;
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
 
-  license.value.id = data.value.license.id || "";
-  license.value.status = data.value.license.status || "";
+  license.value.id = data.value?.license?.id || "";
+  license.value.status = data.value?.license?.status || "";
   license.value.customLicenseTitle =
-    data.value.license.customLicenseTitle || "";
+    data.value?.license?.customLicenseTitle || "";
 
   selectedExistingDeposition.value = data.value.existingZenodoDepositionId
     ? "existing"
@@ -210,7 +212,7 @@ const allConfirmed = computed(
   () =>
     licenseChecked.value &&
     metadataChecked.value &&
-    license.value.id !== "Custom",
+    license.value?.id !== "Custom",
 );
 
 const createDraftGithubReleaseSpinner = ref(false);
@@ -488,16 +490,14 @@ const requestZenodoBadge = () => {
   showZenodoBadgeModal.value = true;
 };
 
-const copyBadge = () => {
-  const markdownSnippet = `[![DOI](${codefairDomain}/api/badge/${owner}/${repo})](${codefairDomain}/doi/${owner}/${repo})`;
+const copyText = (text: string) => {
   navigator.clipboard
-    .writeText(markdownSnippet)
+    .writeText(text)
     .then(() => {
-      console.log("Badge markdown copied to clipboard");
+      // Optionally notify the user of success
+      console.log("Text copied to clipboard");
     })
-    .catch((err) => {
-      console.error("Failed to copy:", err);
-    });
+    .catch((err) => console.error("Failed to copy text: ", err));
 };
 
 const fetchZenodoBadge = () => {
@@ -635,6 +635,29 @@ const loginToZenodo = async () => {
 
 const githubReleaseInterval = ref<any>(null);
 
+const snippets = computed(() => [
+  {
+    title: "reStructuredText",
+    content: `.. image:: ${codefairDomain}/badge/${owner}/${repo}\n   :target: ${codefairDomain}/badge/${owner}/${repo}`,
+  },
+  {
+    title: "Markdown",
+    content: `[![FAIR Software Release](${codefairDomain}/badge/${owner}/${repo})](${codefairDomain}/badge/${owner}/${repo})`,
+  },
+  {
+    title: "HTML",
+    content: `<a href="${codefairDomain}/badge/${owner}/${repo}"><img src="${codefairDomain}/badge/${owner}/${repo}" alt="FAIR Software Release"></a>`,
+  },
+  {
+    title: "Image URL",
+    content: `${codefairDomain}/badge/${owner}/${repo}`,
+  },
+  {
+    title: "Target URL",
+    content: `${codefairDomain}/doi/${owner}/${repo}`,
+  },
+]);
+
 onMounted(() => {
   // if there are items in the zenodoMetadata object, validate the zenodoForm
   if (
@@ -761,7 +784,7 @@ onBeforeUnmount(() => {
         <template #content>
           <div class="flex w-full flex-col space-y-3">
             <n-flex
-              v-if="license.id && license?.customLicenseTitle != ''"
+              v-if="license.id && license.customLicenseTitle != ''"
               class="border p-2"
               align="center"
             >
@@ -786,7 +809,7 @@ onBeforeUnmount(() => {
             </n-flex>
 
             <n-alert
-              v-if="license.id === 'Custom' && !license.customLicenseTitle"
+              v-if="license.id === 'Custom' && !license?.customLicenseTitle"
               type="error"
               class="mb-4 w-full"
             >
@@ -1297,45 +1320,81 @@ onBeforeUnmount(() => {
       size="huge"
       :mask-closable="true"
       :close-on-esc="true"
-      class="w-[600px]"
+      class="max-h-[40rem] w-[600px] overflow-scroll"
     >
-      <div class="flex flex-col gap-4">
-        <p>
+      <div class="-mt-6 flex flex-col gap-6 p-0">
+        <p class="text-base">
           Your software was successfully archived on Zenodo. We recommend
           reviewing the deposition and adding additional metadata supported by
-          Zenodo to make your software more FAIR.
+          Zenodo to make your software more FAIR. Below is your Zenodo badge.
+          Copy the markdown snippet below and paste it into your README file to
+          display the badge.
         </p>
 
-        <p>
-          Below is your Zenodo badge. Copy the markdown snippet below and paste
-          it into your README file to display the badge.
-        </p>
+        <!-- Version DOI Badge Section -->
+        <h3 class="-mt-2 text-xl font-bold">Latest Version DOI Badge</h3>
+        <!-- Snippet Template -->
+        <div v-for="(snippet, index) in snippets" :key="index" class="-mt-4">
+          <h4 class="mb-1 font-medium">{{ snippet.title }}</h4>
 
-        <div class="text-center">
-          <NuxtLink
-            :to="`/doi/${owner}/${repo}`"
-            target="_blank"
-            class="inline-block"
-          >
-            <div v-html="zenodoBadgeShield" />
-          </NuxtLink>
+          <div class="group relative">
+            <pre
+              class="overflow-auto rounded border border-gray-200 bg-gray-50 p-4 font-mono text-sm"
+            ><code>{{ snippet.content }}</code></pre>
+
+            <button
+              class="absolute inset-y-0 right-0 flex items-center justify-center px-3 opacity-0 transition group-hover:opacity-100"
+              @click="copyText(snippet.content)"
+            >
+              <Icon
+                name="mdi:content-copy"
+                class="h-5 w-5 text-gray-400 hover:text-gray-700"
+              />
+            </button>
+          </div>
         </div>
-
-        <code
-          class="whitespace-pre-wrap rounded bg-gray-100 p-4 font-mono text-sm"
-          >[![DOI]({{ codefairDomain }}/api/badge/{{ owner }}/{{ repo }})]({{
-            codefairDomain
-          }}/doi/{{ owner }}/{{ repo }})
-        </code>
-
-        <button
-          class="flex items-center justify-center gap-2 rounded border border-blue-500 px-4 py-2 text-blue-500 transition hover:bg-blue-50"
-          @click="copyBadge"
-        >
-          <Icon name="mdi:content-copy" class="h-5 w-5" />
-          Copy Markdown
-        </button>
       </div>
+
+      <template v-if="zenodoPublishStatus === 'published'" #footer>
+        <n-flex justify="space-between">
+          <n-flex vertical justify="space-between">
+            <NuxtLink
+              :to="`https://doi.org/${zenodoPublishDOI}`"
+              target="_blank"
+            >
+              <n-button type="primary">
+                <template #icon>
+                  <Icon name="simple-icons:zenodo" size="16" />
+                </template>
+                View Zenodo deposition
+              </n-button>
+            </NuxtLink>
+
+            <NuxtLink
+              target="_blank"
+              :to="`https://github.com/${owner}/${repo}/releases/tag/${githubTag}`"
+            >
+              <n-button type="primary">
+                <template #icon>
+                  <Icon name="simple-icons:github" size="16" />
+                </template>
+                View GitHub Release
+              </n-button>
+            </NuxtLink>
+          </n-flex>
+
+          <n-button
+            v-if="
+              zenodoPublishStatus === 'published' ||
+              zenodoPublishStatus === 'error'
+            "
+            type="success"
+            @click="navigateToDashboard"
+          >
+            Okay
+          </n-button>
+        </n-flex>
+      </template>
     </n-modal>
 
     <n-modal
@@ -1372,48 +1431,38 @@ onBeforeUnmount(() => {
         </p>
       </n-flex>
 
-      <n-flex
-        v-else-if="zenodoPublishStatus === 'published' && showZenodoBadgeModal"
-        vertical
-      >
-        <div class="flex flex-col gap-4">
-          <p>
+      <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
+        <div class="-mt-6 flex flex-col gap-6 p-0">
+          <p class="text-base">
             Your software was successfully archived on Zenodo. We recommend
             reviewing the deposition and adding additional metadata supported by
-            Zenodo to make your software more FAIR.
+            Zenodo to make your software more FAIR. Below is your Zenodo badge.
+            Copy the markdown snippet below and paste it into your README file
+            to display the badge.
           </p>
 
-          <p>
-            Below is your Zenodo badge. Copy the markdown snippet below and
-            paste it into your README file to display the badge.
-          </p>
+          <!-- Version DOI Badge Section -->
+          <h3 class="-mt-2 text-xl font-bold">Latest Version DOI Badge</h3>
+          <!-- Snippet Template -->
+          <div v-for="(snippet, index) in snippets" :key="index" class="-mt-4">
+            <h4 class="mb-1 font-medium">{{ snippet.title }}</h4>
 
-          <div class="text-center">
-            <NuxtLink
-              :to="`/doi/${owner}/${repo}`"
-              target="_blank"
-              class="inline-block"
-            >
-              <div v-html="zenodoBadgeShield" />
-            </NuxtLink>
+            <div class="group relative">
+              <pre
+                class="overflow-auto rounded border border-gray-200 bg-gray-50 p-4 font-mono text-sm"
+              ><code>{{ snippet.content }}</code></pre>
+
+              <button
+                class="absolute inset-y-0 right-0 flex items-center justify-center px-3 opacity-0 transition group-hover:opacity-100"
+                @click="copyText(snippet.content)"
+              >
+                <Icon
+                  name="mdi:content-copy"
+                  class="h-5 w-5 text-gray-400 hover:text-gray-700"
+                />
+              </button>
+            </div>
           </div>
-
-          <pre
-            class="whitespace-pre-wrap rounded bg-gray-100 p-4 font-mono text-sm"
-          >
-          [![DOI]({{ codefairDomain }}/api/badge/{{ owner }}/{{ repo }})]({{
-              codefairDomain
-            }}/doi/{{ owner }}/{{ repo }})
-      </pre
-          >
-
-          <button
-            class="flex items-center justify-center gap-2 rounded border border-blue-500 px-4 py-2 text-blue-500 transition hover:bg-blue-50"
-            @click="copyBadge"
-          >
-            <Icon name="mdi:content-copy" class="h-5 w-5" />
-            Copy Markdown
-          </button>
         </div>
       </n-flex>
 
@@ -1423,18 +1472,33 @@ onBeforeUnmount(() => {
 
       <template #footer>
         <n-flex justify="space-between">
-          <NuxtLink
-            v-if="zenodoPublishStatus === 'published'"
-            :to="`https://doi.org/${zenodoPublishDOI}`"
-            target="_blank"
-          >
-            <n-button type="primary">
-              <template #icon>
-                <Icon name="simple-icons:zenodo" size="16" />
-              </template>
-              View Zenodo deposition
-            </n-button>
-          </NuxtLink>
+          <n-flex vertical justify="space-between">
+            <NuxtLink
+              v-if="zenodoPublishStatus === 'published'"
+              :to="`https://doi.org/${zenodoPublishDOI}`"
+              target="_blank"
+            >
+              <n-button type="primary">
+                <template #icon>
+                  <Icon name="simple-icons:zenodo" size="16" />
+                </template>
+                View Zenodo deposition
+              </n-button>
+            </NuxtLink>
+
+            <NuxtLink
+              v-if="zenodoPublishStatus === 'published'"
+              target="_blank"
+              :to="`https://github.com/${owner}/${repo}/releases/tag/${githubTag}`"
+            >
+              <n-button type="primary">
+                <template #icon>
+                  <Icon name="simple-icons:github" size="16" />
+                </template>
+                View GitHub Release
+              </n-button>
+            </NuxtLink>
+          </n-flex>
 
           <n-button
             v-if="

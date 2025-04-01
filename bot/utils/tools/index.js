@@ -577,7 +577,13 @@ export async function downloadRepositoryZip(
   }
 }
 
-export async function iterateCommitDetails(commits, subjects, repository) {
+export async function iterateCommitDetails(
+  commits,
+  subjects,
+  repository,
+  context,
+  owner
+) {
   const gatheredCWLFiles = [];
   const removedCWLFiles = [];
   for (let i = 0; i < commits.length; i++) {

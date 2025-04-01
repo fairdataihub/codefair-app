@@ -1,3 +1,4 @@
+import { error } from "console";
 import dbInstance from "../db.js";
 import { logwatch } from "../utils/logwatch.js";
 import fs from "fs";
@@ -43,21 +44,38 @@ export async function updateGitHubRelease(
 export async function publishZenodoDeposition(zenodoToken, depositionId) {
   try {
     logwatch.start(`Publishing the Zenodo deposition: ${depositionId}`);
-    const publishDeposition = await fetch(
-      `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/publish`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${zenodoToken}`,
-        },
-      }
+    const url = `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/publish`;
+    logwatch.info(`Sending POST request to: ${url}`);
+
+    const publishDeposition = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${zenodoToken}`,
+      },
+    });
+
+    logwatch.info(
+      `Received response with status: ${publishDeposition.status} ${publishDeposition.statusText}`
     );
 
     if (!publishDeposition.ok) {
+      let fetchResponse;
+      try {
+        fetchResponse = await publishDeposition.json();
+      } catch (parseError) {
+        logwatch.error("Failed to parse error response as JSON", parseError);
+        fetchResponse = { error: "Unable to parse response as JSON" };
+      }
+
+      logwatch.error(
+        { message: "Error publishing the Zenodo deposition:", fetchResponse },
+        true
+      );
+
       throw new Error(
-        `Failed to publish the Zenodo deposition. Status: ${publishDeposition.status}: ${publishDeposition.statusText}, Error: ${JSON.stringify(publishDeposition)}`,
-        { cause: publishDeposition }
+        `Failed to publish the Zenodo deposition. Status: ${publishDeposition.status}: ${publishDeposition.statusText}, Error: ${JSON.stringify(fetchResponse)}`,
+        { cause: fetchResponse }
       );
     }
 
@@ -66,6 +84,10 @@ export async function publishZenodoDeposition(zenodoToken, depositionId) {
       `Zenodo deposition published successfully at: ${publishedDeposition.links.latest_html}`
     );
   } catch (error) {
+    logwatch.error(
+      `Exception occurred during Zenodo publication: ${error.message}`,
+      error
+    );
     throw new Error(
       `Error publishing the Zenodo deposition: ${error.message}`,
       { cause: error }
@@ -274,6 +296,7 @@ export async function fetchExistingZenodoDeposition(zenodoToken, depositionId) {
       }
 
       const draftDepositionInfo = await draftDeposition.json();
+      // console.log("Draft depo fetched: ", draftDepositionInfo);
       return draftDepositionInfo;
     } else if (!zenodoDeposition.ok) {
       const errorText = await zenodoDeposition.text();
@@ -290,6 +313,7 @@ export async function fetchExistingZenodoDeposition(zenodoToken, depositionId) {
     }
 
     const zenodoDepositionInfo = await zenodoDeposition.json();
+    // console.log("Newly created Zneodo depo: ", zenodoDepositionInfo);
     return zenodoDepositionInfo;
   } catch (error) {
     throw new Error(`Error fetching the Zenodo deposition: ${error}`, {
@@ -306,29 +330,50 @@ export async function fetchExistingZenodoDeposition(zenodoToken, depositionId) {
  */
 export async function createNewVersionOfDeposition(zenodoToken, depositionId) {
   try {
-    const zenodoRecord = await fetch(
-      `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${zenodoToken}`, // Use Authorization header instead of query parameter
-        },
-      }
-    );
+    const url = `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/newversion`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${zenodoToken}`,
+      },
+    });
 
-    if (!zenodoRecord.ok) {
-      const errorText = await zenodoRecord.text();
+    // Consume the response body once
+    const responseBody = await response.json();
+
+    if (!response.ok) {
+      // Log detailed context
+      logwatch.error(
+        {
+          message: "Error creating a new version of Zenodo deposition",
+          endpoint: url,
+          depositionId,
+          status: response.status,
+          responseBody,
+        },
+        true
+      );
+      // Use JSON.stringify to get a readable error message
       throw new Error(
-        `Failed to create a new version of Zenodo deposition. Status: ${zenodoRecord.status}: ${zenodoRecord.statusText}.`,
-        { cause: errorText }
+        `Failed to create a new version of Zenodo deposition. HTTP Status: ${response.status}. Response: ${JSON.stringify(responseBody)}.`,
+        { cause: responseBody }
       );
     }
-    logwatch.success("New version of Zenodo deposition created successfully!");
 
-    return await zenodoRecord.json();
+    logwatch.success("New version of Zenodo deposition created successfully!");
+    return responseBody;
   } catch (error) {
+    logwatch.error(
+      {
+        message:
+          "Unhandled error while creating a new version of Zenodo deposition",
+        error: error.message,
+        stack: error.stack,
+      },
+      true
+    );
     throw new Error(
-      `Error creating a new version of Zenodo deposition: ${error}`,
+      `Error creating a new version of Zenodo deposition: ${error.message}`,
       { cause: error }
     );
   }
@@ -348,6 +393,7 @@ export async function getZenodoDepositionInfo(depositionId, zenodoToken) {
     return newZenodoDeposition;
   } else {
     // Fetch existing Zenodo deposition
+    logwatch.info(`Fetching existing Zenodo deposition: ${depositionId}`);
     const zenodoDepositionInfo = await fetchExistingZenodoDeposition(
       zenodoToken,
       depositionId
@@ -359,7 +405,7 @@ export async function getZenodoDepositionInfo(depositionId, zenodoToken) {
         "Requested deposition is a draft. Deleting the files in the draft..."
       );
       for (const file of zenodoDepositionInfo.files) {
-        await deleteFileFromZenodo(depositionId, zenodoToken, file.name);
+        await deleteFileFromZenodo(depositionId, zenodoToken, file.filename);
       }
       return zenodoDepositionInfo;
     }
@@ -371,6 +417,7 @@ export async function getZenodoDepositionInfo(depositionId, zenodoToken) {
     );
 
     if (newZenodoVersion.files.length > 0) {
+      // console.log("Files to delete: ", newZenodoVersion.files);
       for (const file of newZenodoVersion.files) {
         logwatch.start(
           `Deleting file from newly created draft: ${file.links.download}`
@@ -395,7 +442,11 @@ export async function getZenodoDepositionInfo(depositionId, zenodoToken) {
  * @param {String} codemetadata - Code metadata JSON string (parse with JSON.parse)
  * @returns {Object} Object of Zenodo metadata
  */
-export async function createZenodoMetadata(codemetadata, repository) {
+export async function createZenodoMetadata(
+  codemetadata,
+  repository,
+  addUploadType
+) {
   try {
     const new_date = new Date().toISOString().split("T")[0];
     const codeMetaContent = codemetadata;
@@ -463,6 +514,8 @@ export async function createZenodoMetadata(codemetadata, repository) {
       );
     }
 
+    // console.log("fetched zenodo metadata: ", zenodoMetadata);
+
     if (licenseId === "Custom") {
       throw new Error("Custom licenses are not supported yet.");
       // return {
@@ -485,21 +538,22 @@ export async function createZenodoMetadata(codemetadata, repository) {
       //   }
       // }
     }
-
-    return {
-      metadata: {
-        title: codeMetaContent?.name,
-        description: codeMetaContent?.description,
-        upload_type: "software",
-        creators: zenodoCreators,
-        access_right: zenodoMetadata.zenodo_metadata.accessRight,
-        publication_date: new_date,
-        license: licenseId,
-        version: zenodoMetadata.zenodo_metadata?.version
-          ? zenodoMetadata.zenodo_metadata.version
-          : codeMetaContent?.version,
-      },
+    const metadata = {
+      title: codeMetaContent?.name,
+      description: codeMetaContent?.description,
+      creators: zenodoCreators,
+      access_right: zenodoMetadata.zenodo_metadata.accessRight,
+      publication_date: new_date,
+      license: licenseId,
+      version:
+        zenodoMetadata.zenodo_metadata?.version || codeMetaContent?.version,
     };
+
+    if (addUploadType) {
+      metadata.upload_type = "software";
+    }
+
+    return { metadata };
   } catch (error) {
     throw new Error(`Error getting Zenodo metadata: ${error}`, {
       cause: error,
@@ -520,24 +574,70 @@ export async function updateZenodoMetadata(
   metadata
 ) {
   try {
-    const updatedMetadata = await fetch(
-      `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`,
-      {
-        method: "PUT",
-        params: { access_token: zenodoToken },
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${zenodoToken}`,
-        },
-        body: JSON.stringify(metadata),
-      }
+    const url = `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`;
+    logwatch.start(`Updating Zenodo metadata for deposition: ${depositionId}`);
+    logwatch.debug(`PUT URL: ${url}`);
+
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${zenodoToken}`,
+      },
+      body: JSON.stringify(metadata),
+    });
+
+    // Log the status for debugging purposes
+    logwatch.debug(
+      `Received response with status: ${response.status} ${response.statusText}`
     );
 
-    const updatedMetadataInfo = await updatedMetadata.json();
+    if (!response.ok) {
+      let errorDetail;
+      try {
+        errorDetail = await response.json();
+      } catch (jsonError) {
+        errorDetail = await response.text();
+      }
+      logwatch.error(
+        {
+          message: "Error updating Zenodo metadata:",
+          errorDetail,
+        },
+        true
+      );
+      throw new Error(
+        `Failed to update Zenodo metadata. Status: ${response.status}: ${response.statusText}. Error: ${JSON.stringify(errorDetail)}`
+      );
+    }
+
+    const updatedMetadataInfo = await response.json();
     logwatch.success("Zenodo deposition metadata updated successfully!");
+    // console.log("Updated metadata:", updatedMetadataInfo);
+
+    // If the metadata does not have an upload_type, add it and update the metadata again.
+    if (!updatedMetadataInfo?.metadata?.upload_type) {
+      logwatch.start("Adding upload_type to Zenodo metadata...");
+      logwatch.info(
+        `Adding upload_type to Zenodo metadata for deposition: ${depositionId}`
+      );
+      const newMetadata = {
+        ...updatedMetadataInfo.metadata,
+        upload_type: "software",
+      };
+      await updateZenodoMetadata(depositionId, zenodoToken, {
+        metadata: newMetadata,
+      });
+      logwatch.success("Upload type added to Zenodo metadata!");
+    }
+
     return updatedMetadataInfo;
   } catch (error) {
-    throw new Error(`Error updating Zenodo metadata: ${error}`, {
+    logwatch.error(
+      `Exception in updateZenodoMetadata: ${error.message}`,
+      error
+    );
+    throw new Error(`Error updating Zenodo metadata: ${error.message}`, {
       cause: error,
     });
   }
@@ -578,6 +678,11 @@ export async function uploadReleaseAssetsToZenodo(
             },
           }
         );
+
+        if (!assetData) {
+          logwatch.error(`Failed to fetch asset data for ${asset.name}`);
+          throw new Error(`Failed to fetch asset data for ${asset.name}`);
+        }
         logwatch.success(
           `Asset data fetched for ${asset.name}, for the release ${tagVersion}, from the GitHub repository: ${repository.name}`
         );
@@ -598,11 +703,11 @@ export async function uploadReleaseAssetsToZenodo(
 
         if (!uploadAsset.ok) {
           logwatch.error({
-            message: `Failed to upload ${asset.name}. Status: ${uploadAsset.statusText}`,
+            message: `Failed to upload ${asset.name}. Status: ${uploadAsset.statusText}, Status Code: ${uploadAsset.status}`,
             error: uploadAsset,
           });
           throw new Error(
-            `Failed to upload ${asset.name}. Status: ${uploadAsset.statusText}`
+            `Failed to upload ${asset.name}. Status: ${uploadAsset.statusText}, Status Code: ${uploadAsset.status}`
           );
         } else {
           logwatch.success(`${asset.name} successfully uploaded to Zenodo!`);
@@ -629,10 +734,10 @@ export async function uploadReleaseAssetsToZenodo(
 
   if (!uploadZip.ok) {
     logwatch.error(
-      `Failed to upload zip file. Status: ${uploadZip.statusText}`
+      `Failed to upload zip file. Status: ${uploadZip.statusText}, Status Code: ${uploadZip.status} `
     );
     throw new Error(
-      `Failed to upload zip file. Status: ${uploadZip.statusText}`
+      `Failed to upload zip file. Status: ${uploadZip.statusText}, Status Code: ${uploadZip.status} `
     );
   }
 

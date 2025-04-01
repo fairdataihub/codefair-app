@@ -574,11 +574,13 @@ export async function updateMetadataIdentifier(
       );
     }
 
+    // console.log("Zenodo metadata", zenodoMetadata);
+
     citationFile.doi = identifier;
     citationFile["date-released"] = updated_date;
-    citationFile.version = zenodoMetadata?.zenodo_metadata?.version || version;
+    citationFile.version = zenodoMetadata?.zenodo_metadata?.version;
     codeMetaFile.identifier = identifier;
-    codeMetaFile.version = zenodoMetadata.zenodo_metadata?.version || version;
+    codeMetaFile.version = zenodoMetadata.zenodo_metadata?.version;
     codeMetaFile.dateModified = updated_date;
 
     const response = await dbInstance.licenseRequest.findUnique({
