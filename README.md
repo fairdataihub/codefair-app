@@ -47,6 +47,12 @@ Your coding assistant to make research software reusable without breaking a swea
 
 ---
 
+## Codefair Live Status
+
+View the live status of Codefair at [status.codefair.io](https://status.codefair.io/). You can check the status of the app, including any incidents or outages that may affect its performance. The status page provides real-time updates on the app's availability and performance, ensuring that you are always informed about its current state.
+
+---
+
 ## Description
 
 Codefair is your personal assistant when it comes to making your research software reusable and especially complying with the [Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software](https://doi.org/10.1038/s41597-022-01710-x). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, Codefair is here to assist you. By communicating with you through GitHub issues and submitting pull requests, Codefair will make sure that your software follows best coding practices, provides metadata in standard format, includes a license file, is archived on Zenodo, and much more. With Codefair by your side, you're not just developing software but you're advocating for better software practices. Learn more on the app's website [codefair.io](https://codefair.io/).
