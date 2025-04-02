@@ -268,15 +268,24 @@ const handleSettingsSelect = (key: any) => {
             v-if="data?.licenseRequest?.containsLicense"
             class="flex flex-wrap items-center space-x-2"
           >
-            <n-tag
+            <n-popover
               v-if="data?.licenseRequest?.licenseStatus === 'valid'"
-              type="success"
+              trigger="hover"
             >
-              <template #icon>
-                <Icon name="icon-park-solid:check-one" size="16" />
+              <template #trigger>
+                <n-tag
+                  v-if="data?.licenseRequest?.licenseStatus === 'valid'"
+                  type="success"
+                >
+                  <template #icon>
+                    <Icon name="icon-park-solid:check-one" size="16" />
+                  </template>
+                  Contains a valid license
+                </n-tag>
               </template>
-              Contains a valid license
-            </n-tag>
+
+              <span>SPDX License: {{ data?.licenseRequest?.licenseId }}</span>
+            </n-popover>
 
             <n-tooltip
               v-else-if="data?.licenseRequest?.licenseStatus === 'invalid'"
@@ -326,9 +335,9 @@ const handleSettingsSelect = (key: any) => {
               content="Doing this action will overwrite any existing draft. Do you want to continue?"
               positive-text="Confirm"
               negative-text="Cancel"
+              :loading="loading"
               @positive-click="handlePositiveClick('license')"
               @negative-click="showLicenseModal = false"
-              :loading="loading"
             />
           </div>
         </template>
@@ -456,9 +465,9 @@ const handleSettingsSelect = (key: any) => {
               content="Doing this action will overwrite any existing draft. Do you want to continue?"
               positive-text="Confirm"
               negative-text="Cancel"
+              :loading="loading"
               @positive-click="handlePositiveClick('metadata')"
               @negative-click="showMetadataModal = false"
-              :loading="loading"
             />
           </n-flex>
         </template>
@@ -610,19 +619,25 @@ const handleSettingsSelect = (key: any) => {
 
         <template #header-extra>
           <n-flex>
-            <NuxtLink
-              v-if="data?.zenodoDeposition?.lastPublishedZenodoDoi"
-              :to="`https://doi.org/${data?.zenodoDeposition?.lastPublishedZenodoDoi}`"
-              target="_blank"
-              class="cursor-pointer"
-            >
-              <n-tag type="success" class="cursor-pointer">
-                <template #icon>
-                  <Icon name="simple-icons:doi" size="16" />
-                </template>
-                {{ data?.zenodoDeposition?.lastPublishedZenodoDoi }}
-              </n-tag>
-            </NuxtLink>
+            <n-popover trigger="hover">
+              <template #trigger>
+                <NuxtLink
+                  v-if="data?.zenodoDeposition?.lastPublishedZenodoDoi"
+                  :to="`https://doi.org/${data?.zenodoDeposition?.lastPublishedZenodoDoi}`"
+                  target="_blank"
+                  class="cursor-pointer"
+                >
+                  <n-tag type="success" class="cursor-pointer">
+                    <template #icon>
+                      <Icon name="simple-icons:doi" size="16" />
+                    </template>
+                    {{ data?.zenodoDeposition?.lastPublishedZenodoDoi }}
+                  </n-tag>
+                </NuxtLink>
+              </template>
+
+              <span>Last published Zenodo DOI</span>
+            </n-popover>
 
             <div
               v-if="data?.licenseRequest?.containsLicense"
