@@ -141,7 +141,7 @@ const handleSettingsSelect = (key: string) => {
         <n-card
           v-for="repo in filteredRepos"
           :key="repo.repositoryId"
-          class="mb-2 rounded-md bg-gray-50 p-4 shadow-md transition-all hover:shadow-lg"
+          class="mb-2 rounded-md bg-gray-50 p-4 shadow-md"
         >
           <div
             class="grid grid-cols-[3rem_auto_5px_40rem_150px] items-center gap-4"
@@ -179,7 +179,10 @@ const handleSettingsSelect = (key: string) => {
                 target="_blank"
                 class="truncate text-base text-slate-600 transition-all hover:text-blue-600"
               >
-                {{ repo?.latestCommitMessage }}
+                {{
+                  repo?.latestCommitMessage ||
+                  "Waiting for activity on repository."
+                }}
               </NuxtLink>
 
               <NuxtLink

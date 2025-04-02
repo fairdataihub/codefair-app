@@ -494,8 +494,10 @@ const copyText = (text: string) => {
   navigator.clipboard
     .writeText(text)
     .then(() => {
-      // Optionally notify the user of success
-      console.log("Text copied to clipboard");
+      push.success({
+        title: "Success",
+        message: "Text copied to clipboard",
+      });
     })
     .catch((err) => console.error("Failed to copy text: ", err));
 };
@@ -685,12 +687,12 @@ onBeforeUnmount(() => {
       <div class="flex flex-row items-center justify-between">
         <h1>FAIR Software Release</h1>
 
-        <n-button
+        <!-- <n-button
           type="primary"
           class="flex items-center"
           @click="requestZenodoBadge"
           >Request Zenodo badge</n-button
-        >
+        > -->
 
         <NuxtLink
           to="https://docs.codefair.io/docs/archive.html"
@@ -742,13 +744,25 @@ onBeforeUnmount(() => {
         type="success"
         class="w-full"
       >
-        This repository was last released on Zenodo at
-        <NuxtLink
-          :to="`https://doi.org/${data?.lastPublishedZenodoDoi}`"
-          target="_blank"
-          class="text-blue-500 underline transition-all hover:text-blue-700"
-          >{{ data?.lastPublishedZenodoDoi }} </NuxtLink
-        >.
+        <n-flex justify="space-between">
+          <div>
+            This repository was last released on Zenodo at
+            <NuxtLink
+              :to="`https://doi.org/${data?.lastPublishedZenodoDoi}`"
+              target="_blank"
+              class="text-blue-500 underline transition-all hover:text-blue-700"
+              >{{ data?.lastPublishedZenodoDoi }} </NuxtLink
+            >.
+          </div>
+
+          <n-button
+            type="primary"
+            ghost
+            class="flex items-center"
+            @click="requestZenodoBadge"
+            >Request Zenodo badge</n-button
+          >
+        </n-flex>
       </n-alert>
 
       <n-alert
@@ -1315,106 +1329,102 @@ onBeforeUnmount(() => {
     <n-modal
       v-model:show="showZenodoBadgeModal"
       preset="card"
-      title="Zenodo Badge"
       :bordered="false"
       size="huge"
       :mask-closable="true"
       :close-on-esc="true"
-      class="max-h-[40rem] w-[600px] overflow-scroll"
+      class="w-[600px]"
     >
-      <div class="-mt-6 flex flex-col gap-6 p-0">
-        <p class="text-base">
-          Your software was successfully archived on Zenodo. We recommend
-          reviewing the deposition and adding additional metadata supported by
-          Zenodo to make your software more FAIR. Below is your Zenodo badge.
-          Copy the markdown snippet below and paste it into your README file to
-          display the badge.
-        </p>
-
-        <!-- Version DOI Badge Section -->
-        <h3 class="-mt-2 text-xl font-bold">Latest Version DOI Badge</h3>
-        <!-- Snippet Template -->
-        <div v-for="(snippet, index) in snippets" :key="index" class="-mt-4">
-          <h4 class="mb-1 font-medium">{{ snippet.title }}</h4>
-
-          <div class="group relative">
-            <pre
-              class="overflow-auto rounded border border-gray-200 bg-gray-50 p-4 font-mono text-sm"
-            ><code>{{ snippet.content }}</code></pre>
-
-            <button
-              class="absolute inset-y-0 right-0 flex items-center justify-center px-3 opacity-0 transition group-hover:opacity-100"
-              @click="copyText(snippet.content)"
+      <template #header>
+        <h2 class="text-xl font-bold text-gray-800">
+          Latest Version DOI Badge
+        </h2>
+      </template>
+      <!-- Main success content -->
+      <div class="space-y-4">
+        <!-- Snippet cards -->
+        <div class="space-y-4">
+          <div
+            v-for="(snippet, index) in snippets"
+            :key="index"
+            class="rounded-md border border-gray-200 bg-white shadow-sm"
+          >
+            <!-- Card header with snippet title & copy button -->
+            <div
+              class="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-3 py-2"
             >
-              <Icon
-                name="mdi:content-copy"
-                class="h-5 w-5 text-gray-400 hover:text-gray-700"
-              />
-            </button>
+              <h4 class="text-sm font-semibold text-gray-600">
+                {{ snippet.title }}
+              </h4>
+
+              <button
+                class="inline-flex items-center text-gray-400 transition-colors hover:text-gray-600"
+                @click="copyText(snippet.content)"
+              >
+                <Icon name="mdi:content-copy" class="mr-1 h-4 w-4" />
+
+                <span class="text-xs">Copy</span>
+              </button>
+            </div>
+
+            <!-- Code block -->
+            <div class="bg-gray-50 p-3">
+              <pre
+                class="overflow-auto font-mono text-sm"
+              ><code>{{ snippet.content.trim() }}</code></pre>
+            </div>
           </div>
         </div>
       </div>
-
-      <template v-if="zenodoPublishStatus === 'published'" #footer>
-        <n-flex justify="space-between">
-          <n-flex vertical justify="space-between">
-            <NuxtLink
-              :to="`https://doi.org/${zenodoPublishDOI}`"
-              target="_blank"
-            >
-              <n-button type="primary">
-                <template #icon>
-                  <Icon name="simple-icons:zenodo" size="16" />
-                </template>
-                View Zenodo deposition
-              </n-button>
-            </NuxtLink>
-
-            <NuxtLink
-              target="_blank"
-              :to="`https://github.com/${owner}/${repo}/releases/tag/${githubTag}`"
-            >
-              <n-button type="primary">
-                <template #icon>
-                  <Icon name="simple-icons:github" size="16" />
-                </template>
-                View GitHub Release
-              </n-button>
-            </NuxtLink>
-          </n-flex>
-
-          <n-button
-            v-if="
-              zenodoPublishStatus === 'published' ||
-              zenodoPublishStatus === 'error'
-            "
-            type="success"
-            @click="navigateToDashboard"
-          >
-            Okay
-          </n-button>
-        </n-flex>
-      </template>
     </n-modal>
 
     <n-modal
       v-model:show="showZenodoPublishProgressModal"
       preset="card"
-      :title="
-        zenodoPublishStatus === 'inProgress'
-          ? 'Zenodo publish in progress'
-          : zenodoPublishStatus === 'error'
-            ? 'Zenodo publish error'
-            : zenodoPublishStatus === 'published'
-              ? 'Zenodo publish success'
-              : 'Loading...'
-      "
       :bordered="false"
       size="huge"
       :mask-closable="false"
       :close-on-esc="false"
       style="width: 600px"
     >
+      <!-- HEADER SLOT: Show a dynamic title and icon -->
+      <template #header>
+        <div class="flex items-center space-x-2">
+          <!-- Conditionally render icons based on status -->
+          <Icon
+            v-if="zenodoPublishStatus === 'published'"
+            name="mdi:check-circle"
+            class="h-6 w-6 text-green-600"
+          />
+
+          <Icon
+            v-else-if="zenodoPublishStatus === 'error'"
+            name="mdi:alert-circle"
+            class="h-6 w-6 text-red-600"
+          />
+
+          <Icon
+            v-else-if="zenodoPublishStatus === 'inProgress'"
+            name="mdi:progress-clock"
+            class="h-6 w-6 text-blue-600"
+          />
+
+          <!-- Dynamic title -->
+          <h2 class="text-xl font-bold text-gray-800">
+            {{
+              zenodoPublishStatus === "inProgress"
+                ? "Zenodo publish in progress"
+                : zenodoPublishStatus === "error"
+                  ? "Zenodo publish error"
+                  : zenodoPublishStatus === "published"
+                    ? "Zenodo publish success"
+                    : "Loading..."
+            }}
+          </h2>
+        </div>
+      </template>
+
+      <!-- BODY CONTENT -->
       <n-flex v-if="zenodoPublishStatus === 'inProgress'" vertical>
         <p>
           The workflow for publishing this repository to Zenodo is currently in
@@ -1426,80 +1436,99 @@ onBeforeUnmount(() => {
 
       <n-flex v-else-if="zenodoPublishStatus === 'error'" vertical>
         <p>
-          There was an error with publishing this repository to Zenodo. Please
-          try again later or contact the Codefair team for assistance.
+          There was an error publishing this repository to Zenodo. Please try
+          again later or contact the Codefair team for assistance.
         </p>
       </n-flex>
 
       <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
-        <div class="-mt-6 flex flex-col gap-6 p-0">
-          <p class="text-base">
+        <!-- Main success content -->
+        <div class="space-y-4">
+          <p class="text-gray-700">
             Your software was successfully archived on Zenodo. We recommend
-            reviewing the deposition and adding additional metadata supported by
-            Zenodo to make your software more FAIR. Below is your Zenodo badge.
-            Copy the markdown snippet below and paste it into your README file
-            to display the badge.
+            reviewing the deposition and adding additional metadata to make your
+            software more FAIR. Below is your Zenodo badge. Copy the snippet
+            below and paste it into your README file to display the badge.
           </p>
 
-          <!-- Version DOI Badge Section -->
-          <h3 class="-mt-2 text-xl font-bold">Latest Version DOI Badge</h3>
-          <!-- Snippet Template -->
-          <div v-for="(snippet, index) in snippets" :key="index" class="-mt-4">
-            <h4 class="mb-1 font-medium">{{ snippet.title }}</h4>
+          <!-- Subheading -->
+          <h3 class="text-base font-semibold text-gray-900">
+            Latest Version DOI Badge
+          </h3>
 
-            <div class="group relative">
-              <pre
-                class="overflow-auto rounded border border-gray-200 bg-gray-50 p-4 font-mono text-sm"
-              ><code>{{ snippet.content }}</code></pre>
-
-              <button
-                class="absolute inset-y-0 right-0 flex items-center justify-center px-3 opacity-0 transition group-hover:opacity-100"
-                @click="copyText(snippet.content)"
+          <!-- Snippet cards -->
+          <div class="space-y-4">
+            <div
+              v-for="(snippet, index) in snippets"
+              :key="index"
+              class="rounded-md border border-gray-200 bg-white shadow-sm"
+            >
+              <!-- Card header with snippet title & copy button -->
+              <div
+                class="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-3 py-2"
               >
-                <Icon
-                  name="mdi:content-copy"
-                  class="h-5 w-5 text-gray-400 hover:text-gray-700"
-                />
-              </button>
+                <h4 class="text-sm font-semibold text-gray-600">
+                  {{ snippet.title }}
+                </h4>
+
+                <button
+                  class="inline-flex items-center text-gray-400 transition-colors hover:text-gray-600"
+                  @click="copyText(snippet.content)"
+                >
+                  <Icon name="mdi:content-copy" class="mr-1 h-4 w-4" />
+
+                  <span class="text-xs">Copy</span>
+                </button>
+              </div>
+
+              <!-- Code block -->
+              <div class="bg-gray-50 p-3">
+                <pre
+                  class="overflow-auto font-mono text-sm"
+                ><code>{{ snippet.content.trim() }}</code></pre>
+              </div>
             </div>
           </div>
         </div>
       </n-flex>
 
+      <!-- Loading state -->
       <n-flex v-else>
         <p>Please wait while we get the status of your workflow.</p>
       </n-flex>
 
+      <!-- FOOTER SLOT: Action buttons -->
       <template #footer>
-        <n-flex justify="space-between">
-          <n-flex vertical justify="space-between">
-            <NuxtLink
-              v-if="zenodoPublishStatus === 'published'"
-              :to="`https://doi.org/${zenodoPublishDOI}`"
-              target="_blank"
-            >
-              <n-button type="primary">
-                <template #icon>
-                  <Icon name="simple-icons:zenodo" size="16" />
-                </template>
-                View Zenodo deposition
-              </n-button>
-            </NuxtLink>
+        <n-flex justify="space-between" align="center">
+          <!-- Link to Zenodo Deposition -->
+          <NuxtLink
+            v-if="zenodoPublishStatus === 'published'"
+            :to="`https://doi.org/${zenodoPublishDOI}`"
+            target="_blank"
+          >
+            <n-button type="primary" size="small">
+              <template #icon>
+                <Icon name="simple-icons:zenodo" size="16" />
+              </template>
+              View Zenodo Deposition
+            </n-button>
+          </NuxtLink>
 
-            <NuxtLink
-              v-if="zenodoPublishStatus === 'published'"
-              target="_blank"
-              :to="`https://github.com/${owner}/${repo}/releases/tag/${githubTag}`"
-            >
-              <n-button type="primary">
-                <template #icon>
-                  <Icon name="simple-icons:github" size="16" />
-                </template>
-                View GitHub Release
-              </n-button>
-            </NuxtLink>
-          </n-flex>
+          <!-- Link to GitHub Release -->
+          <NuxtLink
+            v-if="zenodoPublishStatus === 'published'"
+            :to="`https://github.com/${owner}/${repo}/releases/tag/${githubTag}`"
+            target="_blank"
+          >
+            <n-button type="primary" size="small">
+              <template #icon>
+                <Icon name="simple-icons:github" size="16" />
+              </template>
+              View GitHub Release
+            </n-button>
+          </NuxtLink>
 
+          <!-- "Okay" or "Go to Dashboard" button -->
           <n-button
             v-if="
               zenodoPublishStatus === 'published' ||
@@ -1508,7 +1537,7 @@ onBeforeUnmount(() => {
             type="success"
             @click="navigateToDashboard"
           >
-            Okay
+            Return to Dashboard
           </n-button>
         </n-flex>
       </template>

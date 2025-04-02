@@ -216,11 +216,7 @@ export default defineEventHandler(async (event) => {
       const matchingRelease = githubReleasesJson.find(
         (release: any) => release.tag_name === tag.name,
       );
-      if (matchingRelease) {
-        console.log("Matching release:", matchingRelease);
-      }
       const isReleased = matchingRelease ? matchingRelease.draft : false;
-      console.log("isReleased", isReleased);
 
       tagMap.set(tag.name, {
         name: tag.name,

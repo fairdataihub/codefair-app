@@ -380,60 +380,114 @@ export async function createNewVersionOfDeposition(zenodoToken, depositionId) {
 }
 
 /**
- * * Returns the latest draft deposition of a new or existing Zenodo deposition. Files are deleted from the latest draft deposition.
+ * Returns the latest draft deposition of a new or existing Zenodo deposition.
+ * Files are deleted from the latest draft deposition.
+ *
  * @param {String} depositionId - Zenodo deposition ID
  * @param {String} zenodoToken - Zenodo API token
  * @returns {Object} Object of Zenodo deposition info
  */
 export async function getZenodoDepositionInfo(depositionId, zenodoToken) {
-  // For debugging purposes
-  // console.log("Zenodo Token: ", zenodoToken);
-  if (depositionId === "new") {
-    const newZenodoDeposition = await createNewZenodoDeposition(zenodoToken);
-    return newZenodoDeposition;
-  } else {
-    // Fetch existing Zenodo deposition
-    logwatch.info(`Fetching existing Zenodo deposition: ${depositionId}`);
-    const zenodoDepositionInfo = await fetchExistingZenodoDeposition(
-      zenodoToken,
-      depositionId
-    );
-
-    if (zenodoDepositionInfo.submitted === false) {
-      // Delete the files in the draft
-      logwatch.start(
-        "Requested deposition is a draft. Deleting the files in the draft..."
+  try {
+    if (depositionId === "new") {
+      logwatch.info("Creating a new Zenodo deposition...");
+      const newZenodoDeposition = await createNewZenodoDeposition(zenodoToken);
+      logwatch.success("New Zenodo deposition created successfully!");
+      return newZenodoDeposition;
+    } else {
+      // Fetch existing deposition info
+      logwatch.info(`Fetching existing Zenodo deposition: ${depositionId}`);
+      const zenodoDepositionInfo = await fetchExistingZenodoDeposition(
+        zenodoToken,
+        depositionId
       );
-      for (const file of zenodoDepositionInfo.files) {
-        await deleteFileFromZenodo(depositionId, zenodoToken, file.filename);
-      }
-      return zenodoDepositionInfo;
-    }
 
-    // Create a new version of an existing Zenodo deposition
-    const newZenodoVersion = await createNewVersionOfDeposition(
-      zenodoToken,
-      zenodoDepositionInfo.id
-    );
-
-    if (newZenodoVersion.files.length > 0) {
-      // console.log("Files to delete: ", newZenodoVersion.files);
-      for (const file of newZenodoVersion.files) {
-        logwatch.start(
-          `Deleting file from newly created draft: ${file.links.download}`
-        );
-        await deleteFileFromZenodo(
-          newZenodoVersion.record_id,
-          zenodoToken,
-          file.filename
+      if (!zenodoDepositionInfo) {
+        throw new Error(
+          `Failed to fetch deposition info for ID: ${depositionId}`
         );
       }
-    }
 
-    logwatch.success(
-      "New draft version of Zenodo deposition created successfully!"
-    );
-    return newZenodoVersion;
+      // If the deposition is still a draft, delete its files.
+      if (zenodoDepositionInfo.submitted === false) {
+        logwatch.start("Deposition is a draft. Deleting files in the draft...");
+        for (const file of zenodoDepositionInfo.files) {
+          try {
+            logwatch.info(
+              `Deleting file "${file.filename}" from draft deposition...`
+            );
+            await deleteFileFromZenodo(
+              depositionId,
+              zenodoToken,
+              file.filename
+            );
+            logwatch.success(`File "${file.filename}" deleted successfully.`);
+          } catch (fileError) {
+            logwatch.error(
+              `Error deleting file "${file.filename}": ${fileError.message}`,
+              fileError
+            );
+            throw new Error(
+              `Error deleting file "${file.filename}": ${fileError.message}`,
+              { cause: fileError }
+            );
+          }
+        }
+        logwatch.success("All files deleted from the draft deposition.");
+        return zenodoDepositionInfo;
+      }
+
+      // If the deposition is submitted, create a new version.
+      logwatch.info("Deposition is submitted. Creating a new version...");
+      const newZenodoVersion = await createNewVersionOfDeposition(
+        zenodoToken,
+        zenodoDepositionInfo.id
+      );
+
+      if (!newZenodoVersion) {
+        throw new Error(
+          "Failed to create a new version of the Zenodo deposition."
+        );
+      }
+
+      // Delete any files from the new version draft if present.
+      if (newZenodoVersion.files && newZenodoVersion.files.length > 0) {
+        for (const file of newZenodoVersion.files) {
+          try {
+            logwatch.start(
+              `Deleting file from new draft: ${file.links.download}`
+            );
+            await deleteFileFromZenodo(
+              newZenodoVersion.record_id,
+              zenodoToken,
+              file.filename
+            );
+            logwatch.success(
+              `File "${file.filename}" deleted from new draft successfully.`
+            );
+          } catch (fileError) {
+            logwatch.error(
+              `Error deleting file "${file.filename}" from new draft: ${fileError.message}`,
+              fileError
+            );
+            throw new Error(
+              `Error deleting file "${file.filename}" from new draft: ${fileError.message}`,
+              { cause: fileError }
+            );
+          }
+        }
+      }
+
+      logwatch.success(
+        "New draft version of Zenodo deposition created successfully!"
+      );
+      return newZenodoVersion;
+    }
+  } catch (error) {
+    logwatch.error(`Error in getZenodoDepositionInfo: ${error.message}`, error);
+    throw new Error(`Error in getZenodoDepositionInfo: ${error.message}`, {
+      cause: error,
+    });
   }
 }
 
@@ -645,13 +699,14 @@ export async function updateZenodoMetadata(
 
 /**
  * * Uploads the release assets to Zenodo deposition
- * @param {String} depositionId - Zenodo deposition ID
  * @param {String} zenodoToken - Access token for Zenodo API
  * @param {Array} draftReleaseAssets - List of objects containing the release assets information
  * @param {*} repositoryArchive - The repository archive file
  * @param {String} owner - GitHub owner
  * @param {Object} context - GitHub context
  * @param {String} bucket_url - Zenodo bucket URL
+ * @param {Object} repository - GitHub repository object
+ * @param {String} tagVersion - Release tag/version
  */
 export async function uploadReleaseAssetsToZenodo(
   zenodoToken,
@@ -664,34 +719,39 @@ export async function uploadReleaseAssetsToZenodo(
   tagVersion
 ) {
   const startTime = performance.now();
+  logwatch.info(
+    `Starting upload process for repository "${repository.name}" with tag "${tagVersion}".`
+  );
+
   if (draftReleaseAssets.length > 0) {
     for (const asset of draftReleaseAssets) {
       try {
+        logwatch.info(`Processing asset "${asset.name}" (ID: ${asset.id}).`);
+
         // Download the raw file from GitHub
         const { data: assetData } = await context.octokit.repos.getReleaseAsset(
           {
             owner,
             repo: repository.name,
             asset_id: asset.id,
-            headers: {
-              accept: "application/octet-stream",
-            },
+            headers: { accept: "application/octet-stream" },
           }
         );
 
         if (!assetData) {
-          logwatch.error(`Failed to fetch asset data for ${asset.name}`);
-          throw new Error(`Failed to fetch asset data for ${asset.name}`);
+          const errorMsg = `Asset data for "${asset.name}" is empty or undefined.`;
+          logwatch.error(errorMsg);
+          throw new Error(errorMsg);
         }
-        logwatch.success(
-          `Asset data fetched for ${asset.name}, for the release ${tagVersion}, from the GitHub repository: ${repository.name}`
-        );
+        logwatch.info(`Fetched data for asset "${asset.name}".`);
 
         // Convert the asset data to a buffer
         const assetBuffer = Buffer.from(assetData);
 
         // Upload the file to Zenodo
-        const uploadAsset = await fetch(`${bucket_url}/${asset.name}`, {
+        const uploadUrl = `${bucket_url}/${asset.name}`;
+        logwatch.info(`Uploading asset to Zenodo at: ${uploadUrl}`);
+        const uploadAssetResponse = await fetch(uploadUrl, {
           method: "PUT",
           body: assetBuffer, // Upload the raw file directly
           headers: {
@@ -701,50 +761,80 @@ export async function uploadReleaseAssetsToZenodo(
           },
         });
 
-        if (!uploadAsset.ok) {
-          logwatch.error({
-            message: `Failed to upload ${asset.name}. Status: ${uploadAsset.statusText}, Status Code: ${uploadAsset.status}`,
-            error: uploadAsset,
-          });
-          throw new Error(
-            `Failed to upload ${asset.name}. Status: ${uploadAsset.statusText}, Status Code: ${uploadAsset.status}`
-          );
-        } else {
-          logwatch.success(`${asset.name} successfully uploaded to Zenodo!`);
+        if (!uploadAssetResponse.ok) {
+          // Attempt to capture error details
+          let errorDetails = "";
+          try {
+            errorDetails = await uploadAssetResponse.text();
+          } catch (e) {
+            errorDetails = "Unable to retrieve error details";
+          }
+          const errorMsg = `Failed to upload asset "${asset.name}". Status: ${uploadAssetResponse.statusText}, Code: ${uploadAssetResponse.status}. Details: ${errorDetails}`;
+          logwatch.error(errorMsg);
+          throw new Error(errorMsg);
         }
-      } catch (error) {
-        throw new Error(`Error uploading assets to Zenodo: ${error}`, {
-          cause: error,
-        });
+        logwatch.success(
+          `Asset "${asset.name}" uploaded successfully to Zenodo.`
+        );
+      } catch (assetError) {
+        logwatch.error(
+          `Error processing asset "${asset.name}": ${assetError.message}`
+        );
+        throw new Error(
+          `Error uploading asset "${asset.name}": ${assetError.message}`,
+          {
+            cause: assetError,
+          }
+        );
       }
     }
+  } else {
+    logwatch.warn("No draft release assets provided for upload.");
   }
 
   // Upload the repository archive to Zenodo
-  const uploadZip = await fetch(
-    `${bucket_url}/${repository.name}-${tagVersion}.zip`,
-    {
+  try {
+    const archiveFilename = `${repository.name}-${tagVersion}.zip`;
+    const archiveUploadUrl = `${bucket_url}/${archiveFilename}`;
+    logwatch.info(
+      `Uploading repository archive "${archiveFilename}" to Zenodo at: ${archiveUploadUrl}`
+    );
+
+    const uploadZipResponse = await fetch(archiveUploadUrl, {
       method: "PUT",
       body: repositoryArchive,
       headers: {
         Authorization: `Bearer ${zenodoToken}`,
       },
-    }
-  );
+    });
 
-  if (!uploadZip.ok) {
+    if (!uploadZipResponse.ok) {
+      let errorDetails = "";
+      try {
+        errorDetails = await uploadZipResponse.text();
+      } catch (e) {
+        errorDetails = "Unable to retrieve error details";
+      }
+      const errorMsg = `Failed to upload repository archive. Status: ${uploadZipResponse.statusText}, Code: ${uploadZipResponse.status}. Details: ${errorDetails}`;
+      logwatch.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+    logwatch.success("Repository archive uploaded successfully to Zenodo.");
+  } catch (archiveError) {
     logwatch.error(
-      `Failed to upload zip file. Status: ${uploadZip.statusText}, Status Code: ${uploadZip.status} `
+      `Error uploading repository archive: ${archiveError.message}`
     );
     throw new Error(
-      `Failed to upload zip file. Status: ${uploadZip.statusText}, Status Code: ${uploadZip.status} `
+      `Error uploading repository archive: ${archiveError.message}`,
+      {
+        cause: archiveError,
+      }
     );
   }
 
   const endTime = performance.now();
-  logwatch.info(
-    `Total duration to upload assets and zip to Zenodo deposition: ${(endTime - startTime) / 1000} seconds`
-  );
+  const durationSeconds = ((endTime - startTime) / 1000).toFixed(2);
+  logwatch.info(`Upload process completed in ${durationSeconds} seconds.`);
   logwatch.success("Zip file successfully uploaded to Zenodo!");
 }
 
@@ -773,8 +863,6 @@ export async function deleteFileFromZenodo(
         `Failed to delete file from Zenodo. Status: ${deleteFile.status}: ${deleteFile.statusText}. Error: ${errorText}`
       );
     }
-
-    logwatch.success("File successfully deleted from Zenodo!");
   } catch (error) {
     throw new Error(`Error deleting file from Zenodo: ${error}`, {
       cause: error,
