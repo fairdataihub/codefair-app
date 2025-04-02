@@ -124,12 +124,12 @@ export async function validateCWLFile(downloadUrl) {
       const errorData = await response.json();
       if (response.status === 400) {
         logwatch.warn({
-          message: "Validation error from API",
+          message: "Validation error for CWL file",
           status: response.status,
-          error: errorData.error,
+          error: errorData.output,
           downloadUrl,
         });
-        return [false, errorData.error];
+        return [false, errorData.output];
       } else if (response.status === 500) {
         logwatch.error(
           {

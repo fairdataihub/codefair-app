@@ -181,7 +181,7 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
       addUploadType
     );
 
-    // console.log("New Zenodo metadata:", newZenodoMetadata);
+    logwatch.info(newZenodoMetadata, true);
 
     // 7. Update the Zenodo deposition's metadata
     await updateZenodoMetadata(newDepositionId, zenodoToken, newZenodoMetadata);
