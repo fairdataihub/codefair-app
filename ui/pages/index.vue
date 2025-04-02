@@ -254,11 +254,12 @@ breadcrumbsStore.hideBreadcrumbs();
       </div>
     </section>
 
-    <section class="bg-[#e7ddfa4f] py-4 md:py-8">
+    <section class="bg-[#e7ddfa4f] py-8">
       <div
-        class="mx-auto flex max-w-screen-xl flex-col-reverse justify-between lg:flex-row"
+        class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 px-4 lg:flex-row lg:items-start lg:gap-12"
       >
-        <div class="self-center">
+        <!-- Left column: Image -->
+        <div class="flex-shrink-0">
           <img
             src="/assets/images/Other 02.png"
             loading="lazy"
@@ -267,15 +268,14 @@ breadcrumbsStore.hideBreadcrumbs();
           />
         </div>
 
-        <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
+        <!-- Right column: Text + Buttons -->
+        <div class="flex flex-1 flex-col gap-6">
           <div>
-            <h2
-              class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
-            >
+            <h2 class="mb-4 text-3xl font-bold text-black sm:text-4xl">
               Need help? Have suggestions? Want to contribute?
             </h2>
 
-            <p class="font-onest text-lg text-slate-800">
+            <p class="text-lg text-slate-800">
               Reach out to us via the GitHub issues of the Codefair repo and we
               will be happy to connect with you. You may also use the Contact Us
               form at the bottom right of this page to send us a message. We are
@@ -283,25 +283,39 @@ breadcrumbsStore.hideBreadcrumbs();
             </p>
           </div>
 
-          <div
-            class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center md:-mt-8 md:py-0 lg:justify-start"
-          >
+          <!-- Button row -->
+          <div class="flex flex-col items-start gap-3 sm:flex-row sm:gap-4">
+            <!-- GitHub Issue button -->
             <NuxtLink
               to="https://github.com/fairdataihub/codefair-app/issues"
               target="_blank"
-              class="align-center flex w-3/5 justify-between self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+              class="inline-flex w-3/5 items-center gap-2 self-center rounded-lg bg-indigo-500 px-4 py-4 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
             >
-              <span class="mr-3">Open a GitHub issue</span>
+              <Icon name="fa:github" size="16" />
 
-              <Icon name="fa:github" size="25" />
+              <span>Open a GitHub issue</span>
             </NuxtLink>
 
+            <!-- Documentation button -->
             <NuxtLink
               to="https://docs.codefair.io/"
               target="_blank"
-              class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+              class="inline-flex w-3/5 items-center gap-2 self-center rounded-lg bg-indigo-500 px-4 py-4 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
             >
-              Read the Documentation ->
+              <span>Read the Documentation</span>
+
+              <Icon name="material-symbols:arrow-forward-rounded" size="16" />
+            </NuxtLink>
+
+            <!-- Live Status button -->
+            <NuxtLink
+              to="https://docs.codefair.io/"
+              target="_blank"
+              class="inline-flex w-3/5 items-center gap-2 self-center rounded-lg bg-indigo-500 px-4 py-4 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+            >
+              <span>View Live Status of Codefair</span>
+
+              <Icon name="material-symbols:arrow-forward-rounded" size="16" />
             </NuxtLink>
           </div>
         </div>
