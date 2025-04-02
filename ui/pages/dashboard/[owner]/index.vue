@@ -45,7 +45,13 @@ if (error.value) {
 
 const filteredRepos = computed(() => {
   return data.value
-    ? data.value.installations.filter((repo) => repo.action_count === 0)
+    ? data.value.installations
+        .filter((repo) => repo.action_count === 0)
+        .sort(
+          (a, b) =>
+            new Date(b.latestCommitDate).getTime() -
+            new Date(a.latestCommitDate).getTime(),
+        )
     : [];
 });
 
