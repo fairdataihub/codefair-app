@@ -47,9 +47,7 @@ if (error.value) {
       <!-- Your Account Section -->
       <h2 class="pb-4 text-xl font-semibold">Your Account</h2>
 
-      <n-card
-        class="rounded-lg bg-gray-50 p-4 shadow-md transition-all hover:shadow-lg"
-      >
+      <n-card class="rounded-lg bg-gray-50 p-4 shadow-md">
         <div class="grid grid-cols-[20%_1px_auto_200px] items-center gap-4">
           <div id="repo-avatar-and-name" class="flex items-center space-x-4">
             <!-- Adjusted Avatar Size -->
@@ -112,7 +110,7 @@ if (error.value) {
         <n-card
           v-for="organization in data?.orgs"
           :key="organization.id"
-          class="rounded-lg bg-gray-50 p-6 shadow-md transition-all hover:shadow-lg"
+          class="rounded-lg bg-gray-50 p-6 shadow-md"
         >
           <div class="flex items-start space-x-4">
             <!-- Organization Avatar -->

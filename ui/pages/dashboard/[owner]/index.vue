@@ -187,7 +187,7 @@ const handleSettingsSelect = (key: string) => {
               >
                 {{
                   repo?.latestCommitMessage ||
-                  "Waiting for activity on repository."
+                  "Waiting for activity on repository..."
                 }}
               </NuxtLink>
 
