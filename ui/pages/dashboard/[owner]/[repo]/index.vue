@@ -632,6 +632,7 @@ const handleSettingsSelect = (key: any) => {
                       <Icon name="simple-icons:doi" size="16" />
                     </template>
                     {{ data?.zenodoDeposition?.lastPublishedZenodoDoi }}
+                    <Icon name="ri:external-link-line" size="13" />
                   </n-tag>
                 </NuxtLink>
               </template>
