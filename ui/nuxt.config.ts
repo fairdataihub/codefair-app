@@ -52,6 +52,8 @@ export default defineNuxtConfig({
     storageKey: "nuxt-color-mode",
   },
 
+  compatibilityDate: "2024-09-24",
+
   css: [
     "@/assets/css/tailwind.css",
     "md-editor-v3/lib/style.css",
@@ -121,6 +123,4 @@ export default defineNuxtConfig({
       },
     },
   },
-
-  compatibilityDate: "2024-09-24",
 });

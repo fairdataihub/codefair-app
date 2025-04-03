@@ -30,11 +30,11 @@ breadcrumbsStore.hideBreadcrumbs();
           </div>
 
           <div
-            class="flex flex-col gap-2.5 pb-10 pt-4 sm:flex-row sm:justify-center lg:justify-center"
+            class="flex flex-col gap-2.5 pt-4 pb-10 sm:flex-row sm:justify-center lg:justify-center"
           >
             <a
               href="http://fair-biors.org/"
-              class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white ring-indigo-300 transition duration-100 outline-none hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
               >Learn more about the FAIR4RS principles -></a
             >
           </div>
@@ -85,7 +85,7 @@ breadcrumbsStore.hideBreadcrumbs();
           >
             <a
               href="https://github.com/fairdataihub/codefair-app"
-              class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white ring-indigo-300 transition duration-100 outline-none hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
               >View the source code -></a
             >
           </div>
@@ -129,12 +129,28 @@ breadcrumbsStore.hideBreadcrumbs();
           </h2>
 
           <p class="font-onest text-lg text-slate-800">
-            Codefair is developed using <NuxtLink class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700" to="https://probot.github.io/">Probot</NuxtLink> and is deployed on our own
-            servers. The GitHub app is configured to receive webhooks for
-            important actions such as pushing code, opening or closing issues,
-            opening or merging pull requests, and commenting on discussions. The
-            app is written in <NuxtLink class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700" to="https://nodejs.org/">Node.js</NuxtLink> and utilizes the <NuxtLink class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700" to="https://octokit.github.io/">Octokit library</NuxtLink> to
-            interact with the GitHub API, enabling seamless integration with
+            Codefair is developed using
+            <NuxtLink
+              class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+              to="https://probot.github.io/"
+              >Probot</NuxtLink
+            >
+            and is deployed on our own servers. The GitHub app is configured to
+            receive webhooks for important actions such as pushing code, opening
+            or closing issues, opening or merging pull requests, and commenting
+            on discussions. The app is written in
+            <NuxtLink
+              class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+              to="https://nodejs.org/"
+              >Node.js</NuxtLink
+            >
+            and utilizes the
+            <NuxtLink
+              class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+              to="https://octokit.github.io/"
+              >Octokit library</NuxtLink
+            >
+            to interact with the GitHub API, enabling seamless integration with
             GitHub's features and functionality.
           </p>
         </div>

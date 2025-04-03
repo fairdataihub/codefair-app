@@ -69,9 +69,9 @@ const toggleMobileMenu = () => {
             target="_blank"
             class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
           >
-          <span>GitHub</span>
-          <Icon name="ri:external-link-line" size="13" />
-            
+            <span>GitHub</span>
+
+            <Icon name="ri:external-link-line" size="13" />
           </NuxtLink>
 
           <NuxtLink
@@ -113,12 +113,12 @@ const toggleMobileMenu = () => {
         <div
           v-show="showMobileMenu"
           id="mobile-menu"
-          class="z-100 fixed inset-0 flex flex-col items-center justify-center gap-6 bg-purple-50 sm:hidden"
+          class="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-purple-50 sm:hidden"
           style="height: fit-content; padding: 6rem"
         >
           <a
             href="/"
-            class="absolute left-4 top-4 inline-flex items-center gap-2.5 text-2xl font-bold text-black"
+            class="absolute top-4 left-4 inline-flex items-center gap-2.5 text-2xl font-bold text-black"
             aria-label="logo"
           >
             <img
@@ -133,7 +133,7 @@ const toggleMobileMenu = () => {
           <button
             id="mobile-menu-close"
             type="button"
-            class="absolute right-4 top-6 text-gray-500"
+            class="absolute top-6 right-4 text-gray-500"
             @click="toggleMobileMenu"
           >
             <svg
@@ -254,7 +254,7 @@ const toggleMobileMenu = () => {
 
     <footer class="mx-auto max-w-screen-xl border-t px-5 pt-3">
       <div
-        class="grid grid-rows-1 items-center gap-12 pb-4 pt-8 lg:grid-cols-3 lg:grid-rows-1"
+        class="grid grid-rows-1 items-center gap-12 pt-8 pb-4 lg:grid-cols-3 lg:grid-rows-1"
       >
         <div class="md:col-span-2">
           <div class="mb-4 lg:-mt-2">
@@ -337,7 +337,7 @@ const toggleMobileMenu = () => {
       </div>
     </footer>
 
-    <div class="fixed bottom-6 right-6 z-30">
+    <div class="fixed right-6 bottom-6 z-30">
       <n-button
         strong
         circle

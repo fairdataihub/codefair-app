@@ -23,7 +23,7 @@ if (error.value) {
 </script>
 
 <template>
-  <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
+  <main class="mx-auto max-w-screen-xl px-8 pt-4 pb-8">
     <n-flex vertical>
       <!-- Header Section -->
       <div class="flex flex-row items-center justify-between">
@@ -145,7 +145,7 @@ if (error.value) {
           <div class="mt-6 flex flex-col items-start justify-between space-y-2">
             <!-- Repo Count -->
             <div class="flex flex-row justify-end">
-              <span class="whitespace-nowrap text-sm text-gray-500">
+              <span class="text-sm whitespace-nowrap text-gray-500">
                 Codefair managed repositories:&nbsp;
               </span>
 

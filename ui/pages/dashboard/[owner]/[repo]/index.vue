@@ -221,7 +221,7 @@ const handleSettingsSelect = (key: any) => {
 </script>
 
 <template>
-  <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
+  <main class="mx-auto max-w-screen-xl px-8 pt-4 pb-8">
     <n-flex vertical>
       <n-flex justify="space-between" align="start">
         <h1>FAIR Compliance Dashboard</h1>

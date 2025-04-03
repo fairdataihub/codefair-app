@@ -13,16 +13,16 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const user_details = await prisma.user.findUnique({
-    where: {
-      id: user.id,
-    },
+  const userDetails = await prisma.user.findUnique({
     select: {
       access_token: true,
+    },
+    where: {
+      id: user.id,
     },
   });
 
   return {
-    access_token: user_details?.access_token || "",
+    access_token: userDetails?.access_token || "",
   };
 });

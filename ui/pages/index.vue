@@ -31,7 +31,7 @@ breadcrumbsStore.hideBreadcrumbs();
           <NuxtLink
             to="https://github.com/marketplace/codefair-app"
             target="_blank"
-            class="mb-4 inline-block w-4/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-base font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-lg lg:mb-0"
+            class="mb-4 inline-block w-4/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-base font-semibold text-white ring-indigo-300 transition duration-100 outline-none hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-lg lg:mb-0"
           >
             Get Codefair ->
           </NuxtLink>
@@ -39,20 +39,20 @@ breadcrumbsStore.hideBreadcrumbs();
       </div>
 
       <div
-        class="relative hidden h-48 animate-float-item lg:flex lg:h-auto xl:w-5/12"
+        class="animate-float-item relative hidden h-48 lg:flex lg:h-auto xl:w-5/12"
       >
         <img
           src="/assets/images/second_layer_hero.png"
           loading="lazy"
           alt="Hero image"
-          class="absolute left-24 top-8 h-[25rem] w-[25rem] animate-float-opposite object-cover object-center"
+          class="animate-float-opposite absolute top-8 left-24 h-[25rem] w-[25rem] object-cover object-center"
         />
 
         <img
           src="/assets/images/first_layer_hero.png"
           loading="lazy"
           alt="Hero image"
-          class="h[25rem]- absolute -left-[4rem] top-10 w-[25rem] animate-float-item object-cover object-center"
+          class="h[25rem]- animate-float-item absolute top-10 -left-[4rem] w-[25rem] object-cover object-center"
         />
       </div>
     </section>
@@ -100,7 +100,7 @@ breadcrumbsStore.hideBreadcrumbs();
             <NuxtLink
               to="https://github.com/fairdataihub/codefair-app"
               target="_blank"
-              class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+              class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white ring-indigo-300 transition duration-100 outline-none hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
             >
               View the source code ->
             </NuxtLink>
@@ -135,7 +135,7 @@ breadcrumbsStore.hideBreadcrumbs();
           >
             <NuxtLink
               to="fairsoftware"
-              class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white ring-indigo-300 transition duration-100 outline-none hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
             >
               Learn more about FAIR software ->
             </NuxtLink>
@@ -196,7 +196,7 @@ breadcrumbsStore.hideBreadcrumbs();
           >
             <NuxtLink
               to="codefair"
-              class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white ring-indigo-300 transition duration-100 outline-none hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
             >
               Learn more about Codefair ->
             </NuxtLink>
@@ -236,7 +236,7 @@ breadcrumbsStore.hideBreadcrumbs();
             <NuxtLink
               to="https://fairdataihub.org/"
               target="_blank"
-              class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+              class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white ring-indigo-300 transition duration-100 outline-none hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
             >
               Learn more about us ->
             </NuxtLink>
@@ -289,7 +289,7 @@ breadcrumbsStore.hideBreadcrumbs();
             <NuxtLink
               to="https://github.com/fairdataihub/codefair-app/issues"
               target="_blank"
-              class="inline-flex w-3/5 items-center gap-2 self-center rounded-lg bg-indigo-500 px-4 py-4 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+              class="inline-flex w-3/5 items-center gap-2 self-center rounded-lg bg-indigo-500 px-4 py-4 text-center text-sm font-semibold text-white ring-indigo-300 transition duration-100 outline-none hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
             >
               <Icon name="fa:github" size="16" />
 
@@ -300,7 +300,7 @@ breadcrumbsStore.hideBreadcrumbs();
             <NuxtLink
               to="https://docs.codefair.io/"
               target="_blank"
-              class="inline-flex w-3/5 items-center gap-2 self-center rounded-lg bg-indigo-500 px-4 py-4 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+              class="inline-flex w-3/5 items-center gap-2 self-center rounded-lg bg-indigo-500 px-4 py-4 text-center text-sm font-semibold text-white ring-indigo-300 transition duration-100 outline-none hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
             >
               <span>Read the Documentation</span>
 
@@ -311,7 +311,7 @@ breadcrumbsStore.hideBreadcrumbs();
             <NuxtLink
               to="https://docs.codefair.io/"
               target="_blank"
-              class="inline-flex w-3/5 items-center gap-2 self-center rounded-lg bg-indigo-500 px-4 py-4 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+              class="inline-flex w-3/5 items-center gap-2 self-center rounded-lg bg-indigo-500 px-4 py-4 text-center text-sm font-semibold text-white ring-indigo-300 transition duration-100 outline-none hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
             >
               <span>View Live Status of Codefair</span>
 

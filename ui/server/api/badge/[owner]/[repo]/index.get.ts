@@ -24,9 +24,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const format = {
+    color: "blue",
     label: "DOI",
     message: `${zenodo.last_published_zenodo_doi}`,
-    color: "blue",
   };
 
   // Create the badge with badge-maker
