@@ -64,7 +64,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   modules: [
-    "@nuxtjs/tailwindcss",
+    "motion-v/nuxt",
     "notivue/nuxt",
     "@nuxtjs/color-mode",
     "@pinia/nuxt",
@@ -87,6 +87,13 @@ export default defineNuxtConfig({
       global: {},
     },
     position: "bottom-right",
+  },
+
+  postcss: {
+    plugins: {
+      autoprefixer: {},
+      tailwindcss: {}, // https://tailwindcss.nuxtjs.org/postcss
+    },
   },
 
   runtimeConfig: {
