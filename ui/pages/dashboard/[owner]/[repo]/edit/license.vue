@@ -2,7 +2,7 @@
 import sanitizeHtml from "sanitize-html";
 import { MdEditor, config } from "md-editor-v3";
 import licensesJSON from "@/assets/data/licenses.json";
-import TargetBlankExtension from "@/lib/TargetBlankExtension";
+import TargetBlankExtension from "@/utils/TargetBlankExtension";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 config({
