@@ -71,10 +71,10 @@ export default defineEventHandler(async (event) => {
 
   // Count the amount of repositories each organization has from the installation table
   const RepoCount = await prisma.installation.groupBy({
-    by: ["owner"],
     _count: {
       repo: true,
     },
+    by: ["owner"],
   });
 
   // Store each count in the org object

@@ -69,6 +69,10 @@ export default defineEventHandler(async (event) => {
   // Check if the user is authorized to access the license request
   await repoWritePermissions(event, owner, repo);
 
+  if (!process.env.GH_APP_PRIVATE_KEY) {
+    throw new Error("GH_APP_PRIVATE_KEY is not defined.");
+  }
+
   const app = new App({
     appId: process.env.GH_APP_ID!,
     oauth: {

@@ -11,13 +11,13 @@ const props = defineProps({
   collapse: {
     type: Boolean,
   },
-  subheader: {
-    default: "",
-    type: String,
-  },
   horizontal: {
     default: false,
     type: Boolean,
+  },
+  subheader: {
+    default: "",
+    type: String,
   },
 });
 
@@ -101,7 +101,7 @@ const toggleCollapse = () => {
 
     <div
       v-if="hasAction"
-      class="flex items-center justify-start flex-row rounded-lg bg-slate-50 px-6 py-4"
+      class="flex flex-row items-center justify-start rounded-lg bg-slate-50 px-6 py-4"
     >
       <slot name="action"></slot>
     </div>

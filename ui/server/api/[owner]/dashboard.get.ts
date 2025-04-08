@@ -25,7 +25,6 @@ export default defineEventHandler(async (event) => {
   return {
     installationId:
       installations.length > 0 ? installations[0].installation_id : null,
-    isOrganization: isOrg,
     installations: installations.map((installation) => {
       return {
         action_count: installation.action_count as number,
@@ -37,5 +36,6 @@ export default defineEventHandler(async (event) => {
         repositoryId: installation.id as number,
       };
     }),
+    isOrganization: isOrg,
   };
 });

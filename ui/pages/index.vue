@@ -7,316 +7,375 @@ breadcrumbsStore.hideBreadcrumbs();
 </script>
 
 <template>
-  <main>
+  <main class="min-h-screen bg-purple-50">
+    <!-- HERO SECTION -->
     <section
-      class="mx-auto mt-10 flex max-w-screen-xl flex-col justify-between gap-6 px-4 sm:gap-10 md:gap-16 md:px-8 lg:flex-row"
+      class="relative overflow-hidden bg-gradient-to-b from-white to-codefair-light py-12 md:py-24"
     >
+      <!-- Grid pattern behind hero content -->
+      <UiInteractiveGridPattern
+        :class="[
+          '[mask-image:radial-gradient(1000px_circle_at_center,white,transparent)]',
+          'absolute',
+          'inset-0',
+          'w-full',
+          'h-full',
+          'z-10',
+        ]"
+        :width="60"
+        :height="60"
+        :squares="[80, 80]"
+        squares-class-name="hover:fill-codefair-grid transition-colors duration-200"
+      />
+      <!-- Content container (pointer-events disabled so grid behind can be hovered) -->
       <div
-        class="flex flex-col justify-center sm:text-center lg:pb-12 lg:text-left xl:w-5/12 xl:pb-24"
+        class="pointer-events-none relative z-20 mx-auto flex max-w-screen-xl flex-col-reverse items-center gap-10 px-4 sm:px-8 md:flex-row md:gap-16"
       >
-        <h1
-          class="mb-4 text-4xl font-bold text-black sm:text-5xl md:mb-4 md:text-5xl"
-        >
-          Make your research software reusable without breaking a sweat!
-        </h1>
-
-        <p class="font-onest text-gray-600 lg:w-full xl:text-xl">
-          Let Codefair handle the complexities of making your research software
-          FAIR, so you can focus on what matters most to you.
-        </p>
-
         <div
-          class="mt-8 flex flex-col gap-2.5 sm:flex-row sm:justify-center md:mt-8 lg:justify-start"
+          class="mt-0 flex flex-col items-center text-center md:w-1/2 md:items-start md:text-left"
         >
-          <NuxtLink
-            to="https://github.com/marketplace/codefair-app"
-            target="_blank"
-            class="mb-4 inline-block w-4/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-base font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-lg lg:mb-0"
+          <h1
+            class="mb-4 text-6xl font-extrabold leading-tight text-indigo-900 sm:text-5xl md:text-6xl"
           >
-            Get Codefair ->
-          </NuxtLink>
+            Make your research software reusable
+            <br class="hidden md:block" />
+
+            <span class="text-indigo-700">without breaking a sweat!</span>
+          </h1>
+
+          <p class="font-onest text-gray-700 md:text-lg lg:text-xl">
+            Let Codefair handle the complexities of making your research
+            software FAIR, so you can focus on what matters most to you.
+          </p>
+
+          <div class="pointer-events-auto mt-8">
+            <NuxtLink
+              to="https://github.com/marketplace/codefair-app"
+              target="_blank"
+              class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-base font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-lg"
+            >
+              Get Codefair ->
+            </NuxtLink>
+          </div>
         </div>
-      </div>
+        <!-- Hero images -->
+        <div
+          class="pointer-events-none relative hidden justify-center md:flex md:w-1/2"
+        >
+          <div class="relative w-[18rem] md:w-[25rem]">
+            <img
+              src="/assets/images/second_layer_hero.png"
+              alt="Hero image"
+              loading="lazy"
+              class="absolute -top-16 left-12 w-[18rem] animate-float-opposite object-cover md:w-[25rem]"
+            />
 
-      <div
-        class="relative hidden h-48 animate-float-item lg:flex lg:h-auto xl:w-5/12"
-      >
-        <img
-          src="/assets/images/second_layer_hero.png"
-          loading="lazy"
-          alt="Hero image"
-          class="absolute left-24 top-8 h-[25rem] w-[25rem] animate-float-opposite object-cover object-center"
-        />
-
-        <img
-          src="/assets/images/first_layer_hero.png"
-          loading="lazy"
-          alt="Hero image"
-          class="h[25rem]- absolute -left-[4rem] top-10 w-[25rem] animate-float-item object-cover object-center"
-        />
+            <img
+              src="/assets/images/first_layer_hero.png"
+              alt="Hero image"
+              loading="lazy"
+              class="relative w-[18rem] animate-float-item object-cover md:w-[25rem]"
+            />
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="w-full bg-[#e7ddfa4f] py-4 md:py-8">
+    <!-- SECTION 1: What is Codefair? -->
+    <section
+      style="
+        background: radial-gradient(
+          circle at bottom,
+          white 0%,
+          var(--codefair-light) 90%
+        );
+      "
+    >
+      <!-- Content container -->
       <div
-        class="mx-auto flex max-w-screen-xl flex-col-reverse justify-between md:flex-row"
+        class="z-10 mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row"
       >
-        <div class="flex-2 self-center">
+        <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
             src="/assets/images/Saly-38.png"
-            loading="lazy"
             alt="Info image"
-            class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
+            loading="lazy"
+            class="w-[15rem] md:w-[20rem]"
           />
         </div>
 
-        <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
-          <div class="flex flex-col">
-            <h2
-              class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
-            >
-              What is Codefair?
-            </h2>
+        <div class="md:w-1/2">
+          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+            What is Codefair?
+          </h2>
 
-            <p class="font-onest text-lg text-slate-800">
-              Codefair is a free and open source GitHub app that acts as your
-              personal assistant when it comes to making your research software
-              reusable and especially complying with the
-              <NuxtLink
-                to="https://www.nature.com/articles/s41597-022-01710-x"
-                class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
-                >Findable, Accessible, Interoperable, Reusable (FAIR) Principles
-                for Research Software (FAIR4RS Principles)</NuxtLink
-              >. Whether you are developing artificial intelligence (AI)/machine
-              learning (ML) models with Python, data visualization tools with
-              Jupyter notebook, or data analysis code with R, Codefair is here
-              to assist you.
-            </p>
-          </div>
+          <p class="font-onest text-lg text-slate-800">
+            Codefair is a free and open source GitHub app that acts as your
+            personal assistant when it comes to making your research software
+            reusable and especially complying with the
+            <NuxtLink
+              to="https://www.nature.com/articles/s41597-022-01710-x"
+              target="_blank"
+              class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+              >Findable, Accessible, Interoperable, Reusable (FAIR) Principles
+              for Research Software (FAIR4RS Principles)</NuxtLink
+            >. Whether you are developing AI/ML models with Python, data
+            visualization tools with Jupyter notebook, or data analysis code
+            with R, Codefair is here to assist you.
+          </p>
 
-          <div
-            class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start lg:py-0"
-          >
+          <div class="mt-6">
             <NuxtLink
               to="https://github.com/fairdataihub/codefair-app"
               target="_blank"
-              class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+              class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
             >
               View the source code ->
             </NuxtLink>
           </div>
         </div>
       </div>
+
+      <!-- Border bottom -->
+      <!-- <div
+        class="mx-auto max-w-screen-xl border-b-2 border-b-slate-300 bg-transparent"
+      ></div> -->
     </section>
 
-    <section class="py-4 md:py-8">
+    <!-- SECTION 2: Why make research software reusable? -->
+    <section
+      style="
+        background: radial-gradient(
+          circle at top,
+          white 0%,
+          var(--codefair-light) 90%
+        );
+      "
+    >
       <div
-        class="mx-auto flex max-w-screen-xl flex-col justify-between md:flex-row"
+        class="mx-auto flex max-w-screen-xl flex-col-reverse items-center gap-8 py-16 md:flex-row"
       >
-        <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
-          <div class="flex flex-col">
-            <h2
-              class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
-            >
-              Why make research software reusable?
-            </h2>
+        <div class="md:w-1/2">
+          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+            Why make research software reusable?
+          </h2>
 
-            <p class="font-onest text-lg text-slate-800">
-              Making research software FAIR, i.e. optimally reusable, is
-              critical to enable reproducible and transparent research, prevent
-              duplicate effort and ultimately increase the pace of new
-              scientific discoveries. Also, more and more funding agencies such
-              as the NIH and NSF are requiring research software to be reusable.
-            </p>
-          </div>
+          <p class="font-onest text-lg text-slate-800">
+            Making research software FAIR, i.e. optimally reusable, is critical
+            to enable reproducible and transparent research, prevent duplicate
+            effort, and ultimately increase the pace of new discoveries. Also,
+            more funding agencies such as the NIH and NSF require software to be
+            reusable.
+          </p>
 
-          <div
-            class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center lg:justify-start lg:py-0"
-          >
+          <div class="mt-6">
             <NuxtLink
               to="fairsoftware"
-              class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              target="_blank"
+              class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
             >
               Learn more about FAIR software ->
             </NuxtLink>
           </div>
         </div>
 
-        <div class="flex-2 self-center">
+        <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
             src="/assets/images/Other 08.png"
-            loading="lazy"
             alt="Info image"
-            class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
+            loading="lazy"
+            class="w-[15rem] md:w-[20rem]"
           />
         </div>
       </div>
+
+      <!-- Border bottom -->
+      <!-- <div
+        class="mx-auto max-w-screen-xl border-b-2 border-b-slate-300 bg-transparent"
+      ></div> -->
     </section>
 
-    <section class="bg-[#e7ddfa4f] py-4 md:py-8">
+    <!-- SECTION 3: Why should you use Codefair? -->
+    <section
+      style="
+        background: radial-gradient(
+          circle at bottom,
+          white 0%,
+          var(--codefair-light) 90%
+        );
+      "
+    >
       <div
-        class="mx-auto flex max-w-screen-xl flex-col-reverse justify-between lg:flex-row"
+        class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row"
       >
-        <div class="flex-2 self-center">
+        <div class="flex justify-center md:w-1/2">
           <img
             src="/assets/images/Saly-16.png"
-            loading="lazy"
             alt="Info image"
-            class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
+            loading="lazy"
+            class="w-[15rem] md:w-[20rem]"
           />
         </div>
 
-        <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
-          <div class="flex flex-col">
-            <h2
-              class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
-            >
-              Why should you use Codefair?
-            </h2>
+        <div class="md:w-1/2">
+          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+            Why should you use Codefair?
+          </h2>
 
-            <p class="font-onest text-lg text-slate-800">
-              With Codefair, you do not have to think about making your software
-              FAIR. Just install Codefair from the GitHub marketplace on your
-              software's GitHub repository. You can then track FAIR-compliance
-              issues through the Codefair issue dashboard and address them
-              through the Codefair website. Through intuitive interfaces and
-              automated pull requests, Codefair will allow you to make sure that
-              your software follows best coding practices, provides metadata in
-              standard format, includes a license file, is archived on
-              <NuxtLink
-                to="https://zenodo.org/"
-                class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
-                >Zenodo</NuxtLink
-              >, and much more to align with the FAIR4RS principles.
-            </p>
-          </div>
+          <p class="text-lg text-slate-800">
+            With Codefair, you do not have to think about making your software
+            FAIR. Just install Codefair from the GitHub marketplace on your
+            repository. Then track FAIR-compliance issues in the Codefair
+            dashboard and address them through the Codefair website. Through
+            intuitive interfaces and automated pull requests, Codefair helps
+            ensure best coding practices, standard metadata, a proper license,
+            archival on
+            <NuxtLink
+              to="https://zenodo.org/"
+              target="_blank"
+              class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+              >Zenodo</NuxtLink
+            >, and much more to align with FAIR4RS principles.
+          </p>
 
-          <div
-            class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center md:py-0 lg:justify-start"
-          >
+          <div class="mt-6">
             <NuxtLink
               to="codefair"
-              class="inline-block w-auto self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              target="_blank"
+              class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
             >
               Learn more about Codefair ->
             </NuxtLink>
           </div>
         </div>
       </div>
+
+      <!-- Border bottom -->
+      <!-- <div
+        class="mx-auto max-w-screen-xl border-b-2 border-b-slate-300 bg-transparent"
+      ></div> -->
     </section>
 
-    <section class="py-4 md:py-8">
+    <!-- SECTION 4: Who are we? -->
+    <section
+      style="
+        background: radial-gradient(
+          circle at top,
+          white 0%,
+          var(--codefair-light) 90%
+        );
+      "
+    >
       <div
-        class="mx-auto flex max-w-screen-xl flex-col justify-between lg:flex-row"
+        class="z-10 mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row"
       >
-        <div class="flex max-w-2xl flex-1 flex-col justify-evenly p-4">
-          <div>
-            <h2
-              class="mb-4 text-xl font-bold text-black sm:text-5xl md:mb-4 md:text-4xl"
-            >
-              Who are we?
-            </h2>
+        <div class="md:w-1/2">
+          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+            Who are we?
+          </h2>
 
-            <p class="font-onest text-lg text-slate-800">
-              Codefair is being developed by the FAIR Data Innovations Hub team,
-              a division of the nonprofit biomedical research facility,
-              California Medical Innovations Institute. As developers of
-              research software, we have experienced firsthand the challenges of
-              making software FAIR, which prompted us to develop Codefair. The
-              project is not receiving any financial support yet, but we hope to
-              secure funding in the future so we can dedicate more time and
-              effort to this much-needed tool. We would also love for others to
-              join us in this effort!
-            </p>
-          </div>
+          <p class="text-lg text-slate-800">
+            Codefair is developed by the FAIR Data Innovations Hub team, part of
+            the nonprofit biomedical research facility, California Medical
+            Innovations Institute. We experienced firsthand the challenges of
+            making software FAIR, which prompted us to create Codefair. We hope
+            to secure funding so we can dedicate more time and effort to this
+            much-needed tool—and welcome contributions from others!
+          </p>
 
-          <div
-            class="flex flex-col gap-2.5 py-8 sm:flex-row sm:justify-center md:py-0 lg:justify-start"
-          >
+          <div class="mt-6">
             <NuxtLink
               to="https://fairdataihub.org/"
               target="_blank"
-              class="inline-block w-3/5 self-center rounded-lg bg-indigo-500 px-8 py-3 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
+              class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
             >
               Learn more about us ->
             </NuxtLink>
           </div>
         </div>
 
-        <div class="self-center">
+        <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
             src="/assets/images/DRIP_18.png"
-            loading="lazy"
             alt="Info image"
-            class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
+            loading="lazy"
+            class="w-[15rem] md:w-[20rem]"
           />
         </div>
       </div>
+
+      <!-- Border bottom -->
+      <!-- <div
+        class="mx-auto max-w-screen-xl border-b-2 border-b-slate-300 bg-transparent"
+      ></div> -->
     </section>
 
-    <section class="bg-[#e7ddfa4f] py-8">
-      <div
-        class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 px-4 lg:flex-row lg:items-start lg:gap-12"
-      >
-        <!-- Left column: Image -->
-        <div class="flex-shrink-0">
-          <img
-            src="/assets/images/Other 02.png"
-            loading="lazy"
-            alt="Info image"
-            class="h-[15rem] w-[15rem] md:h-[25rem] md:w-[25rem]"
-          />
-        </div>
-
-        <!-- Right column: Text + Buttons -->
-        <div class="flex flex-1 flex-col gap-6">
-          <div>
-            <h2 class="mb-4 text-3xl font-bold text-black sm:text-4xl">
+    <!-- SECTION 5: Need help? -->
+    <section
+      style="
+        background: radial-gradient(
+          circle at center,
+          white 0%,
+          var(--codefair-light) 70%
+        );
+      "
+    >
+      <div class="z-10 mx-auto max-w-screen-xl py-16">
+        <div class="flex flex-col gap-8 md:flex-row-reverse md:items-center">
+          <div class="md:w-1/2">
+            <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
               Need help? Have suggestions? Want to contribute?
             </h2>
 
-            <p class="text-lg text-slate-800">
-              Reach out to us via the GitHub issues of the Codefair repo and we
-              will be happy to connect with you. You may also use the Contact Us
-              form at the bottom right of this page to send us a message. We are
-              always looking for ways to make Codefair better!
+            <p class="mb-6 text-lg text-slate-800">
+              Reach out via the GitHub issues of the Codefair repo and we’ll be
+              happy to connect with you. You can also use the Contact Us form at
+              the bottom right of this page. We’re always looking for ways to
+              make Codefair better!
             </p>
+
+            <div class="flex flex-col gap-3 sm:flex-row">
+              <NuxtLink
+                to="https://github.com/fairdataihub/codefair-app/issues"
+                target="_blank"
+                class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700"
+              >
+                <Icon name="fa:github" size="16" />
+
+                <span>Open a GitHub issue</span>
+              </NuxtLink>
+
+              <NuxtLink
+                to="https://docs.codefair.io/"
+                target="_blank"
+                class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700"
+              >
+                <span>Read the Documentation</span>
+
+                <Icon name="material-symbols:arrow-forward-rounded" size="16" />
+              </NuxtLink>
+
+              <NuxtLink
+                to="https://docs.codefair.io/"
+                target="_blank"
+                class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700"
+              >
+                <span>View Live Status of Codefair</span>
+
+                <Icon name="material-symbols:arrow-forward-rounded" size="16" />
+              </NuxtLink>
+            </div>
           </div>
 
-          <!-- Button row -->
-          <div class="flex flex-col items-start gap-3 sm:flex-row sm:gap-4">
-            <!-- GitHub Issue button -->
-            <NuxtLink
-              to="https://github.com/fairdataihub/codefair-app/issues"
-              target="_blank"
-              class="inline-flex w-3/5 items-center gap-2 self-center rounded-lg bg-indigo-500 px-4 py-4 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
-            >
-              <Icon name="fa:github" size="16" />
-
-              <span>Open a GitHub issue</span>
-            </NuxtLink>
-
-            <!-- Documentation button -->
-            <NuxtLink
-              to="https://docs.codefair.io/"
-              target="_blank"
-              class="inline-flex w-3/5 items-center gap-2 self-center rounded-lg bg-indigo-500 px-4 py-4 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
-            >
-              <span>Read the Documentation</span>
-
-              <Icon name="material-symbols:arrow-forward-rounded" size="16" />
-            </NuxtLink>
-
-            <!-- Live Status button -->
-            <NuxtLink
-              to="https://docs.codefair.io/"
-              target="_blank"
-              class="inline-flex w-3/5 items-center gap-2 self-center rounded-lg bg-indigo-500 px-4 py-4 text-center text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:w-auto md:text-base"
-            >
-              <span>View Live Status of Codefair</span>
-
-              <Icon name="material-symbols:arrow-forward-rounded" size="16" />
-            </NuxtLink>
+          <div class="pointer-events-none flex justify-center md:w-1/2">
+            <div class="p-4">
+              <img
+                src="/assets/images/Other 02.png"
+                alt="Info image"
+                loading="lazy"
+                class="w-[15rem] md:w-[20rem]"
+              />
+            </div>
           </div>
         </div>
       </div>

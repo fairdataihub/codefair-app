@@ -25,7 +25,7 @@ const toggleMobileMenu = () => {
 
 <template>
   <div
-    class="relative mx-auto flex h-full min-h-screen w-full flex-col bg-slate-50"
+    class="relative mx-auto flex h-full min-h-screen w-full flex-col bg-white"
     :class="{ 'debug-screens': devMode }"
   >
     <!-- <div
@@ -69,9 +69,9 @@ const toggleMobileMenu = () => {
             target="_blank"
             class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
           >
-          <span>GitHub</span>
-          <Icon name="ri:external-link-line" size="13" />
-            
+            <span>GitHub</span>
+
+            <Icon name="ri:external-link-line" size="13" />
           </NuxtLink>
 
           <NuxtLink
@@ -194,7 +194,9 @@ const toggleMobileMenu = () => {
       </div>
     </div> -->
 
-    <div class="relative z-10 grow">
+    <div
+      class="relative z-10 grow bg-gradient-to-b from-white to-codefair-light"
+    >
       <div class="mx-auto max-w-screen-xl px-8">
         <ClientOnly>
           <template #fallback>
@@ -252,88 +254,98 @@ const toggleMobileMenu = () => {
       <slot />
     </div>
 
-    <footer class="mx-auto max-w-screen-xl border-t px-5 pt-3">
-      <div
-        class="grid grid-rows-1 items-center gap-12 pb-4 pt-8 lg:grid-cols-3 lg:grid-rows-1"
-      >
-        <div class="md:col-span-2">
-          <div class="mb-4 lg:-mt-2">
-            <a
-              href="/"
-              class="inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
-              aria-label="logo"
-            >
-              <img
-                src="/assets/images/codefair_logo.png"
-                alt="codefair"
-                class="h-10 w-10 md:h-12 md:w-12"
-              />
+    <footer
+      style="
+        background: radial-gradient(
+          circle at bottom,
+          white 0%,
+          var(--codefair-light) 80%
+        );
+      "
+    >
+      <div class="mx-auto max-w-screen-xl px-5 pt-3">
+        <div
+          class="grid grid-rows-1 items-center gap-12 pb-4 pt-8 lg:grid-cols-3 lg:grid-rows-1"
+        >
+          <div class="md:col-span-2">
+            <div class="mb-4 lg:-mt-2">
+              <a
+                href="/"
+                class="inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
+                aria-label="logo"
+              >
+                <img
+                  src="/assets/images/codefair_logo.png"
+                  alt="codefair"
+                  class="h-10 w-10 md:h-12 md:w-12"
+                />
 
-              Codefair
-            </a>
+                Codefair
+              </a>
+            </div>
+
+            <p class="mb-6 text-gray-500 sm:pr-8">
+              With Codefair by your side, you're not just managing repositories
+              but you are advocating for the development of FAIR software
+            </p>
+
+            <div class="flex gap-4">
+              <a
+                href="https://twitter.com/fairdataihub"
+                target="_blank"
+                class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
+              >
+                <Icon name="fa:twitter" size="25" />
+              </a>
+
+              <a
+                href="https://github.com/fairdataihub"
+                target="_blank"
+                class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
+              >
+                <Icon name="fa:github" size="25" />
+              </a>
+            </div>
           </div>
 
-          <p class="mb-6 text-gray-500 sm:pr-8">
-            With Codefair by your side, you're not just managing repositories
-            but you are advocating for the development of FAIR software
-          </p>
+          <n-flex vertical size="small" class="py-8 text-base text-gray-400">
+            <div class="flex items-center justify-end">
+              <span class="text-right"> Made with </span>
 
-          <div class="flex gap-4">
-            <a
-              href="https://twitter.com/fairdataihub"
-              target="_blank"
-              class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
-            >
-              <Icon name="fa:twitter" size="25" />
-            </a>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="30"
+                height="20"
+                viewBox="0 0 256 256"
+              >
+                <g fill="#a782ec">
+                  <path
+                    d="M232 102c0 66-104 122-104 122S24 168 24 102a54 54 0 0 1 54-54c22.59 0 41.94 12.31 50 32c8.06-19.69 27.41-32 50-32a54 54 0 0 1 54 54"
+                    opacity="0.2"
+                  />
 
-            <a
-              href="https://github.com/fairdataihub"
-              target="_blank"
-              class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
-            >
-              <Icon name="fa:github" size="25" />
-            </a>
-          </div>
+                  <path
+                    d="M178 40c-20.65 0-38.73 8.88-50 23.89C116.73 48.88 98.65 40 78 40a62.07 62.07 0 0 0-62 62c0 70 103.79 126.66 108.21 129a8 8 0 0 0 7.58 0C136.21 228.66 240 172 240 102a62.07 62.07 0 0 0-62-62m-50 174.8c-18.26-10.64-96-59.11-96-112.8a46.06 46.06 0 0 1 46-46c19.45 0 35.78 10.36 42.6 27a8 8 0 0 0 14.8 0c6.82-16.67 23.15-27 42.6-27a46.06 46.06 0 0 1 46 46c0 53.61-77.76 102.15-96 112.8"
+                  />
+                </g>
+              </svg>
+
+              <span class="text-right"> by the </span>
+
+              <NuxtLink
+                to="https://fairdataihub.org"
+                class="pl-1 text-indigo-500 transition-all hover:text-indigo-600 active:text-indigo-700"
+                target="_blank"
+              >
+                FAIR Data Innovations Hub
+              </NuxtLink>
+            </div>
+
+            <span class="text-right text-sm">
+              © 2024 - FAIR Data Innovations Hub. All rights reserved.
+            </span>
+          </n-flex>
         </div>
-
-        <n-flex vertical size="small" class="py-8 text-base text-gray-400">
-          <div class="flex items-center justify-end">
-            <span class="text-right"> Made with </span>
-
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="20"
-              viewBox="0 0 256 256"
-            >
-              <g fill="#a782ec">
-                <path
-                  d="M232 102c0 66-104 122-104 122S24 168 24 102a54 54 0 0 1 54-54c22.59 0 41.94 12.31 50 32c8.06-19.69 27.41-32 50-32a54 54 0 0 1 54 54"
-                  opacity="0.2"
-                />
-
-                <path
-                  d="M178 40c-20.65 0-38.73 8.88-50 23.89C116.73 48.88 98.65 40 78 40a62.07 62.07 0 0 0-62 62c0 70 103.79 126.66 108.21 129a8 8 0 0 0 7.58 0C136.21 228.66 240 172 240 102a62.07 62.07 0 0 0-62-62m-50 174.8c-18.26-10.64-96-59.11-96-112.8a46.06 46.06 0 0 1 46-46c19.45 0 35.78 10.36 42.6 27a8 8 0 0 0 14.8 0c6.82-16.67 23.15-27 42.6-27a46.06 46.06 0 0 1 46 46c0 53.61-77.76 102.15-96 112.8"
-                />
-              </g>
-            </svg>
-
-            <span class="text-right"> by the </span>
-
-            <NuxtLink
-              to="https://fairdataihub.org"
-              class="pl-1 text-indigo-500 transition-all hover:text-indigo-600 active:text-indigo-700"
-              target="_blank"
-            >
-              FAIR Data Innovations Hub
-            </NuxtLink>
-          </div>
-
-          <span class="text-right text-sm">
-            © 2024 - FAIR Data Innovations Hub. All rights reserved.
-          </span>
-        </n-flex>
       </div>
     </footer>
 

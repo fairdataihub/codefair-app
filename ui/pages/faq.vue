@@ -21,7 +21,7 @@
         <h3
           class="mb-4 flex items-start text-lg font-medium text-gray-900 dark:text-white"
         >
-          <Icon name="ri:question-fill" class="mr-2 mt-1" />
+          <Icon name="ri:question-fill" class="mt-1 mr-2" />
           Why are there two GitHub apps with Codefair?
         </h3>
 
@@ -41,7 +41,7 @@
         <h3
           class="mb-4 flex items-start text-lg font-medium text-gray-900 dark:text-white"
         >
-          <Icon name="ri:question-fill" class="mr-2 mt-1" />
+          <Icon name="ri:question-fill" class="mt-1 mr-2" />
           Why am I having trouble accessing my Organization's repositories on
           Codefair?
         </h3>

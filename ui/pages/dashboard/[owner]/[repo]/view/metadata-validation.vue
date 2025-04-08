@@ -12,9 +12,12 @@ breadcrumbsStore.showBreadcrumbs();
 
 const { owner, repo } = route.params as { owner: string; repo: string };
 
-const { data, error } = await useFetch(`/api/${owner}/${repo}/metadata-validation`, {
-  headers: useRequestHeaders(["cookie"]),
-});
+const { data, error } = await useFetch(
+  `/api/${owner}/${repo}/metadata-validation`,
+  {
+    headers: useRequestHeaders(["cookie"]),
+  },
+);
 
 breadcrumbsStore.setFeature({
   id: "view-metadata-validation",
@@ -57,34 +60,56 @@ if (error.value) {
 
       <div class="border-b border-dashed py-2">
         <p class="text-base">
-          Metadata validation is a process that ensures both CITATION.cff and codemeta.json files are valid against the Codefair validator.
-          The validation process checks for the presence of required fields and values. If the validation fails, the validator will provide
-          feedback on what needs to be fixed.
+          Metadata validation is a process that ensures both CITATION.cff and
+          codemeta.json files are valid against the Codefair validator. The
+          validation process checks for the presence of required fields and
+          values. If the validation fails, the validator will provide feedback
+          on what needs to be fixed.
         </p>
       </div>
 
-      <n-collapse :trigger-areas="['main', 'arrow']" :default-expanded-names="['CITATION.cff', 'codemeta.json']">
+      <n-collapse
+        :trigger-areas="['main', 'arrow']"
+        :default-expanded-names="['CITATION.cff', 'codemeta.json']"
+      >
         <n-collapse-item
           key="CITATION.cff"
           title="CITATION.cff Validation"
           name="CITATION.cff"
         >
           <n-flex vertical>
-            <n-alert :type="data?.citationStatus === 'invalid' ? 'error' : 'success'" class="max-h-36 overflow-y-auto">
-              <pre v-if="data?.citationValidationMessage !== ''">{{ data?.citationValidationMessage }}</pre>
-              <pre v-else>This file either doesn't exist or has not been validated.</pre>
+            <n-alert
+              :type="data?.citationStatus === 'invalid' ? 'error' : 'success'"
+              class="max-h-36 overflow-y-auto"
+            >
+              <pre v-if="data?.citationValidationMessage !== ''">{{
+                data?.citationValidationMessage
+              }}</pre>
+
+              <pre v-else>
+This file either doesn't exist or has not been validated.</pre
+              >
             </n-alert>
           </n-flex>
         </n-collapse-item>
+
         <n-collapse-item
           key="codemeta.json"
           title="codemeta.json Validation"
           name="codemeta.json"
         >
           <n-flex vertical>
-            <n-alert :type="data?.codemetaStatus === 'invalid' ? 'error' : 'success'" class="max-h-36 overflow-y-auto">
-              <pre v-if="data?.codemetaValidationMessage !== ''">{{ data?.codemetaValidationMessage }}</pre>
-              <pre v-else>This file either doesn't exist or has not been validated.</pre>
+            <n-alert
+              :type="data?.codemetaStatus === 'invalid' ? 'error' : 'success'"
+              class="max-h-36 overflow-y-auto"
+            >
+              <pre v-if="data?.codemetaValidationMessage !== ''">{{
+                data?.codemetaValidationMessage
+              }}</pre>
+
+              <pre v-else>
+This file either doesn't exist or has not been validated.</pre
+              >
             </n-alert>
           </n-flex>
         </n-collapse-item>

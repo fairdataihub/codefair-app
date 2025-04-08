@@ -682,7 +682,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
+  <main class="mx-auto max-w-screen-xl px-8 pt-4 pb-8">
     <n-flex vertical>
       <div class="flex flex-row items-center justify-between">
         <h1>FAIR Software Release</h1>
