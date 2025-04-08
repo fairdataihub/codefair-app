@@ -19,7 +19,6 @@ module.exports = {
     require("@tailwindcss/typography"),
     animate,
     setupInspiraUI,
-    require("tailwindcss-animate"),
   ],
   prefix: "",
   safelist: ["dark"],
