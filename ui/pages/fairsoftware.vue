@@ -87,7 +87,7 @@ breadcrumbsStore.hideBreadcrumbs();
       </div>
 
       <div
-        class="mx-auto max-w-screen-xl border-b-2 border-b-slate-300 bg-transparent"
+        class="mx-auto max-w-screen-xl border-b-2 border-b-indigo-200 bg-transparent"
       ></div>
     </section>
 
@@ -128,7 +128,7 @@ breadcrumbsStore.hideBreadcrumbs();
       </div>
 
       <div
-        class="mx-auto max-w-screen-xl border-b-2 border-b-slate-300 bg-transparent"
+        class="mx-auto max-w-screen-xl border-b-2 border-b-indigo-200 bg-transparent"
       ></div>
     </section>
 
@@ -182,7 +182,7 @@ breadcrumbsStore.hideBreadcrumbs();
       </div>
 
       <div
-        class="mx-auto max-w-screen-xl border-b-2 border-b-slate-300 bg-transparent"
+        class="mx-auto max-w-screen-xl border-b-2 border-b-indigo-200 bg-transparent"
       ></div>
     </section>
 

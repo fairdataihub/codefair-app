@@ -404,7 +404,15 @@ const navigateToPR = () => {
 </script>
 
 <template>
-  <main>
+  <main
+    style="
+      background: radial-gradient(
+        circle at bottom,
+        var(--codefair-light) 0%,
+        white 90%
+      );
+    "
+  >
     <div class="mx-auto mb-4 max-w-screen-xl rounded bg-white p-8 shadow-md">
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">

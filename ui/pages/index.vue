@@ -316,7 +316,7 @@ breadcrumbsStore.hideBreadcrumbs();
         background: radial-gradient(
           circle at center,
           white 0%,
-          var(--codefair-light) 70%
+          var(--codefair-light) 80%
         );
       "
     >

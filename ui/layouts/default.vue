@@ -259,11 +259,13 @@ const toggleMobileMenu = () => {
         background: radial-gradient(
           circle at bottom,
           white 0%,
-          var(--codefair-light) 80%
+          var(--codefair-light) 90%
         );
       "
     >
-      <div class="mx-auto max-w-screen-xl px-5 pt-3">
+      <div
+        class="mx-auto max-w-screen-xl border-t-2 border-indigo-200 px-5 pt-3"
+      >
         <div
           class="grid grid-rows-1 items-center gap-12 pb-4 pt-8 lg:grid-cols-3 lg:grid-rows-1"
         >

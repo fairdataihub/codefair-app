@@ -138,7 +138,7 @@ breadcrumbsStore.hideBreadcrumbs();
     >
       <!-- Border top -->
       <div
-        class="mx-auto max-w-screen-xl border-b-2 border-b-slate-300 bg-transparent px-4"
+        class="mx-auto max-w-screen-xl border-t-2 border-t-indigo-200 bg-transparent px-4"
       ></div>
 
       <!-- Content -->
@@ -174,7 +174,7 @@ breadcrumbsStore.hideBreadcrumbs();
 
       <!-- Border bottom -->
       <div
-        class="mx-auto max-w-screen-xl border-b-2 border-b-slate-300 bg-transparent px-4"
+        class="mx-auto max-w-screen-xl border-b-2 border-b-indigo-200 bg-transparent px-4"
       ></div>
     </section>
 

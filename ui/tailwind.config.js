@@ -52,8 +52,8 @@ module.exports = {
           4: "hsl(var(--chart-4))",
           5: "hsl(var(--chart-5))",
         },
-        "codefair-grid": "#c799ff",
-        "codefair-light": "#EFE2FF", // Used in backgrounds and gradients
+        "codefair-grid": "#c7a8f0",
+        "codefair-light": "#f1e6ff", // Used in backgrounds and gradients
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
