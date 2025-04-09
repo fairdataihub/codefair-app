@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import type { NuxtError } from "#app";
 
-// Define error prop with types
 const props = defineProps({
   error: {
     default: null,
@@ -11,71 +9,41 @@ const props = defineProps({
   },
 });
 
-// Capture key properties from error
 const statusCode = props.error?.statusCode ?? 500;
-const errorMessage = props.error?.statusMessage ?? "Something went wrong";
-const urlVisiting = (props.error as NuxtError & { url?: string }).url ?? "/";
-
-// Enhanced debugging: Log complete error info if in development mode
-if (process.dev && props.error) {
-  console.groupCollapsed("[Error Debug Info]");
-  console.error("Status Code:", statusCode);
-  console.error("Error Message:", errorMessage);
-  console.error("URL Visiting:", urlVisiting);
-  console.error("Full Error Object:", props.error);
-  if (props.error.stack) {
-    console.error("Stack Trace:", props.error.stack);
-  }
-  console.groupEnd();
-}
 
 const showNotAuthorizedError = ref(false);
 const orgNotAuthorizedError = ref(false);
 const accountNotAuthorizedError = ref(false);
 const requestClosed = ref(false);
+
 const githubOAuthOrgUrl = ref("");
 
-// Determine error type and handle accordingly
 if (props.error) {
+  const errorCode = props.error.statusMessage ?? "Something went wrong";
+  const urlVisiting = (props.error as NuxtError & { url?: string }).url ?? "/";
+
   if (statusCode === 403) {
     showNotAuthorizedError.value = true;
 
-    if (errorMessage.startsWith("unauthorized-org-access")) {
+    if (errorCode.startsWith("unauthorized-org-access")) {
       orgNotAuthorizedError.value = true;
-      githubOAuthOrgUrl.value = errorMessage.split("|")[1];
 
-      // Log details about organization access failure
-      if (process.dev) {
-        console.error(
-          "Unauthorized organization access. GitHub OAuth URL:",
-          githubOAuthOrgUrl.value,
-        );
-      }
-    } else if (errorMessage === "unauthorized-account-access") {
+      githubOAuthOrgUrl.value = errorCode.split("|")[1];
+    } else if (errorCode === "unauthorized-account-access") {
       accountNotAuthorizedError.value = true;
-      if (process.dev) {
-        console.error("Unauthorized account access encountered.");
-      }
     }
   } else if (statusCode === 400) {
-    if (errorMessage === "request-closed") {
+    if (errorCode === "request-closed") {
       requestClosed.value = true;
-      if (process.dev) {
-        console.error("Request closed error encountered:", errorMessage);
-      }
+
       push.error({
         title: "Request closed",
         message: "This request has been closed. You can't edit it anymore.",
       });
     }
-  } else if (statusCode === 401 && errorMessage === "not-signed-in") {
+  } else if (statusCode === 401 && errorCode === "not-signed-in") {
     const redirectPath = encodeURIComponent(urlVisiting);
-    if (process.dev) {
-      console.error(
-        "User not signed in. Redirecting to login page with redirect path:",
-        redirectPath,
-      );
-    }
+
     try {
       await navigateTo({
         path: "/login/github",
@@ -88,11 +56,7 @@ if (props.error) {
     push.error({
       title: "Something went wrong",
     });
-    if (process.dev) {
-      console.error(
-        "Unhandled error case. Throwing error for insufficient access.",
-      );
-    }
+
     throw new Error("You may not have access to this page.");
   }
 }
@@ -104,7 +68,7 @@ if (props.error) {
       <div
         class="grid place-items-center px-6 pb-8 text-center text-lg text-slate-700 lg:px-8"
       >
-        <img src="/assets/images/error/404.svg" alt="Page not found" />
+        <img class="" src="/assets/images/error/404.svg" alt="Page not found" />
 
         <h1 class="mt-4 text-2xl font-bold">
           {{ error.statusCode }}
