@@ -138,7 +138,7 @@ breadcrumbsStore.hideBreadcrumbs();
     >
       <!-- Border top -->
       <div
-        class="mx-auto max-w-screen-xl border-b-2 border-b-slate-300 bg-transparent px-4"
+        class="mx-auto max-w-screen-xl border-t-2 border-t-indigo-200 bg-transparent px-4"
       ></div>
 
       <!-- Content -->
@@ -174,7 +174,7 @@ breadcrumbsStore.hideBreadcrumbs();
 
       <!-- Border bottom -->
       <div
-        class="mx-auto max-w-screen-xl border-b-2 border-b-slate-300 bg-transparent px-4"
+        class="mx-auto max-w-screen-xl border-b-2 border-b-indigo-200 bg-transparent px-4"
       ></div>
     </section>
 
@@ -192,7 +192,7 @@ breadcrumbsStore.hideBreadcrumbs();
       <div
         class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row"
       >
-        <div class="flex justify-center md:w-1/2">
+        <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
             src="/assets/images/Saly-39.png"
             alt="Info image"
