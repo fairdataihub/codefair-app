@@ -192,7 +192,7 @@ breadcrumbsStore.hideBreadcrumbs();
       <div
         class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row"
       >
-        <div class="flex justify-center md:w-1/2">
+        <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
             src="/assets/images/Saly-39.png"
             alt="Info image"

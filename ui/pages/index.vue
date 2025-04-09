@@ -100,7 +100,7 @@ breadcrumbsStore.hideBreadcrumbs();
             src="/assets/images/Saly-38.png"
             alt="Info image"
             loading="lazy"
-            class="w-[15rem] md:w-[20rem]"
+            class="w-[15rem] md:w-[23rem]"
           />
         </div>
 
@@ -184,7 +184,7 @@ breadcrumbsStore.hideBreadcrumbs();
             src="/assets/images/Other 08.png"
             alt="Info image"
             loading="lazy"
-            class="w-[15rem] md:w-[20rem]"
+            class="w-[15rem] md:w-[21rem]"
           />
         </div>
       </div>
@@ -208,12 +208,12 @@ breadcrumbsStore.hideBreadcrumbs();
       <div
         class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row"
       >
-        <div class="flex justify-center md:w-1/2">
+        <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
             src="/assets/images/Saly-16.png"
             alt="Info image"
             loading="lazy"
-            class="w-[15rem] md:w-[20rem]"
+            class="w-[15rem] md:w-[22rem]"
           />
         </div>
 
