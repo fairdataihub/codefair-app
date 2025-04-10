@@ -168,12 +168,10 @@ export async function createIssue(context, owner, repository, title, body) {
     // iterate through issues to see if there is an issue with the same title
     let noIssue = false;
     let issueNumber;
-    for (let i = 0; i < issue.data.length; i++) {
-      if (issue.data[i].title === title) {
-        noIssue = true;
-        issueNumber = issue.data[i].number;
-        break;
-      }
+    const existingIssue = issue.data.find((item) => item.title === title);
+    if (existingIssue) {
+      noIssue = true;
+      issueNumber = existingIssue.number;
     }
 
     if (!noIssue) {
@@ -200,9 +198,7 @@ export async function createIssue(context, owner, repository, title, body) {
 
       await applyGitHubIssueToDatabase(issueNumber, repository.id);
     }
-  }
-
-  if (issue.data.length === 0) {
+  } else {
     // Issue has not been created so we create one
     const response = await context.octokit.issues.create({
       title,
