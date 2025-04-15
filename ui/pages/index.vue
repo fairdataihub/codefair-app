@@ -334,26 +334,31 @@ breadcrumbsStore.hideBreadcrumbs();
               make Codefair better!
             </p>
 
-            <div class="flex flex-col gap-3 sm:flex-row">
-              <NuxtLink
-                to="https://github.com/fairdataihub/codefair-app/issues"
-                target="_blank"
-                class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700"
-              >
-                <Icon name="fa:github" size="16" />
+            <n-flex>
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <NuxtLink
+                  to="https://github.com/fairdataihub/codefair-app/issues"
+                  target="_blank"
+                  class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700"
+                >
+                  <Icon name="fa:github" size="16" />
 
-                <span>Open a GitHub issue</span>
-              </NuxtLink>
+                  <span>Open a GitHub issue</span>
+                </NuxtLink>
 
-              <NuxtLink
-                to="https://docs.codefair.io/"
-                target="_blank"
-                class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700"
-              >
-                <span>Read the Documentation</span>
+                <NuxtLink
+                  to="https://docs.codefair.io/"
+                  target="_blank"
+                  class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700"
+                >
+                  <span>Read the Documentation</span>
 
-                <Icon name="material-symbols:arrow-forward-rounded" size="16" />
-              </NuxtLink>
+                  <Icon
+                    name="material-symbols:arrow-forward-rounded"
+                    size="16"
+                  />
+                </NuxtLink>
+              </div>
 
               <NuxtLink
                 to="https://docs.codefair.io/"
@@ -364,7 +369,7 @@ breadcrumbsStore.hideBreadcrumbs();
 
                 <Icon name="material-symbols:arrow-forward-rounded" size="16" />
               </NuxtLink>
-            </div>
+            </n-flex>
           </div>
 
           <div class="pointer-events-none flex justify-center md:w-1/2">
