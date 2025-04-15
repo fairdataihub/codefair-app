@@ -43,7 +43,7 @@ if (error.value) {
           can manage the repositories and actions performed on them from here.
         </p>
 
-        <n-divider class="my-6" />
+        <LayoutSectionDivider class="my-4" />
 
         <!-- Your Account Section -->
         <h2 class="pb-4 text-xl font-semibold">Your Account</h2>
@@ -102,7 +102,7 @@ if (error.value) {
           </div>
         </n-card>
 
-        <n-divider class="my-6" />
+        <LayoutSectionDivider class="my-6" />
 
         <!-- Your Organizations Section -->
         <h2 class="pb-4 text-xl font-semibold">Your Organizations</h2>

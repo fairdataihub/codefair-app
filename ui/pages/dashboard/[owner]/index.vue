@@ -140,7 +140,7 @@ const handleSettingsSelect = (key: string) => {
         processed, the repositories will appear in the list.
       </p>
 
-      <n-divider class="my-6" />
+      <LayoutSectionDivider class="my-4" />
 
       <!-- Repositories Section -->
       <n-flex vertical>

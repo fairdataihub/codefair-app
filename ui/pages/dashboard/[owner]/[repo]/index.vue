@@ -253,7 +253,7 @@ const handleSettingsSelect = (key: any) => {
     </n-alert>
 
     <div v-else>
-      <n-divider />
+      <LayoutSectionDivider class="my-4" />
 
       <CardDashboard
         title="License"
