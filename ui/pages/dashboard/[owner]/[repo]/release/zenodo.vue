@@ -758,7 +758,7 @@ onBeforeUnmount(() => {
           <n-button
             type="primary"
             ghost
-            class="flex items-center"
+            class="flex h-6 items-center"
             @click="requestZenodoBadge"
             >Request Zenodo badge</n-button
           >
