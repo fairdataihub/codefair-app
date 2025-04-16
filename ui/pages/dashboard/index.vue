@@ -38,7 +38,7 @@ if (error.value) {
           >
         </div>
 
-        <p class="mt-4 text-base">
+        <p class="text-base">
           These are the accounts and organizations that you have access to. You
           can manage the repositories and actions performed on them from here.
         </p>

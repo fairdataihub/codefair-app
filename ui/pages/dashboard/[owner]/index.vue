@@ -134,7 +134,7 @@ const handleSettingsSelect = (key: string) => {
         </div>
       </div>
 
-      <p class="mt-4 text-base text-gray-600">
+      <p class="text-base text-gray-600">
         Some repositories may not appear here if they have not had any actions
         performed on their main branch yet. Once a couple of actions have been
         processed, the repositories will appear in the list.

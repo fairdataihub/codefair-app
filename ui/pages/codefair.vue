@@ -118,7 +118,7 @@ breadcrumbsStore.hideBreadcrumbs();
         <div class="relative aspect-square w-[26rem]">
           <n-image
             src="/assets/images/zenodo-top.png"
-            alt="Another feature"
+            alt="Zenodo Release UI"
             loading="lazy"
             class="rounded-lg object-contain shadow-lg"
           />
