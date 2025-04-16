@@ -90,10 +90,11 @@ breadcrumbsStore.hideBreadcrumbs();
           var(--codefair-light) 90%
         );
       "
+      class="p-8 md:py-16"
     >
       <!-- Content container -->
       <div
-        class="z-10 mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row"
+        class="z-10 mx-auto flex max-w-screen-xl flex-col items-center gap-8 md:flex-row"
       >
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
@@ -151,9 +152,10 @@ breadcrumbsStore.hideBreadcrumbs();
           var(--codefair-light) 90%
         );
       "
+      class="p-8 md:py-16"
     >
       <div
-        class="mx-auto flex max-w-screen-xl flex-col-reverse items-center gap-8 py-16 md:flex-row"
+        class="mx-auto flex max-w-screen-xl flex-col-reverse items-center gap-8 md:flex-row"
       >
         <div class="md:w-1/2">
           <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
@@ -204,9 +206,10 @@ breadcrumbsStore.hideBreadcrumbs();
           var(--codefair-light) 90%
         );
       "
+      class="p-8 md:py-16"
     >
       <div
-        class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row"
+        class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 md:flex-row"
       >
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
@@ -265,9 +268,10 @@ breadcrumbsStore.hideBreadcrumbs();
           var(--codefair-light) 90%
         );
       "
+      class="p-8 md:py-16"
     >
       <div
-        class="z-10 mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row"
+        class="z-10 mx-auto flex max-w-screen-xl flex-col items-center gap-8 md:flex-row"
       >
         <div class="md:w-1/2">
           <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
@@ -319,8 +323,9 @@ breadcrumbsStore.hideBreadcrumbs();
           var(--codefair-light) 80%
         );
       "
+      class="p-8 md:py-16"
     >
-      <div class="z-10 mx-auto max-w-screen-xl py-16">
+      <div class="z-10 mx-auto max-w-screen-xl">
         <div class="flex flex-col gap-8 md:flex-row-reverse md:items-center">
           <div class="md:w-1/2">
             <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
@@ -359,16 +364,6 @@ breadcrumbsStore.hideBreadcrumbs();
                   />
                 </NuxtLink>
               </div>
-
-              <NuxtLink
-                to="https://docs.codefair.io/"
-                target="_blank"
-                class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700"
-              >
-                <span>View Live Status of Codefair</span>
-
-                <Icon name="material-symbols:arrow-forward-rounded" size="16" />
-              </NuxtLink>
             </n-flex>
           </div>
 

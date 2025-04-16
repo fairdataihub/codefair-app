@@ -264,33 +264,48 @@ const toggleMobileMenu = () => {
       "
     >
       <div
-        class="mx-auto max-w-screen-xl border-t-2 border-indigo-200 px-5 pt-3"
+        class="mx-auto max-w-screen-xl border-t-2 border-indigo-200 px-5 py-4"
       >
+        <div class="flex items-center justify-between">
+          <!-- Logo -->
+          <div class="flex items-center gap-2.5">
+            <img
+              src="/assets/images/codefair_logo.png"
+              alt="codefair"
+              class="h-10 w-10 md:h-12 md:w-12"
+            />
+
+            <span class="text-2xl font-bold text-black md:text-3xl">
+              Codefair
+            </span>
+          </div>
+
+          <!-- Status Badge -->
+          <div>
+            <n-badge>
+              <n-tag type="info">
+                <a
+                  href="https://status.codefair.io/status/all"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  View Codefair Status
+                </a>
+              </n-tag>
+            </n-badge>
+          </div>
+        </div>
+
         <div
-          class="grid grid-rows-1 items-center gap-12 pb-4 pt-8 lg:grid-cols-3 lg:grid-rows-1"
+          class="mt-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center"
         >
-          <div class="md:col-span-2">
-            <div class="mb-4 lg:-mt-2">
-              <a
-                href="/"
-                class="inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
-                aria-label="logo"
-              >
-                <img
-                  src="/assets/images/codefair_logo.png"
-                  alt="codefair"
-                  class="h-10 w-10 md:h-12 md:w-12"
-                />
-
-                Codefair
-              </a>
-            </div>
-
-            <p class="mb-6 text-gray-500 sm:pr-8">
+          <div>
+            <p class="mb-3 max-w-lg text-gray-500">
               With Codefair by your side, you're not just managing repositories
               but you are advocating for the development of FAIR software
             </p>
 
+            <!-- Social icons -->
             <div class="flex gap-4">
               <a
                 href="https://twitter.com/fairdataihub"
@@ -310,14 +325,14 @@ const toggleMobileMenu = () => {
             </div>
           </div>
 
-          <n-flex vertical size="small" class="py-8 text-base text-gray-400">
-            <div class="flex items-center justify-end">
-              <span class="text-right"> Made with </span>
-
+          <div class="text-sm text-gray-400 md:text-right">
+            <div class="flex items-center gap-1 md:justify-end">
+              <span>Made with</span>
+              <!-- Heart SVG -->
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="30"
-                height="20"
+                width="22"
+                height="16"
                 viewBox="0 0 256 256"
               >
                 <g fill="#a782ec">
@@ -332,21 +347,22 @@ const toggleMobileMenu = () => {
                 </g>
               </svg>
 
-              <span class="text-right"> by the </span>
+              <span>by the</span>
 
-              <NuxtLink
-                to="https://fairdataihub.org"
+              <a
+                href="https://fairdataihub.org"
                 class="pl-1 text-indigo-500 transition-all hover:text-indigo-600 active:text-indigo-700"
                 target="_blank"
               >
                 FAIR Data Innovations Hub
-              </NuxtLink>
+              </a>
             </div>
 
-            <span class="text-right text-sm">
+            <!-- Year -->
+            <div class="mt-2">
               © 2024 - FAIR Data Innovations Hub. All rights reserved.
-            </span>
-          </n-flex>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
