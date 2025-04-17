@@ -67,6 +67,7 @@ breadcrumbsStore.hideBreadcrumbs();
           var(--codefair-light) 90%
         );
       "
+      class="px-4 md:px-0"
     >
       <!-- Content -->
       <div class="z-10 mx-auto max-w-screen-xl py-12 text-center">
@@ -135,6 +136,7 @@ breadcrumbsStore.hideBreadcrumbs();
           var(--codefair-light) 90%
         );
       "
+      class="px-4 md:px-0"
     >
       <!-- Border top -->
       <div
@@ -180,7 +182,6 @@ breadcrumbsStore.hideBreadcrumbs();
 
     <!-- SECTION 3: How is Codefair developed? -->
     <section
-      class=""
       style="
         background: radial-gradient(
           circle at bottom,
@@ -188,6 +189,7 @@ breadcrumbsStore.hideBreadcrumbs();
           var(--codefair-light) 90%
         );
       "
+      class="px-4 md:px-0"
     >
       <div
         class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row"

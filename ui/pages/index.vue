@@ -35,7 +35,7 @@ breadcrumbsStore.hideBreadcrumbs();
           class="mt-0 flex flex-col items-center text-center md:w-1/2 md:items-start md:text-left"
         >
           <h1
-            class="mb-4 text-6xl font-extrabold leading-tight text-indigo-900 sm:text-5xl md:text-6xl"
+            class="mb-4 text-4xl font-extrabold leading-tight text-indigo-900 md:text-6xl"
           >
             Make your research software reusable
             <br class="hidden md:block" />

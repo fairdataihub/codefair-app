@@ -100,6 +100,7 @@ breadcrumbsStore.hideBreadcrumbs();
           var(--codefair-light) 90%
         );
       "
+      class="px-4 md:px-0"
     >
       <div class="mx-auto max-w-screen-xl py-10 md:px-8">
         <div class="flex flex-col py-8">
@@ -141,6 +142,7 @@ breadcrumbsStore.hideBreadcrumbs();
           var(--codefair-light) 90%
         );
       "
+      class="px-4 md:px-0"
     >
       <div class="mx-auto max-w-screen-xl py-10 md:px-8">
         <div class="flex flex-col py-8">
@@ -195,6 +197,7 @@ breadcrumbsStore.hideBreadcrumbs();
           var(--codefair-light) 90%
         );
       "
+      class="px-4 md:px-0"
     >
       <div class="mx-auto max-w-screen-xl py-10 md:px-8">
         <div class="flex flex-col py-8">
