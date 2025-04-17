@@ -36,10 +36,10 @@ const purgeTokens = async () => {
       <p>This is all the information we know about you.</p>
     </n-flex>
 
-    <n-divider />
+    <LayoutSectionDivider class="my-6" />
 
     <n-flex vertical size="large">
-      <n-card title="GitHub Username">
+      <n-card title="GitHub Username" class="shadow-md">
         <NuxtLink :to="`https://github.com/${user?.username}`" target="_blank">
           <p>
             {{ user?.username }}
@@ -47,13 +47,13 @@ const purgeTokens = async () => {
         </NuxtLink>
       </n-card>
 
-      <n-card title="GitHub ID">
+      <n-card title="GitHub ID" class="shadow-md">
         <p class="m-0">
           {{ user?.github_id }}
         </p>
       </n-card>
 
-      <n-card title="Purge Tokens">
+      <n-card title="Purge Tokens" class="shadow-md">
         <n-flex justify="space-between">
           <p class="">
             This will remove all Zenodo and GitHub tokens associated with your
