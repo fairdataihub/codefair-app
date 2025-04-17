@@ -282,15 +282,21 @@ const toggleMobileMenu = () => {
 
           <!-- Status Badge -->
           <div>
-            <n-badge>
+            <n-badge dot type="success" :show="true" :size="20">
               <n-tag type="info">
-                <a
-                  href="https://status.codefair.io/status/all"
+                <NuxtLink
+                  to="https://status.codefair.io/status/all"
                   target="_blank"
                   rel="noopener"
                 >
-                  View Codefair Status
-                </a>
+                  <div class="flex items-center align-middle">
+                    <span class="mr-[.2rem]"
+                      >Monitor Codefair service status
+                    </span>
+
+                    <Icon name="ri:external-link-line" size="14" />
+                  </div>
+                </NuxtLink>
               </n-tag>
             </n-badge>
           </div>
