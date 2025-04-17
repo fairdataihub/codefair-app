@@ -43,7 +43,7 @@ breadcrumbsStore.hideBreadcrumbs();
             <span class="text-indigo-700">without breaking a sweat!</span>
           </h1>
 
-          <p class="font-onest text-gray-700 md:text-lg lg:text-xl">
+          <p class="font-onest font-medium text-gray-700 md:text-lg lg:text-xl">
             Let Codefair handle the complexities of making your research
             software FAIR, so you can focus on what matters most to you.
           </p>

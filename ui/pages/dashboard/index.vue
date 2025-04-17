@@ -48,7 +48,7 @@ if (error.value) {
         <!-- Your Account Section -->
         <h2 class="pb-4 text-xl font-semibold">Your Account</h2>
 
-        <n-card class="rounded-lg bg-white p-4 shadow-md">
+        <n-card class="rounded-lg bg-white p-2 shadow-md">
           <div class="grid grid-cols-[20%_1px_auto_200px] items-center gap-4">
             <div id="repo-avatar-and-name" class="flex items-center space-x-4">
               <!-- Adjusted Avatar Size -->
@@ -107,11 +107,11 @@ if (error.value) {
         <!-- Your Organizations Section -->
         <h2 class="pb-4 text-xl font-semibold">Your Organizations</h2>
 
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
           <n-card
             v-for="organization in data?.orgs"
             :key="organization.id"
-            class="rounded-lg bg-white p-6 shadow-md"
+            class="rounded-lg bg-white py-2 shadow-md"
           >
             <div class="flex items-start space-x-4">
               <!-- Organization Avatar -->
@@ -143,20 +143,18 @@ if (error.value) {
               </div>
             </div>
 
-            <div
-              class="mt-6 flex flex-col items-start justify-between space-y-2"
-            >
+            <div class="mt-6 flex items-center justify-between">
               <!-- Repo Count -->
-              <div class="flex flex-row justify-end">
+              <div class="flex items-center space-x-1">
                 <span class="whitespace-nowrap text-sm text-gray-500">
-                  Codefair managed repositories:&nbsp;
+                  Codefair managed repositories:
                 </span>
 
-                <span>{{ organization.repoCount }}</span>
-                <!-- <span class="text-sm font-medium text-gray-700">
-                  
-                </span> -->
+                <span class="text-sm font-medium text-gray-700">
+                  {{ organization.repoCount }}
+                </span>
               </div>
+
               <!-- Button -->
               <NuxtLink :to="`/dashboard/${organization.name}`">
                 <n-button type="primary" class="hover:shadow-lg">

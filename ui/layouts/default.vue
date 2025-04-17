@@ -69,7 +69,7 @@ const toggleMobileMenu = () => {
             target="_blank"
             class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
           >
-            <span>GitHub</span>
+            <span class="mr-[.2rem]">GitHub</span>
 
             <Icon name="ri:external-link-line" size="13" />
           </NuxtLink>
@@ -366,7 +366,7 @@ const toggleMobileMenu = () => {
 
             <!-- Year -->
             <div class="mt-2">
-              © 2024 - FAIR Data Innovations Hub. All rights reserved.
+              © 2025 - FAIR Data Innovations Hub. All rights reserved.
             </div>
           </div>
         </div>
