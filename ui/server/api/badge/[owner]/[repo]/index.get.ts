@@ -32,7 +32,6 @@ export default defineEventHandler(async (event) => {
   // Create the badge with badge-maker
   // Svg string is stored in the badge variable
   const badge = makeBadge(format);
-  console.log("Badge created");
 
   // Set the response header to indicate SVG content
   setHeader(event, "Content-Type", "image/svg+xml");
