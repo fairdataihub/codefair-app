@@ -23,7 +23,7 @@ if (error.value) {
 </script>
 
 <template>
-  <main class="h-full bg-gradient-to-b from-white to-codefair-light">
+  <main class="h-full">
     <section class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
       <n-flex vertical>
         <!-- Header Section -->
