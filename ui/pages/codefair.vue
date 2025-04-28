@@ -127,7 +127,7 @@ breadcrumbsStore.hideBreadcrumbs();
       </div>
     </section>
 
-    <!-- SECTION 2: Who should use Codefair? -->
+    <!-- SECTION 2: Who is a GitHub App? -->
     <section
       style="
         background: radial-gradient(
@@ -145,31 +145,33 @@ breadcrumbsStore.hideBreadcrumbs();
 
       <!-- Content -->
       <div
-        class="mx-auto flex max-w-screen-xl flex-col-reverse items-center gap-8 py-16 md:flex-row"
+        class="mx-auto flex max-w-screen-xl flex-col-reverse items-center gap-8 py-16 md:flex-row-reverse"
       >
         <div class="md:w-1/2">
           <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
-            Who should use Codefair?
+            What is a GitHub App?
           </h2>
 
           <p class="font-onest text-lg text-slate-800">
-            Currently, Codefair helps make software FAIR by following the FAIR
-            Biomedical Research Software (FAIR-BioRS) guidelines. However, most
-            of the steps in the FAIR-BioRS guidelines are applicable to any
-            research software, regardless of the field. This means that anyone
-            developing research software can use Codefair. Whether you are
-            developing artificial intelligence (AI)/machine learning (ML) models
-            with Python, data visualization tools with Jupyter Notebook, or data
-            analysis code with R, Codefair is here to assist you.
+            GitHub Apps are integrations you install on GitHub that act like
+            independent user's with their own, tightly controlled permissions.
+            Once added to one or more repositories (or an entire organization),
+            they listen for events (such as code pushes, pull requests or issue
+            creations) and automatically perform configured tasks. If you’ve
+            used GitHub Actions to write individual workflows (for example,
+            running tests or deploying code) in each repo, think of a GitHub App
+            as a single appliance you install once that applies those
+            automations across all your projects without needing separate
+            workflow files.
           </p>
         </div>
 
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
-            src="/assets/images/Saly-22.png"
+            src="/assets/images/Saly-15.png"
             alt="Info image"
             loading="lazy"
-            class="w-[15rem] md:w-[20rem]"
+            class="w-[10rem] md:w-[15rem]"
           />
         </div>
       </div>
@@ -192,7 +194,7 @@ breadcrumbsStore.hideBreadcrumbs();
       class="px-4 md:px-0"
     >
       <div
-        class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row"
+        class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row-reverse"
       >
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
@@ -250,6 +252,59 @@ breadcrumbsStore.hideBreadcrumbs();
       <!-- Border bottom -->
       <!-- <div
         class="mx-auto max-w-screen-xl border-b-2 border-b-slate-300 bg-transparent px-4"
+      ></div> -->
+    </section>
+
+    <!-- SECTION 3: Who should use Codefair? -->
+    <section
+      style="
+        background: radial-gradient(
+          circle at top,
+          white 0%,
+          var(--codefair-light) 90%
+        );
+      "
+      class="px-4 md:px-0"
+    >
+      <!-- Border top -->
+      <div
+        class="mx-auto max-w-screen-xl border-t-2 border-t-indigo-200 bg-transparent px-4"
+      ></div>
+
+      <!-- Content -->
+      <div
+        class="mx-auto flex max-w-screen-xl flex-col-reverse items-center gap-8 py-16 md:flex-row-reverse"
+      >
+        <div class="md:w-1/2">
+          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+            Who should use Codefair?
+          </h2>
+
+          <p class="font-onest text-lg text-slate-800">
+            Currently, Codefair helps make software FAIR by following the FAIR
+            Biomedical Research Software (FAIR-BioRS) guidelines. However, most
+            of the steps in the FAIR-BioRS guidelines are applicable to any
+            research software, regardless of the field. This means that anyone
+            developing research software can use Codefair. Whether you are
+            developing artificial intelligence (AI)/machine learning (ML) models
+            with Python, data visualization tools with Jupyter Notebook, or data
+            analysis code with R, Codefair is here to assist you.
+          </p>
+        </div>
+
+        <div class="pointer-events-none flex justify-center md:w-1/2">
+          <img
+            src="/assets/images/Saly-22.png"
+            alt="Info image"
+            loading="lazy"
+            class="w-[15rem] md:w-[20rem]"
+          />
+        </div>
+      </div>
+
+      <!-- Border bottom -->
+      <!-- <div
+        class="mx-auto max-w-screen-xl border-b-2 border-b-indigo-200 bg-transparent px-4"
       ></div> -->
     </section>
   </main>
