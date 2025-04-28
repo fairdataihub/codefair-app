@@ -52,39 +52,87 @@ const toggleMobileMenu = () => {
         <nav class="hidden items-center gap-8 lg:flex">
           <NuxtLink
             to="/codefair"
-            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+            class="relative inline-block text-lg font-bold text-gray-600 transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:rounded-lg after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
           >
             About
           </NuxtLink>
 
           <NuxtLink
             to="/fairsoftware"
-            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+            class="relative inline-block text-lg font-bold text-gray-600 transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
           >
             FAIR Software
           </NuxtLink>
 
           <NuxtLink
-            to="https://github.com/fairdataihub/codefair-app"
-            target="_blank"
-            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-          >
-            <span class="mr-[.2rem]">GitHub</span>
-
-            <Icon name="ri:external-link-line" size="13" />
-          </NuxtLink>
-
-          <NuxtLink
             v-if="user?.username"
             to="/dashboard"
-            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+            class="relative inline-block text-lg font-bold text-gray-600 transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
           >
             Dashboard
           </NuxtLink>
 
-          <div>
-            <ProfileStatus />
-          </div>
+          <ProfileStatus />
+
+          <n-flex justify="center" gap="4" class="-ml-4">
+            <NuxtLink
+              to="https://docs.codefair.io/"
+              target="_blank"
+              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+            >
+              <n-popover trigger="hover" placement="top" :show-arrow="false">
+                <template #trigger>
+                  <Icon name="solar:documents-bold" size="22" />
+                </template>
+
+                <template #default>
+                  <div class="w-48 text-center">
+                    <p class="text-sm font-semibold text-indigo-900">
+                      Documentation
+                    </p>
+
+                    <p class="text-xs text-gray-500">
+                      Explore the documentation for Codefair.
+                      <Icon
+                        name="mdi:emoji-robot-happy"
+                        size="14"
+                        class="text-indigo-500"
+                      />
+                    </p>
+                  </div>
+                </template>
+              </n-popover>
+            </NuxtLink>
+
+            <NuxtLink
+              to="https://github.com/fairdataihub/codefair-app"
+              target="_blank"
+              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+            >
+              <n-popover trigger="hover" placement="top" :show-arrow="false">
+                <template #trigger>
+                  <Icon name="ri:github-fill" size="22" />
+                </template>
+
+                <template #default>
+                  <div class="w-48 text-center">
+                    <p class="text-sm font-semibold text-indigo-900">
+                      GitHub Repository
+                    </p>
+
+                    <p class="text-xs text-gray-500">
+                      View the source code and contribute to the project!
+                      <Icon
+                        name="mdi:emoji-robot-happy"
+                        size="14"
+                        class="text-indigo-500"
+                      />
+                    </p>
+                  </div>
+                </template>
+              </n-popover>
+            </NuxtLink>
+          </n-flex>
         </nav>
 
         <button
