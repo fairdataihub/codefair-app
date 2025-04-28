@@ -48,15 +48,27 @@ breadcrumbsStore.hideBreadcrumbs();
             software FAIR, so you can focus on what matters most to you.
           </p>
 
-          <div class="pointer-events-auto mt-8">
+          <n-flex
+            justify="between"
+            class="align-center pointer-events-auto mt-8 justify-center md:justify-start"
+          >
             <NuxtLink
               to="https://github.com/marketplace/codefair-app"
               target="_blank"
-              class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-base font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-lg"
+              class="inline-block rounded-lg bg-indigo-500 px-6 py-3 text-base font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-lg"
             >
               Get Codefair ->
             </NuxtLink>
-          </div>
+
+            <NuxtLink
+              to="https://docs.codefair.io/"
+              target="_blank"
+              class="inline-block rounded-lg bg-indigo-500 px-6 py-3 text-base font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-lg"
+            >
+              Read the Documentation
+              <Icon name="solar:documents-bold" size="18" />
+            </NuxtLink>
+          </n-flex>
         </div>
         <!-- Hero images -->
         <div
@@ -125,15 +137,31 @@ breadcrumbsStore.hideBreadcrumbs();
             with R, Codefair is here to assist you.
           </p>
 
-          <div class="mt-6">
+          <n-flex justify="between" class="mt-6">
             <NuxtLink
               to="https://github.com/fairdataihub/codefair-app"
               target="_blank"
-              class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-block rounded-lg bg-indigo-500 px-6 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
             >
-              View the source code ->
+              <n-flex justify="between" align="center">
+                <span>View the source code</span>
+
+                <Icon
+                  name="fluent:code-block-edit-24-filled"
+                  size="18"
+                  class="-ml-1"
+                />
+              </n-flex>
             </NuxtLink>
-          </div>
+
+            <NuxtLink
+              to="codefair"
+              target="_blank"
+              class="inline-block rounded-lg bg-indigo-500 px-6 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+            >
+              Learn more about Codefair ->
+            </NuxtLink>
+          </n-flex>
         </div>
       </div>
 
@@ -240,16 +268,6 @@ breadcrumbsStore.hideBreadcrumbs();
               >Zenodo</NuxtLink
             >, and much more to align with FAIR4RS principles.
           </p>
-
-          <div class="mt-6">
-            <NuxtLink
-              to="codefair"
-              target="_blank"
-              class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
-            >
-              Learn more about Codefair ->
-            </NuxtLink>
-          </div>
         </div>
       </div>
 
@@ -291,9 +309,13 @@ breadcrumbsStore.hideBreadcrumbs();
             <NuxtLink
               to="https://fairdataihub.org/"
               target="_blank"
-              class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-block rounded-lg bg-indigo-500 px-6 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
             >
-              Learn more about us ->
+              <n-flex justify="between" align="center">
+                <span>Learn more about us</span>
+
+                <Icon name="ri:team-fill" size="16" />
+              </n-flex>
             </NuxtLink>
           </div>
         </div>
@@ -349,19 +371,6 @@ breadcrumbsStore.hideBreadcrumbs();
                   <Icon name="fa:github" size="16" />
 
                   <span>Open a GitHub issue</span>
-                </NuxtLink>
-
-                <NuxtLink
-                  to="https://docs.codefair.io/"
-                  target="_blank"
-                  class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700"
-                >
-                  <span>Read the Documentation</span>
-
-                  <Icon
-                    name="material-symbols:arrow-forward-rounded"
-                    size="16"
-                  />
                 </NuxtLink>
               </div>
             </n-flex>
