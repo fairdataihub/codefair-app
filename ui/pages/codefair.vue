@@ -58,7 +58,7 @@ breadcrumbsStore.hideBreadcrumbs();
       </div>
     </section>
 
-    <!-- SECTION 1: How Codefair Works -->
+    <!-- SECTION 1: What is Codefair? -->
     <section
       style="
         background: radial-gradient(
@@ -72,7 +72,7 @@ breadcrumbsStore.hideBreadcrumbs();
       <!-- Content -->
       <div class="z-10 mx-auto max-w-screen-xl py-12 text-center">
         <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
-          How Codefair Works
+          What is Codefair?
         </h2>
 
         <p class="text-justify font-onest text-lg text-slate-800">
@@ -182,7 +182,7 @@ breadcrumbsStore.hideBreadcrumbs();
       ></div>
     </section>
 
-    <!-- SECTION 3: How is Codefair developed? -->
+    <!-- SECTION 3: How Codefair works? -->
     <section
       style="
         background: radial-gradient(
@@ -195,6 +195,57 @@ breadcrumbsStore.hideBreadcrumbs();
     >
       <div
         class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row-reverse"
+      >
+        <div class="pointer-events-none flex justify-center md:w-1/2">
+          <img
+            src="/assets/images/Saly-40.png"
+            alt="Info image"
+            loading="lazy"
+            class="w-[15rem] md:w-[14rem]"
+          />
+        </div>
+
+        <div class="md:w-1/2">
+          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+            How Codefair works
+          </h2>
+
+          <p class="font-onest text-lg text-slate-800">
+            Codefair gets you up and running in seconds and creates a
+            “Dashboard” issue in each repo you connect. From that moment on, it
+            quietly provides feedback on the FAIR Compliance status of your
+            repository through GitHub Issues. Behind the scenes, Codefair
+            monitors your repositories for changes and allows you know
+            create/update your metadata files easily through our web interface.
+            If you'd rather not dig through GitHub, our web dashboard shows the
+            FAIR Compliance of all your projects at a glance and when you're
+            ready to release, Codefair walks you creating a release while also
+            depositing into Zenodo. We handle Zenodo metadata, archiving, and
+            giving your research a FAIR release so you can stay focused on your
+            science.
+          </p>
+        </div>
+      </div>
+
+      <!-- Border bottom -->
+      <div
+        class="mx-auto max-w-screen-xl border-b-2 border-b-indigo-200 bg-transparent px-4"
+      ></div>
+    </section>
+
+    <!-- SECTION 4: How is Codefair developed? -->
+    <section
+      style="
+        background: radial-gradient(
+          circle at bottom,
+          white 0%,
+          var(--codefair-light) 90%
+        );
+      "
+      class="px-4 md:px-0"
+    >
+      <div
+        class="mx-auto flex max-w-screen-xl flex-col items-center gap-8 py-16 md:flex-row"
       >
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
@@ -255,7 +306,7 @@ breadcrumbsStore.hideBreadcrumbs();
       ></div> -->
     </section>
 
-    <!-- SECTION 3: Who should use Codefair? -->
+    <!-- SECTION 5: Who should use Codefair? -->
     <section
       style="
         background: radial-gradient(
@@ -273,7 +324,7 @@ breadcrumbsStore.hideBreadcrumbs();
 
       <!-- Content -->
       <div
-        class="mx-auto flex max-w-screen-xl flex-col-reverse items-center gap-8 py-16 md:flex-row-reverse"
+        class="mx-auto flex max-w-screen-xl flex-col-reverse items-center gap-8 py-16 md:flex-row"
       >
         <div class="md:w-1/2">
           <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
