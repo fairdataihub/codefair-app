@@ -24,6 +24,21 @@ yarn dev
 bun run dev
 ```
 
+## Database
+
+The api uses a postgres database. You can create one of these locally via docker:
+
+```bash
+docker-compose -f ./dev-docker-compose.yaml up
+docker-compose -f ./dev-docker-compose.yaml up -d # if you want the db to run in the background
+```
+
+Close the database with:
+
+```bash
+docker-compose -f ./dev-docker-compose.yaml down -v
+```
+
 ## Production
 
 Build the application for production:
