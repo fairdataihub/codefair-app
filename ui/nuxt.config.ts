@@ -52,6 +52,8 @@ export default defineNuxtConfig({
     storageKey: "nuxt-color-mode",
   },
 
+  compatibilityDate: "2024-09-24",
+
   css: [
     "@/assets/css/tailwind.css",
     "md-editor-v3/lib/style.css",
@@ -62,7 +64,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   modules: [
-    "@nuxtjs/tailwindcss",
+    "motion-v/nuxt",
     "notivue/nuxt",
     "@nuxtjs/color-mode",
     "@pinia/nuxt",
@@ -85,6 +87,19 @@ export default defineNuxtConfig({
       global: {},
     },
     position: "bottom-right",
+  },
+
+  postcss: {
+    plugins: {
+      autoprefixer: {},
+      tailwindcss: {}, // https://tailwindcss.nuxtjs.org/postcss
+    },
+  },
+
+  runtimeConfig: {
+    public: {
+      codefairDomain: process.env.CODEFAIR_APP_DOMAIN,
+    },
   },
 
   vite: {
@@ -115,6 +130,4 @@ export default defineNuxtConfig({
       },
     },
   },
-
-  compatibilityDate: "2024-09-24",
 });

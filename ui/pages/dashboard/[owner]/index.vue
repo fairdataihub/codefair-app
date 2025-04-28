@@ -44,7 +44,15 @@ if (error.value) {
 }
 
 const filteredRepos = computed(() => {
-  return data.value ? data.value.installations.filter((repo) => repo.action_count === 0) : [];
+  return data.value
+    ? data.value.installations
+        .filter((repo) => repo.action_count === 0)
+        .sort(
+          (a, b) =>
+            new Date(b.latestCommitDate).getTime() -
+            new Date(a.latestCommitDate).getTime(),
+        )
+    : [];
 });
 
 const settingsOptions = [
@@ -59,16 +67,16 @@ const settingsOptions = [
     label: "View Codefair settings",
   },
   {
+    icon: renderIcon("mdi:help-circle-outline"),
     key: "need-help-link",
     label: "Need help?",
-    icon: renderIcon("mdi:help-circle-outline"),
   },
 ];
 
 const handleSettingsSelect = (key: string) => {
   switch (key) {
     case "view-org":
-      navigateTo(`https://github.com/${owner}`, {open: {target: "_blank"}});
+      navigateTo(`https://github.com/${owner}`, { open: { target: "_blank" } });
       break;
     case "view-codefair-settings":
       if (data.value?.isOrganization) {
@@ -92,7 +100,10 @@ const handleSettingsSelect = (key: string) => {
       }
       break;
     case "need-help-link":
-      navigateTo("https://docs.codefair.io/docs/ui-dashboard.html", {open: {target: "_blank"}});
+      navigateTo("https://docs.codefair.io/docs/ui-dashboard.html", {
+        open: { target: "_blank" },
+      });
+      break;
     default:
       console.log("Unknown action");
   }
@@ -100,114 +111,118 @@ const handleSettingsSelect = (key: string) => {
 </script>
 
 <template>
-<main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
-  <n-flex vertical>
-    <!-- Header Section -->
-    <div class="flex flex-row items-center justify-between">
-      <h1 class="text-2xl font-bold">Apps being managed by Codefair</h1>
-
-      <div class="flex flex-row items-center gap-4">
-        <n-dropdown
-          :options="settingsOptions"
-          placement="bottom-end"
-          :show-arrow="true"
-          @select="handleSettingsSelect"
-        >
-          <n-button type="info" secondary size="large">
-            <template #icon>
-              <Icon name="ic:round-settings" size="16" />
-            </template>
-            Settings
-          </n-button>
-        </n-dropdown>
-      </div>
-    </div>
-
-    <p class="mt-4 text-base text-gray-600">
-      Some repositories may not appear here if they have not had any actions
-      performed on their main branch yet. Once a couple of actions have been
-      processed, the repositories will appear in the list.
-    </p>
-
-    <n-divider class="my-6" />
-
-    <!-- Repositories Section -->
+  <main class="mx-auto max-w-screen-xl px-8 pb-8 pt-4">
     <n-flex vertical>
-      <n-card
-        v-for="repo in filteredRepos"
-        :key="repo.repositoryId"
-        class="bg-gray-50 shadow-md rounded-md p-4 hover:shadow-lg transition-all mb-2"
-      >
-        <div class="grid grid-cols-[3rem_auto_5px_40rem_150px] items-center gap-4">
-          <!-- Repository Avatar -->
-          <n-avatar
-            size="medium"
-            :src="`https://api.dicebear.com/9.x/identicon/svg?seed=${repo.repositoryId}&backgroundColor=ffffff&bacgroundType=gradientLinear`"
-            class="w-12 h-12"
-          />
+      <!-- Header Section -->
+      <div class="flex flex-row items-center justify-between">
+        <h1 class="text-2xl font-bold">Apps being managed by Codefair</h1>
 
-          <!-- Repository Name and Link -->
-          <div class="flex flex-col">
-            <span
-              class="text-gray-700 text-base"
-            >
-              {{ repo.repo }}
-          </span>
-
-            <NuxtLink
-              :to="`https://github.com/${owner}/${repo.repo}`"
-              target="_blank"
-              class="text-sm text-gray-500 truncate transition-all hover:text-blue-600 hover:underline"
-            >
-              <Icon name="ri:external-link-line" size="12" />
-              {{ owner }}/{{ repo.repo }}
-            </NuxtLink>
-          </div>
-
-          <!-- Vertical Divider -->
-          <div class="h-[70%] bg-gray-200 w-[1px]"></div>
-
-          <!-- Commit Information -->
-          <div class="flex flex-col max-w-[40rem]">
-            <NuxtLink
-              :to="repo?.latestCommitUrl"
-              target="_blank"
-              class="truncate text-base text-slate-600 transition-all hover:text-blue-600"
-            >
-              {{ repo?.latestCommitMessage }}
-            </NuxtLink>
-            <NuxtLink
-              v-if="repo?.latestCommitSha"
-              :to="repo?.latestCommitUrl"
-              target="_blank"
-              class="flex items-center gap-1 text-sm text-gray-400 transition-all hover:text-blue-600 hover:underline"
-            >
-              <Icon name="ri:git-commit-line" size="12" />
-              {{ repo.latestCommitSha?.substring(0, 7) }}
-            </NuxtLink>
-          </div>
-
-          <!-- Manage Button -->
-          <div class="flex justify-end">
-            <NuxtLink :to="`/dashboard/${owner}/${repo.repo}`">
-              <n-button size="medium" type="primary" class="hover:shadow-md">
-                <template #icon>
-                  <Icon name="ri:settings-4-fill" />
-                </template>
-                Manage
-              </n-button>
-            </NuxtLink>
-          </div>
+        <div class="flex flex-row items-center gap-4">
+          <n-dropdown
+            :options="settingsOptions"
+            placement="bottom-end"
+            :show-arrow="true"
+            @select="handleSettingsSelect"
+          >
+            <n-button type="info" secondary size="large">
+              <template #icon>
+                <Icon name="ic:round-settings" size="16" />
+              </template>
+              Settings
+            </n-button>
+          </n-dropdown>
         </div>
-      </n-card>
+      </div>
 
-      <!-- Empty State -->
-      <n-empty
-        v-if="filteredRepos.length === 0"
-        class="mt-4"
-        description="Codefair is not enabled on any repositories yet."
-      />
+      <p class="text-base text-gray-600">
+        Some repositories may not appear here if they have not had any actions
+        performed on their main branch yet. Once a couple of actions have been
+        processed, the repositories will appear in the list.
+      </p>
+
+      <LayoutSectionDivider class="my-4" />
+
+      <!-- Repositories Section -->
+      <n-flex vertical>
+        <n-card
+          v-for="repo in filteredRepos"
+          :key="repo.repositoryId"
+          class="mb-2 rounded-md bg-white p-4 shadow-md"
+        >
+          <div
+            class="grid grid-cols-[3rem_auto_5px_40rem_150px] items-center gap-4"
+          >
+            <!-- Repository Avatar -->
+            <n-avatar
+              size="medium"
+              :src="`https://api.dicebear.com/9.x/identicon/svg?seed=${repo.repositoryId}&backgroundColor=ffffff&bacgroundType=gradientLinear`"
+              class="h-12 w-12"
+            />
+
+            <!-- Repository Name and Link -->
+            <div class="flex max-w-[14rem] flex-col">
+              <span class="text-base text-gray-700">
+                {{ repo.repo }}
+              </span>
+
+              <NuxtLink
+                :to="`https://github.com/${owner}/${repo.repo}`"
+                target="_blank"
+                class="truncate text-sm text-gray-500 transition-all hover:text-blue-600 hover:underline"
+              >
+                <Icon name="ri:external-link-line" size="12" />
+                {{ owner }}/{{ repo.repo }}
+              </NuxtLink>
+            </div>
+
+            <!-- Vertical Divider -->
+            <div class="h-[70%] w-[1px] bg-gray-200"></div>
+
+            <!-- Commit Information -->
+            <div class="flex max-w-[40rem] flex-col">
+              <NuxtLink
+                :to="repo?.latestCommitUrl"
+                target="_blank"
+                class="truncate text-base text-slate-600 transition-all hover:text-blue-600"
+              >
+                {{
+                  repo?.latestCommitMessage ||
+                  "Waiting for activity on repository..."
+                }}
+              </NuxtLink>
+
+              <NuxtLink
+                v-if="repo?.latestCommitSha"
+                :to="repo?.latestCommitUrl"
+                target="_blank"
+                class="flex items-center gap-1 text-sm text-gray-400 transition-all hover:text-blue-600 hover:underline"
+              >
+                <Icon name="ri:git-commit-line" size="12" />
+                {{ repo.latestCommitSha?.substring(0, 7) }}
+              </NuxtLink>
+            </div>
+
+            <!-- Manage Button -->
+            <div class="flex justify-end">
+              <NuxtLink :to="`/dashboard/${owner}/${repo.repo}`">
+                <n-button size="medium" type="primary" class="hover:shadow-md">
+                  <template #icon>
+                    <Icon name="ri:settings-4-fill" />
+                  </template>
+                  Manage
+                </n-button>
+              </NuxtLink>
+            </div>
+          </div>
+        </n-card>
+
+        <!-- Empty State -->
+        <n-empty
+          v-if="filteredRepos.length === 0"
+          class="mt-4"
+          description="Codefair is not enabled on any repositories yet."
+        />
+      </n-flex>
     </n-flex>
-  </n-flex>
-</main>
+  </main>
 </template>

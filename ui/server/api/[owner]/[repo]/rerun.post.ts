@@ -21,8 +21,8 @@ export default defineEventHandler(async (event) => {
 
   if (!parsedBody.success) {
     throw createError({
-      statusMessage: "The provided parameters are invalid",
       statusCode: 400,
+      statusMessage: "The provided parameters are invalid",
     });
   }
 
@@ -58,6 +58,10 @@ export default defineEventHandler(async (event) => {
 
   // Check if the user is authorized to access the repo to request the validation
   await repoWritePermissions(event, owner, repo);
+
+  if (!process.env.GH_APP_PRIVATE_KEY) {
+    throw new Error("GH_APP_PRIVATE_KEY is not defined.");
+  }
 
   // Create an octokit app instance
   const app = new App({

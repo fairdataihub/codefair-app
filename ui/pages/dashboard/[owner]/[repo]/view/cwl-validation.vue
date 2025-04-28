@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import dayjs from "dayjs";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 definePageMeta({
@@ -88,11 +89,10 @@ if (error.value) {
           </n-alert>
 
           <p class="pt-2 text-sm">
-            This file was last validated on
             <time>{{
-              $dayjs
-                .unix(parseInt(file.last_validated.toString()) / 1000)
-                .format("MMMM DD, YYYY [at] hh:mmA")
+              dayjs(parseInt(file.last_validated.toString()) * 1000).format(
+                "MMMM DD, YYYY [at] hh:mmA",
+              )
             }}</time>
           </p>
 

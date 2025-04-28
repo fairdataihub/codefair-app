@@ -24,14 +24,14 @@ export default defineEventHandler(async (event) => {
 
   return {
     citationStatus: codeMetadataRequest.citation_status || "invalid",
+    citationValidationMessage:
+      codeMetadataRequest.citation_validation_message || "",
     codemetaStatus: codeMetadataRequest.codemeta_status || "invalid",
+    codemetaValidationMessage:
+      codeMetadataRequest.codemeta_validation_message || "",
     containsCitation: codeMetadataRequest.contains_citation || false,
     containsCodemeta: codeMetadataRequest.contains_codemeta || false,
     containsMetadata: codeMetadataRequest.contains_metadata || false,
-    citationValidationMessage:
-      codeMetadataRequest.citation_validation_message || "",
-    codemetaValidationMessage:
-      codeMetadataRequest.codemeta_validation_message || "",
     identifier: codeMetadataRequest.identifier || "",
     timestamp: codeMetadataRequest.updated_at || null,
   };

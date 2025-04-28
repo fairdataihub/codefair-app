@@ -5,6 +5,28 @@ All notable changes the Codefair App will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v3.4.0] - TBD
+
+### Added
+
+- Feature to provide users with a Zenodo badge that links to the Zenodo archive of their repository.
+- Added a new button to retrieve the badge formats of the last Zenodo release.
+- Add a new endpoint to retrieve the user's GitHub token for use in the profile dropdown.
+- Abstracted FAIR compliance checks into one call to allow plugability of different checks.
+- Abstracted commit details workflow into one call.
+- UI redesign
+
+### Removed
+
+- Bread crumb in /dashboard page.
+
+### Fixed
+
+- Configure redirect URL for Zenodo OAuth to try and prevent blank page after successful login. Better error handling for Zenodo OAuth when redirect URL is not successful.
+- Full Codefair run will trigger after action state is set to 0.
+- Fixed the re-validate option bug: previously, a single variable was incorrectly used to load both re-validation modals. This change introduces distinct variables for each modal.
+- Existing Zenodo drafts are now correctly calling different endpoints compared to new drafts.
+
 ## v3.3.0 - TBD
 
 ### Added

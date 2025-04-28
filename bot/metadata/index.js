@@ -275,7 +275,7 @@ export async function gatherMetadata(context, owner, repo) {
     context,
     owner,
     repo.name,
-    "citation",
+    "citation"
   );
   let url;
   if (repoData.data.homepage != null) {
@@ -412,18 +412,15 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
 
       logwatch.start("Sending content to metadata validator");
       try {
-        const response = await fetch(
-          `${VALIDATOR_URL}/validate-codemeta`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              file_content: loaded_file,
-            }),
+        const response = await fetch(`${VALIDATOR_URL}/validate-codemeta`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        );
+          body: JSON.stringify({
+            file_content: loaded_file,
+          }),
+        });
 
         if (!response.ok) {
           const data = await response.json();
@@ -433,15 +430,12 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
               error: data,
               file: "codemeta.json",
             },
-            true,
+            true
           );
-          throw new Error(
-            "Error validating the codemeta.json file",
-            data,
-          );
+          throw new Error("Error validating the codemeta.json file", data);
         }
         const data = await response.json();
-        logwatch.info({message: "Codemeta validation response", data}, true);
+        logwatch.info({ message: "Codemeta validation response", data }, true);
 
         let validationMessage = `The codemeta.json file is valid according to the ${data.version} codemeta.json schema.`;
         if (data.message !== "valid") {
@@ -492,18 +486,15 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
       }
 
       try {
-        const response = await fetch(
-          `${VALIDATOR_URL}/validate-citation`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              file_path: metadataInfo.file_path,
-            }),
+        const response = await fetch(`${VALIDATOR_URL}/validate-citation`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        );
+          body: JSON.stringify({
+            file_path: metadataInfo.file_path,
+          }),
+        });
 
         if (!response.ok) {
           throw new Error("Error validating the CITATION.cff file", response);
@@ -511,7 +502,7 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
 
         const data = await response.json();
 
-        logwatch.info({message: "Citation validation response", data}, true);
+        logwatch.info({ message: "Citation validation response", data }, true);
         let validationMessage = "";
         if (data.message === "valid") {
           validationMessage = data.output;
@@ -531,7 +522,10 @@ export async function validateMetadata(metadataInfo, fileType, repository) {
 
         return data.message === "valid";
       } catch (error) {
-        logwatch.error({message: "Error validating the CITATION.cff file", error}, true);
+        logwatch.error(
+          { message: "Error validating the CITATION.cff file", error },
+          true
+        );
         return false;
       }
     } catch (error) {
@@ -554,7 +548,7 @@ export async function updateMetadataIdentifier(
   owner,
   repository,
   identifier,
-  version,
+  version
 ) {
   try {
     // Get the citation file
@@ -576,15 +570,17 @@ export async function updateMetadataIdentifier(
 
     if (!zenodoMetadata) {
       throw new Error(
-        "Zenodo metadata not found in the database. Please create a new Zenodo deposition.",
+        "Zenodo metadata not found in the database. Please create a new Zenodo deposition."
       );
     }
 
+    // console.log("Zenodo metadata", zenodoMetadata);
+
     citationFile.doi = identifier;
     citationFile["date-released"] = updated_date;
-    citationFile.version = zenodoMetadata?.zenodo_metadata?.version || version;
+    citationFile.version = zenodoMetadata?.zenodo_metadata?.version;
     codeMetaFile.identifier = identifier;
-    codeMetaFile.version = zenodoMetadata?.zenodo_metadata?.version || version;
+    codeMetaFile.version = zenodoMetadata.zenodo_metadata?.version;
     codeMetaFile.dateModified = updated_date;
 
     const response = await dbInstance.licenseRequest.findUnique({
@@ -607,7 +603,7 @@ export async function updateMetadataIdentifier(
       path: "CITATION.cff",
       message: "chore: 📝 Update CITATION.cff with Zenodo identifier",
       content: Buffer.from(
-        yaml.dump(citationFile, { noRefs: true, indent: 2 }),
+        yaml.dump(citationFile, { noRefs: true, indent: 2 })
       ).toString("base64"),
       sha: citationSha,
     });
@@ -621,7 +617,7 @@ export async function updateMetadataIdentifier(
       path: "codemeta.json",
       message: "chore: 📝 Update codemeta.json with Zenodo identifier",
       content: Buffer.from(JSON.stringify(codeMetaFile, null, 2)).toString(
-        "base64",
+        "base64"
       ),
       sha: codeMetaSha,
     });
@@ -642,7 +638,7 @@ export async function updateMetadataIdentifier(
     // Update the codemetadata content with the new Zenodo identifier
     existingCodemeta.metadata.uniqueIdentifier = identifier;
     existingCodemeta.metadata.currentVersion =
-      zenodoMetadata?.zenodo_metadata?.version || version;
+      zenodoMetadata.zenodo_metadata?.version || version;
 
     // Update the database with the latest metadata
     await dbInstance.codeMetadata.update({
@@ -756,12 +752,15 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
     try {
       codemetaContent = JSON.parse(codemeta.content.trim());
     } catch (error) {
-      logwatch.error({message: "Error parsing codemeta content", error}, true);
+      logwatch.error(
+        { message: "Error parsing codemeta content", error },
+        true
+      );
       return;
     }
     const convertedCodemeta = await convertCodemetaForDB(
       codemetaContent,
-      repository,
+      repository
     );
 
     metadata.name = convertedCodemeta.name || metadata.name || "";
@@ -834,7 +833,7 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
           const foundAuthor = metadata.authors.find(
             (existingAuthor) =>
               existingAuthor?.familyName === author?.familyName &&
-              existingAuthor?.givenName === author?.givenName,
+              existingAuthor?.givenName === author?.givenName
           );
 
           if (foundAuthor) {
@@ -849,8 +848,8 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
                   !foundAuthor.roles.some(
                     (existingRole) =>
                       existingRole.role === newRole.role &&
-                      existingRole.startDate === newRole.startDate,
-                  ),
+                      existingRole.startDate === newRole.startDate
+                  )
               ),
             ];
 
@@ -875,8 +874,8 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
             !convertedCodemeta.authors.some(
               (author) =>
                 author.familyName === existingAuthor.familyName &&
-                author.givenName === existingAuthor.givenName,
-            ),
+                author.givenName === existingAuthor.givenName
+            )
         );
 
         metadata.authors = [...nonUpdatedAuthors, ...updatedAuthors];
@@ -891,7 +890,7 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
             const foundContributor = metadata.contributors.find(
               (existingContributor) =>
                 existingContributor?.familyName === contributor?.familyName &&
-                existingContributor?.givenName === contributor?.givenName,
+                existingContributor?.givenName === contributor?.givenName
             );
 
             if (foundContributor) {
@@ -906,8 +905,8 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
                     !foundContributor.roles.some(
                       (existingRole) =>
                         existingRole.role === newRole.role &&
-                        existingRole.startDate === newRole.startDate,
-                    ),
+                        existingRole.startDate === newRole.startDate
+                    )
                 ),
               ];
 
@@ -925,7 +924,7 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
 
             // If no match, return the current contributor from convertedCodemeta
             return contributor;
-          },
+          }
         );
 
         // Merge updated contributors with any contributors in metadata not present in convertedCodemeta
@@ -934,8 +933,8 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
             !convertedCodemeta.contributors.some(
               (contributor) =>
                 contributor.familyName === existingContributor.familyName &&
-                contributor.givenName === existingContributor.givenName,
-            ),
+                contributor.givenName === existingContributor.givenName
+            )
         );
 
         metadata.contributors = [
@@ -950,7 +949,10 @@ export async function applyCodemetaMetadata(codemeta, metadata, repository) {
 
     return metadata;
   } catch (error) {
-    logwatch.error({message: "Error applying codemeta metadata", error}, true);
+    logwatch.error(
+      { message: "Error applying codemeta metadata", error },
+      true
+    );
     throw new Error("Error applying codemeta metadata", { cause: error });
   }
 }
@@ -960,7 +962,7 @@ export async function applyCitationMetadata(citation, metadata, repository) {
   const citationContent = yaml.load(citation.content);
   const convertedCitation = await convertCitationForDB(
     citationContent,
-    repository,
+    repository
   );
 
   metadata.license = convertedCitation.license || metadata.license || null;
@@ -986,7 +988,7 @@ export async function applyCitationMetadata(citation, metadata, repository) {
         const foundAuthor = metadata.authors.find(
           (existingAuthor) =>
             existingAuthor.familyName === author.familyName &&
-            existingAuthor.givenName === author.givenName,
+            existingAuthor.givenName === author.givenName
         );
 
         if (foundAuthor) {
@@ -1031,7 +1033,7 @@ export async function applyMetadataTemplate(
   baseTemplate,
   repository,
   owner,
-  context,
+  context
 ) {
   try {
     const githubAction = context.payload?.pusher?.name;
@@ -1059,7 +1061,9 @@ export async function applyMetadataTemplate(
 
     if (githubAction && githubAction !== `${GH_APP_NAME}[bot]`) {
       // Push event was made, only update the metadata if the pusher updated the codemeta.json or citation.cff
-      logwatch.info("Push event detected, checking for metadata or license changes...");
+      logwatch.info(
+        "Push event detected, checking for metadata or license changes..."
+      );
       const updatedFiles = context.payload.head_commit.modified;
       const addedFiles = context.payload.head_commit.added;
       revalidate = false;
@@ -1106,7 +1110,7 @@ export async function applyMetadataTemplate(
         validCodemeta = await validateMetadata(
           codemeta,
           "codemeta",
-          repository,
+          repository
         );
         metadata = await applyCodemetaMetadata(codemeta, metadata, repository);
       }
@@ -1117,7 +1121,7 @@ export async function applyMetadataTemplate(
         validCitation = await validateMetadata(
           citation,
           "citation",
-          repository,
+          repository
         );
         metadata = await applyCitationMetadata(citation, metadata, repository);
       }
@@ -1168,7 +1172,10 @@ export async function applyMetadataTemplate(
     return baseTemplate;
   } catch (error) {
     if (error.cause) {
-      logwatch.error({message: "Error applying metadata template", error: error.cause}, true);
+      logwatch.error(
+        { message: "Error applying metadata template", error: error.cause },
+        true
+      );
     }
     throw new Error("Error applying metadata template", { cause: error });
   }

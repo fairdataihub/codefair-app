@@ -1,10 +1,10 @@
+postgres-data/
 node_modules
 npm-debug.log
 *.pem
 !mock-cert.pem
 .env
 coverage
-lib
 bot/node_modules
 public/assets/css/styles.css
 .DS_Store

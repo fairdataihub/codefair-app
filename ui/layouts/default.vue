@@ -25,7 +25,7 @@ const toggleMobileMenu = () => {
 
 <template>
   <div
-    class="relative mx-auto flex h-full min-h-screen w-full flex-col bg-slate-50"
+    class="relative mx-auto flex h-full min-h-screen w-full flex-col bg-white"
     :class="{ 'debug-screens': devMode }"
   >
     <!-- <div
@@ -52,39 +52,87 @@ const toggleMobileMenu = () => {
         <nav class="hidden items-center gap-8 lg:flex">
           <NuxtLink
             to="/codefair"
-            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+            class="relative inline-block text-lg font-bold text-gray-600 transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:rounded-lg after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
           >
             About
           </NuxtLink>
 
           <NuxtLink
             to="/fairsoftware"
-            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+            class="relative inline-block text-lg font-bold text-gray-600 transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
           >
             FAIR Software
           </NuxtLink>
 
           <NuxtLink
-            to="https://github.com/fairdataihub/codefair-app"
-            target="_blank"
-            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-          >
-          <span>GitHub</span>
-          <Icon name="ri:external-link-line" size="13" />
-            
-          </NuxtLink>
-
-          <NuxtLink
             v-if="user?.username"
             to="/dashboard"
-            class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+            class="relative inline-block text-lg font-bold text-gray-600 transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
           >
             Dashboard
           </NuxtLink>
 
-          <div>
-            <ProfileStatus />
-          </div>
+          <ProfileStatus />
+
+          <n-flex justify="center" gap="4" class="-ml-4">
+            <NuxtLink
+              to="https://docs.codefair.io/"
+              target="_blank"
+              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+            >
+              <n-popover trigger="hover" placement="top" :show-arrow="false">
+                <template #trigger>
+                  <Icon name="solar:documents-bold" size="22" />
+                </template>
+
+                <template #default>
+                  <div class="w-48 text-center">
+                    <p class="text-sm font-semibold text-indigo-900">
+                      Documentation
+                    </p>
+
+                    <p class="text-xs text-gray-500">
+                      Explore the documentation for Codefair.
+                      <Icon
+                        name="mdi:emoji-robot-happy"
+                        size="14"
+                        class="text-indigo-500"
+                      />
+                    </p>
+                  </div>
+                </template>
+              </n-popover>
+            </NuxtLink>
+
+            <NuxtLink
+              to="https://github.com/fairdataihub/codefair-app"
+              target="_blank"
+              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+            >
+              <n-popover trigger="hover" placement="top" :show-arrow="false">
+                <template #trigger>
+                  <Icon name="ri:github-fill" size="22" />
+                </template>
+
+                <template #default>
+                  <div class="w-48 text-center">
+                    <p class="text-sm font-semibold text-indigo-900">
+                      GitHub Repository
+                    </p>
+
+                    <p class="text-xs text-gray-500">
+                      View the source code and contribute to the project!
+                      <Icon
+                        name="mdi:emoji-robot-happy"
+                        size="14"
+                        class="text-indigo-500"
+                      />
+                    </p>
+                  </div>
+                </template>
+              </n-popover>
+            </NuxtLink>
+          </n-flex>
         </nav>
 
         <button
@@ -194,7 +242,9 @@ const toggleMobileMenu = () => {
       </div>
     </div> -->
 
-    <div class="relative z-10 grow">
+    <div
+      class="relative z-10 grow bg-gradient-to-b from-white to-codefair-light"
+    >
       <div class="mx-auto max-w-screen-xl px-8">
         <ClientOnly>
           <template #fallback>
@@ -252,88 +302,122 @@ const toggleMobileMenu = () => {
       <slot />
     </div>
 
-    <footer class="mx-auto max-w-screen-xl border-t px-5 pt-3">
+    <footer
+      style="
+        background: radial-gradient(
+          circle at bottom,
+          white 0%,
+          var(--codefair-light) 90%
+        );
+      "
+    >
       <div
-        class="grid grid-rows-1 items-center gap-12 pb-4 pt-8 lg:grid-cols-3 lg:grid-rows-1"
+        class="mx-auto max-w-screen-xl border-t-2 border-indigo-200 px-5 py-4"
       >
-        <div class="md:col-span-2">
-          <div class="mb-4 lg:-mt-2">
-            <a
-              href="/"
-              class="inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
-              aria-label="logo"
-            >
-              <img
-                src="/assets/images/codefair_logo.png"
-                alt="codefair"
-                class="h-10 w-10 md:h-12 md:w-12"
-              />
+        <div class="flex items-center justify-between">
+          <!-- Logo -->
+          <div class="flex items-center gap-2.5">
+            <img
+              src="/assets/images/codefair_logo.png"
+              alt="codefair"
+              class="h-10 w-10 md:h-12 md:w-12"
+            />
 
+            <span class="text-2xl font-bold text-black md:text-3xl">
               Codefair
-            </a>
+            </span>
           </div>
 
-          <p class="mb-6 text-gray-500 sm:pr-8">
-            With Codefair by your side, you're not just managing repositories
-            but you are advocating for the development of FAIR software
-          </p>
+          <!-- Status Badge -->
+          <div>
+            <n-badge dot type="success" :show="true" :size="20">
+              <n-tag type="info">
+                <NuxtLink
+                  to="https://status.codefair.io/status/all"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <div class="flex items-center align-middle">
+                    <span class="mr-[.2rem]"
+                      >Monitor Codefair service status
+                    </span>
 
-          <div class="flex gap-4">
-            <a
-              href="https://twitter.com/fairdataihub"
-              target="_blank"
-              class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
-            >
-              <Icon name="fa:twitter" size="25" />
-            </a>
-
-            <a
-              href="https://github.com/fairdataihub"
-              target="_blank"
-              class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
-            >
-              <Icon name="fa:github" size="25" />
-            </a>
+                    <Icon name="ri:external-link-line" size="14" />
+                  </div>
+                </NuxtLink>
+              </n-tag>
+            </n-badge>
           </div>
         </div>
 
-        <n-flex vertical size="small" class="py-8 text-base text-gray-400">
-          <div class="flex items-center justify-end">
-            <span class="text-right"> Made with </span>
+        <div
+          class="mt-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center"
+        >
+          <div>
+            <p class="mb-3 max-w-lg text-gray-500">
+              With Codefair by your side, you're not just managing repositories
+              but you are advocating for the development of FAIR software
+            </p>
 
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="20"
-              viewBox="0 0 256 256"
-            >
-              <g fill="#a782ec">
-                <path
-                  d="M232 102c0 66-104 122-104 122S24 168 24 102a54 54 0 0 1 54-54c22.59 0 41.94 12.31 50 32c8.06-19.69 27.41-32 50-32a54 54 0 0 1 54 54"
-                  opacity="0.2"
-                />
+            <!-- Social icons -->
+            <div class="flex gap-4">
+              <a
+                href="https://twitter.com/fairdataihub"
+                target="_blank"
+                class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
+              >
+                <Icon name="fa:twitter" size="25" />
+              </a>
 
-                <path
-                  d="M178 40c-20.65 0-38.73 8.88-50 23.89C116.73 48.88 98.65 40 78 40a62.07 62.07 0 0 0-62 62c0 70 103.79 126.66 108.21 129a8 8 0 0 0 7.58 0C136.21 228.66 240 172 240 102a62.07 62.07 0 0 0-62-62m-50 174.8c-18.26-10.64-96-59.11-96-112.8a46.06 46.06 0 0 1 46-46c19.45 0 35.78 10.36 42.6 27a8 8 0 0 0 14.8 0c6.82-16.67 23.15-27 42.6-27a46.06 46.06 0 0 1 46 46c0 53.61-77.76 102.15-96 112.8"
-                />
-              </g>
-            </svg>
-
-            <span class="text-right"> by the </span>
-
-            <NuxtLink
-              to="https://fairdataihub.org"
-              class="pl-1 text-indigo-500 transition-all hover:text-indigo-600 active:text-indigo-700"
-              target="_blank"
-            >
-              FAIR Data Innovations Hub
-            </NuxtLink>
+              <a
+                href="https://github.com/fairdataihub"
+                target="_blank"
+                class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
+              >
+                <Icon name="fa:github" size="25" />
+              </a>
+            </div>
           </div>
 
-          <span class="text-right text-sm">
-            © 2024 - FAIR Data Innovations Hub. All rights reserved.
-          </span>
-        </n-flex>
+          <div class="text-sm text-gray-400 md:text-right">
+            <div class="flex items-center gap-1 md:justify-end">
+              <span>Made with</span>
+              <!-- Heart SVG -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="22"
+                height="16"
+                viewBox="0 0 256 256"
+              >
+                <g fill="#a782ec">
+                  <path
+                    d="M232 102c0 66-104 122-104 122S24 168 24 102a54 54 0 0 1 54-54c22.59 0 41.94 12.31 50 32c8.06-19.69 27.41-32 50-32a54 54 0 0 1 54 54"
+                    opacity="0.2"
+                  />
+
+                  <path
+                    d="M178 40c-20.65 0-38.73 8.88-50 23.89C116.73 48.88 98.65 40 78 40a62.07 62.07 0 0 0-62 62c0 70 103.79 126.66 108.21 129a8 8 0 0 0 7.58 0C136.21 228.66 240 172 240 102a62.07 62.07 0 0 0-62-62m-50 174.8c-18.26-10.64-96-59.11-96-112.8a46.06 46.06 0 0 1 46-46c19.45 0 35.78 10.36 42.6 27a8 8 0 0 0 14.8 0c6.82-16.67 23.15-27 42.6-27a46.06 46.06 0 0 1 46 46c0 53.61-77.76 102.15-96 112.8"
+                  />
+                </g>
+              </svg>
+
+              <span>by the</span>
+
+              <a
+                href="https://fairdataihub.org"
+                class="pl-1 text-indigo-500 transition-all hover:text-indigo-600 active:text-indigo-700"
+                target="_blank"
+              >
+                FAIR Data Innovations Hub
+              </a>
+            </div>
+
+            <!-- Year -->
+            <div class="mt-2">
+              © 2025 - FAIR Data Innovations Hub. All rights reserved.
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
 

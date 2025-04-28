@@ -21,6 +21,9 @@ const botNotInstalled = ref(false);
 const cwlValidationRerunRequestLoading = ref(false);
 const displayMetadataValidationResults = ref(false);
 const showModal = ref(false);
+const showLicenseModal = ref(false);
+const showMetadataModal = ref(false);
+const loading = ref(false);
 
 const renderIcon = (icon: string) => {
   return () => {
@@ -96,6 +99,13 @@ const hideConfirmation = () => {
 
 const showConfirmation = () => {
   showModal.value = true;
+};
+
+const handlePositiveClick = async (reRunType: string) => {
+  loading.value = true;
+  await rerunCodefairChecks(reRunType);
+  loading.value = false;
+  showLicenseModal.value = false;
 };
 
 const rerunCwlValidation = async () => {
@@ -202,10 +212,10 @@ const handleSettingsSelect = (key: any) => {
     }
   } else if (key === "re-validate-license") {
     // rerunCodefairChecks("license");
-    showConfirmation();
+    showLicenseModal.value = true;
   } else if (key === "re-validate-metadata") {
     // rerunCodefairChecks("metadata");
-    showConfirmation();
+    showMetadataModal.value = true;
   }
 };
 </script>
@@ -243,7 +253,7 @@ const handleSettingsSelect = (key: any) => {
     </n-alert>
 
     <div v-else>
-      <n-divider />
+      <LayoutSectionDivider class="my-4" />
 
       <CardDashboard
         title="License"
@@ -258,15 +268,24 @@ const handleSettingsSelect = (key: any) => {
             v-if="data?.licenseRequest?.containsLicense"
             class="flex flex-wrap items-center space-x-2"
           >
-            <n-tag
+            <n-popover
               v-if="data?.licenseRequest?.licenseStatus === 'valid'"
-              type="success"
+              trigger="hover"
             >
-              <template #icon>
-                <Icon name="icon-park-solid:check-one" size="16" />
+              <template #trigger>
+                <n-tag
+                  v-if="data?.licenseRequest?.licenseStatus === 'valid'"
+                  type="success"
+                >
+                  <template #icon>
+                    <Icon name="icon-park-solid:check-one" size="16" />
+                  </template>
+                  Contains a valid license
+                </n-tag>
               </template>
-              Contains a valid license
-            </n-tag>
+
+              <span>SPDX License: {{ data?.licenseRequest?.licenseId }}</span>
+            </n-popover>
 
             <n-tooltip
               v-else-if="data?.licenseRequest?.licenseStatus === 'invalid'"
@@ -309,21 +328,24 @@ const handleSettingsSelect = (key: any) => {
             </n-dropdown>
 
             <n-modal
-              v-model:show="showModal"
+              v-model:show="showLicenseModal"
               :mask-closable="false"
               preset="dialog"
               title="Are you sure?"
               content="Doing this action will overwrite any existing draft. Do you want to continue?"
               positive-text="Confirm"
               negative-text="Cancel"
-              @positive-click="rerunCodefairChecks('license')"
-              @negative-click="hideConfirmation"
+              :loading="loading"
+              @positive-click="handlePositiveClick('license')"
+              @negative-click="showLicenseModal = false"
             />
           </div>
         </template>
 
         <template #content>
-          <p class="text-base">A License is required according to the FAIR-BioRS guidelines</p>
+          <p class="text-base">
+            A License is required according to the FAIR-BioRS guidelines
+          </p>
         </template>
 
         <template #action>
@@ -436,15 +458,16 @@ const handleSettingsSelect = (key: any) => {
             </n-dropdown>
 
             <n-modal
-              v-model:show="showModal"
+              v-model:show="showMetadataModal"
               :mask-closable="false"
               preset="dialog"
               title="Are you sure?"
               content="Doing this action will overwrite any existing draft. Do you want to continue?"
               positive-text="Confirm"
               negative-text="Cancel"
-              @positive-click="rerunCodefairChecks('metadata')"
-              @negative-click="hideConfirmation"
+              :loading="loading"
+              @positive-click="handlePositiveClick('metadata')"
+              @negative-click="showMetadataModal = false"
             />
           </n-flex>
         </template>
@@ -596,19 +619,26 @@ const handleSettingsSelect = (key: any) => {
 
         <template #header-extra>
           <n-flex>
-            <NuxtLink
-              v-if="data?.zenodoDeposition?.lastPublishedZenodoDoi"
-              :to="`https://doi.org/${data?.zenodoDeposition?.lastPublishedZenodoDoi}`"
-              target="_blank"
-              class="cursor-pointer"
-            >
-              <n-tag type="success" class="cursor-pointer">
-                <template #icon>
-                  <Icon name="simple-icons:doi" size="16" />
-                </template>
-                {{ data?.zenodoDeposition?.lastPublishedZenodoDoi }}
-              </n-tag>
-            </NuxtLink>
+            <n-popover trigger="hover">
+              <template #trigger>
+                <NuxtLink
+                  v-if="data?.zenodoDeposition?.lastPublishedZenodoDoi"
+                  :to="`https://doi.org/${data?.zenodoDeposition?.lastPublishedZenodoDoi}`"
+                  target="_blank"
+                  class="cursor-pointer"
+                >
+                  <n-tag type="success" class="cursor-pointer">
+                    <template #icon>
+                      <Icon name="simple-icons:doi" size="16" />
+                    </template>
+                    {{ data?.zenodoDeposition?.lastPublishedZenodoDoi }}
+                    <Icon name="ri:external-link-line" size="13" />
+                  </n-tag>
+                </NuxtLink>
+              </template>
+
+              <span>Last published Zenodo DOI</span>
+            </n-popover>
 
             <div
               v-if="data?.licenseRequest?.containsLicense"

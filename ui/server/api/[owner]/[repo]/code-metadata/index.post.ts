@@ -270,6 +270,10 @@ export default defineEventHandler(async (event) => {
     type: "SoftwareSourceCode",
   };
 
+  if (!process.env.GH_APP_PRIVATE_KEY) {
+    throw new Error("GH_APP_PRIVATE_KEY is not defined.");
+  }
+
   // Create an octokit app instance
   const app = new App({
     appId: process.env.GH_APP_ID!,

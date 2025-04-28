@@ -12,9 +12,14 @@ definePageMeta({
   middleware: ["protected"],
 });
 
+// const config = useRuntimeConfig();
+// const codefairDomain = config.public.codefairDomain;
+
 const route = useRoute();
 const githubTag = route.query.githubTag;
 const githubRelease = route.query.githubRelease;
+const codefairDomain =
+  typeof window !== "undefined" ? window.location.origin : "";
 
 const user = useUser();
 const breadcrumbsStore = useBreadcrumbsStore();
@@ -118,10 +123,10 @@ if (data.value) {
   selectedDeposition.value = data.value.zenodoDepositionId?.toString() || null;
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
 
-  license.value.id = data.value.license.id || "";
-  license.value.status = data.value.license.status || "";
+  license.value.id = data.value?.license?.id || "";
+  license.value.status = data.value?.license?.status || "";
   license.value.customLicenseTitle =
-    data.value.license.customLicenseTitle || "";
+    data.value?.license?.customLicenseTitle || "";
 
   selectedExistingDeposition.value = data.value.existingZenodoDepositionId
     ? "existing"
@@ -207,7 +212,7 @@ const allConfirmed = computed(
   () =>
     licenseChecked.value &&
     metadataChecked.value &&
-    license.value.id !== "Custom",
+    license.value?.id !== "Custom",
 );
 
 const createDraftGithubReleaseSpinner = ref(false);
@@ -375,6 +380,8 @@ const showZenodoPublishProgressModal = ref(false);
 const zenodoPublishProgressInterval = ref<any>(null);
 const zenodoPublishStatus = ref<string>("");
 const zenodoPublishDOI = ref<string>("");
+const zenodoBadgeShield = ref<string>("");
+const showZenodoBadgeModal = ref(false);
 
 const checkForZenodoPublishProgress = async () => {
   await $fetch(`/api/${owner}/${repo}/release/zenodo/status`, {
@@ -472,6 +479,45 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     .finally(() => {
       zenodoPublishSpinner.value = false;
       zenodoDraftSpinner.value = false;
+
+      // Make API call to get the DOI badge for the user
+      fetchZenodoBadge();
+    });
+};
+
+const requestZenodoBadge = () => {
+  fetchZenodoBadge();
+  showZenodoBadgeModal.value = true;
+};
+
+const copyText = (text: string) => {
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      push.success({
+        title: "Success",
+        message: "Text copied to clipboard",
+      });
+    })
+    .catch((err) => console.error("Failed to copy text: ", err));
+};
+
+const fetchZenodoBadge = () => {
+  zenodoBadgeShield.value = "";
+  $fetch(`/api/badge/${owner}/${repo}`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "GET",
+    responseType: "text",
+  })
+    .then((badge) => {
+      if (badge) {
+        // Provide a modal to show the badge
+        console.log(badge);
+        zenodoBadgeShield.value = badge;
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching badge:", error);
     });
 };
 
@@ -524,20 +570,22 @@ const loginToZenodo = async () => {
   })
     .then(() => {
       const githubDetails = {
-        githubTag: githubFormValue.value.tag === "new" ? githubFormValue.value.tagTitle : githubFormValue.value.tag,
         githubRelease: githubFormValue.value.release,
+        githubTag:
+          githubFormValue.value.tag === "new"
+            ? githubFormValue.value.tagTitle
+            : githubFormValue.value.tag,
       };
-
       // Extract the existing state from the Zenodo login URL
       const existingStateMatch =
         zenodoLoginUrl.value.match(/[?&]state=([^&]+)/);
-      let originalState;
+      let originalState = {};
 
       if (existingStateMatch) {
         try {
           const decodedState = decodeURIComponent(existingStateMatch[1]);
           const [userId, owner, repo] = decodedState.split(":");
-          originalState = { userId, owner, repo };
+          originalState = { owner, repo, userId };
         } catch (error) {
           console.error("Failed to parse existing state:", error);
           throw new Error("Invalid state format");
@@ -550,12 +598,11 @@ const loginToZenodo = async () => {
         ...originalState,
         githubDetails,
       };
-
       // Encode the updated state as a JSON string
       const encodedState = encodeURIComponent(JSON.stringify(updatedState));
-
       // Replace the existing state parameter in the Zenodo login URL
       let zenodoLoginUrlWithState;
+
       if (zenodoLoginUrl.value.includes("state=")) {
         // Replace the existing state parameter with the updated one
         zenodoLoginUrlWithState = zenodoLoginUrl.value.replace(
@@ -569,6 +616,14 @@ const loginToZenodo = async () => {
         }state=${encodedState}`;
       }
 
+      if (!zenodoLoginUrlWithState.includes("state=")) {
+        throw createError({
+          statusCode: 404,
+          statusMessage: "Zenodo login URL not configured properly",
+        });
+      }
+
+      // Redirect to the updated URL
       window.location.href = zenodoLoginUrlWithState;
     })
     .catch((error) => {
@@ -581,6 +636,29 @@ const loginToZenodo = async () => {
 };
 
 const githubReleaseInterval = ref<any>(null);
+
+const snippets = computed(() => [
+  {
+    title: "reStructuredText",
+    content: `.. image:: ${codefairDomain}/badge/${owner}/${repo}\n   :target: ${codefairDomain}/badge/${owner}/${repo}`,
+  },
+  {
+    title: "Markdown",
+    content: `[![FAIR Software Release](${codefairDomain}/badge/${owner}/${repo})](${codefairDomain}/badge/${owner}/${repo})`,
+  },
+  {
+    title: "HTML",
+    content: `<a href="${codefairDomain}/badge/${owner}/${repo}"><img src="${codefairDomain}/badge/${owner}/${repo}" alt="FAIR Software Release"></a>`,
+  },
+  {
+    title: "Image URL",
+    content: `${codefairDomain}/badge/${owner}/${repo}`,
+  },
+  {
+    title: "Target URL",
+    content: `${codefairDomain}/doi/${owner}/${repo}`,
+  },
+]);
 
 onMounted(() => {
   // if there are items in the zenodoMetadata object, validate the zenodoForm
@@ -608,6 +686,13 @@ onBeforeUnmount(() => {
     <n-flex vertical>
       <div class="flex flex-row items-center justify-between">
         <h1>FAIR Software Release</h1>
+
+        <!-- <n-button
+          type="primary"
+          class="flex items-center"
+          @click="requestZenodoBadge"
+          >Request Zenodo badge</n-button
+        > -->
 
         <NuxtLink
           to="https://docs.codefair.io/docs/archive.html"
@@ -659,13 +744,25 @@ onBeforeUnmount(() => {
         type="success"
         class="w-full"
       >
-        This repository was last released on Zenodo at
-        <NuxtLink
-          :to="`https://doi.org/${data?.lastPublishedZenodoDoi}`"
-          target="_blank"
-          class="text-blue-500 underline transition-all hover:text-blue-700"
-          >{{ data?.lastPublishedZenodoDoi }}</NuxtLink
-        >.
+        <n-flex justify="space-between">
+          <div>
+            This repository was last released on Zenodo at
+            <NuxtLink
+              :to="`https://doi.org/${data?.lastPublishedZenodoDoi}`"
+              target="_blank"
+              class="text-blue-500 underline transition-all hover:text-blue-700"
+              >{{ data?.lastPublishedZenodoDoi }} </NuxtLink
+            >.
+          </div>
+
+          <n-button
+            type="primary"
+            ghost
+            class="flex h-6 items-center"
+            @click="requestZenodoBadge"
+            >Request Zenodo badge</n-button
+          >
+        </n-flex>
       </n-alert>
 
       <n-alert
@@ -701,7 +798,7 @@ onBeforeUnmount(() => {
         <template #content>
           <div class="flex w-full flex-col space-y-3">
             <n-flex
-              v-if="license.id && license?.customLicenseTitle != ''"
+              v-if="license.id && license.customLicenseTitle != ''"
               class="border p-2"
               align="center"
             >
@@ -726,7 +823,7 @@ onBeforeUnmount(() => {
             </n-flex>
 
             <n-alert
-              v-if="license.id === 'Custom' && !license.customLicenseTitle"
+              v-if="license.id === 'Custom' && !license?.customLicenseTitle"
               type="error"
               class="mb-4 w-full"
             >
@@ -755,8 +852,8 @@ onBeforeUnmount(() => {
 
             <n-checkbox
               :checked="licenseChecked && license.id !== 'Custom'"
-              @update:checked="(val) => (licenseChecked = val)"
               :disabled="license.id === 'Custom'"
+              @update:checked="(val: any) => (licenseChecked = val)"
             >
               I have added and reviewed the license file that is required for
               the repository to be released on Zenodo.
@@ -1160,7 +1257,8 @@ onBeforeUnmount(() => {
           <div
             v-if="
               (githubFormIsValid || githubReleaseIsDraft) &&
-              zenodoDraftIsReadyForRelease
+              zenodoDraftIsReadyForRelease &&
+              zenodoFormIsValid
             "
           >
             <n-divider />
@@ -1229,23 +1327,104 @@ onBeforeUnmount(() => {
     </n-collapse>
 
     <n-modal
+      v-model:show="showZenodoBadgeModal"
+      preset="card"
+      :bordered="false"
+      size="huge"
+      :mask-closable="true"
+      :close-on-esc="true"
+      class="w-[600px]"
+    >
+      <template #header>
+        <h2 class="text-xl font-bold text-gray-800">
+          Latest Version DOI Badge
+        </h2>
+      </template>
+      <!-- Main success content -->
+      <div class="space-y-4">
+        <!-- Snippet cards -->
+        <div class="space-y-4">
+          <div
+            v-for="(snippet, index) in snippets"
+            :key="index"
+            class="rounded-md border border-gray-200 bg-white shadow-sm"
+          >
+            <!-- Card header with snippet title & copy button -->
+            <div
+              class="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-3 py-2"
+            >
+              <h4 class="text-sm font-semibold text-gray-600">
+                {{ snippet.title }}
+              </h4>
+
+              <button
+                class="inline-flex items-center text-gray-400 transition-colors hover:text-gray-600"
+                @click="copyText(snippet.content)"
+              >
+                <Icon name="mdi:content-copy" class="mr-1 h-4 w-4" />
+
+                <span class="text-xs">Copy</span>
+              </button>
+            </div>
+
+            <!-- Code block -->
+            <div class="bg-gray-50 p-3">
+              <pre
+                class="overflow-auto font-mono text-sm"
+              ><code>{{ snippet.content.trim() }}</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </n-modal>
+
+    <n-modal
       v-model:show="showZenodoPublishProgressModal"
       preset="card"
-      :title="
-        zenodoPublishStatus === 'inProgress'
-          ? 'Zenodo publish in progress'
-          : zenodoPublishStatus === 'error'
-            ? 'Zenodo publish error'
-            : zenodoPublishStatus === 'published'
-              ? 'Zenodo publish success'
-              : 'Loading...'
-      "
       :bordered="false"
       size="huge"
       :mask-closable="false"
       :close-on-esc="false"
       style="width: 600px"
     >
+      <!-- HEADER SLOT: Show a dynamic title and icon -->
+      <template #header>
+        <div class="flex items-center space-x-2">
+          <!-- Conditionally render icons based on status -->
+          <Icon
+            v-if="zenodoPublishStatus === 'published'"
+            name="mdi:check-circle"
+            class="h-6 w-6 text-green-600"
+          />
+
+          <Icon
+            v-else-if="zenodoPublishStatus === 'error'"
+            name="mdi:alert-circle"
+            class="h-6 w-6 text-red-600"
+          />
+
+          <Icon
+            v-else-if="zenodoPublishStatus === 'inProgress'"
+            name="mdi:progress-clock"
+            class="h-6 w-6 text-blue-600"
+          />
+
+          <!-- Dynamic title -->
+          <h2 class="text-xl font-bold text-gray-800">
+            {{
+              zenodoPublishStatus === "inProgress"
+                ? "Zenodo publish in progress"
+                : zenodoPublishStatus === "error"
+                  ? "Zenodo publish error"
+                  : zenodoPublishStatus === "published"
+                    ? "Zenodo publish success"
+                    : "Loading..."
+            }}
+          </h2>
+        </div>
+      </template>
+
+      <!-- BODY CONTENT -->
       <n-flex v-if="zenodoPublishStatus === 'inProgress'" vertical>
         <p>
           The workflow for publishing this repository to Zenodo is currently in
@@ -1257,38 +1436,99 @@ onBeforeUnmount(() => {
 
       <n-flex v-else-if="zenodoPublishStatus === 'error'" vertical>
         <p>
-          There was an error with publishing this repository to Zenodo. Please
-          try again later or contact the Codefair team for assistance.
+          There was an error publishing this repository to Zenodo. Please try
+          again later or contact the Codefair team for assistance.
         </p>
       </n-flex>
 
       <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
-        <p>
-          Your software was successfully archived on Zenodo. We recommend
-          reviewing the deposition and adding additional metadata supported by
-          Zenodo to make your software more FAIR.
-        </p>
+        <!-- Main success content -->
+        <div class="space-y-4">
+          <p class="text-gray-700">
+            Your software was successfully archived on Zenodo. We recommend
+            reviewing the deposition and adding additional metadata to make your
+            software more FAIR. Below is your Zenodo badge. Copy the snippet
+            below and paste it into your README file to display the badge.
+          </p>
+
+          <!-- Subheading -->
+          <h3 class="text-base font-semibold text-gray-900">
+            Latest Version DOI Badge
+          </h3>
+
+          <!-- Snippet cards -->
+          <div class="space-y-4">
+            <div
+              v-for="(snippet, index) in snippets"
+              :key="index"
+              class="rounded-md border border-gray-200 bg-white shadow-sm"
+            >
+              <!-- Card header with snippet title & copy button -->
+              <div
+                class="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-3 py-2"
+              >
+                <h4 class="text-sm font-semibold text-gray-600">
+                  {{ snippet.title }}
+                </h4>
+
+                <button
+                  class="inline-flex items-center text-gray-400 transition-colors hover:text-gray-600"
+                  @click="copyText(snippet.content)"
+                >
+                  <Icon name="mdi:content-copy" class="mr-1 h-4 w-4" />
+
+                  <span class="text-xs">Copy</span>
+                </button>
+              </div>
+
+              <!-- Code block -->
+              <div class="bg-gray-50 p-3">
+                <pre
+                  class="overflow-auto font-mono text-sm"
+                ><code>{{ snippet.content.trim() }}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
       </n-flex>
 
+      <!-- Loading state -->
       <n-flex v-else>
         <p>Please wait while we get the status of your workflow.</p>
       </n-flex>
 
+      <!-- FOOTER SLOT: Action buttons -->
       <template #footer>
-        <n-flex justify="space-between">
+        <n-flex justify="space-between" align="center">
+          <!-- Link to Zenodo Deposition -->
           <NuxtLink
             v-if="zenodoPublishStatus === 'published'"
             :to="`https://doi.org/${zenodoPublishDOI}`"
             target="_blank"
           >
-            <n-button type="primary">
+            <n-button type="primary" size="small">
               <template #icon>
                 <Icon name="simple-icons:zenodo" size="16" />
               </template>
-              View Zenodo deposition
+              View Zenodo Deposition
             </n-button>
           </NuxtLink>
 
+          <!-- Link to GitHub Release -->
+          <NuxtLink
+            v-if="zenodoPublishStatus === 'published'"
+            :to="`https://github.com/${owner}/${repo}/releases/tag/${githubTag}`"
+            target="_blank"
+          >
+            <n-button type="primary" size="small">
+              <template #icon>
+                <Icon name="simple-icons:github" size="16" />
+              </template>
+              View GitHub Release
+            </n-button>
+          </NuxtLink>
+
+          <!-- "Okay" or "Go to Dashboard" button -->
           <n-button
             v-if="
               zenodoPublishStatus === 'published' ||
@@ -1296,9 +1536,9 @@ onBeforeUnmount(() => {
             "
             type="success"
             @click="navigateToDashboard"
-            >
-            Okay
-            </n-button>
+          >
+            Return to Dashboard
+          </n-button>
         </n-flex>
       </template>
     </n-modal>

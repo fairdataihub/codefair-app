@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { h } from "vue";
+import { ref, computed, h } from "vue";
+
 import { Icon } from "#components";
 
 // User-related states and utilities
@@ -16,10 +16,10 @@ const renderIcon = (icon: string) => {
 };
 
 type DropdownOption = {
+  children?: DropdownOption[];
   icon: () => VNode;
   key: string;
   label: string;
-  children?: DropdownOption[];
 };
 
 const settingOptions = ref<DropdownOption[]>([]);
@@ -98,7 +98,7 @@ if (loggedIn.value) {
       name: user.value?.username,
       avatar: `https://avatars.githubusercontent.com/u/${user.value?.github_id}?v=4`,
       description: "Your personal account",
-    })
+    });
 
     // Map organizations to dropdown options
     let count = 0;
@@ -111,28 +111,27 @@ if (loggedIn.value) {
         });
       }
       orgChildren.push({
-        key: `/dashboard/${org.name}`,
-        label: org.name,
         icon: () =>
           h("img", {
+            alt: org.name,
             src: org.avatar
               ? org.avatar
               : `https://api.dicebear.com/9.x/identicon/svg?seed=${org.id}&backgroundColor=ffffff&backgroundType=gradientLinear`,
-            alt: org.name,
             style: "width: 24px; height: 24px; border-radius: 50%;",
           }),
+        key: `/dashboard/${org.name}`,
+        label: org.name,
       });
       count++;
     });
 
-
     // Update settingOptions with organizations
     settingOptions.value = [
       {
+        children: orgChildren,
         icon: renderIcon("mdi:cog"),
         key: "switch-org",
         label: "Switch Organization",
-        children: orgChildren,
       },
       {
         icon: renderIcon("mdi:account"),
@@ -185,10 +184,10 @@ async function logout() {
   <n-flex v-if="loggedIn" align="center">
     <n-dropdown
       :options="settingOptions"
-      @select="handleSettingsSelect"
       placement="bottom-end"
       :show-arrow="true"
       class="rounded-md bg-white shadow-md"
+      @select="handleSettingsSelect"
     >
       <!-- User Avatar -->
       <n-avatar
@@ -202,7 +201,7 @@ async function logout() {
   </n-flex>
 
   <!-- Loading spinner while fetching data -->
-  <div v-else-if="loading" class="flex justify-center items-center">
+  <div v-else-if="loading" class="flex items-center justify-center">
     <n-spin size="large" />
   </div>
 

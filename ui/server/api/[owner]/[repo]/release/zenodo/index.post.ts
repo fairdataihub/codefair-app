@@ -75,6 +75,10 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  if (!process.env.GH_APP_PRIVATE_KEY) {
+    throw new Error("GH_APP_PRIVATE_KEY is not defined.");
+  }
+
   const app = new App({
     appId: process.env.GH_APP_ID!,
     oauth: {
