@@ -230,12 +230,7 @@ export async function rerunLicenseValidation(
   }
 }
 
-export async function rerunCWLValidation(
-  context,
-  owner,
-  repository,
-  issueBody
-) {
+export async function rerunCWLValidation(context, owner, repository) {
   try {
     logwatch.start("Rerunning CWL Validation...");
 
@@ -258,8 +253,6 @@ export async function rerunCWLValidation(
 
     const cwlObject = await getCWLFiles(context, owner, repository);
 
-    logwatch.info("at here!");
-
     const subjects = {
       cwl: cwlObject,
       citation,
@@ -275,7 +268,6 @@ export async function rerunCWLValidation(
       subjects
     );
 
-    logwatch.info("at heredfasdfad!");
     await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
 
     logwatch.info("CWL Validation rerun successfully!");
@@ -303,12 +295,7 @@ export async function rerunCWLValidation(
   }
 }
 
-export async function rerunFullRepoValidation(
-  context,
-  owner,
-  repository,
-  issueBody
-) {
+export async function rerunFullRepoValidation(context, owner, repository) {
   logwatch.start("Rerunning full repository validation...");
   try {
     let subjects = await checkForCompliance(context, owner, repository);

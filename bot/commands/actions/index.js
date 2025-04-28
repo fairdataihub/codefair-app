@@ -28,7 +28,7 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const { ZENODO_ENDPOINT } = process.env;
 
-export async function reRenderDashboard(context, owner, repository, issueBody) {
+export async function reRenderDashboard(context, owner, repository) {
   // Run database queries in parallel using Promise.all
   logwatch.start("Re-rendering issue dashboard...");
   try {
@@ -79,15 +79,16 @@ export async function reRenderDashboard(context, owner, repository, issueBody) {
     await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
   } catch (error) {
     // Remove the command from the issue body
-    const issueBodyRemovedCommand = issueBody.substring(
-      0,
-      issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
-    );
+    // Remove the command from the issue body with guard against missing marker
+    const marker = `<sub><span style="color: grey;">Last updated`;
+    const markerIndex = issueBody.indexOf(marker);
+    const issueBodyRemovedCommand =
+      markerIndex !== -1 ? issueBody.substring(0, markerIndex) : issueBody;
     const lastModified = await applyLastModifiedTemplate(
       issueBodyRemovedCommand
     );
     await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
-    throw new Error("Error rerunning re-rendering dashboard", error);
+    throw new Error("Error rerunning re-rendering dashboard", { cause: error });
   }
 }
 
