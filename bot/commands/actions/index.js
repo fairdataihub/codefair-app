@@ -16,13 +16,13 @@ import {
   getZenodoToken,
   publishZenodoDeposition,
   updateGitHubRelease,
-} from "../../archival/index.js";
+} from "../../compliance-checks/archival/index.js";
 import {
   validateMetadata,
   getCitationContent,
   getCodemetaContent,
   updateMetadataIdentifier,
-} from "../../metadata/index.js";
+} from "../../compliance-checks/metadata/index.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;

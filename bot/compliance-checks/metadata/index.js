@@ -1,13 +1,12 @@
-import { consola } from "consola";
 import yaml from "js-yaml";
 import {
   gatherLanguagesUsed,
   gatherRepoAuthors,
   getDOI,
   createId,
-} from "../utils/tools/index.js";
-import dbInstance from "../db.js";
-import { logwatch } from "../utils/logwatch.js";
+} from "../../utils/tools/index.js";
+import dbInstance from "../../db.js";
+import { logwatch } from "../../utils/logwatch.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const { GH_APP_NAME, VALIDATOR_URL } = process.env;

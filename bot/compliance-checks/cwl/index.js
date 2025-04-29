@@ -1,17 +1,61 @@
 /**
  * * This file contains the functions to interact with the CWL files in the repository
  */
-import { consola } from "consola";
-import { logwatch } from "../utils/logwatch.js";
+import { logwatch } from "../../utils/logwatch.js";
 import {
   isRepoPrivate,
   createId,
   replaceRawGithubUrl,
-} from "../utils/tools/index.js";
-import dbInstance from "../db.js";
+} from "../../utils/tools/index.js";
+import dbInstance from "../../db.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const { VALIDATOR_URL } = process.env;
+
+// Recursive function to search for CWL files throughout repository directories
+/**
+ * * This function searches for CWL files in the given directory path of a GitHub repository.
+ * @param {String} path - The path to search for CWL files
+ * @param {Object} cwlObject - The CWL object collecting discovered files
+ * @returns {Promise<Object>} - The updated cwlObject containing found files
+ * @throws {Error} - Throws an error if the search fails
+ */
+async function searchRepository(path, cwlObject) {
+  try {
+    const repoContent = await context.octokit.repos.getContent({
+      owner,
+      path,
+      repo: repository.name,
+    });
+
+    for (const file of repoContent.data) {
+      if (file.type === "file" && file.name.endsWith(".cwl")) {
+        logwatch.info({ message: "CWL file found", file: file.name }, true);
+        cwlObject.files.push(file);
+      }
+      if (file.type === "dir") {
+        await searchRepository(file.path, cwlObject);
+      }
+    }
+    return cwlObject;
+  } catch (error) {
+    if (error.status === 404) {
+      // Directory not found; likely an empty repository or directory, so we simply return the current object
+      return cwlObject;
+    }
+    logwatch.error(
+      {
+        message: "Error searching for CWL files",
+        path,
+        error,
+      },
+      true
+    );
+    throw new Error(`Error searching directory "${path}": ${error.message}`, {
+      cause: error,
+    });
+  }
+}
 
 /**
  * This function gets the CWL files in the repository
@@ -29,46 +73,9 @@ export async function getCWLFiles(context, owner, repository) {
     removed_files: [],
   };
 
-  // Recursive function to search for CWL files throughout repository directories
-  async function searchDirectory(path) {
-    try {
-      const repoContent = await context.octokit.repos.getContent({
-        owner,
-        path,
-        repo: repository.name,
-      });
-
-      for (const file of repoContent.data) {
-        if (file.type === "file" && file.name.endsWith(".cwl")) {
-          logwatch.info({ message: "CWL file found", file: file.name }, true);
-          cwlObject.files.push(file);
-        }
-        if (file.type === "dir") {
-          await searchDirectory(file.path);
-        }
-      }
-    } catch (error) {
-      if (error.status === 404) {
-        // Directory not found; likely an empty repository or directory, so we simply return
-        return;
-      }
-      logwatch.error(
-        {
-          message: "Error searching for CWL files",
-          path,
-          error,
-        },
-        true
-      );
-      throw new Error(`Error searching directory "${path}": ${error.message}`, {
-        cause: error,
-      });
-    }
-  }
-
   // Execute the directory search
   try {
-    await searchDirectory("");
+    cwlObject = await searchRepository("");
   } catch (error) {
     throw new Error(
       `Failed to search repository for CWL files: ${error.message}`,

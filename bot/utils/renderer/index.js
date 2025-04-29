@@ -4,10 +4,10 @@ import {
   applyGitHubIssueToDatabase,
   applyLastModifiedTemplate,
 } from "../tools/index.js";
-import { applyCWLTemplate } from "../../cwl/index.js";
-import { applyMetadataTemplate } from "../../metadata/index.js";
-import { applyLicenseTemplate } from "../../license/index.js";
-import { applyArchivalTemplate } from "../../archival/index.js";
+import { applyCWLTemplate } from "../../compliance-checks/cwl/index.js";
+import { applyMetadataTemplate } from "../../compliance-checks/metadata/index.js";
+import { applyLicenseTemplate } from "../../compliance-checks/license/index.js";
+import { applyArchivalTemplate } from "../../compliance-checks/archival/index.js";
 import dbInstance from "../../db.js";
 
 const { GH_APP_NAME } = process.env;

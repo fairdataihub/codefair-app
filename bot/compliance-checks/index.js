@@ -1,7 +1,8 @@
-import { checkForLicense } from "../../license/index.js";
-import { checkForCitation } from "../../citation/index.js";
-import { checkForCodeMeta } from "../../codemeta/index.js";
-import { getCWLFiles } from "../../cwl/index.js";
+import { checkForLicense } from "./license/index.js";
+import { checkForCitation } from "./citation/index.js";
+import { checkForCodeMeta } from "./codemeta/index.js";
+import { getCWLFiles } from "./cwl/index.js";
+import { checkForReadme } from "./readme/index.js";
 
 /**
  * * Check for compliance of a repository with Codefair standards.
@@ -19,7 +20,7 @@ import { getCWLFiles } from "../../cwl/index.js";
  * @property {Array} cwl.removed_files - Array of CWL files that were removed.
  * @property {Boolean} license - Boolean license check result.
  */
-export async function checkForCompliance(
+export async function runComplianceChecks(
   context,
   owner,
   repository,
@@ -30,6 +31,7 @@ export async function checkForCompliance(
     files: [],
     removed_files: [],
   };
+  const readme = await checkForReadme(context, owner, repository.name);
   const license = await checkForLicense(context, owner, repository.name);
   const citation = await checkForCitation(context, owner, repository.name);
   const codemeta = await checkForCodeMeta(context, owner, repository.name);
@@ -42,5 +44,6 @@ export async function checkForCompliance(
     codemeta,
     cwl: cwlObject,
     license,
+    readme,
   };
 }

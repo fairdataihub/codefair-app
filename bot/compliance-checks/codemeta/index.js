@@ -1,4 +1,4 @@
-import { gatherRepoAuthors } from "../utils/tools/index.js";
+import { gatherRepoAuthors } from "../../utils/tools/index.js";
 
 export async function checkForCodeMeta(context, owner, repo) {
   try {

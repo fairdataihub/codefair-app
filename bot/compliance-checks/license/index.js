@@ -1,10 +1,9 @@
 /**
  * @fileoverview This file contains utility functions for the license bot
  */
-import { consola } from "consola";
-import { logwatch } from "../utils/logwatch.js";
-import dbInstance from "../db.js";
-import { createId } from "../utils/tools/index.js";
+import { logwatch } from "../../utils/logwatch.js";
+import dbInstance from "../../db.js";
+import { createId } from "../../utils/tools/index.js";
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 
