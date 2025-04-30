@@ -40,9 +40,18 @@ const submitLoading = ref(false);
 const showSuccessModal = ref(false);
 const pullRequestURL = ref("");
 
-const { data, error } = await useFetch(`/api/${owner}/${repo}/readme`, {
-  headers: useRequestHeaders(["cookie"]),
-});
+interface ReadmeResponse {
+  readmeContent: string;
+  timestamp: number;
+}
+
+const { data, error } = await useFetch<ReadmeResponse>(
+  `/api/${owner}/${repo}/readme`,
+  {
+    headers: useRequestHeaders(["cookie"]),
+    method: "GET",
+  },
+);
 
 breadcrumbsStore.setFeature({
   id: "edit-readme",

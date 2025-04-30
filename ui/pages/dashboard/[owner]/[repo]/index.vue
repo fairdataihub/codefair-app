@@ -23,6 +23,7 @@ const displayMetadataValidationResults = ref(false);
 const showModal = ref(false);
 const showLicenseModal = ref(false);
 const showMetadataModal = ref(false);
+const showReadmeModal = ref(false);
 const loading = ref(false);
 
 const renderIcon = (icon: string) => {
@@ -254,6 +255,83 @@ const handleSettingsSelect = (key: any) => {
 
     <div v-else>
       <LayoutSectionDivider class="my-4" />
+
+      <CardDashboard
+        title="README"
+        subheader="The README for the repository is shown here."
+      >
+        <template #icon>
+          <Icon name="gg:readme" size="40" />
+        </template>
+
+        <template #header-extra>
+          <div
+            v-if="data?.readmeValidation?.readmeExists"
+            class="flex flex-wrap items-center space-x-2"
+          >
+            <n-popover trigger="hover">
+              <template #trigger>
+                <n-tag type="success">
+                  <template #icon>
+                    <Icon name="icon-park-solid:check-one" size="16" />
+                  </template>
+                  Repository contains a README
+                </n-tag>
+              </template>
+
+              <span>README file exists</span>
+            </n-popover>
+
+            <!-- <n-button class="border-none"></n-button> -->
+
+            <!-- Dropdown options -->
+            <!-- <n-dropdown
+              :options="readmeSettingsOptions"
+              placement="bottom-end"
+              :show-arrow="true"
+              @select="handleSettingsSelect"
+            >
+              <n-button quaternary circle size="large">
+                <template #icon>
+                  <Icon name="humbleicons:dots-vertical" size="20" />
+                </template>
+              </n-button>
+            </n-dropdown> -->
+
+            <n-modal
+              v-model:show="showReadmeModal"
+              :mask-closable="false"
+              preset="dialog"
+              title="Are you sure?"
+              content="Doing this action will overwrite any existing draft. Do you want to continue?"
+              positive-text="Confirm"
+              negative-text="Cancel"
+              :loading="loading"
+              @positive-click="handlePositiveClick('readme')"
+              @negative-click="showReadmeModal = false"
+            />
+          </div>
+        </template>
+
+        <template #content>
+          <p class="text-base">
+            A README is required according to the FAIR-BioRS guidelines
+          </p>
+        </template>
+
+        <template #action>
+          <a :href="`/dashboard/${owner}/${repo}/edit/readme`">
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="akar-icons:edit" size="16" />
+              </template>
+              Edit README
+            </n-button>
+          </a>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
 
       <CardDashboard
         title="License"

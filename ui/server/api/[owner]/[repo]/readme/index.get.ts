@@ -18,18 +18,18 @@ export default defineEventHandler(async (event) => {
   if (!readme) {
     throw createError({
       statusCode: 404,
-      statusMessage: "license-request-not-found",
+      statusMessage: "readme-request-not-found",
     });
   }
 
-  // Check if the user is authorized to access the license request
+  // Check if the user is authorized to access the readme request
   await repoWritePermissions(event, owner, repo);
 
   const response: ReadmeRequestGetResponse = {
-    readmeContent: readme.readme_content,
+    readmeContent: readme.readme_content || "",
     timestamp: Date.parse(readme.updated_at.toString()),
   };
 
-  // return the valid license request
+  // return the valid readme request
   return response;
 });
