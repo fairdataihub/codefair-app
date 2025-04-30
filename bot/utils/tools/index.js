@@ -85,7 +85,7 @@ export async function getDefaultBranch(context, owner, repositoryName) {
  * @param {string} repo - The name of the repository
  * @param {string} filePath - The path to the file to check
  *
- * @returns {boolean} - Returns true if the file exists, false otherwise
+ * @returns {Object} - Returns the file data if it exists, null otherwise
  * */
 export async function checkForFile(context, owner, repoName, filePath) {
   const file = await context.octokit.repos.getContent({
@@ -93,7 +93,11 @@ export async function checkForFile(context, owner, repoName, filePath) {
     repo: repoName,
     path: filePath,
   });
-  return file.status === 200;
+
+  if (file.status === 200) {
+    return file.data;
+  }
+  return null;
 }
 
 /**

@@ -69,6 +69,7 @@ model ReadmeValidation {
   repository_id    Int          @unique
   contains_readme  Boolean      @default(false)
   readme_content   String       @default("")
+  readme_path      String       @default("")
   pull_request_url String       @default("")
   created_at       DateTime     @default(now())
   updated_at       DateTime     @updatedAt
@@ -145,4 +146,5 @@ model Analytics {
   updated_at               DateTime @updatedAt
   create_release           Int      @default(0)
   zenodo_release           Int      @default(0)
+  update_readme            Int      @default(0)
 }

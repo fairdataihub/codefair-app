@@ -20,40 +20,43 @@ const { VALIDATOR_URL } = process.env;
  * @returns {Promise<Object>} - The updated cwlObject containing found files
  * @throws {Error} - Throws an error if the search fails
  */
-async function searchRepository(path, cwlObject) {
+async function searchRepository(context, owner, repo, path = "", cwlObject) {
   try {
-    const repoContent = await context.octokit.repos.getContent({
+    const response = await context.octokit.repos.getContent({
       owner,
+      repo,
       path,
-      repo: repository.name,
     });
+    const { data } = response;
 
-    for (const file of repoContent.data) {
-      if (file.type === "file" && file.name.endsWith(".cwl")) {
-        logwatch.info({ message: "CWL file found", file: file.name }, true);
-        cwlObject.files.push(file);
-      }
-      if (file.type === "dir") {
-        await searchRepository(file.path, cwlObject);
+    // Directory listing: array of items
+    if (Array.isArray(data)) {
+      for (const item of data) {
+        if (item.type === "dir") {
+          await searchRepository(context, owner, repo, item.path, cwlObject);
+        } else if (item.type === "file" && item.name.endsWith(".cwl")) {
+          logwatch.info({ message: "CWL file found", file: item.path }, true);
+          cwlObject.files.push(item);
+        }
       }
     }
+    // Single-file case: if someone specifically requested a file
+    else if (data.type === "file" && data.name.endsWith(".cwl")) {
+      logwatch.info({ message: "CWL file found", file: data.path }, true);
+      cwlObject.files.push(data);
+    }
+
     return cwlObject;
-  } catch (error) {
-    if (error.status === 404) {
-      // Directory not found; likely an empty repository or directory, so we simply return the current object
+  } catch (err) {
+    // 404 means “nothing here” (empty folder), so we just return what we have
+    if (err.status === 404) {
       return cwlObject;
     }
-    logwatch.error(
-      {
-        message: "Error searching for CWL files",
-        path,
-        error,
-      },
-      true
+    // Wrap and rethrow so parent can detect
+    throw new Error(
+      `searchRepository failed at path "${path || "/"}": ${err.message}`,
+      { cause: err }
     );
-    throw new Error(`Error searching directory "${path}": ${error.message}`, {
-      cause: error,
-    });
   }
 }
 
@@ -66,49 +69,51 @@ async function searchRepository(path, cwlObject) {
  */
 export async function getCWLFiles(context, owner, repository) {
   logwatch.info("Checking for CWL files in the repository...");
-
-  const cwlObject = {
+  let cwlObject = {
     contains_cwl_files: false,
     files: [],
     removed_files: [],
   };
 
-  // Execute the directory search
+  // 1) GitHub scan
   try {
-    cwlObject = await searchRepository("");
-  } catch (error) {
-    throw new Error(
-      `Failed to search repository for CWL files: ${error.message}`,
-      {
-        cause: error,
-      }
+    cwlObject = await searchRepository(
+      context,
+      owner,
+      repository.name,
+      "",
+      cwlObject
     );
+    logwatch.info("CWL files found:", cwlObject.files);
+    logwatch.info(cwlObject);
+  } catch (err) {
+    throw new Error(`Failed to scan repository for CWL files: ${err.message}`, {
+      cause: err,
+    });
   }
 
-  // Process the database entry for removed files if it exists
+  // 2) DB compare to find removed files
   try {
     const existingCWL = await dbInstance.cwlValidation.findUnique({
       where: { repository_id: repository.id },
     });
 
-    // Map current file paths correctly
-    const cwlFilePaths = cwlObject.files.map((file) => file.path);
-
-    if (existingCWL && existingCWL.contains_cwl_files) {
-      cwlObject.removed_files = existingCWL.files.filter((file) => {
-        return !cwlFilePaths.includes(file.path);
-      });
+    if (existingCWL?.contains_cwl_files) {
+      const currentPaths = new Set(cwlObject.files.map((f) => f.path));
+      cwlObject.removed_files = existingCWL.files.filter(
+        (dbFile) => !currentPaths.has(dbFile.path)
+      );
     }
 
     cwlObject.contains_cwl_files = cwlObject.files.length > 0;
     return cwlObject;
-  } catch (error) {
+  } catch (err) {
     logwatch.error(
-      { message: "Error retrieving CWL files from the database", error },
+      { message: "Error retrieving CWL files from the database", error: err },
       true
     );
-    throw new Error(`Error getting CWL files: ${error.message}`, {
-      cause: error,
+    throw new Error(`Error querying CWL files in DB: ${err.message}`, {
+      cause: err,
     });
   }
 }

@@ -121,8 +121,11 @@ export default async (app, { getRouter }) => {
           continue;
         }
 
-        // BEGIN CHECKING FOR COMPLIANCE
-        const subjects = await runComplianceChecks(context, owner, repository);
+        let subjects;
+        if (!emptyRepo) {
+          // BEGIN CHECKING FOR COMPLIANCE
+          subjects = await runComplianceChecks(context, owner, repository);
+        }
 
         // Create issue body template
         const issueBody = await renderIssues(
