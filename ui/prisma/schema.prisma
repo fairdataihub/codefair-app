@@ -145,4 +145,5 @@ model Analytics {
   updated_at               DateTime @updatedAt
   create_release           Int      @default(0)
   zenodo_release           Int      @default(0)
+  update_readme            Int      @default(0)
 }
