@@ -49,7 +49,7 @@ COPY --from=builder /app/prisma ./prisma
 COPY api ./api
 COPY compliance-checks ./compliance-checks
 COPY commands ./commands
-COPY migrations ./migrations
+COPY migrations ./prisma/migrations
 COPY public ./public
 COPY scripts ./scripts
 COPY utils ./utils
