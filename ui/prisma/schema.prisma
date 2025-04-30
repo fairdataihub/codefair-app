@@ -45,6 +45,7 @@ model Installation {
   CwlValidation         CwlValidation?
   LicenseRequest        LicenseRequest?
   ZenodoDeposition      ZenodoDeposition?
+  ReadmeValidation      ReadmeValidation?
 }
 
 model LicenseRequest {
@@ -60,6 +61,18 @@ model LicenseRequest {
   updated_at           DateTime     @updatedAt
   custom_license_title String       @default("")
   repository           Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+}
+
+model ReadmeValidation {
+  id               String       @id @default(cuid())
+  identifier       String       @unique
+  repository_id    Int          @unique
+  contains_readme  Boolean      @default(false)
+  readme_content   String       @default("")
+  pull_request_url String       @default("")
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+  repository       Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
 }
 
 model Ping {

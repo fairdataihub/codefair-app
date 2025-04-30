@@ -9,6 +9,7 @@ import { applyMetadataTemplate } from "../../compliance-checks/metadata/index.js
 import { applyLicenseTemplate } from "../../compliance-checks/license/index.js";
 import { applyArchivalTemplate } from "../../compliance-checks/archival/index.js";
 import dbInstance from "../../db.js";
+import { applyReadmeTemplate } from "../../compliance-checks/readme/index.js";
 
 const { GH_APP_NAME } = process.env;
 
@@ -45,6 +46,13 @@ export async function renderIssues(
     }
 
     let baseTemplate = `# Check the FAIRness of your software\n\nThis issue is your repository's dashboard for all things FAIR. Keep it open as making and keeping software FAIR is a continuous process that evolves along with the software. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n`;
+
+    baseTemplate = await applyReadmeTemplate(
+      owner,
+      repository,
+      subjects,
+      baseTemplate
+    );
 
     baseTemplate = await applyLicenseTemplate(
       subjects,
