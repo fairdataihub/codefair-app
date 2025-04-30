@@ -33,11 +33,9 @@ export async function renderIssues(
   prInfo = { title: "", link: "" }
 ) {
   let step = "start";
-  logwatch.info("test1");
   try {
     // ── EMPTY REPO ─────────────────────────────────────────────────────────────
     if (emptyRepo) {
-      logwatch.info("test2");
       step = "emptyRepo";
       logwatch.success(`Applying empty-repo template`, {
         owner,
