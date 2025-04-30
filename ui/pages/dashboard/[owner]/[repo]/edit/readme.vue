@@ -16,6 +16,7 @@ config({
       // toolBarsExclude: ["preview", "fullscreen"],
     },
   },
+
   markdownItConfig(md) {
     md.use(TargetBlankExtension);
   },
@@ -81,20 +82,10 @@ if (data.value) {
 const sanitize = (html: string) => sanitizeHtml(html);
 
 const saveReadmeDraft = async () => {
-  if (licenseId.value === "Custom" && !customLicenseTitle.value.trim()) {
-    push.error({
-      title: "Custom license title required",
-      message: "Please enter a custom license title",
-    });
-    return;
-  }
-
   submitLoading.value = true;
 
   const body = {
-    customLicenseTitle: customLicenseTitle.value,
-    licenseContent: licenseContent.value,
-    licenseId: licenseId.value,
+    readmeContent: readmeContent.value,
   };
 
   await $fetch(`/api/${owner}/${repo}/license`, {
@@ -121,20 +112,10 @@ const saveReadmeDraft = async () => {
 };
 
 const saveReadmeAndPush = async () => {
-  if (licenseId.value === "Custom" && !customLicenseTitle.value.trim()) {
-    push.error({
-      title: "Custom license title required",
-      message: "Please enter a custom license title",
-    });
-    return;
-  }
-
   submitLoading.value = true;
 
   const body = {
-    customLicenseTitle: customLicenseTitle.value,
-    licenseContent: licenseContent.value,
-    licenseId: licenseId.value,
+    readmeContent: readmeContent.value,
   };
 
   await $fetch(`/api/${owner}/${repo}/license`, {

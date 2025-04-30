@@ -275,28 +275,13 @@ const handleSettingsSelect = (key: any) => {
                   <template #icon>
                     <Icon name="icon-park-solid:check-one" size="16" />
                   </template>
+
                   Repository contains a README
                 </n-tag>
               </template>
 
               <span>README file exists</span>
             </n-popover>
-
-            <!-- <n-button class="border-none"></n-button> -->
-
-            <!-- Dropdown options -->
-            <!-- <n-dropdown
-              :options="readmeSettingsOptions"
-              placement="bottom-end"
-              :show-arrow="true"
-              @select="handleSettingsSelect"
-            >
-              <n-button quaternary circle size="large">
-                <template #icon>
-                  <Icon name="humbleicons:dots-vertical" size="20" />
-                </template>
-              </n-button>
-            </n-dropdown> -->
 
             <n-modal
               v-model:show="showReadmeModal"
