@@ -72,10 +72,7 @@ if (error.value) {
 
 if (data.value) {
   readmeContent.value = data.value.readmeContent ?? "";
-
-  if (readmeContent.value) {
-    displayReadmeEditor.value = true;
-  }
+  displayReadmeEditor.value = true;
 }
 
 const sanitize = (html: string) => sanitizeHtml(html);
