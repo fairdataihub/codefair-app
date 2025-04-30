@@ -1,10 +1,10 @@
-import { checkForCompliance } from "../../utils/compliance-checks/index.js";
+import { runComplianceChecks } from "../../compliance-checks/index.js";
 import { renderIssues, createIssue } from "../../utils/renderer/index.js";
 import dbInstance from "../../db.js";
 import { logwatch } from "../../utils/logwatch.js";
 import { applyLastModifiedTemplate } from "../../utils/tools/index.js";
-import { validateLicense } from "../../license/index.js";
-import { getCWLFiles } from "../../cwl/index.js";
+import { validateLicense } from "../../compliance-checks/license/index.js";
+import { getCWLFiles } from "../../compliance-checks/cwl/index.js";
 import {
   validateMetadata,
   getCitationContent,
@@ -14,7 +14,7 @@ import {
   applyDbMetadata,
   applyCodemetaMetadata,
   applyCitationMetadata,
-} from "../../metadata/index.js";
+} from "../../compliance-checks/metadata/index.js";
 
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const db = dbInstance;
@@ -298,7 +298,7 @@ export async function rerunCWLValidation(context, owner, repository) {
 export async function rerunFullRepoValidation(context, owner, repository) {
   logwatch.start("Rerunning full repository validation...");
   try {
-    let subjects = await checkForCompliance(context, owner, repository);
+    let subjects = await runComplianceChecks(context, owner, repository);
 
     const issueBody = await renderIssues(
       context,

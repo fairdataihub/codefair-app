@@ -1,7 +1,7 @@
 "use strict";
 
 import * as express from "express";
-import { checkForCompliance } from "./utils/compliance-checks/index.js";
+import { runComplianceChecks } from "./compliance-checks/index.js";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
 import dbInstance from "./db.js";
 import { logwatch } from "./utils/logwatch.js";
@@ -121,8 +121,11 @@ export default async (app, { getRouter }) => {
           continue;
         }
 
-        // BEGIN CHECKING FOR COMPLIANCE
-        const subjects = await checkForCompliance(context, owner, repository);
+        let subjects;
+        if (!emptyRepo) {
+          // BEGIN CHECKING FOR COMPLIANCE
+          subjects = await runComplianceChecks(context, owner, repository);
+        }
 
         // Create issue body template
         const issueBody = await renderIssues(
@@ -240,7 +243,7 @@ export default async (app, { getRouter }) => {
     // Grab the commits being pushed
     const { commits } = context.payload;
 
-    let subjects = await checkForCompliance(
+    let subjects = await runComplianceChecks(
       context,
       owner,
       repository,
@@ -506,7 +509,7 @@ export default async (app, { getRouter }) => {
       );
 
       // Begin fair compliance checks
-      const subjects = await checkForCompliance(context, owner, repository);
+      const subjects = await runComplianceChecks(context, owner, repository);
 
       const issueBody = await renderIssues(
         context,

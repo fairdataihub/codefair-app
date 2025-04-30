@@ -79,6 +79,28 @@ export async function getDefaultBranch(context, owner, repositoryName) {
 }
 
 /**
+ * * Check if a file exists in the repository
+ * @param {object} context - The GitHub context object
+ * @param {string} owner - The owner of the repository
+ * @param {string} repo - The name of the repository
+ * @param {string} filePath - The path to the file to check
+ *
+ * @returns {Object} - Returns the file data if it exists, null otherwise
+ * */
+export async function checkForFile(context, owner, repoName, filePath) {
+  const file = await context.octokit.repos.getContent({
+    owner,
+    repo: repoName,
+    path: filePath,
+  });
+
+  if (file.status === 200) {
+    return file.data;
+  }
+  return null;
+}
+
+/**
  * * Check if the issue already exists in the repository
  * @param {object} context - The GitHub context object
  * @param {string} owner - The owner of the repository

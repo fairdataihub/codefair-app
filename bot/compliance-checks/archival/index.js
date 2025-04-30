@@ -1,6 +1,6 @@
 import { error } from "console";
-import dbInstance from "../db.js";
-import { logwatch } from "../utils/logwatch.js";
+import dbInstance from "../../db.js";
+import { logwatch } from "../../utils/logwatch.js";
 import fs from "fs";
 const licensesJson = JSON.parse(
   fs.readFileSync("./public/assets/data/licenses.json", "utf8")

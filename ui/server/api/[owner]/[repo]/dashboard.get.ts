@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
       CodeMetadata: true,
       CwlValidation: true,
       LicenseRequest: true,
+      ReadmeValidation: true,
       ZenodoDeposition: true,
     },
     where: {
@@ -36,6 +37,7 @@ export default defineEventHandler(async (event) => {
   const codeMetadataRequest = installation.CodeMetadata;
   const cwlValidation = installation.CwlValidation;
   const zenodoDeposition = installation.ZenodoDeposition;
+  const readmeValidation = installation.ReadmeValidation;
 
   return {
     codeMetadataRequest: codeMetadataRequest
@@ -77,6 +79,13 @@ export default defineEventHandler(async (event) => {
           pullRequest: licenseRequest.pull_request_url || "",
           repo: installation.repo,
           timestamp: licenseRequest.updated_at || null,
+        }
+      : null,
+    readmeValidation: readmeValidation
+      ? {
+          readmeContent: readmeValidation.readme_content || "",
+          readmeExists: readmeValidation.contains_readme || false,
+          timestamp: Date.parse(readmeValidation.updated_at.toString()),
         }
       : null,
     zenodoDeposition: zenodoDeposition

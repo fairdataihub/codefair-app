@@ -1,14 +1,14 @@
-import { consola } from "consola";
 import { logwatch } from "../logwatch.js";
 import {
   applyGitHubIssueToDatabase,
   applyLastModifiedTemplate,
 } from "../tools/index.js";
-import { applyCWLTemplate } from "../../cwl/index.js";
-import { applyMetadataTemplate } from "../../metadata/index.js";
-import { applyLicenseTemplate } from "../../license/index.js";
-import { applyArchivalTemplate } from "../../archival/index.js";
+import { applyCWLTemplate } from "../../compliance-checks/cwl/index.js";
+import { applyMetadataTemplate } from "../../compliance-checks/metadata/index.js";
+import { applyLicenseTemplate } from "../../compliance-checks/license/index.js";
+import { applyArchivalTemplate } from "../../compliance-checks/archival/index.js";
 import dbInstance from "../../db.js";
+import { applyReadmeTemplate } from "../../compliance-checks/readme/index.js";
 
 const { GH_APP_NAME } = process.env;
 
@@ -32,20 +32,58 @@ export async function renderIssues(
   subjects,
   prInfo = { title: "", link: "" }
 ) {
+  let step = "start";
   try {
+    // ── EMPTY REPO ─────────────────────────────────────────────────────────────
     if (emptyRepo) {
-      logwatch.success(
-        `Applying empty repo template for repository: ${repository.name}`
+      step = "emptyRepo";
+      logwatch.success(`Applying empty-repo template`, {
+        owner,
+        repo: repository.name,
+      });
+
+      const emptyTemplate = applyLastModifiedTemplate(
+        `# Check the FAIRness of your software\n\n` +
+          `This issue is your repository's dashboard for all things FAIR. Keep it open ` +
+          `as making and keeping software FAIR is a continuous process that evolves along ` +
+          `with the software. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n` +
+          `> [!WARNING]\n> Currently your repository is empty and will not be checked until content is detected within your repository.\n\n` +
+          `## LICENSE\n\n` +
+          `To make your software reusable a license file is expected at the root level of your repository. ` +
+          `Codefair will check for a license file after you add content to your repository.\n\n` +
+          `![License](https://img.shields.io/badge/License_Not_Checked-fbbf24)\n\n` +
+          `## Metadata\n\n` +
+          `To make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. ` +
+          `Codefair will check for these files after a license file is detected.\n\n` +
+          `![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`
       );
-      let emptyTemplate = `# Check the FAIRness of your software\n\nThis issue is your repository's dashboard for all things FAIR. Keep it open as making and keeping software FAIR is a continuous process that evolves along with the software. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n> [!WARNING]\n> Currently your repository is empty and will not be checked until content is detected within your repository.\n\n## LICENSE\n\nTo make your software reusable a license file is expected at the root level of your repository. Codefair will check for a license file after you add content to your repository.\n\n![License](https://img.shields.io/badge/License_Not_Checked-fbbf24)\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
 
-      emptyTemplate = applyLastModifiedTemplate(emptyTemplate);
-
+      logwatch.success(`Empty-repo template ready`, {
+        owner,
+        repo: repository.name,
+      });
       return emptyTemplate;
     }
 
-    let baseTemplate = `# Check the FAIRness of your software\n\nThis issue is your repository's dashboard for all things FAIR. Keep it open as making and keeping software FAIR is a continuous process that evolves along with the software. You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n`;
+    // ── BASE TEMPLATE
+    let baseTemplate =
+      `# Check the FAIRness of your software\n\n` +
+      `This issue is your repository's dashboard for all things FAIR. Keep it open as making ` +
+      `and keeping software FAIR is a continuous process that evolves along with the software. ` +
+      `You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.`;
 
+    // ── README
+    step = "applyReadme";
+    baseTemplate = await applyReadmeTemplate(
+      owner,
+      repository,
+      subjects,
+      baseTemplate
+    );
+    logwatch.info(`README template applied`, { owner, repo: repository.name });
+
+    // ── LICENSE
+    step = "applyLicense";
     baseTemplate = await applyLicenseTemplate(
       subjects,
       baseTemplate,
@@ -53,43 +91,44 @@ export async function renderIssues(
       owner,
       context
     );
+    logwatch.info(`License template applied`, { owner, repo: repository.name });
 
-    // Check if pull request url exist in db
+    // ── LICENSE PR CHECK
+    step = "licensePRCheck";
     const prUrl = await dbInstance.licenseRequest.findUnique({
       where: { repository_id: repository.id },
     });
 
-    if (prUrl?.license_id === "Custom") {
-      subjects.customLicense = true;
-    }
-
-    // If License PR is open, add the PR number to the dashboard
-    if (prUrl?.pull_request_url !== "") {
-      // Verify if the PR is still open
-      try {
-        const pr = await context.octokit.pulls.get({
+    if (prUrl?.pull_request_url) {
+      logwatch.info(`Verifying License PR`, {
+        owner,
+        repo: repository.name,
+        url: prUrl.pull_request_url,
+      });
+      const pull_number = prUrl.pull_request_url.split("/").pop();
+      const pr = await context.octokit.pulls.get({
+        owner,
+        repo: repository.name,
+        pull_number,
+      });
+      if (pr.data.state === "open") {
+        baseTemplate +=
+          `\n\nA pull request for the LICENSE is open:\n\n` +
+          `[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prUrl.pull_request_url})`;
+      } else {
+        await dbInstance.licenseRequest.update({
+          where: { repository_id: repository.id },
+          data: { pull_request_url: "" },
+        });
+        logwatch.info(`Cleared stale License PR URL`, {
           owner,
           repo: repository.name,
-          pull_number: prUrl.pull_request_url.split("/").pop(),
         });
-
-        if (pr.data.state === "open") {
-          baseTemplate += `\n\nA pull request for the LICENSE file is open. You can view the pull request:\n\n[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prUrl.pull_request_url})`;
-        } else {
-          // If the PR is closed, remove the PR from the database
-          await dbInstance.licenseRequest.update({
-            where: { repository_id: repository.id },
-            data: { pull_request_url: "" },
-          });
-        }
-      } catch (error) {
-        logwatch.error(
-          { message: "Error fetching pull request:", error },
-          true
-        );
       }
     }
 
+    // ── METADATA
+    step = "applyMetadata";
     baseTemplate = await applyMetadataTemplate(
       subjects,
       baseTemplate,
@@ -97,36 +136,47 @@ export async function renderIssues(
       owner,
       context
     );
+    logwatch.info(`Metadata template applied`, {
+      owner,
+      repo: repository.name,
+    });
 
-    const metadataPrUrl = await dbInstance.codeMetadata.findUnique({
+    // ── METADATA PR CHECK
+    step = "metadataPRCheck";
+    const metadataPr = await dbInstance.codeMetadata.findUnique({
       where: { repository_id: repository.id },
     });
 
-    if (metadataPrUrl?.pull_request_url) {
-      try {
-        const pr = await context.octokit.pulls.get({
+    if (metadataPr?.pull_request_url) {
+      logwatch.info(`Verifying Metadata PR`, {
+        owner,
+        repo: repository.name,
+        url: metadataPr.pull_request_url,
+      });
+      const pull_number = metadataPr.pull_request_url.split("/").pop();
+      const pr = await context.octokit.pulls.get({
+        owner,
+        repo: repository.name,
+        pull_number,
+      });
+      if (pr.data.state === "open") {
+        baseTemplate +=
+          `\n\nA pull request for metadata is open:\n\n` +
+          `[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${metadataPr.pull_request_url})`;
+      } else {
+        await dbInstance.codeMetadata.update({
+          where: { repository_id: repository.id },
+          data: { pull_request_url: "" },
+        });
+        logwatch.info(`Cleared stale Metadata PR URL`, {
           owner,
           repo: repository.name,
-          pull_number: metadataPrUrl.pull_request_url.split("/").pop(),
         });
-
-        if (pr.data.state === "open") {
-          baseTemplate += `\n\nA pull request for the metadata files is open. You can view the pull request:\n\n[![Metadata](https://img.shields.io/badge/View_PR-6366f1.svg)](${metadataPrUrl.pull_request_url})`;
-        } else {
-          // If the PR is closed, remove the PR from the database
-          await dbInstance.codeMetadata.update({
-            where: { repository_id: repository.id },
-            data: { pull_request_url: "" },
-          });
-        }
-      } catch (error) {
-        logwatch.error(
-          { message: "Error fetching metadata pull request:", error },
-          true
-        );
       }
     }
 
+    // ── CWL
+    step = "applyCWL";
     baseTemplate = await applyCWLTemplate(
       subjects,
       baseTemplate,
@@ -134,14 +184,39 @@ export async function renderIssues(
       owner,
       context
     );
+    logwatch.info(`CWL template applied`, { owner, repo: repository.name });
 
+    // ── ARCHIVAL
+    step = "applyArchival";
     baseTemplate = await applyArchivalTemplate(baseTemplate, repository, owner);
+    logwatch.info(`Archival template applied`, {
+      owner,
+      repo: repository.name,
+    });
 
+    // ── LAST MODIFIED
+    step = "applyLastModified";
     baseTemplate = applyLastModifiedTemplate(baseTemplate);
+    logwatch.info(`Last-Modified template applied`, {
+      owner,
+      repo: repository.name,
+    });
 
+    logwatch.success(`renderIssues complete`, { owner, repo: repository.name });
     return baseTemplate;
-  } catch (error) {
-    throw new Error("Error rendering issue:", { cause: error });
+  } catch (err) {
+    logwatch.error(
+      {
+        message: `renderIssues failed at step "${step}"`,
+        owner,
+        repo: repository.name,
+        error: { message: err.message, stack: err.stack, cause: err.cause },
+      },
+      true
+    );
+    throw new Error(`Error rendering issue [${step}]: ${err.message}`, {
+      cause: err,
+    });
   }
 }
 
