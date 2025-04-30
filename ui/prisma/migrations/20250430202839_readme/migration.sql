@@ -1,3 +1,6 @@
+-- AlterTable
+ALTER TABLE "Analytics" ADD COLUMN     "update_readme" INTEGER NOT NULL DEFAULT 0;
+
 -- CreateTable
 CREATE TABLE "ReadmeValidation" (
     "id" TEXT NOT NULL,
@@ -5,6 +8,7 @@ CREATE TABLE "ReadmeValidation" (
     "repository_id" INTEGER NOT NULL,
     "contains_readme" BOOLEAN NOT NULL DEFAULT false,
     "readme_content" TEXT NOT NULL DEFAULT '',
+    "readme_path" TEXT NOT NULL DEFAULT '',
     "pull_request_url" TEXT NOT NULL DEFAULT '',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
