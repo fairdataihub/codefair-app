@@ -43,7 +43,6 @@ const pullRequestURL = ref("");
 
 interface ReadmeResponse {
   readmeContent: string;
-  timestamp: number;
 }
 
 const { data, error } = await useFetch<ReadmeResponse>(

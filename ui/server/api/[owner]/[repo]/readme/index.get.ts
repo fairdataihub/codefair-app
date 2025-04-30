@@ -15,19 +15,11 @@ export default defineEventHandler(async (event) => {
     },
   });
 
-  if (!readme) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: "readme-request-not-found",
-    });
-  }
-
   // Check if the user is authorized to access the readme request
   await repoWritePermissions(event, owner, repo);
 
-  const response: ReadmeRequestGetResponse = {
-    readmeContent: readme.readme_content || "",
-    timestamp: Date.parse(readme.updated_at.toString()),
+  const response: ReadmeRequest = {
+    readmeContent: readme?.readme_content || "",
   };
 
   // return the valid readme request
