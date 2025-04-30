@@ -300,7 +300,9 @@ const handleSettingsSelect = (key: any) => {
 
         <template #content>
           <p class="text-base">
-            A README is required according to the FAIR-BioRS guidelines
+            A README file was not found at the root of your repository. This
+            file is a markdown file that contains information about your
+            project.
           </p>
         </template>
 

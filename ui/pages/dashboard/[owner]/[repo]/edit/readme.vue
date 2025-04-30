@@ -88,7 +88,7 @@ const saveReadmeDraft = async () => {
     readmeContent: readmeContent.value,
   };
 
-  await $fetch(`/api/${owner}/${repo}/license`, {
+  await $fetch(`/api/${owner}/${repo}/readme`, {
     body: JSON.stringify(body),
     headers: useRequestHeaders(["cookie"]),
     method: "PUT",
@@ -100,9 +100,9 @@ const saveReadmeDraft = async () => {
       });
     })
     .catch((error) => {
-      console.error("Failed to save license draft:", error);
+      console.error("Failed to save README draft:", error);
       push.error({
-        title: "Failed to save license draft",
+        title: "Failed to save README draft",
         message: "Please try again later",
       });
     })
@@ -118,7 +118,7 @@ const saveReadmeAndPush = async () => {
     readmeContent: readmeContent.value,
   };
 
-  await $fetch(`/api/${owner}/${repo}/license`, {
+  await $fetch(`/api/${owner}/${repo}/readme`, {
     body: JSON.stringify(body),
     headers: useRequestHeaders(["cookie"]),
     method: "POST",
@@ -126,7 +126,7 @@ const saveReadmeAndPush = async () => {
     .then((response) => {
       if ("prUrl" in response) {
         push.success({
-          title: "License pushed to repository",
+          title: "README pushed to repository",
           message: "Review the changes in the repository",
         });
 
@@ -134,15 +134,15 @@ const saveReadmeAndPush = async () => {
         pullRequestURL.value = response.prUrl;
       } else {
         push.error({
-          title: "Failed to push license to repository",
+          title: "Failed to push README to repository",
           message: "Please try again later",
         });
       }
     })
     .catch((error) => {
-      console.error("Failed to push license to repository:", error);
+      console.error("Failed to push README to repository:", error);
       push.error({
-        title: "Failed to push license to repository",
+        title: "Failed to push README to repository",
         message: "Please try again later",
       });
     })
