@@ -60,6 +60,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const readmePath = readme.contains_readme ? readme.readme_path : "README";
+
   // Check if the user is authorized to access the license request
   await repoWritePermissions(event, owner, repo);
 
@@ -134,7 +136,7 @@ export default defineEventHandler(async (event) => {
           "X-GitHub-Api-Version": "2022-11-28",
         },
         owner,
-        path: "README",
+        path: readmePath,
         ref: newBranchName,
         repo,
       },
@@ -155,7 +157,7 @@ export default defineEventHandler(async (event) => {
     },
     message: `feat: ✨ ${existingReadmeSHA ? "Update" : "Create"} README file`,
     owner,
-    path: "README",
+    path: readmePath,
     repo,
     ...(existingReadmeSHA && { sha: existingReadmeSHA }),
   });
@@ -164,12 +166,12 @@ export default defineEventHandler(async (event) => {
   const { data: pullRequestData } = await octokit.request(
     "POST /repos/{owner}/{repo}/pulls",
     {
-      title: `feat: ✨ README file ${existingReadmeSHA ? "updated" : "added"}`,
+      title: `feat: ✨ ${readmePath} file ${existingReadmeSHA ? "updated" : "added"}`,
       base: defaultBranch,
       body: `This pull request ${
         existingReadmeSHA
           ? "updates the existing README file"
-          : `adds the README file created with Codefair`
+          : `adds the ${readmePath} file created with Codefair`
       }. Please review the changes and merge the pull request if everything looks good.`,
       head: newBranchName,
       headers: {
@@ -186,6 +188,7 @@ export default defineEventHandler(async (event) => {
     data: {
       pull_request_url: pullRequestData.html_url,
       readme_content: readmeContent,
+      readme_path: readmePath,
     },
     include: {
       repository: true,
@@ -213,17 +216,6 @@ export default defineEventHandler(async (event) => {
       data: {
         id: updatedReadme.repository.id,
         update_readme: 1,
-      },
-    });
-  }
-
-  if (existingAnalytics) {
-    await prisma.analytics.update({
-      data: {
-        license_created: { increment: 1 },
-      },
-      where: {
-        id: existingAnalytics.id,
       },
     });
   }

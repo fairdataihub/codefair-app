@@ -1,3 +1,5 @@
+import { createId } from "@paralleldrive/cuid2";
+
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 
@@ -6,14 +8,40 @@ export default defineEventHandler(async (event) => {
     repo: string;
   };
 
-  const readme = await prisma.readmeValidation.findFirst({
+  const installation = await prisma.installation.findFirst({
+    include: {
+      ReadmeValidation: true,
+    },
     where: {
-      repository: {
-        owner,
-        repo,
-      },
+      owner,
+      repo,
     },
   });
+
+  if (!installation) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: "Installation not found",
+    });
+  }
+
+  let readme = installation?.ReadmeValidation;
+
+  if (!readme) {
+    // Create entry if it doesn't exist
+    readme = await prisma.readmeValidation.create({
+      data: {
+        contains_readme: false,
+        identifier: createId(),
+        readme_content: "",
+        repository: {
+          connect: {
+            id: installation.id,
+          },
+        },
+      },
+    });
+  }
 
   // Check if the user is authorized to access the readme request
   await repoWritePermissions(event, owner, repo);
