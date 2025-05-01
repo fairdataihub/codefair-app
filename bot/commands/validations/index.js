@@ -16,6 +16,7 @@ import {
   applyCitationMetadata,
 } from "../../compliance-checks/metadata/index.js";
 import { checkForReadme } from "../../compliance-checks/readme/index.js";
+import { createId } from "../../utils/tools/index.js";
 
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const db = dbInstance;
@@ -100,7 +101,7 @@ export async function rerunMetadataValidation(
       validCitation = false,
       validCodemeta = false;
 
-    const existingMetadataEntry = await db.codeMetadata.findUnique({
+    let existingMetadataEntry = await db.codeMetadata.findUnique({
       where: {
         repository_id: repository.id,
       },
@@ -111,6 +112,18 @@ export async function rerunMetadataValidation(
       containsCitation = existingMetadataEntry.contains_citation;
       containsCodemeta = existingMetadataEntry.contains_codemeta;
       metadata = applyDbMetadata(existingMetadataEntry, metadata);
+    } else {
+      // create blank entry to prevent issues down the line
+      existingMetadataEntry = await db.codeMetadata.create({
+        data: {
+          identifier: createId(),
+          repository: {
+            connect: {
+              id: repository.id,
+            },
+          },
+        },
+      });
     }
 
     const citation = await getCitationContent(context, owner, repository);
