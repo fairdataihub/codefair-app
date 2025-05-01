@@ -12,7 +12,17 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  * @returns {Boolean} - True if a README file exists, false otherwise
  */
 export async function checkForReadme(context, owner, repoName) {
-  const readmeFilesTypes = ["README.md", "README.txt", "README"];
+  const readmeFilesTypes = [
+    "README.md",
+    "README.txt",
+    "README",
+    "docs/README.md",
+    "docs/README.txt",
+    "docs/README",
+    ".github/README.md",
+    ".github/README.txt",
+    ".github/README",
+  ];
 
   for (const filePath of readmeFilesTypes) {
     const readme = await checkForFile(context, owner, repoName, filePath);

@@ -15,9 +15,76 @@ import {
   applyCodemetaMetadata,
   applyCitationMetadata,
 } from "../../compliance-checks/metadata/index.js";
+import { checkForReadme } from "../../compliance-checks/readme/index.js";
 
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const db = dbInstance;
+
+export async function rerunReadmeValidation(
+  context,
+  owner,
+  repository,
+  issueBody
+) {
+  logwatch.start("Refetching README file...");
+  try {
+    const readme = await checkForReadme(context, owner, repository.name);
+    const existingReadmeEntry = await db.readmeValidation.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
+    });
+
+    if (existingReadmeEntry) {
+      // Update the entry
+      await db.readmeValidation.update({
+        data: {
+          readme_path: readme.path,
+          readme_content: readme.content,
+          contains_readme: readme.status,
+        },
+        where: {
+          repository_id: repository.id,
+        },
+      });
+    } else {
+      // Create a new entry
+      await db.readmeValidation.create({
+        data: {
+          readme_path: readme.path,
+          readme_content: readme.content,
+          contains_readme: readme.status,
+          repository: {
+            connect: {
+              id: repository.id,
+            },
+          },
+        },
+      });
+    }
+  } catch (error) {
+    // Remove the command from the issue body
+    const issueBodyRemovedCommand = issueBody.substring(
+      0,
+      issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
+    );
+    const lastModified = await applyLastModifiedTemplate(
+      issueBodyRemovedCommand
+    );
+    await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+    if (error.cause) {
+      logwatch.error(
+        {
+          message: "Error.cause message for fetching README file",
+          error_cause: error.cause,
+          error: error,
+        },
+        true
+      );
+    }
+    throw new Error("Error re-fetching README", error);
+  }
+}
 
 export async function rerunMetadataValidation(
   context,
@@ -233,23 +300,28 @@ export async function rerunLicenseValidation(
 export async function rerunCWLValidation(context, owner, repository) {
   try {
     logwatch.start("Rerunning CWL Validation...");
+    // fetch installation and its relations
+    const installation = await db.installation.findFirst({
+      include: {
+        CodeMetadata: true,
+        LicenseRequest: true,
+        ReadmeValidation: true,
+      },
+      where: { owner, repo: repository.name },
+    });
 
-    const [licenseResponse, metadataResponse, cwlResponse] = await Promise.all([
-      db.licenseRequest.findUnique({
-        where: {
-          repository_id: repository.id,
-        },
-      }),
-      db.codeMetadata.findUnique({
-        where: {
-          repository_id: repository.id,
-        },
-      }),
-    ]);
+    if (!installation) {
+      throw new Error("Installation not found in the database");
+    }
 
-    const license = !!licenseResponse?.license_id;
-    const citation = !!metadataResponse?.contains_citation;
-    const codemeta = !!metadataResponse?.contains_codemeta;
+    const citation = installation.CodeMetadata?.contains_citation;
+    const codemeta = installation.CodeMetadata?.contains_codemeta;
+    const license = installation.LicenseRequest?.contains_license;
+    const readme = {
+      status: installation?.ReadmeValidation?.contains_readme || false,
+      path: installation?.ReadmeValidation?.readme_path || null,
+      content: installation?.ReadmeValidation?.readme_content || "",
+    };
 
     const cwlObject = await getCWLFiles(context, owner, repository);
 
@@ -258,6 +330,7 @@ export async function rerunCWLValidation(context, owner, repository) {
       citation,
       codemeta,
       license,
+      readme,
     };
 
     const issueBody = await renderIssues(

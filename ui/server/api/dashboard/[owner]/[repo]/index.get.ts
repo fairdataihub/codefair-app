@@ -6,22 +6,20 @@ export default defineEventHandler(async (event) => {
     repo: string;
   };
 
-  // Check if the user has write permissions to the repository
+  // permission checks
   await repoWritePermissions(event, owner, repo);
-  const isOrg = await ownerIsOrganization(event, owner);
-  await isOrganizationMember(event, isOrg, owner);
+  const isOrganization = await ownerIsOrganization(event, owner);
+  await isOrganizationMember(event, isOrganization, owner);
 
-  // Check if the installation exists in the database
+  // fetch installation and its relations
   const installation = await prisma.installation.findFirst({
     include: {
       CodeMetadata: true,
       CwlValidation: true,
       LicenseRequest: true,
+      ReadmeValidation: true,
     },
-    where: {
-      owner,
-      repo,
-    },
+    where: { owner, repo },
   });
 
   if (!installation) {
@@ -31,47 +29,57 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const licenseRequest = installation.LicenseRequest;
-  const codeMetadataRequest = installation.CodeMetadata;
-  const cwlValidation = installation.CwlValidation;
+  const cmRaw = installation.CodeMetadata;
+  const cwRaw = installation.CwlValidation;
+  const lrRaw = installation.LicenseRequest;
+  const rvRaw = installation.ReadmeValidation;
+
+  const codeMetadataRequest = {
+    citationStatus: cmRaw?.citation_status ?? "invalid",
+    codemetaStatus: cmRaw?.codemeta_status ?? "invalid",
+    containsCitation: cmRaw?.contains_citation ?? false,
+    containsCodemeta: cmRaw?.contains_codemeta ?? false,
+    containsMetadata: cmRaw?.contains_metadata ?? false,
+    identifier: cmRaw?.identifier ?? "",
+    owner: installation.owner,
+    pullRequest: cmRaw?.pull_request_url ?? "",
+    repo: installation.repo,
+    timestamp: cmRaw?.updated_at ?? null,
+  };
+
+  const cwlValidation = {
+    containsCWL: cwRaw?.contains_cwl_files ?? false,
+    identifier: cwRaw?.identifier ?? "",
+    overallStatus: cwRaw?.overall_status ?? "",
+    owner: installation.owner,
+    repo: installation.repo,
+  };
+
+  const licenseRequest = {
+    containsLicense: lrRaw?.contains_license ?? false,
+    identifier: lrRaw?.identifier ?? "",
+    licenseId: lrRaw?.license_id ?? null,
+    licenseStatus: lrRaw?.license_status ?? "invalid",
+    owner: installation.owner,
+    pullRequest: lrRaw?.pull_request_url ?? "",
+    repo: installation.repo,
+    timestamp: lrRaw?.updated_at ?? null,
+  };
+
+  const readmeValidation = {
+    containsReadme: rvRaw?.contains_readme ?? false,
+    owner: installation.owner,
+    readmeContent: rvRaw?.readme_content ?? "",
+    repo: installation.repo,
+    timestamp: rvRaw?.updated_at ?? null,
+  };
 
   return {
-    codeMetadataRequest: codeMetadataRequest
-      ? {
-          citationStatus: codeMetadataRequest.citation_status || "invalid",
-          codemetaStatus: codeMetadataRequest.codemeta_status || "invalid",
-          containsCitation: codeMetadataRequest.contains_citation || false,
-          containsCodemeta: codeMetadataRequest.contains_codemeta || false,
-          containsMetadata: codeMetadataRequest.contains_metadata || false,
-          identifier: codeMetadataRequest.identifier || "",
-          owner: installation.owner,
-          pullRequest: codeMetadataRequest.pull_request_url || "",
-          repo: installation.repo,
-          timestamp: codeMetadataRequest.updated_at || null,
-        }
-      : null,
-    cwlValidation: cwlValidation
-      ? {
-          containsCWL: cwlValidation.contains_cwl_files || false,
-          identifier: cwlValidation.identifier || "",
-          overallStatus: cwlValidation.overall_status || "",
-          owner: installation.owner,
-          repo: installation.repo,
-        }
-      : null,
+    codeMetadataRequest,
+    cwlValidation,
     installationId: installation.installation_id,
-    isOrganization: isOrg,
-    licenseRequest: licenseRequest
-      ? {
-          containsLicense: licenseRequest.contains_license || false,
-          identifier: licenseRequest.identifier || "",
-          licenseId: licenseRequest.license_id || null,
-          licenseStatus: licenseRequest.license_status || "invalid",
-          owner: installation.owner,
-          pullRequest: licenseRequest.pull_request_url || "",
-          repo: installation.repo,
-          timestamp: licenseRequest.updated_at || null,
-        }
-      : null,
+    isOrganization,
+    licenseRequest,
+    readmeValidation,
   };
 });

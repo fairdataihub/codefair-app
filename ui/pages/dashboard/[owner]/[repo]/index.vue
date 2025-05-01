@@ -3,20 +3,13 @@ import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 import { Icon } from "#components";
 
 const route = useRoute();
-
-const breadcrumbsStore = useBreadcrumbsStore();
-
-breadcrumbsStore.showBreadcrumbs();
-breadcrumbsStore.setFeature({
-  id: "",
-  name: "",
-  icon: "",
-});
-
 const { owner, repo } = route.params as { owner: string; repo: string };
 
-const devMode = process.env.NODE_ENV === "development";
+const breadcrumbsStore = useBreadcrumbsStore();
+breadcrumbsStore.showBreadcrumbs();
+breadcrumbsStore.setFeature({ id: "", name: "", icon: "" });
 
+const devMode = process.env.NODE_ENV === "development";
 const botNotInstalled = ref(false);
 const cwlValidationRerunRequestLoading = ref(false);
 const displayMetadataValidationResults = ref(false);
@@ -26,11 +19,7 @@ const showMetadataModal = ref(false);
 const showReadmeModal = ref(false);
 const loading = ref(false);
 
-const renderIcon = (icon: string) => {
-  return () => {
-    return h(Icon, { name: icon });
-  };
-};
+const renderIcon = (icon: string) => () => h(Icon, { name: icon });
 
 const settingsOptions = [
   {
@@ -47,6 +36,14 @@ const settingsOptions = [
     icon: renderIcon("mdi:cog"),
     key: "view-codefair-settings",
     label: "View Codefair settings",
+  },
+];
+
+const readmeSettingsOptions = [
+  {
+    icon: renderIcon("mdi:github"),
+    key: "re-fetch-readme",
+    label: "Re-fetch README content",
   },
 ];
 
@@ -78,7 +75,7 @@ if (error.value) {
     push.error({
       title: "Something went wrong",
       message:
-        "Could not fetch the data for the dashboard. Please try again later. Make sure the bot has access to your account/organization.",
+        "Could not fetch dashboard data. Please try again later. Make sure Codefair has access to your account/organization.",
     });
 
     throw createError(error.value);
@@ -94,12 +91,31 @@ if (
   displayMetadataValidationResults.value = true;
 }
 
-const hideConfirmation = () => {
-  showModal.value = false;
-};
+const hideConfirmation = () => (showModal.value = false);
+const showConfirmation = () => (showModal.value = true);
 
-const showConfirmation = () => {
-  showModal.value = true;
+const rerunCodefairChecks = async (rerunType: string) => {
+  hideConfirmation();
+  push.info({ title: "Submitting request", message: "Please wait..." });
+  try {
+    await $fetch(`/api/${owner}/${repo}/rerun`, {
+      body: { rerunType },
+      headers: useRequestHeaders(["cookie"]),
+      method: "POST",
+    });
+    push.success({
+      title: "Success",
+      message: "Request submitted successfully.",
+    });
+  } catch (err: any) {
+    push.error({
+      title: "Error",
+      message:
+        err.statusMessage === "Validation already requested"
+          ? "Request already submitted. Please wait."
+          : "Failed to submit request. Try again later.",
+    });
+  }
 };
 
 const handlePositiveClick = async (reRunType: string) => {
@@ -111,112 +127,46 @@ const handlePositiveClick = async (reRunType: string) => {
 
 const rerunCwlValidation = async () => {
   cwlValidationRerunRequestLoading.value = true;
-
-  await $fetch(`/api/${owner}/${repo}/cwl-validation/rerun`, {
-    headers: useRequestHeaders(["cookie"]),
-    method: "POST",
-  })
-    .then(() => {
-      push.success({
-        title: "Success",
-        message:
-          "A request to rerun the cwl validator has been submitted succesfully. Please wait a few minutes for this process to take place.",
-      });
-    })
-    .catch((error) => {
-      if (error.statusMessage === "Validation already requested") {
-        push.error({
-          title: "Error",
-          message:
-            "A request to rerun the cwl validator has already been submitted. Please wait a few minutes for this process to take place.",
-        });
-      } else {
-        push.error({
-          title: "Error",
-          message:
-            "Failed to submit the request to rerun the cwl validator. Please try again later.",
-        });
-      }
-    })
-    .finally(() => {
-      cwlValidationRerunRequestLoading.value = false;
+  try {
+    await $fetch(`/api/${owner}/${repo}/cwl-validation/rerun`, {
+      headers: useRequestHeaders(["cookie"]),
+      method: "POST",
     });
+    push.success({ title: "Success", message: "CWL revalidation requested." });
+  } catch (err: any) {
+    push.error({
+      title: "Error",
+      message:
+        err.statusMessage === "Validation already requested"
+          ? "Already requested. Please wait."
+          : "Failed to submit CWL revalidation. Try again later.",
+    });
+  } finally {
+    cwlValidationRerunRequestLoading.value = false;
+  }
 };
 
-const rerunCodefairChecks = async (rerunType: string) => {
-  hideConfirmation();
-  push.info({
-    title: "Submitting request",
-    message:
-      "Please wait while we submit a request to rerun the codefair checks on this repository.",
-  });
-
-  await $fetch(`/api/${owner}/${repo}/rerun`, {
-    body: {
-      rerunType,
+const handleSettingsSelect = (key: string) => {
+  const actions: { [key: string]: () => void } = {
+    "re-fetch-readme": () => (showReadmeModal.value = true),
+    "re-validate-license": () => (showLicenseModal.value = true),
+    "re-validate-metadata": () => (showMetadataModal.value = true),
+    "rerun-codefair-on-repo": () => rerunCodefairChecks("full-repo"),
+    "view-codefair-settings": () => {
+      const url = data.value?.isOrganization
+        ? `https://github.com/organizations/${owner}/settings/installations/${data.value.installationId}`
+        : `https://github.com/settings/installations/${data.value.installationId}`;
+      navigateTo(url, { open: { target: "_blank" } });
     },
-    headers: useRequestHeaders(["cookie"]),
-    method: "POST",
-  })
-    .then(() => {
-      push.success({
-        title: "Success",
-        message:
-          "A request to rerun the codefair checks has been submitted succesfully. Please wait a few minutes for this process to take place.",
-      });
-    })
-    .catch((error) => {
-      if (error.statusMessage === "Validation already requested") {
-        push.error({
-          title: "Error",
-          message:
-            "A request to rerun the codefair checks has already been submitted. Please wait a few minutes for this process to take place.",
-        });
-      } else {
-        push.error({
-          title: "Error",
-          message:
-            "Failed to submit the request to rerun the codefair checks. Please try again later.",
-        });
-      }
-    });
-};
+    "view-repo": () =>
+      navigateTo(`https://github.com/${owner}/${repo}`, {
+        open: { target: "_blank" },
+      }),
+  };
 
-const handleSettingsSelect = (key: any) => {
-  if (key === "view-repo") {
-    navigateTo(`https://github.com/${owner}/${repo}`, {
-      open: {
-        target: "_blank",
-      },
-    });
-  } else if (key === "rerun-codefair-on-repo") {
-    rerunCodefairChecks("full-repo");
-  } else if (key === "view-codefair-settings") {
-    if (data.value?.isOrganization) {
-      navigateTo(
-        `https://github.com/organizations/${owner}/settings/installations/${data.value?.installationId}`,
-        {
-          open: {
-            target: "_blank",
-          },
-        },
-      );
-    } else {
-      navigateTo(
-        `https://github.com/settings/installations/${data.value?.installationId}`,
-        {
-          open: {
-            target: "_blank",
-          },
-        },
-      );
-    }
-  } else if (key === "re-validate-license") {
-    // rerunCodefairChecks("license");
-    showLicenseModal.value = true;
-  } else if (key === "re-validate-metadata") {
-    // rerunCodefairChecks("metadata");
-    showMetadataModal.value = true;
+  const action = actions[key];
+  if (action) {
+    action();
   }
 };
 </script>
@@ -249,13 +199,14 @@ const handleSettingsSelect = (key: any) => {
     </n-flex>
 
     <n-alert v-if="botNotInstalled" type="error" class="my-5">
-      The Codefair bot is not installed on this repository. Please install the
-      bot to view the compliance dashboard.
+      The Codefair bot is not installed on this repository. Please install it to
+      view the dashboard.
     </n-alert>
 
     <div v-else>
       <LayoutSectionDivider class="my-4" />
 
+      <!-- README Card -->
       <CardDashboard
         title="README"
         subheader="The README for the repository is shown here."
@@ -265,30 +216,42 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #header-extra>
-          <div
-            v-if="data?.readmeValidation?.readmeExists"
-            class="flex flex-wrap items-center space-x-2"
-          >
-            <n-popover trigger="hover">
-              <template #trigger>
-                <n-tag type="success">
-                  <template #icon>
-                    <Icon name="icon-park-solid:check-one" size="16" />
-                  </template>
+          <div class="flex flex-wrap items-center space-x-2">
+            <div v-if="data?.readmeValidation?.readmeExists">
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <n-tag type="success">
+                    <template #icon>
+                      <Icon name="icon-park-solid:check-one" size="16" />
+                    </template>
 
-                  Repository contains a README
-                </n-tag>
-              </template>
+                    <span>Repository contains a README</span>
+                  </n-tag>
+                </template>
 
-              <span>README file exists</span>
-            </n-popover>
+                <span>README file exists</span>
+              </n-popover>
+            </div>
+
+            <n-dropdown
+              :options="readmeSettingsOptions"
+              placement="bottom-end"
+              :show-arrow="true"
+              @select="handleSettingsSelect"
+            >
+              <n-button quaternary circle size="large">
+                <template #icon>
+                  <Icon name="humbleicons:dots-vertical" size="20" />
+                </template>
+              </n-button>
+            </n-dropdown>
 
             <n-modal
               v-model:show="showReadmeModal"
               :mask-closable="false"
               preset="dialog"
               title="Are you sure?"
-              content="Doing this action will overwrite any existing draft. Do you want to continue?"
+              content="This will overwrite any existing draft. Do you want to continue?"
               positive-text="Confirm"
               negative-text="Cancel"
               :loading="loading"
@@ -320,6 +283,7 @@ const handleSettingsSelect = (key: any) => {
 
       <n-divider />
 
+      <!-- License Card -->
       <CardDashboard
         title="License"
         subheader="The license for the repository is shown here."
@@ -329,55 +293,65 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #header-extra>
-          <div
-            v-if="data?.licenseRequest?.containsLicense"
-            class="flex flex-wrap items-center space-x-2"
-          >
-            <n-popover
-              v-if="data?.licenseRequest?.licenseStatus === 'valid'"
-              trigger="hover"
-            >
-              <template #trigger>
-                <n-tag
-                  v-if="data?.licenseRequest?.licenseStatus === 'valid'"
-                  type="success"
-                >
-                  <template #icon>
-                    <Icon name="icon-park-solid:check-one" size="16" />
-                  </template>
-                  Contains a valid license
-                </n-tag>
-              </template>
+          <div class="flex flex-wrap items-center space-x-2">
+            <div v-if="data?.licenseRequest?.containsLicense">
+              <n-popover
+                v-if="data?.licenseRequest?.licenseStatus === 'valid'"
+                trigger="hover"
+              >
+                <template #trigger>
+                  <n-tag type="success">
+                    <template #icon>
+                      <Icon name="icon-park-solid:check-one" size="16" />
+                    </template>
+                    Contains a valid license
+                  </n-tag>
+                </template>
 
-              <span>SPDX License: {{ data?.licenseRequest?.licenseId }}</span>
-            </n-popover>
+                <span>SPDX License: {{ data?.licenseRequest?.licenseId }}</span>
+              </n-popover>
 
-            <n-tooltip
-              v-else-if="data?.licenseRequest?.licenseStatus === 'invalid'"
-              trigger="hover"
-            >
-              <template #trigger>
-                <n-tag type="warning">
-                  <template #icon>
-                    <Icon name="ic:round-warning" size="16" />
-                  </template>
-                  Might not contain a valid license
-                </n-tag>
-              </template>
-              We couldn't determine if the license for this repository is valid.
-            </n-tooltip>
+              <n-tooltip
+                v-else-if="data?.licenseRequest?.licenseStatus === 'invalid'"
+                trigger="hover"
+              >
+                <template #trigger>
+                  <n-tag type="warning">
+                    <template #icon>
+                      <Icon name="ic:round-warning" size="16" />
+                    </template>
+                    Might not contain a valid license
+                  </n-tag>
+                </template>
+                We couldn't determine if the license for this repository is
+                valid.
+              </n-tooltip>
 
-            <n-tag
-              v-if="data?.licenseRequest?.licenseId === 'Custom'"
-              type="warning"
-            >
-              <template #icon>
-                <Icon name="ic:round-warning" size="16" />
-              </template>
-              This repository uses a custom license.
-            </n-tag>
+              <n-tag
+                v-if="data?.licenseRequest?.licenseId === 'Custom'"
+                type="warning"
+              >
+                <template #icon>
+                  <Icon name="ic:round-warning" size="16" />
+                </template>
+                This repository uses a custom license.
+              </n-tag>
+            </div>
 
-            <!-- <n-button class="border-none"></n-button> -->
+            <div v-else>
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <n-tag type="error">
+                    <template #icon>
+                      <Icon name="icon-park-solid:close-one" size="16" />
+                    </template>
+                    No license found
+                  </n-tag>
+                </template>
+
+                <span>License file not found</span>
+              </n-popover>
+            </div>
 
             <n-dropdown
               :options="licenseSettingsOptions"
@@ -409,7 +383,7 @@ const handleSettingsSelect = (key: any) => {
 
         <template #content>
           <p class="text-base">
-            A License is required according to the FAIR-BioRS guidelines
+            A License is required according to the FAIR-BioRS guidelines.
           </p>
         </template>
 
@@ -427,6 +401,7 @@ const handleSettingsSelect = (key: any) => {
 
       <n-divider />
 
+      <!-- Code Metadata Card -->
       <CardDashboard
         title="Code Metadata"
         subheader="The code metadata for the repository is shown here."
@@ -440,10 +415,13 @@ const handleSettingsSelect = (key: any) => {
             v-if="data?.licenseRequest?.containsLicense"
             class="items-center align-middle"
           >
-            <n-popover trigger="hover">
+            <!-- CITATION.CFF tag/popover -->
+            <n-popover
+              v-if="data?.codeMetadataRequest?.containsCitation"
+              trigger="hover"
+            >
               <template #trigger>
                 <n-tag
-                  v-if="data?.codeMetadataRequest?.containsCitation"
                   :type="
                     data?.codeMetadataRequest?.citationStatus === 'valid'
                       ? 'success'
@@ -464,61 +442,74 @@ const handleSettingsSelect = (key: any) => {
                 </n-tag>
               </template>
 
-              <span v-if="data?.codeMetadataRequest?.citationStatus === 'valid'"
-                >CITATION.cff is valid</span
-              >
+              <template #default>
+                <div class="text-center">
+                  <span
+                    v-if="data.codeMetadataRequest.citationStatus === 'valid'"
+                  >
+                    CITATION.cff is valid
+                  </span>
 
-              <span v-else
-                >Errors found in your file. View the report below</span
-              >
+                  <span v-else>
+                    Errors found in your file. View the report below
+                  </span>
+                </div>
+              </template>
             </n-popover>
 
-            <n-popover trigger="hover">
+            <!-- CODEMETA.JSON tag/popover -->
+            <n-popover
+              v-if="data?.codeMetadataRequest?.containsCodemeta"
+              trigger="hover"
+            >
               <template #trigger>
-                <span>
-                  <n-tag
-                    v-if="data?.codeMetadataRequest?.containsCodemeta"
-                    :type="
-                      data?.codeMetadataRequest?.codemetaStatus === 'valid'
-                        ? 'success'
-                        : 'error'
-                    "
-                  >
-                    <template #icon>
-                      <Icon
-                        :name="
-                          data?.codeMetadataRequest?.codemetaStatus === 'valid'
-                            ? 'icon-park-solid:check-one'
-                            : 'icon-park-solid:close-one'
-                        "
-                        size="16"
-                      />
-                    </template>
-                    codemeta.json
-                  </n-tag>
-                </span>
+                <n-tag
+                  :type="
+                    data?.codeMetadataRequest?.codemetaStatus === 'valid'
+                      ? 'success'
+                      : 'error'
+                  "
+                >
+                  <template #icon>
+                    <Icon
+                      :name="
+                        data?.codeMetadataRequest?.codemetaStatus === 'valid'
+                          ? 'icon-park-solid:check-one'
+                          : 'icon-park-solid:close-one'
+                      "
+                      size="16"
+                    />
+                  </template>
+                  codemeta.json
+                </n-tag>
               </template>
 
-              <span v-if="data?.codeMetadataRequest?.codemetaStatus === 'valid'"
-                >codemeta.json is valid</span
-              >
+              <template #default>
+                <div class="text-center">
+                  <span
+                    v-if="data?.codeMetadataRequest?.codemetaStatus === 'valid'"
+                  >
+                    codemeta.json is valid
+                  </span>
 
-              <span v-else
-                >Errors found in your file. View the report below</span
-              >
+                  <span v-else>
+                    Errors found in your file. View the report below
+                  </span>
+                </div>
+              </template>
             </n-popover>
 
             <n-dropdown
-              v-if="data?.licenseRequest?.containsLicense"
+              v-if="data?.codeMetadataRequest?.containsCodemeta"
               :options="metadataSettingsOptions"
               placement="bottom-end"
               :show-arrow="true"
               @select="handleSettingsSelect"
             >
               <n-button quaternary circle size="large">
-                <template #icon>
-                  <Icon name="humbleicons:dots-vertical" size="20" />
-                </template>
+                <template #icon
+                  ><Icon name="humbleicons:dots-vertical" size="20"
+                /></template>
               </n-button>
             </n-dropdown>
 
@@ -544,14 +535,13 @@ const handleSettingsSelect = (key: any) => {
             class="w-full"
           >
             There is no license in this repository. A license needs to be added
-            to this repository before the code metadata can be validated.
+            before metadata can be validated.
           </n-alert>
 
           <div v-else>
             <p class="w-full text-base">
               The code metadata for the repository is shown here. This includes
-              the number of files, the number of lines of code, and the number
-              of commits.
+              the number of files, lines of code, and commits.
             </p>
           </div>
         </template>
@@ -560,8 +550,9 @@ const handleSettingsSelect = (key: any) => {
           <div class="flex space-x-3">
             <a
               v-if="
-                data?.codeMetadataRequest?.citationStatus === 'invalid' ||
-                data?.codeMetadataRequest?.codemetaStatus === 'invalid'
+                data?.licenseRequest?.containsLicense &&
+                (data?.codeMetadataRequest?.citationStatus === 'invalid' ||
+                  data?.codeMetadataRequest?.codemetaStatus === 'invalid')
               "
               :href="`/dashboard/${owner}/${repo}/view/metadata-validation`"
             >
@@ -590,11 +581,12 @@ const handleSettingsSelect = (key: any) => {
 
       <n-divider />
 
+      <!-- CWL Validation Card -->
       <h2 class="pb-6">Language Specific Standards</h2>
 
       <CardDashboard
         title="CWL Validation"
-        subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them to create workflows."
+        subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them into workflows."
       >
         <template #icon>
           <Icon name="cib:common-workflow-language" size="40" />
@@ -626,7 +618,7 @@ const handleSettingsSelect = (key: any) => {
 
         <template #content>
           <n-alert
-            v-if="!data?.cwlValidation || !data.cwlValidation.containsCWL"
+            v-if="!data?.cwlValidation?.containsCWL"
             type="info"
             class="w-full"
           >
@@ -635,7 +627,7 @@ const handleSettingsSelect = (key: any) => {
 
           <p v-else class="text-base">
             Common Workflow Language (CWL) is an open standard for describing
-            how to run command line tools and connect them to create workflows.
+            how to run command line tools and connect them into workflows.
           </p>
         </template>
 
@@ -672,6 +664,7 @@ const handleSettingsSelect = (key: any) => {
 
       <n-divider />
 
+      <!-- FAIR Software Release Card -->
       <h2 class="pb-6">FAIR Software Release</h2>
 
       <CardDashboard
@@ -683,39 +676,43 @@ const handleSettingsSelect = (key: any) => {
         </template>
 
         <template #header-extra>
-          <n-flex>
-            <n-popover trigger="hover">
+          <n-flex class="space-x-2">
+            <n-popover
+              v-if="data?.zenodoDeposition?.lastPublishedZenodoDoi"
+              trigger="hover"
+            >
               <template #trigger>
                 <NuxtLink
-                  v-if="data?.zenodoDeposition?.lastPublishedZenodoDoi"
-                  :to="`https://doi.org/${data?.zenodoDeposition?.lastPublishedZenodoDoi}`"
+                  :to="`https://doi.org/${data.zenodoDeposition.lastPublishedZenodoDoi}`"
                   target="_blank"
                   class="cursor-pointer"
                 >
                   <n-tag type="success" class="cursor-pointer">
-                    <template #icon>
-                      <Icon name="simple-icons:doi" size="16" />
-                    </template>
-                    {{ data?.zenodoDeposition?.lastPublishedZenodoDoi }}
+                    <template #icon
+                      ><Icon name="simple-icons:doi" size="16"
+                    /></template>
+                    {{ data.zenodoDeposition.lastPublishedZenodoDoi }}
                     <Icon name="ri:external-link-line" size="13" />
                   </n-tag>
                 </NuxtLink>
               </template>
 
-              <span>Last published Zenodo DOI</span>
+              <template #default>
+                <span>Last published Zenodo DOI</span>
+              </template>
             </n-popover>
 
             <div
-              v-if="data?.licenseRequest?.containsLicense"
+              v-if="
+                data?.licenseRequest?.containsLicense &&
+                data.licenseRequest.licenseId === 'Custom'
+              "
               class="flex flex-wrap space-x-2"
             >
-              <n-tag
-                v-if="data?.licenseRequest?.licenseId === 'Custom'"
-                type="warning"
-              >
-                <template #icon>
-                  <Icon name="ic:round-warning" size="16" />
-                </template>
+              <n-tag type="warning">
+                <template #icon
+                  ><Icon name="ic:round-warning" size="16"
+                /></template>
                 Cannot publish to Zenodo with a custom license
               </n-tag>
             </div>
@@ -725,9 +722,9 @@ const handleSettingsSelect = (key: any) => {
                 v-if="data?.zenodoDeposition?.zenodoStatus === 'inProgress'"
                 type="info"
               >
-                <template #icon>
-                  <Icon name="icon-park-solid:loading-three" size="16" />
-                </template>
+                <template #icon
+                  ><Icon name="icon-park-solid:loading-three" size="16"
+                /></template>
                 Publish in progress
               </n-tag>
 
@@ -747,9 +744,8 @@ const handleSettingsSelect = (key: any) => {
         <template #content>
           <div class="flex w-full flex-col space-y-2">
             <p class="text-base">
-              To make your software FAIR, it is necessary to archive it in a
-              software archival repository like Zenodo every time you make a
-              release.
+              To make your software FAIR, archive it in a software archival
+              repository like Zenodo every time you make a release.
             </p>
           </div>
         </template>
