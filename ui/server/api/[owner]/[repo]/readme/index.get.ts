@@ -21,11 +21,11 @@ export default defineEventHandler(async (event) => {
   if (!installation) {
     throw createError({
       statusCode: 404,
-      statusMessage: "Installation not found",
+      statusMessage: "installation-not-found",
     });
   }
 
-  let readme = installation?.ReadmeValidation;
+  let readme = installation.ReadmeValidation;
 
   if (!readme) {
     // Create entry if it doesn't exist

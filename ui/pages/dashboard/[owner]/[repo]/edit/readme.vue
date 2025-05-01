@@ -28,6 +28,11 @@ definePageMeta({
 
 const breadcrumbsStore = useBreadcrumbsStore();
 breadcrumbsStore.showBreadcrumbs();
+breadcrumbsStore.setFeature({
+  id: "edit-readme",
+  name: "Edit README",
+  icon: "gg:readme",
+});
 
 const route = useRoute();
 
@@ -41,22 +46,9 @@ const submitLoading = ref(false);
 const showSuccessModal = ref(false);
 const pullRequestURL = ref("");
 
-interface ReadmeResponse {
-  readmeContent: string;
-}
-
-const { data, error } = await useFetch<ReadmeResponse>(
-  `/api/${owner}/${repo}/readme`,
-  {
-    headers: useRequestHeaders(["cookie"]),
-    method: "GET",
-  },
-);
-
-breadcrumbsStore.setFeature({
-  id: "edit-readme",
-  name: "Edit README",
-  icon: "gg:readme",
+const { data, error } = await useFetch(`/api/${owner}/${repo}/readme`, {
+  headers: useRequestHeaders(["cookie"]),
+  method: "GET",
 });
 
 if (error.value) {
@@ -71,7 +63,7 @@ if (error.value) {
 }
 
 if (data.value) {
-  readmeContent.value = data.value.readmeContent ?? "";
+  readmeContent.value = data.value?.readmeContent ?? "";
   displayReadmeEditor.value = true;
 }
 
