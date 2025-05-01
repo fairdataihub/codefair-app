@@ -26,6 +26,7 @@ import {
   rerunFullRepoValidation,
   rerunLicenseValidation,
   rerunMetadataValidation,
+  rerunReadmeValidation,
 } from "./commands/validations/index.js";
 
 checkEnvVariable("GH_APP_NAME");
@@ -453,6 +454,9 @@ export default async (app, { getRouter }) => {
       issueBody.includes("<!-- @codefair-bot rerun-metadata-validation -->")
     ) {
       await rerunMetadataValidation(context, owner, repository, issueBody);
+    }
+    if (issueBody.includes("<!-- @codefair-bot rerun-readme-validation -->")) {
+      await rerunReadmeValidation(context, owner, repository, issueBody);
     }
 
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
