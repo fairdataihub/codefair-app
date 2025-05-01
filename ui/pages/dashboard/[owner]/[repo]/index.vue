@@ -92,7 +92,6 @@ if (
 }
 
 const hideConfirmation = () => (showModal.value = false);
-const showConfirmation = () => (showModal.value = true);
 
 const rerunCodefairChecks = async (rerunType: string) => {
   hideConfirmation();
@@ -225,11 +224,32 @@ const handleSettingsSelect = (key: string) => {
                       <Icon name="icon-park-solid:check-one" size="16" />
                     </template>
 
-                    <span>Repository contains a README</span>
+                    <span
+                      >Repository contains a
+                      {{ data?.readmeValidation?.readMePath }}</span
+                    >
                   </n-tag>
                 </template>
 
-                <span>README file exists</span>
+                <span
+                  >{{ data?.readmeValidation?.readMePath }} file exists</span
+                >
+              </n-popover>
+            </div>
+
+            <div v-else>
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <n-tag type="error">
+                    <template #icon>
+                      <Icon name="icon-park-solid:close-one" size="16" />
+                    </template>
+
+                    <span>README file was not found.</span>
+                  </n-tag>
+                </template>
+
+                <span>README not found</span>
               </n-popover>
             </div>
 
@@ -263,9 +283,15 @@ const handleSettingsSelect = (key: string) => {
 
         <template #content>
           <p class="text-base">
-            A README file was not found at the root of your repository. This
-            file is a markdown file that contains information about your
-            project.
+            <span v-if="!data?.readmeValidation?.readmeExists"
+              >A README file was not found at the root of your repository. This
+              file is a markdown file that contains information about your
+              project.</span
+            >
+
+            <span v-else
+              >A {{ data?.readmeValidation?.readMePath }} was found.</span
+            >
           </p>
         </template>
 
