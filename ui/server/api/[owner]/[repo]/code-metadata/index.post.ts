@@ -1,6 +1,7 @@
 import { App } from "octokit";
 import { nanoid } from "nanoid";
 import dayjs from "dayjs";
+// eslint-disable-next-line import/default
 import YAML from "yaml";
 
 export default defineEventHandler(async (event) => {
@@ -316,7 +317,7 @@ export default defineEventHandler(async (event) => {
   );
 
   // Create a new branch for the code metadata additions
-  const newBranchName = `code-metadata-${nanoid()}`;
+  const newBranchName = `code-metadata-${nanoid(5)}`;
 
   // Create a new branch from the default branch
   await octokit.request("POST /repos/{owner}/{repo}/git/refs", {

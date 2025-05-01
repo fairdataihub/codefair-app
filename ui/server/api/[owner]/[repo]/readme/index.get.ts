@@ -33,7 +33,6 @@ export default defineEventHandler(async (event) => {
       data: {
         contains_readme: false,
         identifier: createId(),
-        readme_content: "",
         repository: {
           connect: {
             id: installation.id,

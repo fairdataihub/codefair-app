@@ -112,7 +112,7 @@ export default defineEventHandler(async (event) => {
   );
 
   // Create a new branch for the license addition
-  const newBranchName = `license-${nanoid()}`;
+  const newBranchName = `license-${nanoid(5)}`;
 
   // Create a new branch from the default branch
   await octokit.request("POST /repos/{owner}/{repo}/git/refs", {

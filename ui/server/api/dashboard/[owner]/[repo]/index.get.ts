@@ -29,10 +29,10 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const cmRaw = installation.CodeMetadata;
-  const cwRaw = installation.CwlValidation;
-  const lrRaw = installation.LicenseRequest;
-  const rvRaw = installation.ReadmeValidation;
+  const cmRaw = installation?.CodeMetadata;
+  const cwlRaw = installation?.CwlValidation;
+  const lrRaw = installation?.LicenseRequest;
+  const rmRaw = installation?.ReadmeValidation;
 
   const codeMetadataRequest = {
     citationStatus: cmRaw?.citation_status ?? "invalid",
@@ -48,9 +48,9 @@ export default defineEventHandler(async (event) => {
   };
 
   const cwlValidation = {
-    containsCWL: cwRaw?.contains_cwl_files ?? false,
-    identifier: cwRaw?.identifier ?? "",
-    overallStatus: cwRaw?.overall_status ?? "",
+    containsCWL: cwlRaw?.contains_cwl_files ?? false,
+    identifier: cwlRaw?.identifier ?? "",
+    overallStatus: cwlRaw?.overall_status ?? "",
     owner: installation.owner,
     repo: installation.repo,
   };
@@ -67,11 +67,12 @@ export default defineEventHandler(async (event) => {
   };
 
   const readmeValidation = {
-    containsReadme: rvRaw?.contains_readme ?? false,
+    containsReadme: rmRaw?.contains_readme ?? false,
     owner: installation.owner,
-    readmeContent: rvRaw?.readme_content ?? "",
+    readmeContent: rmRaw?.readme_content ?? "",
+    readMePath: rmRaw?.readme_path ?? "",
     repo: installation.repo,
-    timestamp: rvRaw?.updated_at ?? null,
+    timestamp: rmRaw?.updated_at ?? null,
   };
 
   return {
