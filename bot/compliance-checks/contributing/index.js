@@ -13,27 +13,39 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  * @returns {Boolean} - True if a CONTRIBUTING file exists, false otherwise
  */
 export async function checkForContributingFile(context, owner, repoName) {
-  const filePath = "CONTRIBUTING.md";
-  const contributing = await checkForFile(context, owner, repoName, filePath);
-  if (contributing) {
-    const content = await context.octokit.repos.getContent({
-      owner,
-      repo: repoName,
-      path: filePath,
-    });
-    const contentData = Buffer.from(content.data.content, "base64").toString(
-      "utf-8"
-    );
+  const contributingFilesTypes = [
+    "CONTRIBUTING.md",
+    "CONTRIBUTING.txt",
+    "CONTRIBUTING",
+    "docs/CONTRIBUTING.md",
+    "docs/CONTRIBUTING.txt",
+    "docs/CONTRIBUTING",
+    ".github/CONTRIBUTING.md",
+    ".github/CONTRIBUTING.txt",
+    ".github/CONTRIBUTING",
+  ];
 
-    return {
-      status: true,
-      path: `${contributing.path}`,
-      content: contentData,
-    };
+  for (const filePath of contributingFilesTypes) {
+    const contrib = await checkForFile(context, owner, repoName, filePath);
+    if (contrib) {
+      const content = await context.octokit.repos.getContent({
+        owner,
+        repo: repoName,
+        path: filePath,
+      });
+      const contentData = Buffer.from(content.data.content, "base64").toString(
+        "utf-8"
+      );
+
+      return {
+        status: true,
+        path: `${contrib.path}`,
+        content: contentData,
+      };
+    }
   }
-
   return {
-    path: "No CONTRIBUTING file found",
+    path: "No Contributing file found",
     status: false,
   };
 }
