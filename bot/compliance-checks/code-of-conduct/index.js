@@ -59,7 +59,7 @@ export async function applyCodeofConductTemplate(
   let identifier, badgeURL;
   try {
     identifier = createId();
-    badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/cof`;
+    badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/code-of-conduct`;
   } catch (error) {
     throw new Error(
       `Failed to initialize CODE_OF_CONDUCT template parameters: ${error.message}`,
