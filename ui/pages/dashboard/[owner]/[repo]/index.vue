@@ -17,6 +17,8 @@ const showModal = ref(false);
 const showLicenseModal = ref(false);
 const showMetadataModal = ref(false);
 const showReadmeModal = ref(false);
+const showCodeofConductModal = ref(false);
+const showContributingModal = ref(false);
 const loading = ref(false);
 
 const renderIcon = (icon: string) => () => h(Icon, { name: icon });
@@ -36,6 +38,22 @@ const settingsOptions = [
     icon: renderIcon("mdi:cog"),
     key: "view-codefair-settings",
     label: "View Codefair settings",
+  },
+];
+
+const codeofConductSettingsOptions = [
+  {
+    icon: renderIcon("mdi:github"),
+    key: "re-fetch-code-of-conduct",
+    label: "Re-fetch Code of Conduct content",
+  },
+];
+
+const contributingSettingsOptions = [
+  {
+    icon: renderIcon("mdi:github"),
+    key: "re-fetch-contributing",
+    label: "Re-fetch Contributing content",
   },
 ];
 
@@ -147,6 +165,8 @@ const rerunCwlValidation = async () => {
 
 const handleSettingsSelect = (key: string) => {
   const actions: { [key: string]: () => void } = {
+    "re-fetch-code-of-conduct": () => (showCodeofConductModal.value = true),
+    "re-fetch-contributing": () => (showContributingModal.value = true),
     "re-fetch-readme": () => (showReadmeModal.value = true),
     "re-validate-license": () => (showLicenseModal.value = true),
     "re-validate-metadata": () => (showMetadataModal.value = true),
@@ -154,7 +174,7 @@ const handleSettingsSelect = (key: string) => {
     "view-codefair-settings": () => {
       const url = data.value?.isOrganization
         ? `https://github.com/organizations/${owner}/settings/installations/${data.value.installationId}`
-        : `https://github.com/settings/installations/${data.value.installationId}`;
+        : `https://github.com/settings/installations/${data.value?.installationId}`;
       navigateTo(url, { open: { target: "_blank" } });
     },
     "view-repo": () =>
@@ -602,6 +622,222 @@ const handleSettingsSelect = (key: string) => {
               </n-button>
             </a>
           </div>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <h2 class="pb-6">Additional Recommendations</h2>
+
+      <!-- Code of Conduct card -->
+      <CardDashboard
+        title="Code of Conduct"
+        subheader="The file serves as a guide for the community and helps to create a safe and inclusive environment for all contributors."
+      >
+        <template #icon>
+          <Icon name="octicon:code-of-conduct-16" size="40" />
+        </template>
+
+        <template #header-extra>
+          <div class="flex flex-wrap items-center space-x-2">
+            <div v-if="data?.codeOfConductValidation?.codeExists">
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <n-tag type="success">
+                    <template #icon>
+                      <Icon name="icon-park-solid:check-one" size="16" />
+                    </template>
+
+                    <span
+                      >Repository contains a
+                      {{ data?.codeOfConductValidation?.codePath }}</span
+                    >
+                  </n-tag>
+                </template>
+
+                <span
+                  >{{ data?.codeOfConductValidation?.codePath }} file
+                  exists</span
+                >
+              </n-popover>
+            </div>
+
+            <div v-else>
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <n-tag type="error">
+                    <template #icon>
+                      <Icon name="icon-park-solid:close-one" size="16" />
+                    </template>
+
+                    <span>CODE_OF_CONDUCT.md not found.</span>
+                  </n-tag>
+                </template>
+
+                <span
+                  >CODE_OF_CONDUCT.md file was not in .github, docs, or the root
+                  of your repository</span
+                >
+              </n-popover>
+            </div>
+
+            <n-dropdown
+              :options="codeofConductSettingsOptions"
+              placement="bottom-end"
+              :show-arrow="true"
+              @select="handleSettingsSelect"
+            >
+              <n-button quaternary circle size="large">
+                <template #icon>
+                  <Icon name="humbleicons:dots-vertical" size="20" />
+                </template>
+              </n-button>
+            </n-dropdown>
+
+            <n-modal
+              v-model:show="showCodeofConductModal"
+              :mask-closable="false"
+              preset="dialog"
+              title="Are you sure?"
+              content="This will overwrite any existing draft. Do you want to continue?"
+              positive-text="Confirm"
+              negative-text="Cancel"
+              :loading="loading"
+              @positive-click="handlePositiveClick('readme')"
+              @negative-click="showCodeofConductModal = false"
+            />
+          </div>
+        </template>
+
+        <template #content>
+          <p class="text-base">
+            <span v-if="!data?.codeOfConductValidation?.codeExists"
+              >A CODE_OF_CONDUCT.md file was not found in .github, docs or the
+              root of your repository.</span
+            >
+
+            <span v-else
+              >A {{ data?.codeOfConductValidation?.codePath }} was found.</span
+            >
+          </p>
+        </template>
+
+        <template #action>
+          <a :href="`/dashboard/${owner}/${repo}/edit/code-of-conduct`">
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="akar-icons:edit" size="16" />
+              </template>
+              Edit Code of Conduct
+            </n-button>
+          </a>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <CardDashboard
+        title="Contributing"
+        subheader="The file serves as a guide for the community and helps to create a safe and inclusive environment for all contributors."
+      >
+        <template #icon>
+          <Icon name="catppuccin:contributing" size="40" />
+        </template>
+
+        <template #header-extra>
+          <div class="flex flex-wrap items-center space-x-2">
+            <div v-if="data?.contributingValidation?.contribExists">
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <n-tag type="success">
+                    <template #icon>
+                      <Icon name="icon-park-solid:check-one" size="16" />
+                    </template>
+
+                    <span
+                      >Repository contains a
+                      {{ data?.contributingValidation?.contribPath }}</span
+                    >
+                  </n-tag>
+                </template>
+
+                <span
+                  >{{ data?.contributingValidation?.contribPath }} file
+                  exists</span
+                >
+              </n-popover>
+            </div>
+
+            <div v-else>
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <n-tag type="error">
+                    <template #icon>
+                      <Icon name="icon-park-solid:close-one" size="16" />
+                    </template>
+
+                    <span>CONTRIBUTING.md not found.</span>
+                  </n-tag>
+                </template>
+
+                <span
+                  >CONTRIBUTING.md file was not in .github, docs, or the root of
+                  your repository</span
+                >
+              </n-popover>
+            </div>
+
+            <n-dropdown
+              :options="contributingSettingsOptions"
+              placement="bottom-end"
+              :show-arrow="true"
+              @select="handleSettingsSelect"
+            >
+              <n-button quaternary circle size="large">
+                <template #icon>
+                  <Icon name="humbleicons:dots-vertical" size="20" />
+                </template>
+              </n-button>
+            </n-dropdown>
+
+            <n-modal
+              v-model:show="showContributingModal"
+              :mask-closable="false"
+              preset="dialog"
+              title="Are you sure?"
+              content="This will overwrite any existing draft. Do you want to continue?"
+              positive-text="Confirm"
+              negative-text="Cancel"
+              :loading="loading"
+              @positive-click="handlePositiveClick('contributing')"
+              @negative-click="showContributingModal = false"
+            />
+          </div>
+        </template>
+
+        <template #content>
+          <p class="text-base">
+            <span v-if="!data?.contributingValidation?.contribExists"
+              >A CODE_OF_CONDUCT.md file was not found in .github, docs or the
+              root of your repository.</span
+            >
+
+            <span v-else
+              >A {{ data?.contributingValidation?.contribPath }} was
+              found.</span
+            >
+          </p>
+        </template>
+
+        <template #action>
+          <a :href="`/dashboard/${owner}/${repo}/edit/contributing`">
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="akar-icons:edit" size="16" />
+              </template>
+              Edit Contributing
+            </n-button>
+          </a>
         </template>
       </CardDashboard>
 

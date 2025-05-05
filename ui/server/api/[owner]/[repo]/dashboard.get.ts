@@ -15,6 +15,8 @@ export default defineEventHandler(async (event) => {
   const installation = await prisma.installation.findFirst({
     include: {
       CodeMetadata: true,
+      CodeofConductValidation: true,
+      ContributingValidation: true,
       CwlValidation: true,
       LicenseRequest: true,
       ReadmeValidation: true,
@@ -38,6 +40,8 @@ export default defineEventHandler(async (event) => {
   const cwlRaw = installation.CwlValidation;
   const zenRaw = installation.ZenodoDeposition;
   const rmRaw = installation.ReadmeValidation;
+  const contribRaw = installation.ContributingValidation;
+  const cofcCRaw = installation.CodeofConductValidation;
 
   const codeMetadataRequest = {
     citationStatus: cmRaw?.citation_status ?? "invalid",
@@ -84,8 +88,23 @@ export default defineEventHandler(async (event) => {
     zenodoStatus: zenRaw?.status ?? null,
   };
 
+  const contributingValidation = {
+    contribContent: contribRaw?.contrib_content ?? "",
+    contribExists: contribRaw?.contains_contrib ?? false,
+    contribPath: contribRaw?.contrib_path ?? "",
+    timestamp: contribRaw?.updated_at ?? null,
+  };
+  const codeOfConductValidation = {
+    codeContent: cofcCRaw?.code_content ?? "",
+    codeExists: cofcCRaw?.contains_code ?? false,
+    codePath: cofcCRaw?.code_path ?? "",
+    timestamp: cofcCRaw?.updated_at ?? null,
+  };
+
   return {
     codeMetadataRequest,
+    codeOfConductValidation,
+    contributingValidation,
     cwlValidation,
     installationId: installation.installation_id,
     isOrganization: isOrg,
