@@ -60,10 +60,10 @@ export async function applyReadmeTemplate(
   try {
     identifier = createId();
     badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/edit/readme`;
-  } catch (err) {
+  } catch (error) {
     throw new Error(
-      `Failed to initialize README template parameters: ${err.message}`,
-      { cause: err }
+      `Failed to initialize README template parameters: ${error.message}`,
+      { cause: error }
     );
   }
 
@@ -93,13 +93,13 @@ export async function applyReadmeTemplate(
         },
       });
     }
-  } catch (err) {
-    throw new Error(`Database error in applyReadmeTemplate: ${err.message}`, {
-      cause: err,
+  } catch (error) {
+    throw new Error(`Database error in applyReadmeTemplate: ${error.message}`, {
+      cause: error,
     });
   }
 
-  // 3) Build and return the updated markdown
+  // 3) Prepare the template data
   try {
     const { status, path } = subjects.readme;
     const verb = status ? "Edit" : "Create";
@@ -109,8 +109,8 @@ export async function applyReadmeTemplate(
 
     const header = status ? "## README ✔️" : "## README ❌";
     const desc = status
-      ? `A \`${path}\` file was found at the root level of the repository.`
-      : `A README file was not found at the root of your repository. The README file is a markdown file that contains information about your project. It is usually the first thing that users see when they visit your project on GitHub. Try to make it as informative and helpful as possible. Click on the badge below to create a file with Codefair's editor.`;
+      ? `A \`${path}\` file was found at within your repository.`
+      : `A README file was not found within your .github, docs or root of your repository. The README file is a markdown file that contains information about your project. It is usually the first thing that users see when they visit your project on GitHub. Try to make it as informative and helpful as possible. Click on the badge below to create a file with Codefair's editor.`;
 
     return (
       baseTemplate +
@@ -119,9 +119,9 @@ export async function applyReadmeTemplate(
       `${desc}\n\n` +
       `${readmeBadge}\n\n`
     );
-  } catch (err) {
-    throw new Error(`Error constructing README section: ${err.message}`, {
-      cause: err,
+  } catch (error) {
+    throw new Error(`Error constructing README section: ${error.message}`, {
+      cause: error,
     });
   }
 }
