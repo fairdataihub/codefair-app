@@ -12,7 +12,7 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  * @returns {Boolean} - True if a CODE_OF_CONDUCT file exists, false otherwise
  */
 export async function checkForCodeofConduct(context, owner, repoName) {
-  const cofFilesTypes = [
+  const cofcFilesTypes = [
     "CODE_OF_CONDUCT.md",
     "CODE_OF_CONDUCT.txt",
     "CODE_OF_CONDUCT",
@@ -24,9 +24,9 @@ export async function checkForCodeofConduct(context, owner, repoName) {
     ".github/CODE_OF_CONDUCT",
   ];
 
-  for (const filePath of cofFilesTypes) {
-    const cof = await checkForFile(context, owner, repoName, filePath);
-    if (cof) {
+  for (const filePath of cofcFilesTypes) {
+    const cofc = await checkForFile(context, owner, repoName, filePath);
+    if (cofc) {
       const content = await context.octokit.repos.getContent({
         owner,
         repo: repoName,
@@ -38,13 +38,13 @@ export async function checkForCodeofConduct(context, owner, repoName) {
 
       return {
         status: true,
-        path: `${cof.path}`,
+        path: `${cofc.path}`,
         content: contentData,
       };
     }
   }
   return {
-    path: "No Code of conduct file found",
+    path: "No Code of Conduct file found",
     status: false,
   };
 }
@@ -74,9 +74,9 @@ export async function applyCodeofConductTemplate(
     });
 
     const upsertData = {
-      contains_cof: subjects.cof.status,
-      cof_content: subjects.cof.content,
-      cof_path: subjects.cof.path,
+      contains_cof: subjects.cofc.status,
+      code_content: subjects.cofc.content,
+      code_path: subjects.cofc.path,
     };
 
     if (existing) {
@@ -113,7 +113,7 @@ export async function applyCodeofConductTemplate(
     const header = status ? "## Code of Conduct ✔️" : "## Code of Conduct ❌";
     const desc = status
       ? `A \`${path}\` file was found at the within your repository.`
-      : `A Code of Conduct file was not found within your .github, docs or root of your repository. The Code of Conduct file  is a document that outlines the expected behavior and responsibilities of contributors to a project. It helps create a welcoming and inclusive environment for all participants. You can create one in Codefair's editor that follows the latest [Code of Conduct template](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) and add it to your repository. Click on the badge below to create a file with Codefair's editor.`;
+      : `A Code of Conduct file was not found within your .github, docs or root of your repository. The Code of Conduct file is a document that outlines the expected behavior and responsibilities of contributors to a project. It helps create a welcoming and inclusive environment for all participants. You can create one in Codefair's editor that follows the latest [Code of Conduct template](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) and add it to your repository. Click on the badge below to create a file with Codefair's editor.`;
 
     return (
       baseTemplate +
