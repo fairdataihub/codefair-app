@@ -17,6 +17,8 @@ import {
 } from "../../compliance-checks/metadata/index.js";
 import { checkForReadme } from "../../compliance-checks/readme/index.js";
 import { createId } from "../../utils/tools/index.js";
+import { checkForCodeofConduct } from "../../compliance-checks/code-of-conduct/index.js";
+import { checkForContributing } from "../../compliance-checks/contributing/index.js";
 
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const db = dbInstance;
@@ -84,6 +86,145 @@ export async function rerunReadmeValidation(
       );
     }
     throw new Error("Error re-fetching README", error);
+  }
+}
+
+export async function rerunContributingValidation(
+  context,
+  owner,
+  repository,
+  issueBody
+) {
+  logwatch.start("Refetching CONTRIBUTING file...");
+  try {
+    const contributing = await checkForContributing(
+      context,
+      owner,
+      repository.name
+    );
+    const existingContributingEntry =
+      await db.contributingValidation.findUnique({
+        where: {
+          repository_id: repository.id,
+        },
+      });
+    if (existingContributingEntry) {
+      // Update the entry
+      await db.contributingValidation.update({
+        data: {
+          contributing_path: contributing.path,
+          contributing_content: contributing.content,
+          contains_contributing: contributing.status,
+        },
+        where: {
+          repository_id: repository.id,
+        },
+      });
+    } else {
+      // Create a new entry
+      await db.contributingValidation.create({
+        data: {
+          contributing_path: contributing.path,
+          contributing_content: contributing.content,
+          contains_contributing: contributing.status,
+          repository: {
+            connect: {
+              id: repository.id,
+            },
+          },
+        },
+      });
+    }
+  } catch (error) {
+    // Remove the command from the issue body
+    const issueBodyRemovedCommand = issueBody.substring(
+      0,
+      issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
+    );
+    const lastModified = await applyLastModifiedTemplate(
+      issueBodyRemovedCommand
+    );
+    await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+    if (error.cause) {
+      logwatch.error(
+        {
+          message: "Error.cause message for fetching CONTRIBUTING file",
+          error_cause: error.cause,
+          error: error,
+        },
+        true
+      );
+    }
+    throw new Error("Error re-fetching CONTRIBUTING", error);
+  }
+}
+
+export async function rerunCodeOfConductValidation(
+  context,
+  owner,
+  repository,
+  issueBody
+) {
+  logwatch.start("Refetching Code of Conduct file...");
+  try {
+    const codeOfConduct = await checkForCodeofConduct(
+      context,
+      owner,
+      repository.name
+    );
+    const existingCodeOfConductEntry =
+      await db.codeofConductValidation.findUnique({
+        where: {
+          repository_id: repository.id,
+        },
+      });
+
+    if (existingCodeOfConductEntry) {
+      await db.codeofConductValidation.update({
+        data: {
+          code_path: codeOfConduct.path,
+          code_content: codeOfConduct.content,
+          contains_code: codeOfConduct.status,
+        },
+        where: {
+          repository_id: repository.id,
+        },
+      });
+    } else {
+      await db.codeofConductValidation.create({
+        data: {
+          code_path: codeOfConduct.path,
+          code_content: codeOfConduct.content,
+          contains_code: codeOfConduct.status,
+          repository: {
+            connect: {
+              id: repository.id,
+            },
+          },
+        },
+      });
+    }
+  } catch (error) {
+    // Remove the command from the issue body
+    const issueBodyRemovedCommand = issueBody.substring(
+      0,
+      issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
+    );
+    const lastModified = await applyLastModifiedTemplate(
+      issueBodyRemovedCommand
+    );
+    await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+    if (error.cause) {
+      logwatch.error(
+        {
+          message: "Error.cause message for fetching Code of Conduct file",
+          error_cause: error.cause,
+          error: error,
+        },
+        true
+      );
+    }
+    throw new Error("Error re-fetching Code of Conduct", error);
   }
 }
 
@@ -381,7 +522,12 @@ export async function rerunCWLValidation(context, owner, repository) {
   }
 }
 
-export async function rerunFullRepoValidation(context, owner, repository) {
+export async function rerunFullRepoValidation(
+  context,
+  owner,
+  repository,
+  issueBody
+) {
   logwatch.start("Rerunning full repository validation...");
   try {
     let subjects = await runComplianceChecks(context, owner, repository);
