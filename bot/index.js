@@ -437,13 +437,13 @@ export default async (app, { getRouter }) => {
 
     // "API" using comments to trigger workflows
     if (issueBody.includes("<!-- @codefair-bot rerun-cwl-validation -->")) {
-      await rerunCWLValidation(context, owner, repository);
+      await rerunCWLValidation(context, owner, repository, issueBody);
     }
 
     if (
       issueBody.includes("<!-- @codefair-bot rerun-full-repo-validation -->")
     ) {
-      await rerunFullRepoValidation(context, owner, repository);
+      await rerunFullRepoValidation(context, owner, repository, issueBody);
     }
 
     if (issueBody.includes("<!-- @codefair-bot rerun-license-validation -->")) {
@@ -464,7 +464,7 @@ export default async (app, { getRouter }) => {
     }
 
     if (issueBody.includes("<!-- @codefair-bot re-render-dashboard -->")) {
-      await reRenderDashboard(context, owner, repository);
+      await reRenderDashboard(context, owner, repository, issueBody);
     }
   });
 

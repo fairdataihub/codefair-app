@@ -28,7 +28,7 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const { ZENODO_ENDPOINT } = process.env;
 
-export async function reRenderDashboard(context, owner, repository) {
+export async function reRenderDashboard(context, owner, repository, issueBody) {
   // Run database queries in parallel using Promise.all
   logwatch.start("Re-rendering issue dashboard...");
   try {
