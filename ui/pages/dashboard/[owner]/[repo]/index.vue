@@ -225,110 +225,6 @@ const handleSettingsSelect = (key: string) => {
     <div v-else>
       <LayoutSectionDivider class="my-4" />
 
-      <!-- README Card -->
-      <CardDashboard
-        title="README"
-        subheader="The README for the repository is shown here."
-      >
-        <template #icon>
-          <Icon name="gg:readme" size="40" />
-        </template>
-
-        <template #header-extra>
-          <div class="flex flex-wrap items-center space-x-2">
-            <div v-if="data?.readmeValidation?.readmeExists">
-              <n-popover trigger="hover">
-                <template #trigger>
-                  <n-tag type="success">
-                    <template #icon>
-                      <Icon name="icon-park-solid:check-one" size="16" />
-                    </template>
-
-                    <span
-                      >Repository contains a
-                      {{ data?.readmeValidation?.readMePath }}</span
-                    >
-                  </n-tag>
-                </template>
-
-                <span
-                  >{{ data?.readmeValidation?.readMePath }} file exists</span
-                >
-              </n-popover>
-            </div>
-
-            <div v-else>
-              <n-popover trigger="hover">
-                <template #trigger>
-                  <n-tag type="error">
-                    <template #icon>
-                      <Icon name="icon-park-solid:close-one" size="16" />
-                    </template>
-
-                    <span>README file was not found.</span>
-                  </n-tag>
-                </template>
-
-                <span>README not found</span>
-              </n-popover>
-            </div>
-
-            <n-dropdown
-              :options="readmeSettingsOptions"
-              placement="bottom-end"
-              :show-arrow="true"
-              @select="handleSettingsSelect"
-            >
-              <n-button quaternary circle size="large">
-                <template #icon>
-                  <Icon name="humbleicons:dots-vertical" size="20" />
-                </template>
-              </n-button>
-            </n-dropdown>
-
-            <n-modal
-              v-model:show="showReadmeModal"
-              :mask-closable="false"
-              preset="dialog"
-              title="Are you sure?"
-              content="This will overwrite any existing draft. Do you want to continue?"
-              positive-text="Confirm"
-              negative-text="Cancel"
-              :loading="loading"
-              @positive-click="handlePositiveClick('readme')"
-              @negative-click="showReadmeModal = false"
-            />
-          </div>
-        </template>
-
-        <template #content>
-          <p class="text-base">
-            <span v-if="!data?.readmeValidation?.readmeExists"
-              >A README file was not found at the root of your repository. This
-              file is a markdown file that contains information about your
-              project.</span
-            >
-
-            <span v-else
-              >A {{ data?.readmeValidation?.readMePath }} was found.</span
-            >
-          </p>
-        </template>
-
-        <template #action>
-          <a :href="`/dashboard/${owner}/${repo}/edit/readme`">
-            <n-button type="primary">
-              <template #icon>
-                <Icon name="akar-icons:edit" size="16" />
-              </template>
-              Edit README
-            </n-button>
-          </a>
-        </template>
-      </CardDashboard>
-
-      <n-divider />
-
       <!-- License Card -->
       <CardDashboard
         title="License"
@@ -440,6 +336,110 @@ const handleSettingsSelect = (key: string) => {
                 <Icon name="akar-icons:edit" size="16" />
               </template>
               Edit License
+            </n-button>
+          </a>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <!-- README Card -->
+      <CardDashboard
+        title="README"
+        subheader="The README for the repository is shown here."
+      >
+        <template #icon>
+          <Icon name="gg:readme" size="40" />
+        </template>
+
+        <template #header-extra>
+          <div class="flex flex-wrap items-center space-x-2">
+            <div v-if="data?.readmeValidation?.readmeExists">
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <n-tag type="success">
+                    <template #icon>
+                      <Icon name="icon-park-solid:check-one" size="16" />
+                    </template>
+
+                    <span
+                      >Repository contains a
+                      {{ data?.readmeValidation?.readMePath }}</span
+                    >
+                  </n-tag>
+                </template>
+
+                <span
+                  >{{ data?.readmeValidation?.readMePath }} file exists</span
+                >
+              </n-popover>
+            </div>
+
+            <div v-else>
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <n-tag type="error">
+                    <template #icon>
+                      <Icon name="icon-park-solid:close-one" size="16" />
+                    </template>
+
+                    <span>README file was not found.</span>
+                  </n-tag>
+                </template>
+
+                <span>README not found</span>
+              </n-popover>
+            </div>
+
+            <n-dropdown
+              :options="readmeSettingsOptions"
+              placement="bottom-end"
+              :show-arrow="true"
+              @select="handleSettingsSelect"
+            >
+              <n-button quaternary circle size="large">
+                <template #icon>
+                  <Icon name="humbleicons:dots-vertical" size="20" />
+                </template>
+              </n-button>
+            </n-dropdown>
+
+            <n-modal
+              v-model:show="showReadmeModal"
+              :mask-closable="false"
+              preset="dialog"
+              title="Are you sure?"
+              content="This will overwrite any existing draft. Do you want to continue?"
+              positive-text="Confirm"
+              negative-text="Cancel"
+              :loading="loading"
+              @positive-click="handlePositiveClick('readme')"
+              @negative-click="showReadmeModal = false"
+            />
+          </div>
+        </template>
+
+        <template #content>
+          <p class="text-base">
+            <span v-if="!data?.readmeValidation?.readmeExists"
+              >A README file was not found at the root of your repository. This
+              file is a markdown file that contains information about your
+              project.</span
+            >
+
+            <span v-else
+              >A {{ data?.readmeValidation?.readMePath }} was found.</span
+            >
+          </p>
+        </template>
+
+        <template #action>
+          <a :href="`/dashboard/${owner}/${repo}/edit/readme`">
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="akar-icons:edit" size="16" />
+              </template>
+              Edit README
             </n-button>
           </a>
         </template>
@@ -627,6 +627,192 @@ const handleSettingsSelect = (key: string) => {
 
       <n-divider />
 
+      <!-- FAIR Software Release Card -->
+      <h2 class="pb-6">FAIR Software Release</h2>
+
+      <CardDashboard
+        title="Make a FAIR Software Release"
+        subheader="Make a GitHub release and archive the software on a software archival repository."
+      >
+        <template #icon>
+          <Icon name="mingcute:rocket-fill" size="40" />
+        </template>
+
+        <template #header-extra>
+          <n-flex class="space-x-2">
+            <n-popover
+              v-if="data?.zenodoDeposition?.lastPublishedZenodoDoi"
+              trigger="hover"
+            >
+              <template #trigger>
+                <NuxtLink
+                  :to="`https://doi.org/${data.zenodoDeposition.lastPublishedZenodoDoi}`"
+                  target="_blank"
+                  class="cursor-pointer"
+                >
+                  <n-tag type="success" class="cursor-pointer">
+                    <template #icon
+                      ><Icon name="simple-icons:doi" size="16"
+                    /></template>
+                    {{ data.zenodoDeposition.lastPublishedZenodoDoi }}
+                    <Icon name="ri:external-link-line" size="13" />
+                  </n-tag>
+                </NuxtLink>
+              </template>
+
+              <template #default>
+                <span>Last published Zenodo DOI</span>
+              </template>
+            </n-popover>
+
+            <div
+              v-if="
+                data?.licenseRequest?.containsLicense &&
+                data.licenseRequest.licenseId === 'Custom'
+              "
+              class="flex flex-wrap space-x-2"
+            >
+              <n-tag type="warning">
+                <template #icon
+                  ><Icon name="ic:round-warning" size="16"
+                /></template>
+                Cannot publish to Zenodo with a custom license
+              </n-tag>
+            </div>
+
+            <div v-if="data?.zenodoDeposition?.zenodoStatus">
+              <n-tag
+                v-if="data?.zenodoDeposition?.zenodoStatus === 'inProgress'"
+                type="info"
+              >
+                <template #icon
+                  ><Icon name="icon-park-solid:loading-three" size="16"
+                /></template>
+                Publish in progress
+              </n-tag>
+
+              <n-tag
+                v-else-if="data?.zenodoDeposition?.zenodoStatus === 'error'"
+                type="error"
+              >
+                <template #icon>
+                  <Icon name="icon-park-solid:close-one" size="16" />
+                </template>
+                There was an error publishing to Zenodo
+              </n-tag>
+            </div>
+          </n-flex>
+        </template>
+
+        <template #content>
+          <div class="flex w-full flex-col space-y-2">
+            <p class="text-base">
+              To make your software FAIR, archive it in a software archival
+              repository like Zenodo every time you make a release.
+            </p>
+          </div>
+        </template>
+
+        <template #action>
+          <NuxtLink :to="`/dashboard/${owner}/${repo}/release/zenodo`">
+            <n-button
+              type="primary"
+              :disabled="data?.licenseRequest?.licenseId === 'Custom'"
+            >
+              <template #icon>
+                <Icon name="material-symbols:package-2" size="16" />
+              </template>
+              Create release
+            </n-button>
+          </NuxtLink>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
+      <!-- CWL Validation Card -->
+      <h2 class="pb-6">Language Specific Standards</h2>
+
+      <CardDashboard
+        title="CWL Validation"
+        subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them into workflows."
+      >
+        <template #icon>
+          <Icon name="cib:common-workflow-language" size="40" />
+        </template>
+
+        <template #header-extra>
+          <div v-if="data?.cwlValidation?.containsCWL">
+            <n-tag
+              v-if="data?.cwlValidation?.overallStatus === 'valid'"
+              type="success"
+            >
+              <template #icon>
+                <Icon name="icon-park-solid:check-one" size="16" />
+              </template>
+              Valid CWL file(s)
+            </n-tag>
+
+            <n-tag
+              v-else-if="data?.cwlValidation?.overallStatus === 'invalid'"
+              type="error"
+            >
+              <template #icon>
+                <Icon name="icon-park-solid:close-one" size="16" />
+              </template>
+              Invalid CWL file(s)
+            </n-tag>
+          </div>
+        </template>
+
+        <template #content>
+          <n-alert
+            v-if="!data?.cwlValidation?.containsCWL"
+            type="info"
+            class="w-full"
+          >
+            There are no CWL files in this repository.
+          </n-alert>
+
+          <p v-else class="text-base">
+            Common Workflow Language (CWL) is an open standard for describing
+            how to run command line tools and connect them into workflows.
+          </p>
+        </template>
+
+        <template #action>
+          <div v-if="data?.cwlValidation?.containsCWL" class="flex space-x-3">
+            <n-tooltip trigger="hover" placement="bottom-start">
+              <template #trigger>
+                <n-button
+                  type="warning"
+                  :loading="cwlValidationRerunRequestLoading"
+                  @click="rerunCwlValidation"
+                >
+                  <template #icon>
+                    <Icon name="mynaui:redo" size="16" />
+                  </template>
+
+                  Rerun CWL Validation
+                </n-button>
+              </template>
+              This may take a few minutes to complete.
+            </n-tooltip>
+
+            <NuxtLink :to="`/dashboard/${owner}/${repo}/view/cwl-validation`">
+              <n-button type="primary">
+                <template #icon>
+                  <Icon name="mdi:eye" size="16" />
+                </template>
+                View CWL Validation Results
+              </n-button>
+            </NuxtLink>
+          </div>
+        </template>
+      </CardDashboard>
+
+      <n-divider />
+
       <h2 class="pb-6">Additional Recommendations</h2>
 
       <!-- Code of Conduct card -->
@@ -736,6 +922,7 @@ const handleSettingsSelect = (key: string) => {
 
       <n-divider />
 
+      <!-- Contributing Card -->
       <CardDashboard
         title="Contributing"
         subheader="The file serves as a guide for the community and helps to create a safe and inclusive environment for all contributors."
@@ -838,192 +1025,6 @@ const handleSettingsSelect = (key: string) => {
               Edit Contributing
             </n-button>
           </a>
-        </template>
-      </CardDashboard>
-
-      <n-divider />
-
-      <!-- CWL Validation Card -->
-      <h2 class="pb-6">Language Specific Standards</h2>
-
-      <CardDashboard
-        title="CWL Validation"
-        subheader="Common Workflow Language (CWL) is an open standard for describing how to run command line tools and connect them into workflows."
-      >
-        <template #icon>
-          <Icon name="cib:common-workflow-language" size="40" />
-        </template>
-
-        <template #header-extra>
-          <div v-if="data?.cwlValidation?.containsCWL">
-            <n-tag
-              v-if="data?.cwlValidation?.overallStatus === 'valid'"
-              type="success"
-            >
-              <template #icon>
-                <Icon name="icon-park-solid:check-one" size="16" />
-              </template>
-              Valid CWL file(s)
-            </n-tag>
-
-            <n-tag
-              v-else-if="data?.cwlValidation?.overallStatus === 'invalid'"
-              type="error"
-            >
-              <template #icon>
-                <Icon name="icon-park-solid:close-one" size="16" />
-              </template>
-              Invalid CWL file(s)
-            </n-tag>
-          </div>
-        </template>
-
-        <template #content>
-          <n-alert
-            v-if="!data?.cwlValidation?.containsCWL"
-            type="info"
-            class="w-full"
-          >
-            There are no CWL files in this repository.
-          </n-alert>
-
-          <p v-else class="text-base">
-            Common Workflow Language (CWL) is an open standard for describing
-            how to run command line tools and connect them into workflows.
-          </p>
-        </template>
-
-        <template #action>
-          <div v-if="data?.cwlValidation?.containsCWL" class="flex space-x-3">
-            <n-tooltip trigger="hover" placement="bottom-start">
-              <template #trigger>
-                <n-button
-                  type="warning"
-                  :loading="cwlValidationRerunRequestLoading"
-                  @click="rerunCwlValidation"
-                >
-                  <template #icon>
-                    <Icon name="mynaui:redo" size="16" />
-                  </template>
-
-                  Rerun CWL Validation
-                </n-button>
-              </template>
-              This may take a few minutes to complete.
-            </n-tooltip>
-
-            <NuxtLink :to="`/dashboard/${owner}/${repo}/view/cwl-validation`">
-              <n-button type="primary">
-                <template #icon>
-                  <Icon name="mdi:eye" size="16" />
-                </template>
-                View CWL Validation Results
-              </n-button>
-            </NuxtLink>
-          </div>
-        </template>
-      </CardDashboard>
-
-      <n-divider />
-
-      <!-- FAIR Software Release Card -->
-      <h2 class="pb-6">FAIR Software Release</h2>
-
-      <CardDashboard
-        title="Make a FAIR Software Release"
-        subheader="Make a GitHub release and archive the software on a software archival repository."
-      >
-        <template #icon>
-          <Icon name="mingcute:rocket-fill" size="40" />
-        </template>
-
-        <template #header-extra>
-          <n-flex class="space-x-2">
-            <n-popover
-              v-if="data?.zenodoDeposition?.lastPublishedZenodoDoi"
-              trigger="hover"
-            >
-              <template #trigger>
-                <NuxtLink
-                  :to="`https://doi.org/${data.zenodoDeposition.lastPublishedZenodoDoi}`"
-                  target="_blank"
-                  class="cursor-pointer"
-                >
-                  <n-tag type="success" class="cursor-pointer">
-                    <template #icon
-                      ><Icon name="simple-icons:doi" size="16"
-                    /></template>
-                    {{ data.zenodoDeposition.lastPublishedZenodoDoi }}
-                    <Icon name="ri:external-link-line" size="13" />
-                  </n-tag>
-                </NuxtLink>
-              </template>
-
-              <template #default>
-                <span>Last published Zenodo DOI</span>
-              </template>
-            </n-popover>
-
-            <div
-              v-if="
-                data?.licenseRequest?.containsLicense &&
-                data.licenseRequest.licenseId === 'Custom'
-              "
-              class="flex flex-wrap space-x-2"
-            >
-              <n-tag type="warning">
-                <template #icon
-                  ><Icon name="ic:round-warning" size="16"
-                /></template>
-                Cannot publish to Zenodo with a custom license
-              </n-tag>
-            </div>
-
-            <div v-if="data?.zenodoDeposition?.zenodoStatus">
-              <n-tag
-                v-if="data?.zenodoDeposition?.zenodoStatus === 'inProgress'"
-                type="info"
-              >
-                <template #icon
-                  ><Icon name="icon-park-solid:loading-three" size="16"
-                /></template>
-                Publish in progress
-              </n-tag>
-
-              <n-tag
-                v-else-if="data?.zenodoDeposition?.zenodoStatus === 'error'"
-                type="error"
-              >
-                <template #icon>
-                  <Icon name="icon-park-solid:close-one" size="16" />
-                </template>
-                There was an error publishing to Zenodo
-              </n-tag>
-            </div>
-          </n-flex>
-        </template>
-
-        <template #content>
-          <div class="flex w-full flex-col space-y-2">
-            <p class="text-base">
-              To make your software FAIR, archive it in a software archival
-              repository like Zenodo every time you make a release.
-            </p>
-          </div>
-        </template>
-
-        <template #action>
-          <NuxtLink :to="`/dashboard/${owner}/${repo}/release/zenodo`">
-            <n-button
-              type="primary"
-              :disabled="data?.licenseRequest?.licenseId === 'Custom'"
-            >
-              <template #icon>
-                <Icon name="material-symbols:package-2" size="16" />
-              </template>
-              Create release
-            </n-button>
-          </NuxtLink>
         </template>
       </CardDashboard>
     </div>
