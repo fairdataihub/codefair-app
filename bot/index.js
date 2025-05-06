@@ -192,7 +192,7 @@ export default async (app, { getRouter }) => {
       },
     });
 
-    if (!installation) {
+    if (!installation || installation.disabled) {
       return;
     } else {
       // Verify if repository name has changed
@@ -301,9 +301,9 @@ export default async (app, { getRouter }) => {
         id: repository.id,
       },
     });
-    if (installation && installation?.action_count > 0) {
+    if (installation?.action_count > 0 || installation?.disabled) {
       logwatch.info(
-        `pull_request.opened: Action limit is at ${installation.action_count} still applied, ignoring...`
+        `pull_request.opened: Action limit is at ${installation.action_count} still applied or installation is disabled, ignoring...`
       );
       return;
     }

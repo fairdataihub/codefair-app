@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  let contrib = installation?.ContributingValidation;
+  let contrib = installation.ContributingValidation;
 
   if (!contrib) {
     // Create entry if it doesn't exist
@@ -45,10 +45,7 @@ export default defineEventHandler(async (event) => {
   // Check if the user is authorized to access the request
   await repoWritePermissions(event, owner, repo);
 
-  const response: ContributingRequest = {
+  return {
     contribContent: contrib?.contrib_content || "",
   };
-
-  // return the valid request
-  return response;
 });
