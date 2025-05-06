@@ -1,6 +1,7 @@
 import { checkForFile } from "../../utils/tools/index.js";
 import dbInstance from "../../db.js";
 import { createId } from "../../utils/tools/index.js";
+import logwatch from "../../utils/logwatch.js";
 const db = dbInstance;
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
@@ -39,7 +40,7 @@ export async function checkForContributingFile(context, owner, repoName) {
 
       return {
         status: true,
-        path: `${contrib.path}`,
+        path: filePath,
         content: contentData,
       };
     }
@@ -47,6 +48,7 @@ export async function checkForContributingFile(context, owner, repoName) {
   return {
     path: "No Contributing file found",
     status: false,
+    content: "",
   };
 }
 

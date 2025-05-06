@@ -3,6 +3,9 @@ import { checkForCitation } from "./citation/index.js";
 import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles } from "./cwl/index.js";
 import { checkForReadme } from "./readme/index.js";
+import { checkForContributingFile } from "./contributing/index.js";
+import { checkForCodeofConduct } from "./code-of-conduct/index.js";
+import logwatch from "../utils/logwatch.js";
 
 /**
  * * Check for compliance of a repository with Codefair standards.
@@ -35,9 +38,33 @@ export async function runComplianceChecks(
   const license = await checkForLicense(context, owner, repository.name);
   const citation = await checkForCitation(context, owner, repository.name);
   const codemeta = await checkForCodeMeta(context, owner, repository.name);
+  const contributing = await checkForContributingFile(
+    context,
+    owner,
+    repository.name
+  );
+  logwatch.info(`Contributing check: ${contributing.status}`);
+  const cofc = await checkForCodeofConduct(context, owner, repository.name);
+  logwatch.info(`Code of Conduct check: ${cofc.status}`);
+
   if (fullCodefairRun) {
     cwlObject = await getCWLFiles(context, owner, repository);
   }
+
+  const subjects = {
+    citation,
+    codemeta,
+    cwl: cwlObject,
+    license,
+    readme,
+    contributing,
+    cofc,
+  };
+
+  logwatch.info(
+    { message: `Compliance checks for ${owner}/${repository.name}`, subjects },
+    true
+  );
 
   return {
     citation,
@@ -45,5 +72,7 @@ export async function runComplianceChecks(
     cwl: cwlObject,
     license,
     readme,
+    contributing,
+    cofc,
   };
 }

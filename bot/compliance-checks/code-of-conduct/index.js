@@ -38,7 +38,7 @@ export async function checkForCodeofConduct(context, owner, repoName) {
 
       return {
         status: true,
-        path: `${cofc.path}`,
+        path: filePath,
         content: contentData,
       };
     }
@@ -46,6 +46,7 @@ export async function checkForCodeofConduct(context, owner, repoName) {
   return {
     path: "No Code of Conduct file found",
     status: false,
+    content: "",
   };
 }
 
@@ -69,7 +70,7 @@ export async function applyCodeofConductTemplate(
 
   // 2) Upsert the codeOfConductValidation record
   try {
-    const existing = await db.codeOfConductValidation.findUnique({
+    const existing = await db.codeofConductValidation.findUnique({
       where: { repository_id: repository.id },
     });
 
@@ -80,12 +81,12 @@ export async function applyCodeofConductTemplate(
     };
 
     if (existing) {
-      await db.codeOfConductValidation.update({
+      await db.codeofConductValidation.update({
         where: { id: existing.id },
         data: upsertData,
       });
     } else {
-      await db.codeOfConductValidation.create({
+      await db.codeofConductValidation.create({
         data: {
           identifier,
           ...upsertData,

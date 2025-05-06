@@ -1134,12 +1134,12 @@ export async function applyMetadataTemplate(
     if ((!subjects.codemeta || !subjects.citation) && subjects.license) {
       // License was found but no codemeta.json or CITATION.cff exists
       const metadataBadge = `[![Metadata](https://img.shields.io/badge/Add_Metadata-dc2626.svg)](${url})`;
-      baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a CITATION.cff and codemeta.json are expected at the root level of your repository. These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}`;
+      baseTemplate += `\n\n## Metadata ❌\n\nTo make your software FAIR, a \`CITATION.cff\` and \`codemeta.json\` are expected at the root level of your repository. These files are not found in the repository. If you would like Codefair to add these files, click the "Add metadata" button below to go to our interface for providing metadata and generating these files.\n\n${metadataBadge}\n\n`;
     }
 
     if (subjects.codemeta && subjects.citation && subjects.license) {
       const metadataBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-0ea5e9.svg)](${url}?)`;
-      baseTemplate += `\n\n## Metadata ✔️\n\nA CITATION.cff and a codemeta.json file are found in the repository. They may need to be updated over time as new people are contributing to the software, etc.\n\n${metadataBadge}`;
+      baseTemplate += `\n\n## Metadata ✔️\n\nA \`CITATION.cff\` and \`codemeta.json\` file are found in the repository. They may need to be updated over time as new people are contributing to the software, etc.\n\n${metadataBadge}\n\n`;
     }
 
     if (!existingMetadata) {
@@ -1165,7 +1165,7 @@ export async function applyMetadataTemplate(
     if (!subjects.license) {
       // License was not found
       const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
-      baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR a CITATION.cff and codemeta.json metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n${metadataBadge}`;
+      baseTemplate += `\n\n## Metadata\n\nTo make your software FAIR a \`CITATION.cff\` and \`codemeta.json\` metadata files are expected at the root level of your repository. Codefair will check for these files after a license file is detected.\n\n${metadataBadge}\n\n`;
     }
 
     return baseTemplate;

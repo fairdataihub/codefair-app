@@ -288,21 +288,21 @@ export async function applyLicenseTemplate(
   const licenseBadge = `[![License](https://img.shields.io/badge/${subjects.license ? "Edit_License-0ea5e9" : "Add_License-dc2626"}.svg)](${badgeURL})`;
 
   if (subjects.license && licenseId && licenseId !== "Custom") {
-    baseTemplate += `## LICENSE ✔️\n\nA LICENSE file is found at the root level of the repository.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE ✔️\n\nA \`LICENSE\` file is found at the root level of the repository.\n\n${licenseBadge}`;
   } else if (
     subjects.license &&
     licenseId === "Custom" &&
     !existingLicense?.custom_license_title
   ) {
-    baseTemplate += `## LICENSE ❗\n\nA custom LICENSE file has been found at the root level of this repository. While using a custom license is normally acceptable for Zenodo, please note that Zenodo's API currently cannot handle custom licenses. If you plan to make a FAIR release, you will be required to select a license from the SPDX license list to ensure proper archival and compliance.\n\nClick the "Edit license" button below to provide a license title or to select a new license.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE ❗\n\nA custom \`LICENSE\` file has been found at the root level of this repository. While using a custom license is normally acceptable for Zenodo, please note that Zenodo's API currently cannot handle custom licenses. If you plan to make a FAIR release, you will be required to select a license from the SPDX license list to ensure proper archival and compliance.\n\nClick the "Edit license" button below to provide a license title or to select a new license.\n\n${licenseBadge}`;
   } else if (
     subjects.license &&
     licenseId === "Custom" &&
     existingLicense?.custom_license_title
   ) {
-    baseTemplate += `## LICENSE ✔️\n\nA custom LICENSE file titled as **${existingLicense?.custom_license_title}**, has been found at the root level of this repository. If you would like to update the title or change license, click the "Edit license" button below.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE ✔️\n\nA custom \`LICENSE\` file titled as **${existingLicense?.custom_license_title}**, has been found at the root level of this repository. If you would like to update the title or change license, click the "Edit license" button below.\n\n${licenseBadge}`;
   } else {
-    baseTemplate += `## LICENSE ❌\n\nTo make your software reusable, a license file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself, and Codefair will update the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
+    baseTemplate += `## LICENSE ❌\n\nTo make your software reusable, a \`LICENSE\` file is expected at the root level of your repository. If you would like Codefair to add a license file, click the "Add license" button below to go to our interface for selecting and adding a license. You can also add a license file yourself, and Codefair will update the dashboard when it detects it on the main branch.\n\n${licenseBadge}`;
   }
 
   return baseTemplate;
