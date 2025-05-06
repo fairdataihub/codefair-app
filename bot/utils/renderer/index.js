@@ -9,6 +9,7 @@ import { applyLicenseTemplate } from "../../compliance-checks/license/index.js";
 import { applyArchivalTemplate } from "../../compliance-checks/archival/index.js";
 import dbInstance from "../../db.js";
 import { applyReadmeTemplate } from "../../compliance-checks/readme/index.js";
+import { applyAdditionalChecksTemplate } from "../../compliance-checks/additional-checks/index.js";
 
 const { GH_APP_NAME } = process.env;
 
@@ -186,6 +187,19 @@ export async function renderIssues(
     );
     logwatch.info(`CWL template applied`, { owner, repo: repository.name });
 
+    step = "additionalChecks";
+    baseTemplate = await applyAdditionalChecksTemplate(
+      subjects,
+      baseTemplate,
+      repository,
+      owner,
+      context
+    );
+    logwatch.info(`Additional checks template applied`, {
+      owner,
+      repo: repository.name,
+    });
+
     // ── ARCHIVAL
     step = "applyArchival";
     baseTemplate = await applyArchivalTemplate(baseTemplate, repository, owner);
@@ -205,18 +219,33 @@ export async function renderIssues(
     logwatch.success(`renderIssues complete`, { owner, repo: repository.name });
     return baseTemplate;
   } catch (err) {
+    // logwatch.error(
+    //   {
+    //     message: `renderIssues failed at step "${step}"`,
+    //     owner,
+    //     repo: repository.name,
+    //     error: { message: err.message, stack: err.stack, cause: err.cause },
+    //   },
+    //   true
+    // );
+    // throw new Error(`Error rendering issue [${step}]: ${err.message}`, {
+    //   cause: err,
+    // });
     logwatch.error(
       {
         message: `renderIssues failed at step "${step}"`,
         owner,
         repo: repository.name,
-        error: { message: err.message, stack: err.stack, cause: err.cause },
+        error: {
+          message: err.message,
+          cause: err.cause?.message,
+          stack: err.stack,
+        },
       },
       true
     );
-    throw new Error(`Error rendering issue [${step}]: ${err.message}`, {
-      cause: err,
-    });
+    logwatch.error(err);
+    throw err;
   }
 }
 
