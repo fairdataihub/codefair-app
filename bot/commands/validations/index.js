@@ -18,7 +18,7 @@ import {
 import { checkForReadme } from "../../compliance-checks/readme/index.js";
 import { createId } from "../../utils/tools/index.js";
 import { checkForCodeofConduct } from "../../compliance-checks/code-of-conduct/index.js";
-import { checkForContributing } from "../../compliance-checks/contributing/index.js";
+import { checkForContributingFile } from "../../compliance-checks/contributing/index.js";
 
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const db = dbInstance;
@@ -97,7 +97,7 @@ export async function rerunContributingValidation(
 ) {
   logwatch.start("Refetching CONTRIBUTING file...");
   try {
-    const contributing = await checkForContributing(
+    const contributing = await checkForContributingFile(
       context,
       owner,
       repository.name
@@ -451,7 +451,12 @@ export async function rerunLicenseValidation(
   }
 }
 
-export async function rerunCWLValidation(context, owner, repository) {
+export async function rerunCWLValidation(
+  context,
+  owner,
+  repository,
+  issueBody
+) {
   try {
     logwatch.start("Rerunning CWL Validation...");
     // fetch installation and its relations

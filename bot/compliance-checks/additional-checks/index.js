@@ -109,7 +109,7 @@ export async function applyAdditionalChecksTemplate(
     const overallStatusEmoji = additionalSubjects.every(
       (subject) => subject.status
     )
-      ? "✅"
+      ? "✔️"
       : "❗";
 
     const rows = additionalSubjects
