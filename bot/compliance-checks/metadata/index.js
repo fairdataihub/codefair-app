@@ -336,8 +336,10 @@ export async function getCodemetaContent(context, owner, repository) {
       repo: repository.name,
     });
 
+    const raw = Buffer.from(codemetaFile.data.content, "base64").toString();
+
     return {
-      content: Buffer.from(codemetaFile.data.content, "base64").toString(),
+      content: raw,
       sha: codemetaFile.data.sha,
       file_path: codemetaFile.data.download_url,
     };
@@ -363,8 +365,10 @@ export async function getCitationContent(context, owner, repository) {
       repo: repository.name,
     });
 
+    const raw = Buffer.from(citationFile.data.content, "base64").toString();
+
     return {
-      content: Buffer.from(citationFile.data.content, "base64").toString(),
+      content: raw,
       sha: citationFile.data.sha,
       file_path: citationFile.data.download_url,
     };
@@ -378,159 +382,170 @@ export async function getCitationContent(context, owner, repository) {
  * @param {String} content - The content of the metadata file
  * @param {String} fileType - The type of metadata file (codemeta or citation)
  * @param {String} file_path - Raw GitHub file path
- * @returns
+ * @returns {Boolean} - True if the metadata is valid, false otherwise
  */
 export async function validateMetadata(metadataInfo, fileType, repository) {
-  if (fileType === "codemeta") {
-    try {
-      const cleanContent = metadataInfo.content.trim();
-      const normalizedContent = cleanContent.replace(/^\uFEFF/, ""); // Remove BOM if present
-      let loaded_file = null;
-      try {
-        loaded_file = JSON.parse(normalizedContent);
-      } catch (error) {
-        await dbInstance.codeMetadata.update({
-          where: {
-            repository_id: repository.id,
-          },
-          data: {
-            codemeta_validation_message: "Error parsing the codemeta.json file",
-            codemeta_status: "invalid",
-          },
-        });
-        return false;
-      }
-      // Verify the required fields are present
-      if (
-        !loaded_file.name ||
-        !loaded_file.author ||
-        !loaded_file.description
-      ) {
-        return false;
-      }
+  switch (fileType) {
+    case "codemeta":
+      return validateCodemeta(metadataInfo, repository);
+    case "citation":
+      return validateCitation(metadataInfo, repository);
+    default:
+      throw new Error(`Unsupported metadata type: ${fileType}`);
+  }
+}
 
-      logwatch.start("Sending content to metadata validator");
-      try {
-        const response = await fetch(`${VALIDATOR_URL}/validate-codemeta`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            file_content: loaded_file,
-          }),
-        });
+/**
+ * Helper to update the DB in one place
+ */
+async function updateStatus(repoId, fields) {
+  await dbInstance.codeMetadata.update({
+    where: { repository_id: repoId },
+    data: fields,
+  });
+}
 
-        if (!response.ok) {
-          const data = await response.json();
-          logwatch.error(
-            {
-              status: response.status,
-              error: data,
-              file: "codemeta.json",
-            },
-            true
-          );
-          throw new Error("Error validating the codemeta.json file", data);
-        }
-        const data = await response.json();
-        logwatch.info({ message: "Codemeta validation response", data }, true);
+/**
+ * Strip BOM, then trim
+ */
+function normalizeText(raw) {
+  return raw.replace(/^\uFEFF/, "").trim();
+}
 
-        let validationMessage = `The codemeta.json file is valid according to the ${data.version} codemeta.json schema.`;
-        if (data.message !== "valid") {
-          validationMessage = data.error;
-        }
+/**
+ * Validate codemeta.json
+ */
+async function validateCodemeta({ content }, repository) {
+  const repoId = repository.id;
 
-        await dbInstance.codeMetadata.update({
-          where: {
-            repository_id: repository.id,
-          },
-          data: {
-            codemeta_validation_message: validationMessage,
-            codemeta_status: data.message,
-          },
-        });
-
-        return data.message === "valid";
-      } catch (error) {
-        logwatch.error(`error parsing the codemeta.json file: ${error}`);
-        return false;
-      }
-    } catch (error) {
-      return false;
-    }
+  if (typeof content !== "string") {
+    await updateStatus(repoId, {
+      codemeta_status: "invalid",
+      codemeta_validation_message: "Missing or invalid codemeta content",
+    });
+    return false;
   }
 
-  if (fileType === "citation") {
-    try {
-      try {
-        yaml.load(metadataInfo.content);
-      } catch (error) {
-        await dbInstance.codeMetadata.update({
-          where: {
-            repository_id: repository.id,
-          },
-          data: {
-            citation_validation_message: "Error parsing the CITATION.cff file",
-            citation_status: "invalid",
-          },
-        });
-        return false;
-      }
-      const loaded_file = yaml.load(metadataInfo.content);
-      logwatch.start("Validating the CITATION.cff file");
-      // Verify the required fields are present
-      if (!loaded_file.title || !loaded_file.authors) {
-        return false;
-      }
-
-      try {
-        const response = await fetch(`${VALIDATOR_URL}/validate-citation`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            file_path: metadataInfo.file_path,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Error validating the CITATION.cff file", response);
-        }
-
-        const data = await response.json();
-
-        logwatch.info({ message: "Citation validation response", data }, true);
-        let validationMessage = "";
-        if (data.message === "valid") {
-          validationMessage = data.output;
-        } else {
-          validationMessage = data.error;
-        }
-
-        await dbInstance.codeMetadata.update({
-          where: {
-            repository_id: repository.id,
-          },
-          data: {
-            citation_validation_message: validationMessage,
-            citation_status: data.message,
-          },
-        });
-
-        return data.message === "valid";
-      } catch (error) {
-        logwatch.error(
-          { message: "Error validating the CITATION.cff file", error },
-          true
-        );
-        return false;
-      }
-    } catch (error) {
-      return false;
-    }
+  const text = normalizeText(content);
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch (err) {
+    logwatch.error("Error parsing codemeta.json", err);
+    await updateStatus(repoId, {
+      codemeta_status: "invalid",
+      codemeta_validation_message: "Error parsing codemeta.json",
+    });
+    return false;
   }
+
+  const { name, author, description } = json;
+  if (!name || !author || !description) {
+    await updateStatus(repoId, {
+      codemeta_status: "invalid",
+      codemeta_validation_message:
+        "Required fields (name, author, description) missing",
+    });
+    return false;
+  }
+
+  // POST to external schema validator
+  let res;
+  try {
+    res = await fetch(`${VALIDATOR_URL}/validate-codemeta`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file_content: json }),
+    });
+  } catch (err) {
+    logwatch.error("Network error validating codemeta.json", err);
+    await updateStatus(repoId, {
+      codemeta_status: "invalid",
+      codemeta_validation_message: "Validation request failed",
+    });
+    return false;
+  }
+
+  const data = await res.json();
+  if (!res.ok) {
+    logwatch.error({ status: res.status, error: data }, true);
+    await updateStatus(repoId, {
+      codemeta_status: "invalid",
+      codemeta_validation_message: data.error || "Validation failed",
+    });
+    return false;
+  }
+
+  const valid = data.message === "valid";
+  const msg = valid ? `Valid according to v${data.version}` : data.error;
+  await updateStatus(repoId, {
+    codemeta_status: data.message,
+    codemeta_validation_message: msg,
+  });
+  return valid;
+}
+
+/**
+ * Validate CITATION.cff
+ */
+export async function validateCitation({ content, file_path }, repository) {
+  const repoId = repository.id;
+  let doc;
+
+  // parse YAML
+  try {
+    doc = yaml.load(content);
+  } catch (err) {
+    logwatch.error("Error parsing CITATION.cff", err);
+    await updateStatus(repoId, {
+      citation_status: "invalid",
+      citation_validation_message: "Error parsing CITATION.cff",
+    });
+    return false;
+  }
+
+  if (!doc.title || !doc.authors) {
+    await updateStatus(repoId, {
+      citation_status: "invalid",
+      citation_validation_message: "Required fields (title, authors) missing",
+    });
+    return false;
+  }
+
+  // external validation
+  let res;
+  try {
+    res = await fetch(`${VALIDATOR_URL}/validate-citation`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file_path }),
+    });
+  } catch (err) {
+    logwatch.error("Network error validating CITATION.cff", err);
+    await updateStatus(repoId, {
+      citation_status: "invalid",
+      citation_validation_message: "Validation request failed",
+    });
+    return false;
+  }
+
+  const data = await res.json();
+  if (!res.ok) {
+    logwatch.error({ status: res.status, error: data }, true);
+    await updateStatus(repoId, {
+      citation_status: "invalid",
+      citation_validation_message: data.error || "Validation failed",
+    });
+    return false;
+  }
+
+  const valid = data.message === "valid";
+  const msg = valid ? data.output : data.error;
+  await updateStatus(repoId, {
+    citation_status: data.message,
+    citation_validation_message: msg,
+  });
+  return valid;
 }
 
 /**
