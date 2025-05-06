@@ -129,7 +129,7 @@ export default defineEventHandler(async (event) => {
 
   let existingContribSHA = "";
 
-  // Check if the license file already exists
+  // Check if the file already exists
   try {
     const { data: contribData } = await octokit.request(
       "GET /repos/{owner}/{repo}/contents/{path}",
@@ -150,7 +150,7 @@ export default defineEventHandler(async (event) => {
     existingContribSHA = "";
   }
 
-  // Create a new file with the license content
+  // Create a new file with the file content
   await octokit.request("PUT /repos/{owner}/{repo}/contents/{path}", {
     branch: newBranchName,
     content: Buffer.from(contribContent).toString("base64"),
@@ -164,7 +164,7 @@ export default defineEventHandler(async (event) => {
     ...(existingContribSHA && { sha: existingContribSHA }),
   });
 
-  // Create a pull request for the new branch with the license content
+  // Create a pull request for the new branch with the file content
   const { data: pullRequestData } = await octokit.request(
     "POST /repos/{owner}/{repo}/pulls",
     {
@@ -184,8 +184,6 @@ export default defineEventHandler(async (event) => {
     },
   );
 
-  // Save the PR URL to the database
-  // Update the license content and the license id in the database
   const updatedContrib = await prisma.contributingValidation.update({
     data: {
       contrib_content: contribContent,
@@ -217,7 +215,7 @@ export default defineEventHandler(async (event) => {
     await prisma.analytics.create({
       data: {
         id: updatedContrib.repository.id,
-        update_readme: 1,
+        update_contributing: 1,
       },
     });
   }

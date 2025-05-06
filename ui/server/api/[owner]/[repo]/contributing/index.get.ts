@@ -42,13 +42,13 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Check if the user is authorized to access the readme request
+  // Check if the user is authorized to access the request
   await repoWritePermissions(event, owner, repo);
 
   const response: ContributingRequest = {
     contribContent: contrib?.contrib_content || "",
   };
 
-  // return the valid readme request
+  // return the valid request
   return response;
 });

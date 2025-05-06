@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
 
   const { codeContent } = parsedBody.data;
 
-  const code = await prisma.readmeValidation.findFirst({
+  const code = await prisma.codeofConductValidation.findFirst({
     where: {
       repository: {
         owner,
@@ -51,9 +51,9 @@ export default defineEventHandler(async (event) => {
   // Check if the user is authorized to access the license request
   await repoWritePermissions(event, owner, repo);
 
-  const updatedCodeRequest = await prisma.readmeValidation.update({
+  const updatedCodeRequest = await prisma.codeofConductValidation.update({
     data: {
-      readme_content: codeContent,
+      code_content: codeContent,
     },
     where: {
       id: code.id,

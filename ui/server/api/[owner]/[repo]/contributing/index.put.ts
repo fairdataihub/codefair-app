@@ -51,9 +51,9 @@ export default defineEventHandler(async (event) => {
   // Check if the user is authorized to access the contributing request
   await repoWritePermissions(event, owner, repo);
 
-  const updatedContribRequest = await prisma.readmeValidation.update({
+  const updatedContribRequest = await prisma.contributingValidation.update({
     data: {
-      readme_content: contribContent,
+      contrib_content: contribContent,
     },
     where: {
       id: contrib.id,

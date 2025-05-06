@@ -3,6 +3,7 @@ import sanitizeHtml from "sanitize-html";
 import { MdEditor, config } from "md-editor-v3";
 import TargetBlankExtension from "@/utils/TargetBlankExtension";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+import cofcJSON from "@/assets/data/codeOfConduct.json";
 
 config({
   editorConfig: {
@@ -39,12 +40,17 @@ const route = useRoute();
 const { owner, repo } = route.params as { owner: string; repo: string };
 
 const codeContent = ref("");
+const cofcTitle = ref("");
 
 const displayEditor = ref(false);
 const submitLoading = ref(false);
 
 const showSuccessModal = ref(false);
 const pullRequestURL = ref("");
+const cofcOptions = cofcJSON.map((option) => ({
+  label: option.name,
+  value: option.name,
+}));
 
 const { data, error } = await useFetch(
   `/api/${owner}/${repo}/code-of-conduct`,
@@ -72,11 +78,21 @@ if (data.value) {
 
 const sanitize = (html: string) => sanitizeHtml(html);
 
+const updateCodeContent = (value: string) => {
+  const cofc = cofcJSON.find((item) => item.name === value);
+
+  if (cofc) {
+    const { template } = cofc;
+    cofcTitle.value = value;
+    codeContent.value = template || "";
+  }
+};
+
 const saveDraft = async () => {
   submitLoading.value = true;
 
   const body = {
-    codContent: codeContent.value,
+    codeContent: codeContent.value,
   };
 
   await $fetch(`/api/${owner}/${repo}/code-of-conduct`, {
@@ -182,6 +198,24 @@ const navigateToPR = () => {
             contributors.
           </p>
         </div>
+
+        <n-form-item class="mb-3 mt-5" :show-feedback="false" size="large">
+          <template #label>
+            <p class="pb-1 text-base font-bold">
+              Select a Code of Conduct template
+            </p>
+          </template>
+
+          <n-select
+            v-model:value="cofcTitle"
+            placeholder="Code of Conduct"
+            clearable
+            size="large"
+            filterable
+            :options="cofcOptions"
+            @update:value="updateCodeContent"
+          />
+        </n-form-item>
 
         <TransitionFade>
           <n-form-item
