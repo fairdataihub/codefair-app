@@ -88,16 +88,22 @@ export async function getDefaultBranch(context, owner, repositoryName) {
  * @returns {Object} - Returns the file data if it exists, null otherwise
  * */
 export async function checkForFile(context, owner, repoName, filePath) {
-  const file = await context.octokit.repos.getContent({
-    owner,
-    repo: repoName,
-    path: filePath,
-  });
-
-  if (file.status === 200) {
-    return file.data;
+  try {
+    const response = await context.octokit.repos.getContent({
+      owner,
+      repo: repoName,
+      path: filePath,
+    });
+    if (response.status === 200) {
+      return true;
+    }
+  } catch (error) {
+    if (error.status === 404) {
+      // file doesn’t exist
+      return null;
+    }
+    throw error;
   }
-  return null;
 }
 
 /**
