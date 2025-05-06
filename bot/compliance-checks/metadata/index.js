@@ -415,18 +415,21 @@ function normalizeText(raw) {
 /**
  * Validate codemeta.json
  */
-async function validateCodemeta({ content }, repository) {
+async function validateCodemeta(metadataInfo, repository) {
   const repoId = repository.id;
+  let raw = metadataInfo.content;
+  logwatch.info("Validating codemeta.json...");
+  logwatch.info(raw);
 
-  if (typeof content !== "string") {
-    await updateStatus(repoId, {
-      codemeta_status: "invalid",
-      codemeta_validation_message: "Missing or invalid codemeta content",
-    });
-    return false;
+  // 1) Guard null/undefined or non-string
+  if (typeof raw !== "string") {
+    raw = JSON.stringify(raw ?? {});
   }
 
-  const text = normalizeText(content);
+  // 2) Normalize (remove BOM + trim)
+  const text = normalizeText(raw);
+
+  // 3) Try parsing
   let json;
   try {
     json = JSON.parse(text);
@@ -439,8 +442,8 @@ async function validateCodemeta({ content }, repository) {
     return false;
   }
 
-  const { name, author, description } = json;
-  if (!name || !author || !description) {
+  // 4) Check required fields
+  if (!json.name || !json.author || !json.description) {
     await updateStatus(repoId, {
       codemeta_status: "invalid",
       codemeta_validation_message:
@@ -449,7 +452,7 @@ async function validateCodemeta({ content }, repository) {
     return false;
   }
 
-  // POST to external schema validator
+  // 5) External validation
   let res;
   try {
     res = await fetch(`${VALIDATOR_URL}/validate-codemeta`, {
@@ -491,6 +494,8 @@ async function validateCodemeta({ content }, repository) {
 export async function validateCitation({ content, file_path }, repository) {
   const repoId = repository.id;
   let doc;
+
+  logwatch.info("Validating CITATION.cff...");
 
   // parse YAML
   try {

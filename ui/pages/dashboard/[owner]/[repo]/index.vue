@@ -889,7 +889,7 @@ const handleSettingsSelect = (key: string) => {
               positive-text="Confirm"
               negative-text="Cancel"
               :loading="loading"
-              @positive-click="handlePositiveClick('readme')"
+              @positive-click="handlePositiveClick('code-of-conduct')"
               @negative-click="showCodeofConductModal = false"
             />
           </div>

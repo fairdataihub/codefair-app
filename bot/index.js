@@ -22,6 +22,8 @@ import {
   reRenderDashboard,
 } from "./commands/actions/index.js";
 import {
+  rerunCodeOfConductValidation,
+  rerunContributingValidation,
   rerunCWLValidation,
   rerunFullRepoValidation,
   rerunLicenseValidation,
@@ -438,6 +440,20 @@ export default async (app, { getRouter }) => {
     // "API" using comments to trigger workflows
     if (issueBody.includes("<!-- @codefair-bot rerun-cwl-validation -->")) {
       await rerunCWLValidation(context, owner, repository, issueBody);
+    }
+
+    if (
+      issueBody.includes("<!-- @codefair-bot rerun-contributing-validation -->")
+    ) {
+      await rerunContributingValidation(context, owner, repository, issueBody);
+    }
+
+    if (
+      issueBody.includes(
+        "<!-- @codefair-bot rerun-code-of-conduct-validation -->"
+      )
+    ) {
+      await rerunCodeOfConductValidation(context, owner, repository, issueBody);
     }
 
     if (
