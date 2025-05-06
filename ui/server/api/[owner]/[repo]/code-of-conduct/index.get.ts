@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  let code = installation.CodeofConductValidation;
+  let code = installation?.CodeofConductValidation;
 
   if (!code) {
     // Create entry if it doesn't exist

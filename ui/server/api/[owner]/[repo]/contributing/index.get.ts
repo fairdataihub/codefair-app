@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  let contrib = installation.ContributingValidation;
+  let contrib = installation?.ContributingValidation;
 
   if (!contrib) {
     // Create entry if it doesn't exist

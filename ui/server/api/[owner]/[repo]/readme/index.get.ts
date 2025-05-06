@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  let readme = installation.ReadmeValidation;
+  let readme = installation?.ReadmeValidation;
 
   if (!readme) {
     // Create entry if it doesn't exist
