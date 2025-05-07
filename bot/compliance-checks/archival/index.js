@@ -215,7 +215,7 @@ export async function applyArchivalTemplate(baseTemplate, repository, owner) {
     const zenodoId = existingZenodoDep.zenodo_id;
     const zenodoDoi = existingZenodoDep.last_published_zenodo_doi;
     const zenodoDOIBadge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${zenodoId})`;
-    baseTemplate += `${archiveTitle} ✔️\n\n***${lastVersion}***${alreadyReleaseText}\n\n${zenodoDOIBadge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadgeButton} `;
+    baseTemplate += `${archiveTitle} ✔️\n\n***${lastVersion}***${alreadyReleaseText}\n\n${zenodoDOIBadge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadgeButton}\n\n`;
   }
 
   return baseTemplate;
