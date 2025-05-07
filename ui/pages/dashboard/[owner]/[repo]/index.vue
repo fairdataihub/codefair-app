@@ -768,7 +768,7 @@ const handleSettingsSelect = (key: string) => {
             type="info"
             class="w-full"
           >
-            There are no CWL files in this repository.
+            There are no CWL files to validate in this repository.
           </n-alert>
 
           <p v-else class="text-base">

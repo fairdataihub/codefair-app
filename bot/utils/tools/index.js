@@ -567,7 +567,7 @@ export function applyLastModifiedTemplate(baseTemplate) {
     .tz("America/Los_Angeles")
     .format("MMM D YYYY, HH:mm:ss");
 
-  return `${baseTemplate}\n\n<sub><span style="color: grey;">Last updated ${lastModified} (timezone: America/Los_Angeles)</span></sub>`;
+  return `${baseTemplate}<sub><span style="color: grey;">Last updated ${lastModified} (timezone: America/Los_Angeles)</span></sub>`;
 }
 
 /**
