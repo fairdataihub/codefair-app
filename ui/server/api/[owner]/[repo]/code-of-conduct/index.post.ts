@@ -167,11 +167,11 @@ export default defineEventHandler(async (event) => {
   const { data: pullRequestData } = await octokit.request(
     "POST /repos/{owner}/{repo}/pulls",
     {
-      title: `feat: ✨ ${codePath} file ${existingCodeSHA ? "updated" : "added"}`,
+      title: `feat: ✨ CODE_OF_CONDUCT.md file ${existingCodeSHA ? "updated" : "added"}`,
       base: defaultBranch,
       body: `This pull request ${
         existingCodeSHA
-          ? "updates the existing CODE_OF_CONDUCT.md file"
+          ? `updates the existing ${codePath} file`
           : `adds the ${codePath} file created with Codefair`
       }. Please review the changes and merge the pull request if everything looks good.`,
       head: newBranchName,

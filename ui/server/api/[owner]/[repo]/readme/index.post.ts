@@ -166,11 +166,11 @@ export default defineEventHandler(async (event) => {
   const { data: pullRequestData } = await octokit.request(
     "POST /repos/{owner}/{repo}/pulls",
     {
-      title: `feat: ✨ ${readmePath} file ${existingReadmeSHA ? "updated" : "added"}`,
+      title: `feat: ✨ README file ${existingReadmeSHA ? "updated" : "added"}`,
       base: defaultBranch,
       body: `This pull request ${
         existingReadmeSHA
-          ? "updates the existing README file"
+          ? `updates the existing ${readmePath} file`
           : `adds the ${readmePath} file created with Codefair`
       }. Please review the changes and merge the pull request if everything looks good.`,
       head: newBranchName,
