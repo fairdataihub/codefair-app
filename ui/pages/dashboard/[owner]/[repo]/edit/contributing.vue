@@ -194,7 +194,7 @@ const navigateToPR = () => {
 
         <div class="border-b border-dashed py-2">
           <p class="text-base">
-            You can edit your CONITRUBITING.md file here. The CONITRUBITING.md
+            You can edit your CONTRIBUTING.md file here. The CONTRIBUTING.md
             file is a markdown file that contains information about your
             project. It is usually the first thing that users see when they
             visit your project on GitHub. Try to make it as informative and
