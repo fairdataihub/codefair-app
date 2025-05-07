@@ -79,29 +79,31 @@ model ReadmeValidation {
 }
 
 model CodeofConductValidation {
-  id               String       @id @default(cuid())
-  identifier       String       @unique
-  repository_id    Int          @unique
-  contains_code    Boolean      @default(false)
-  code_content     String       @default("")
-  code_path        String       @default("")
-  pull_request_url String       @default("")
-  created_at       DateTime     @default(now())
-  updated_at       DateTime     @updatedAt
-  repository       Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  id                 String       @id @default(cuid())
+  identifier         String       @unique
+  repository_id      Int          @unique
+  code_template_type String       @default("")
+  contains_code      Boolean      @default(false)
+  code_content       String       @default("")
+  code_path          String       @default("")
+  pull_request_url   String       @default("")
+  created_at         DateTime     @default(now())
+  updated_at         DateTime     @updatedAt
+  repository         Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
 }
 
 model ContributingValidation {
-  id               String       @id @default(cuid())
-  identifier       String       @unique
-  repository_id    Int          @unique
-  contains_contrib Boolean      @default(false)
-  contrib_content  String       @default("")
-  contrib_path     String       @default("")
-  pull_request_url String       @default("")
-  created_at       DateTime     @default(now())
-  updated_at       DateTime     @updatedAt
-  repository       Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+  id                    String       @id @default(cuid())
+  identifier            String       @unique
+  repository_id         Int          @unique
+  contains_contrib      Boolean      @default(false)
+  contrib_template_type String       @default("")
+  contrib_content       String       @default("")
+  contrib_path          String       @default("")
+  pull_request_url      String       @default("")
+  created_at            DateTime     @default(now())
+  updated_at            DateTime     @updatedAt
+  repository            Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
 }
 
 model Ping {
