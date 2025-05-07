@@ -99,7 +99,7 @@ export async function applyAdditionalChecksTemplate(
         url: cofcBadgeUrl,
         status: subjects.cofc.status,
         reason:
-          "Defines clear standards for respectful engagement and shows a welcoming, inclusive community by outlining expectations and procedures for handling abuse. When placed at the repo root (or in docs/ or .github/), CODE_OF_CONDUCT.md surfaces in the repository’s community profile and contributor pages to guide behavior at every step.",
+          "Defines clear standards for respectful engagement and shows a welcoming, inclusive community by outlining expectations and procedures for handling abuse. When placed at the repo root (or in docs/ or .github/), CODE_OF_CONDUCT.md surfaces in the repository's community profile and contributor pages to guide behavior at every step.",
         badge: `${subjects.cofc.status ? "Edit" : "Create"}_CODE_OF_CONDUCT-${
           subjects.cofc.status ? "0ea5e9" : "dc2626"
         }`,
@@ -108,7 +108,7 @@ export async function applyAdditionalChecksTemplate(
 
     const section =
       `## Additional Recommendations\n\n` +
-      `Although these files aren't part of the core FAIR compliance checks, ` +
+      `Although these files aren not part of the core FAIR compliance checks, ` +
       `Codefair recommends including them to improve project governance, community engagement, and contributor experience:\n\n` +
       additionalSubjects
         .map(
