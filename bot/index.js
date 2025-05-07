@@ -36,7 +36,6 @@ checkEnvVariable("CODEFAIR_APP_DOMAIN");
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
-const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
 const BOT_MADE_PR_TITLES = [
   "feat: ✨ LICENSE file added",
   "feat: ✨ Add code metadata files",

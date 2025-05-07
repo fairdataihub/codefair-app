@@ -18,6 +18,8 @@ const IGNORED_COMMIT_MESSAGES = [
   "chore: 📝 Update codemeta.json with Zenodo identifier",
 ];
 
+const CLOSED_ISSUE_BODY = `Codefair has been disabled for this repository. If you would like to re-enable it, please reopen this issue.`;
+
 const { GH_APP_NAME } = process.env;
 
 /**
