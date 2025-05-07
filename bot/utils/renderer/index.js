@@ -187,6 +187,14 @@ export async function renderIssues(
     );
     logwatch.info(`CWL template applied`, { owner, repo: repository.name });
 
+    // ── ARCHIVAL
+    step = "applyArchival";
+    baseTemplate = await applyArchivalTemplate(baseTemplate, repository, owner);
+    logwatch.info(`Archival template applied`, {
+      owner,
+      repo: repository.name,
+    });
+
     step = "additionalChecks";
     baseTemplate = await applyAdditionalChecksTemplate(
       subjects,
@@ -196,14 +204,6 @@ export async function renderIssues(
       context
     );
     logwatch.info(`Additional checks template applied`, {
-      owner,
-      repo: repository.name,
-    });
-
-    // ── ARCHIVAL
-    step = "applyArchival";
-    baseTemplate = await applyArchivalTemplate(baseTemplate, repository, owner);
-    logwatch.info(`Archival template applied`, {
       owner,
       repo: repository.name,
     });

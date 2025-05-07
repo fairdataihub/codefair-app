@@ -185,60 +185,90 @@ export async function closeOpenIssue(context, owner, repo, title) {
  * @returns {array} - An array of objects containing the information for the authors of the repository
  */
 export async function gatherRepoAuthors(context, owner, repo, fileType) {
-  // Get the list of contributors from the repo
-  const contributors = await context.octokit.repos.listContributors({
-    owner,
-    repo,
-  });
+  logwatch.start(`Gathering authors for ${owner}/${repo} (${fileType})`);
 
-  // Get user information for each contributors
-  const userInfo = await Promise.all(
-    contributors.data.map(async (contributor) => {
-      return await context.octokit.users.getByUsername({
-        username: contributor.login,
-      });
-    })
+  let contributors;
+  try {
+    const resp = await context.octokit.repos.listContributors({
+      owner,
+      repo,
+    });
+    contributors = resp.data;
+  } catch (err) {
+    logwatch.error(
+      { message: "Failed to list contributors", owner, repo, err },
+      true
+    );
+    throw new Error(
+      `Could not list contributors for ${owner}/${repo}: ${err.message}`
+    );
+  }
+
+  // For each contributor, try to fetch user details—but don’t fail the whole thing.
+  const lookups = contributors.map((c) =>
+    context.octokit.users
+      .getByUsername({ username: c.login })
+      .then((u) => u.data)
+      .catch((err) => {
+        logwatch.error(
+          { message: "Failed to fetch user", login: c.login, err },
+          true
+        );
+        return null;
+      })
   );
 
+  const users = await Promise.allSettled(lookups);
   const parsedAuthors = [];
-  if (userInfo.length > 0) {
-    for (const author of userInfo) {
-      // Skip bots
-      if (author.data.type === "Bot") {
-        continue;
-      }
 
-      const parsedNames = human.parseName(author.data.name);
-      const authorObj = {
-        orcid: "",
-        roles: [],
-        uri: "",
-      };
+  for (const result of users) {
+    if (result.status !== "fulfilled" || !result.value) {
+      continue; // skip failed lookups
+    }
+    const user = result.value;
+    if (user.type === "Bot") {
+      continue;
+    }
 
-      if (author.data.company && fileType === "citation") {
-        authorObj.affiliation = author.data.company;
-      }
+    // Fall back to login if no name
+    const displayName = user.name || user.login;
+    const { firstName, lastName } = human.parseName(displayName);
 
-      if (author.data.company && fileType === "codemeta") {
+    const authorObj = {
+      orcid: "",
+      roles: [],
+      uri: "",
+    };
+
+    // affiliation differs by fileType
+    if (user.company) {
+      if (fileType === "citation") {
+        authorObj.affiliation = user.company;
+      } else {
         authorObj.affiliation = {
-          name: author.data.company,
+          name: user.company,
           "@type": "Organization",
         };
       }
-
-      if (parsedNames.firstName) {
-        authorObj.givenName = parsedNames.firstName;
-      }
-      if (parsedNames.lastName) {
-        authorObj.familyName = parsedNames.lastName;
-      }
-      if (author.data.email) {
-        authorObj.email = author.data.email;
-      }
-      parsedAuthors.push(authorObj);
     }
+
+    if (firstName) {
+      authorObj.givenName = firstName;
+    }
+    if (lastName) {
+      authorObj.familyName = lastName;
+    }
+    if (user.email) {
+      authorObj.email = user.email;
+    }
+
+    parsedAuthors.push(authorObj);
   }
 
+  logwatch.info(
+    `Parsed ${parsedAuthors.length} authors for ${owner}/${repo}`,
+    true
+  );
   return parsedAuthors;
 }
 
