@@ -27,24 +27,27 @@ model Session {
 }
 
 model Installation {
-  id                    Int               @id
-  owner                 String
-  repo                  String
-  installation_id       Int
-  latest_commit_date    String            @default("")
-  latest_commit_message String            @default("")
-  latest_commit_sha     String            @default("")
-  latest_commit_url     String            @default("")
-  disabled              Boolean           @default(false)
-  issue_number          Int               @default(0)
-  owner_is_organization Boolean           @default(false)
-  action_count          Int               @default(0)
-  created_at            DateTime          @default(now())
-  updated_at            DateTime          @updatedAt
-  CodeMetadata          CodeMetadata?
-  CwlValidation         CwlValidation?
-  LicenseRequest        LicenseRequest?
-  ZenodoDeposition      ZenodoDeposition?
+  id                      Int                      @id
+  owner                   String
+  repo                    String
+  installation_id         Int
+  latest_commit_date      String                   @default("")
+  latest_commit_message   String                   @default("")
+  latest_commit_sha       String                   @default("")
+  latest_commit_url       String                   @default("")
+  disabled                Boolean                  @default(false)
+  issue_number            Int                      @default(0)
+  owner_is_organization   Boolean                  @default(false)
+  action_count            Int                      @default(0)
+  created_at              DateTime                 @default(now())
+  updated_at              DateTime                 @updatedAt
+  CodeMetadata            CodeMetadata?
+  CwlValidation           CwlValidation?
+  LicenseRequest          LicenseRequest?
+  ZenodoDeposition        ZenodoDeposition?
+  ReadmeValidation        ReadmeValidation?
+  CodeofConductValidation CodeofConductValidation?
+  ContributingValidation  ContributingValidation?
 }
 
 model LicenseRequest {
@@ -60,6 +63,47 @@ model LicenseRequest {
   updated_at           DateTime     @updatedAt
   custom_license_title String       @default("")
   repository           Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+}
+
+model ReadmeValidation {
+  id               String       @id @default(cuid())
+  identifier       String       @unique
+  repository_id    Int          @unique
+  contains_readme  Boolean      @default(false)
+  readme_content   String       @default("")
+  readme_path      String       @default("")
+  pull_request_url String       @default("")
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+  repository       Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+}
+
+model CodeofConductValidation {
+  id                 String       @id @default(cuid())
+  identifier         String       @unique
+  repository_id      Int          @unique
+  code_template_type String       @default("")
+  contains_code      Boolean      @default(false)
+  code_content       String       @default("")
+  code_path          String       @default("")
+  pull_request_url   String       @default("")
+  created_at         DateTime     @default(now())
+  updated_at         DateTime     @updatedAt
+  repository         Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
+}
+
+model ContributingValidation {
+  id                    String       @id @default(cuid())
+  identifier            String       @unique
+  repository_id         Int          @unique
+  contains_contrib      Boolean      @default(false)
+  contrib_template_type String       @default("")
+  contrib_content       String       @default("")
+  contrib_path          String       @default("")
+  pull_request_url      String       @default("")
+  created_at            DateTime     @default(now())
+  updated_at            DateTime     @updatedAt
+  repository            Installation @relation(fields: [repository_id], references: [id], onDelete: Cascade)
 }
 
 model Ping {
@@ -132,4 +176,7 @@ model Analytics {
   updated_at               DateTime @updatedAt
   create_release           Int      @default(0)
   zenodo_release           Int      @default(0)
+  update_readme            Int      @default(0)
+  update_code_of_conduct   Int      @default(0)
+  update_contributing      Int      @default(0)
 }

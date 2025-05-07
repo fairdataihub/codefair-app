@@ -47,13 +47,9 @@ COPY --from=builder /app/prisma ./prisma
 
 # Create app directory structure and copy files
 COPY api ./api
-COPY archival ./archival
-COPY citation ./citation
-COPY codemeta ./codemeta
-COPY cwl ./cwl
-COPY license ./license
-COPY metadata ./metadata
-COPY migrations ./migrations
+COPY compliance-checks ./compliance-checks
+COPY commands ./commands
+COPY prisma ./prisma
 COPY public ./public
 COPY scripts ./scripts
 COPY utils ./utils

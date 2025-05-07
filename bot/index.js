@@ -1,7 +1,7 @@
 "use strict";
 
 import * as express from "express";
-import { checkForCompliance } from "./utils/compliance-checks/index.js";
+import { runComplianceChecks } from "./compliance-checks/index.js";
 import { renderIssues, createIssue } from "./utils/renderer/index.js";
 import dbInstance from "./db.js";
 import { logwatch } from "./utils/logwatch.js";
@@ -22,10 +22,13 @@ import {
   reRenderDashboard,
 } from "./commands/actions/index.js";
 import {
+  rerunCodeOfConductValidation,
+  rerunContributingValidation,
   rerunCWLValidation,
   rerunFullRepoValidation,
   rerunLicenseValidation,
   rerunMetadataValidation,
+  rerunReadmeValidation,
 } from "./commands/validations/index.js";
 
 checkEnvVariable("GH_APP_NAME");
@@ -121,8 +124,11 @@ export default async (app, { getRouter }) => {
           continue;
         }
 
-        // BEGIN CHECKING FOR COMPLIANCE
-        const subjects = await checkForCompliance(context, owner, repository);
+        let subjects;
+        if (!emptyRepo) {
+          // BEGIN CHECKING FOR COMPLIANCE
+          subjects = await runComplianceChecks(context, owner, repository);
+        }
 
         // Create issue body template
         const issueBody = await renderIssues(
@@ -188,7 +194,7 @@ export default async (app, { getRouter }) => {
       },
     });
 
-    if (!installation) {
+    if (!installation || installation.disabled) {
       return;
     } else {
       // Verify if repository name has changed
@@ -240,7 +246,7 @@ export default async (app, { getRouter }) => {
     // Grab the commits being pushed
     const { commits } = context.payload;
 
-    let subjects = await checkForCompliance(
+    let subjects = await runComplianceChecks(
       context,
       owner,
       repository,
@@ -297,9 +303,9 @@ export default async (app, { getRouter }) => {
         id: repository.id,
       },
     });
-    if (installation && installation?.action_count > 0) {
+    if (installation?.action_count > 0 || installation?.disabled) {
       logwatch.info(
-        `pull_request.opened: Action limit is at ${installation.action_count} still applied, ignoring...`
+        `pull_request.opened: Action limit is at ${installation.action_count} still applied or installation is disabled, ignoring...`
       );
       return;
     }
@@ -433,13 +439,27 @@ export default async (app, { getRouter }) => {
 
     // "API" using comments to trigger workflows
     if (issueBody.includes("<!-- @codefair-bot rerun-cwl-validation -->")) {
-      await rerunCWLValidation(context, owner, repository);
+      await rerunCWLValidation(context, owner, repository, issueBody);
+    }
+
+    if (
+      issueBody.includes("<!-- @codefair-bot rerun-contributing-validation -->")
+    ) {
+      await rerunContributingValidation(context, owner, repository, issueBody);
+    }
+
+    if (
+      issueBody.includes(
+        "<!-- @codefair-bot rerun-code-of-conduct-validation -->"
+      )
+    ) {
+      await rerunCodeOfConductValidation(context, owner, repository, issueBody);
     }
 
     if (
       issueBody.includes("<!-- @codefair-bot rerun-full-repo-validation -->")
     ) {
-      await rerunFullRepoValidation(context, owner, repository);
+      await rerunFullRepoValidation(context, owner, repository, issueBody);
     }
 
     if (issueBody.includes("<!-- @codefair-bot rerun-license-validation -->")) {
@@ -451,13 +471,16 @@ export default async (app, { getRouter }) => {
     ) {
       await rerunMetadataValidation(context, owner, repository, issueBody);
     }
+    if (issueBody.includes("<!-- @codefair-bot rerun-readme-validation -->")) {
+      await rerunReadmeValidation(context, owner, repository, issueBody);
+    }
 
     if (issueBody.includes("<!-- @codefair-bot publish-zenodo")) {
       await publishToZenodo(context, owner, repository, issueBody);
     }
 
     if (issueBody.includes("<!-- @codefair-bot re-render-dashboard -->")) {
-      await reRenderDashboard(context, owner, repository);
+      await reRenderDashboard(context, owner, repository, issueBody);
     }
   });
 
@@ -506,7 +529,7 @@ export default async (app, { getRouter }) => {
       );
 
       // Begin fair compliance checks
-      const subjects = await checkForCompliance(context, owner, repository);
+      const subjects = await runComplianceChecks(context, owner, repository);
 
       const issueBody = await renderIssues(
         context,

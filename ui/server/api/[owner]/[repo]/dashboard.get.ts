@@ -15,8 +15,11 @@ export default defineEventHandler(async (event) => {
   const installation = await prisma.installation.findFirst({
     include: {
       CodeMetadata: true,
+      CodeofConductValidation: true,
+      ContributingValidation: true,
       CwlValidation: true,
       LicenseRequest: true,
+      ReadmeValidation: true,
       ZenodoDeposition: true,
     },
     where: {
@@ -32,60 +35,81 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const licenseRequest = installation.LicenseRequest;
-  const codeMetadataRequest = installation.CodeMetadata;
-  const cwlValidation = installation.CwlValidation;
-  const zenodoDeposition = installation.ZenodoDeposition;
+  const lrRaw = installation.LicenseRequest;
+  const cmRaw = installation.CodeMetadata;
+  const cwlRaw = installation.CwlValidation;
+  const zenRaw = installation.ZenodoDeposition;
+  const rmRaw = installation.ReadmeValidation;
+  const contribRaw = installation.ContributingValidation;
+  const cofcCRaw = installation.CodeofConductValidation;
+
+  const codeMetadataRequest = {
+    citationStatus: cmRaw?.citation_status ?? "invalid",
+    codemetaStatus: cmRaw?.codemeta_status ?? "invalid",
+    containsCitation: cmRaw?.contains_citation ?? false,
+    containsCodemeta: cmRaw?.contains_codemeta ?? false,
+    containsMetadata: cmRaw?.contains_metadata ?? false,
+    identifier: cmRaw?.identifier ?? "",
+    owner: installation.owner,
+    pullRequest: cmRaw?.pull_request_url ?? "",
+    repo: installation.repo,
+    timestamp: cmRaw?.updated_at ?? null,
+  };
+
+  const licenseRequest = {
+    containsLicense: lrRaw?.contains_license ?? false,
+    identifier: lrRaw?.identifier ?? "",
+    licenseId: lrRaw?.license_id ?? null,
+    licenseStatus: lrRaw?.license_status ?? "invalid",
+    owner: installation.owner,
+    pullRequest: lrRaw?.pull_request_url ?? "",
+    repo: installation.repo,
+    timestamp: lrRaw?.updated_at ?? null,
+  };
+
+  const readmeValidation = {
+    readmeContent: rmRaw?.readme_content ?? "",
+    readmeExists: rmRaw?.contains_readme ?? false,
+    readMePath: rmRaw?.readme_path ?? "",
+    timestamp: rmRaw?.updated_at ?? null,
+  };
+
+  const cwlValidation = {
+    containsCWL: cwlRaw?.contains_cwl_files ?? false,
+    identifier: cwlRaw?.identifier ?? "",
+    overallStatus: cwlRaw?.overall_status ?? "",
+    owner: installation.owner,
+    repo: installation.repo,
+  };
+
+  const zenodoDeposition = {
+    lastPublishedZenodoDoi: zenRaw?.last_published_zenodo_doi ?? null,
+    zenodoId: zenRaw?.zenodo_id ?? null,
+    zenodoStatus: zenRaw?.status ?? null,
+  };
+
+  const contributingValidation = {
+    contribContent: contribRaw?.contrib_content ?? "",
+    contribExists: contribRaw?.contains_contrib ?? false,
+    contribPath: contribRaw?.contrib_path ?? "",
+    timestamp: contribRaw?.updated_at ?? null,
+  };
+  const codeOfConductValidation = {
+    codeContent: cofcCRaw?.code_content ?? "",
+    codeExists: cofcCRaw?.contains_code ?? false,
+    codePath: cofcCRaw?.code_path ?? "",
+    timestamp: cofcCRaw?.updated_at ?? null,
+  };
 
   return {
-    codeMetadataRequest: codeMetadataRequest
-      ? {
-          citationStatus: codeMetadataRequest.citation_status || "invalid",
-          citationValidationMessage:
-            codeMetadataRequest.citation_validation_message || "",
-          codemetaStatus: codeMetadataRequest.codemeta_status || "invalid",
-          codemetaValidationMessage:
-            codeMetadataRequest.codemeta_validation_message || "",
-          containsCitation: codeMetadataRequest.contains_citation || false,
-          containsCodemeta: codeMetadataRequest.contains_codemeta || false,
-          containsMetadata: codeMetadataRequest.contains_metadata || false,
-          identifier: codeMetadataRequest.identifier || "",
-          owner: installation.owner,
-          pullRequest: codeMetadataRequest.pull_request_url || "",
-          repo: installation.repo,
-          timestamp: codeMetadataRequest.updated_at || null,
-        }
-      : null,
-    cwlValidation: cwlValidation
-      ? {
-          containsCWL: cwlValidation.contains_cwl_files || false,
-          identifier: cwlValidation.identifier || "",
-          overallStatus: cwlValidation.overall_status || "",
-          owner: installation.owner,
-          repo: installation.repo,
-        }
-      : null,
+    codeMetadataRequest,
+    codeOfConductValidation,
+    contributingValidation,
+    cwlValidation,
     installationId: installation.installation_id,
     isOrganization: isOrg,
-    licenseRequest: licenseRequest
-      ? {
-          containsLicense: licenseRequest.contains_license || false,
-          identifier: licenseRequest.identifier || "",
-          licenseId: licenseRequest.license_id || null,
-          licenseStatus: licenseRequest.license_status || "invalid",
-          owner: installation.owner,
-          pullRequest: licenseRequest.pull_request_url || "",
-          repo: installation.repo,
-          timestamp: licenseRequest.updated_at || null,
-        }
-      : null,
-    zenodoDeposition: zenodoDeposition
-      ? {
-          lastPublishedZenodoDoi:
-            zenodoDeposition.last_published_zenodo_doi || null,
-          zenodoId: zenodoDeposition.zenodo_id || null,
-          zenodoStatus: zenodoDeposition.status || null,
-        }
-      : null,
+    licenseRequest,
+    readmeValidation,
+    zenodoDeposition,
   };
 });
