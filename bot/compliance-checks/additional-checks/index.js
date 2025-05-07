@@ -89,7 +89,7 @@ export async function applyAdditionalChecksTemplate(
         url: contribBadgeUrl,
         status: subjects.contributing.status,
         reason:
-          "Provides guidelines for contributors, reducing onboarding friction.",
+          "This file helps communicate contribution processes and gives contributors clear guidelines placed at the repo root (or in docs/ or .github/), saving time and reducing rework. It surfaces automatically on pull requests, issues, and the repository's Contribute page to guide contributors at every step.",
         badge: `${subjects.contributing.status ? "Edit" : "Create"}_CONTRIBUTING-${
           subjects.contributing.status ? "0ea5e9" : "dc2626"
         }`,
@@ -99,7 +99,7 @@ export async function applyAdditionalChecksTemplate(
         url: cofcBadgeUrl,
         status: subjects.cofc.status,
         reason:
-          "Sets the tone for community interactions, fostering inclusivity.",
+          "Defines clear standards for respectful engagement and shows a welcoming, inclusive community by outlining expectations and procedures for handling abuse. When placed at the repo root (or in docs/ or .github/), CODE_OF_CONDUCT.md surfaces in the repository’s community profile and contributor pages to guide behavior at every step.",
         badge: `${subjects.cofc.status ? "Edit" : "Create"}_CODE_OF_CONDUCT-${
           subjects.cofc.status ? "0ea5e9" : "dc2626"
         }`,
@@ -112,16 +112,21 @@ export async function applyAdditionalChecksTemplate(
       ? "✔️"
       : "❗";
 
-    const rows = additionalSubjects
-      .map(
-        ({ label, reason, url, badge }) =>
-          `| ${label} | ${reason} | [![${label}](https://img.shields.io/badge/${badge}.svg)](${url}) |`
-      )
-      .join("\n");
+    const section =
+      `## Additional Recommendations ${overallStatusEmoji}\n\n` +
+      `Although these files aren't part of the core FAIR compliance checks, ` +
+      `Codefair recommends including them to improve project governance, community engagement, and contributor experience:\n\n` +
+      additionalSubjects
+        .map(
+          ({ label, reason, url, badge, status }) =>
+            `### ${label} ${status ? "✔️" : "❗"}\n\n` +
+            `${reason}\n\n` +
+            `[![${label}](https://img.shields.io/badge/${badge}.svg)](${url})\n`
+        )
+        .join("\n") +
+      `\n`;
 
-    const section = `## Additional Recommendations ${overallStatusEmoji}\n\nAlthough these files aren’t part of the core FAIR compliance checks, Codefair recommends including them to improve project governance, community engagement, and contributor experience:\n\n| Item             | Why it matters                                                                 | Action                                                                                               |\n| ---------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |\n${rows}\n\n`;
-
-    return `${template}\n\n${section}`;
+    return `${template}\n\n${section}\n\n`;
   } catch (error) {
     throw new Error(
       `Failed to prepare template data in applyAdditionalChecksTemplate: ${error.message}`,
