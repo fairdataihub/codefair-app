@@ -362,10 +362,7 @@ const handleSettingsSelect = (key: string) => {
                       <Icon name="icon-park-solid:check-one" size="16" />
                     </template>
 
-                    <span
-                      >Repository contains a
-                      {{ data?.readmeValidation?.readMePath }}</span
-                    >
+                    <span> {{ data?.readmeValidation?.readMePath }} found</span>
                   </n-tag>
                 </template>
 
@@ -834,9 +831,8 @@ const handleSettingsSelect = (key: string) => {
                       <Icon name="icon-park-solid:check-one" size="16" />
                     </template>
 
-                    <span
-                      >Repository contains a
-                      {{ data?.codeOfConductValidation?.codePath }}</span
+                    <span>
+                      {{ data?.codeOfConductValidation?.codePath }} found</span
                     >
                   </n-tag>
                 </template>
@@ -941,9 +937,9 @@ const handleSettingsSelect = (key: string) => {
                       <Icon name="icon-park-solid:check-one" size="16" />
                     </template>
 
-                    <span
-                      >Repository contains a
-                      {{ data?.contributingValidation?.contribPath }}</span
+                    <span>
+                      {{ data?.contributingValidation?.contribPath }}
+                      found</span
                     >
                   </n-tag>
                 </template>
