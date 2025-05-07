@@ -84,14 +84,12 @@ export async function publishZenodoDeposition(zenodoToken, depositionId) {
       `Zenodo deposition published successfully at: ${publishedDeposition.links.latest_html}`
     );
   } catch (error) {
-    logwatch.error(
-      `Exception occurred during Zenodo publication: ${error.message}`,
-      error
-    );
-    throw new Error(
-      `Error publishing the Zenodo deposition: ${error.message}`,
-      { cause: error }
-    );
+    logwatch.error({
+      message: `Exception occurred during Zenodo publication: ${error.message}`,
+      error: error,
+      stack: error.stack,
+    });
+    throw error;
   }
 }
 
@@ -171,36 +169,47 @@ export function parseZenodoInfo(issueBody) {
 export async function applyArchivalTemplate(baseTemplate, repository, owner) {
   const archiveTitle = `\n\n## FAIR Software Release`;
   const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
-  const existingZenodoDep = await dbInstance.zenodoDeposition.findUnique({
-    where: {
-      repository_id: repository.id,
-    },
-  });
   const alreadyReleaseText = ` of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:`;
   const firstReleaseBadgeButton = `[![Create Release](https://img.shields.io/badge/Create_Release-dc2626.svg)](${badgeURL})`;
   const releaseBadgeButton = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`;
   const newReleaseText = `To make your software FAIR, it is necessary to archive it in an archival repository like Zenodo every time you make a release. When you are ready to make your next release, click the "Create release" button below to easily create a FAIR release where your metadata files are updated (including with a DOI) before creating a GitHub release and archiving it.\n\n`;
 
-  if (
-    !existingZenodoDep &&
-    !existingZenodoDep?.last_published_zenodo_doi != null
-  ) {
-    // Entry does not exist in db, create a new one
-    // await zenDepositionCollection.create({
-    //   data: {
-    //     repository_id: repository.id,
-    //     existing_zenodo_deposition_id: null,
-    //     zenodo_id: null,
-    //     zenodo_metadata: {},
-    //     github_release_id: null,
-    //     github_tag_name: null,
-    //     user_id: "",
-    //   }
-    // });
+  let existingZenodoDep = await dbInstance.zenodoDeposition.findUnique({
+    where: {
+      repository_id: repository.id,
+    },
+  });
+
+  if (!existingZenodoDep) {
+    //
+    logwatch.info("Zenodo deposition not found in the database.");
     baseTemplate += `${archiveTitle} ❌\n\n${newReleaseText}\n\n${firstReleaseBadgeButton}`;
+  } else if (
+    existingZenodoDep?.last_published_zenodo_doi === null ||
+    existingZenodoDep?.last_published_zenodo_doi === undefined
+  ) {
+    // Refetch the Zenodo deposition information again in case of delay in db update
+    logwatch.info("Refetching Zenodo deposition information...");
+    existingZenodoDep = await dbInstance.zenodoDeposition.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
+    });
+
+    if (!existingZenodoDep || !existingZenodoDep?.last_published_zenodo_doi) {
+      baseTemplate += `${archiveTitle} ❌\n\n${newReleaseText}\n\n${firstReleaseBadgeButton}`;
+    } else {
+      logwatch.info(existingZenodoDep);
+      const lastVersion = existingZenodoDep.github_tag_name;
+      const zenodoId = existingZenodoDep.zenodo_id;
+      const zenodoDoi = existingZenodoDep.last_published_zenodo_doi;
+      const zenodoDOIBadge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${zenodoId})`;
+      baseTemplate += `${archiveTitle} ✔️\n\n***${lastVersion}***${alreadyReleaseText}\n\n${zenodoDOIBadge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadgeButton}\n\n`;
+    }
   } else {
     // entry does exist, update the existing one
-    await dbInstance.zenodoDeposition.update({
+    logwatch.info("Zenodo deposition found in the database.");
+    const response = await dbInstance.zenodoDeposition.update({
       data: {
         existing_zenodo_deposition_id: true,
         zenodo_id: existingZenodoDep.zenodo_id,
@@ -210,10 +219,12 @@ export async function applyArchivalTemplate(baseTemplate, repository, owner) {
       },
     });
 
+    logwatch.info(response);
+
     // Fetch the DOI content
-    const lastVersion = existingZenodoDep.github_tag_name;
-    const zenodoId = existingZenodoDep.zenodo_id;
-    const zenodoDoi = existingZenodoDep.last_published_zenodo_doi;
+    const lastVersion = response.github_tag_name;
+    const zenodoId = response.zenodo_id;
+    const zenodoDoi = response.last_published_zenodo_doi;
     const zenodoDOIBadge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${zenodoId})`;
     baseTemplate += `${archiveTitle} ✔️\n\n***${lastVersion}***${alreadyReleaseText}\n\n${zenodoDOIBadge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadgeButton}\n\n`;
   }
