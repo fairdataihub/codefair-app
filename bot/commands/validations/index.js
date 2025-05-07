@@ -492,7 +492,7 @@ export async function rerunCWLValidation(
       readme,
     };
 
-    const issueBody = await renderIssues(
+    const updatedBody = await renderIssues(
       context,
       owner,
       repository,
@@ -500,7 +500,7 @@ export async function rerunCWLValidation(
       subjects
     );
 
-    await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+    await createIssue(context, owner, repository, ISSUE_TITLE, updatedBody);
 
     logwatch.info("CWL Validation rerun successfully!");
   } catch (error) {
@@ -535,9 +535,9 @@ export async function rerunFullRepoValidation(
 ) {
   logwatch.start("Rerunning full repository validation...");
   try {
-    let subjects = await runComplianceChecks(context, owner, repository);
+    let subjects = await runComplianceChecks(context, owner, repository, true);
 
-    const issueBody = await renderIssues(
+    const updateBody = await renderIssues(
       context,
       owner,
       repository,
@@ -545,7 +545,7 @@ export async function rerunFullRepoValidation(
       subjects
     );
 
-    await createIssue(context, owner, repository, ISSUE_TITLE, issueBody);
+    await createIssue(context, owner, repository, ISSUE_TITLE, updateBody);
   } catch (error) {
     // Remove the command from the issue body
     const issueBodyRemovedCommand = issueBody.substring(
