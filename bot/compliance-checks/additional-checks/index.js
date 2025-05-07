@@ -106,14 +106,8 @@ export async function applyAdditionalChecksTemplate(
       },
     ];
 
-    const overallStatusEmoji = additionalSubjects.every(
-      (subject) => subject.status
-    )
-      ? "✔️"
-      : "❗";
-
     const section =
-      `## Additional Recommendations ${overallStatusEmoji}\n\n` +
+      `## Additional Recommendations\n\n` +
       `Although these files aren't part of the core FAIR compliance checks, ` +
       `Codefair recommends including them to improve project governance, community engagement, and contributor experience:\n\n` +
       additionalSubjects
