@@ -1517,7 +1517,7 @@ onBeforeUnmount(() => {
           <!-- Link to GitHub Release -->
           <NuxtLink
             v-if="zenodoPublishStatus === 'published'"
-            :to="`https://github.com/${owner}/${repo}/releases/tag/${githubTag}`"
+            :to="`https://github.com/${owner}/${repo}/releases/tag/${githubFormValue.tag === 'new' ? githubFormValue.tagTitle : githubFormValue.tag}`"
             target="_blank"
           >
             <n-button type="primary" size="small">

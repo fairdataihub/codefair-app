@@ -225,6 +225,107 @@ const handleSettingsSelect = (key: string) => {
     <div v-else>
       <LayoutSectionDivider class="my-4" />
 
+      <!-- README Card -->
+      <CardDashboard
+        title="README"
+        subheader="The README for the repository is shown here."
+      >
+        <template #icon>
+          <Icon name="gg:readme" size="40" />
+        </template>
+
+        <template #header-extra>
+          <div class="flex flex-wrap items-center space-x-2">
+            <div v-if="data?.readmeValidation?.readmeExists">
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <n-tag type="success">
+                    <template #icon>
+                      <Icon name="icon-park-solid:check-one" size="16" />
+                    </template>
+
+                    <span> {{ data?.readmeValidation?.readMePath }} found</span>
+                  </n-tag>
+                </template>
+
+                <span
+                  >{{ data?.readmeValidation?.readMePath }} file exists</span
+                >
+              </n-popover>
+            </div>
+
+            <div v-else>
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <n-tag type="error">
+                    <template #icon>
+                      <Icon name="icon-park-solid:close-one" size="16" />
+                    </template>
+
+                    <span>README file was not found.</span>
+                  </n-tag>
+                </template>
+
+                <span>README not found</span>
+              </n-popover>
+            </div>
+
+            <n-dropdown
+              :options="readmeSettingsOptions"
+              placement="bottom-end"
+              :show-arrow="true"
+              @select="handleSettingsSelect"
+            >
+              <n-button quaternary circle size="large">
+                <template #icon>
+                  <Icon name="humbleicons:dots-vertical" size="20" />
+                </template>
+              </n-button>
+            </n-dropdown>
+
+            <n-modal
+              v-model:show="showReadmeModal"
+              :mask-closable="false"
+              preset="dialog"
+              title="Are you sure?"
+              content="This will overwrite any existing draft. Do you want to continue?"
+              positive-text="Confirm"
+              negative-text="Cancel"
+              :loading="loading"
+              @positive-click="handlePositiveClick('readme')"
+              @negative-click="showReadmeModal = false"
+            />
+          </div>
+        </template>
+
+        <template #content>
+          <p class="text-base">
+            <span v-if="!data?.readmeValidation?.readmeExists"
+              >A README file was not found at the root of your repository. This
+              file is a markdown file that contains information about your
+              project.</span
+            >
+
+            <span v-else
+              >A {{ data?.readmeValidation?.readMePath }} was found.</span
+            >
+          </p>
+        </template>
+
+        <template #action>
+          <a :href="`/dashboard/${owner}/${repo}/edit/readme`">
+            <n-button type="primary">
+              <template #icon>
+                <Icon name="akar-icons:edit" size="16" />
+              </template>
+              Edit README
+            </n-button>
+          </a>
+        </template>
+      </CardDashboard>
+
+      <n-divider class="my-4" />
+
       <!-- License Card -->
       <CardDashboard
         title="License"
@@ -336,107 +437,6 @@ const handleSettingsSelect = (key: string) => {
                 <Icon name="akar-icons:edit" size="16" />
               </template>
               Edit License
-            </n-button>
-          </a>
-        </template>
-      </CardDashboard>
-
-      <n-divider />
-
-      <!-- README Card -->
-      <CardDashboard
-        title="README"
-        subheader="The README for the repository is shown here."
-      >
-        <template #icon>
-          <Icon name="gg:readme" size="40" />
-        </template>
-
-        <template #header-extra>
-          <div class="flex flex-wrap items-center space-x-2">
-            <div v-if="data?.readmeValidation?.readmeExists">
-              <n-popover trigger="hover">
-                <template #trigger>
-                  <n-tag type="success">
-                    <template #icon>
-                      <Icon name="icon-park-solid:check-one" size="16" />
-                    </template>
-
-                    <span> {{ data?.readmeValidation?.readMePath }} found</span>
-                  </n-tag>
-                </template>
-
-                <span
-                  >{{ data?.readmeValidation?.readMePath }} file exists</span
-                >
-              </n-popover>
-            </div>
-
-            <div v-else>
-              <n-popover trigger="hover">
-                <template #trigger>
-                  <n-tag type="error">
-                    <template #icon>
-                      <Icon name="icon-park-solid:close-one" size="16" />
-                    </template>
-
-                    <span>README file was not found.</span>
-                  </n-tag>
-                </template>
-
-                <span>README not found</span>
-              </n-popover>
-            </div>
-
-            <n-dropdown
-              :options="readmeSettingsOptions"
-              placement="bottom-end"
-              :show-arrow="true"
-              @select="handleSettingsSelect"
-            >
-              <n-button quaternary circle size="large">
-                <template #icon>
-                  <Icon name="humbleicons:dots-vertical" size="20" />
-                </template>
-              </n-button>
-            </n-dropdown>
-
-            <n-modal
-              v-model:show="showReadmeModal"
-              :mask-closable="false"
-              preset="dialog"
-              title="Are you sure?"
-              content="This will overwrite any existing draft. Do you want to continue?"
-              positive-text="Confirm"
-              negative-text="Cancel"
-              :loading="loading"
-              @positive-click="handlePositiveClick('readme')"
-              @negative-click="showReadmeModal = false"
-            />
-          </div>
-        </template>
-
-        <template #content>
-          <p class="text-base">
-            <span v-if="!data?.readmeValidation?.readmeExists"
-              >A README file was not found at the root of your repository. This
-              file is a markdown file that contains information about your
-              project.</span
-            >
-
-            <span v-else
-              >A {{ data?.readmeValidation?.readMePath }} was found.</span
-            >
-          </p>
-        </template>
-
-        <template #action>
-          <a :href="`/dashboard/${owner}/${repo}/edit/readme`">
-            <n-button type="primary">
-              <template #icon>
-                <Icon name="akar-icons:edit" size="16" />
-              </template>
-              Edit README
             </n-button>
           </a>
         </template>

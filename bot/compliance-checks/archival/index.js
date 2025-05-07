@@ -219,8 +219,6 @@ export async function applyArchivalTemplate(baseTemplate, repository, owner) {
       },
     });
 
-    logwatch.info(response);
-
     // Fetch the DOI content
     const lastVersion = response.github_tag_name;
     const zenodoId = response.zenodo_id;
