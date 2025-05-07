@@ -47,5 +47,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     contribContent: contrib?.contrib_content || "",
+    contribTitle: contrib?.contrib_template_type || "",
   };
 });

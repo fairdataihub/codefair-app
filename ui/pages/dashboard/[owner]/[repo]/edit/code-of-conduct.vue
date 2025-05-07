@@ -39,7 +39,7 @@ const route = useRoute();
 
 const { owner, repo } = route.params as { owner: string; repo: string };
 
-const codeContent = ref("");
+const cofcContent = ref("");
 const cofcTitle = ref("");
 
 const displayEditor = ref(false);
@@ -72,7 +72,8 @@ if (error.value) {
 }
 
 if (data.value) {
-  codeContent.value = data.value?.codeContent ?? "";
+  cofcContent.value = data.value?.codeContent ?? "";
+  cofcTitle.value = data.value?.codeTitle ?? "";
   displayEditor.value = true;
 }
 
@@ -84,7 +85,9 @@ const updateCodeContent = (value: string) => {
   if (cofc) {
     const { template } = cofc;
     cofcTitle.value = value;
-    codeContent.value = template || "";
+    if (value !== "Custom") {
+      cofcContent.value = template ?? "";
+    }
   }
 };
 
@@ -92,7 +95,8 @@ const saveDraft = async () => {
   submitLoading.value = true;
 
   const body = {
-    codeContent: codeContent.value,
+    codeContent: cofcContent.value,
+    codeTitle: cofcTitle.value,
   };
 
   await $fetch(`/api/${owner}/${repo}/code-of-conduct`, {
@@ -122,7 +126,8 @@ const saveAndPush = async () => {
   submitLoading.value = true;
 
   const body = {
-    codContent: codeContent.value,
+    codeContent: cofcContent.value,
+    codeTitle: cofcTitle.value,
   };
 
   await $fetch(`/api/${owner}/${repo}/code-of-conduct`, {
@@ -234,7 +239,7 @@ const navigateToPR = () => {
             </template>
 
             <MdEditor
-              v-model="codeContent"
+              v-model="cofcContent"
               language="en-US"
               :toolbars-exclude="[
                 'preview',
@@ -260,7 +265,7 @@ const navigateToPR = () => {
             size="large"
             color="black"
             :loading="submitLoading"
-            :disabled="!codeContent"
+            :disabled="!cofcContent"
             @click="saveDraft"
           >
             <template #icon>
@@ -274,7 +279,7 @@ const navigateToPR = () => {
         <n-button
           size="large"
           color="black"
-          :disabled="!codeContent"
+          :disabled="!cofcContent"
           :loading="submitLoading"
           @click="saveAndPush"
         >

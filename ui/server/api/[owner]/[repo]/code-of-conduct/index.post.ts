@@ -7,6 +7,7 @@ export default defineEventHandler(async (event) => {
 
   const bodySchema = z.object({
     codeContent: z.string(),
+    codeTitle: z.string().optional(),
   });
 
   const { owner, repo } = event.context.params as {
@@ -32,7 +33,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { codeContent } = parsedBody.data;
+  const { codeContent, codeTitle } = parsedBody.data;
 
   const code = await prisma.codeofConductValidation.findFirst({
     include: {
@@ -188,6 +189,7 @@ export default defineEventHandler(async (event) => {
     data: {
       code_content: codeContent,
       code_path: codePath,
+      code_template_type: codeTitle ?? "Custom",
       pull_request_url: pullRequestData.html_url,
     },
     include: {
@@ -207,14 +209,14 @@ export default defineEventHandler(async (event) => {
 
   const existingAnalytics = await prisma.analytics.findFirst({
     where: {
-      id: updatedCode.repository.id,
+      id: updatedCode.repository_id,
     },
   });
 
   if (!existingAnalytics) {
     await prisma.analytics.create({
       data: {
-        id: updatedCode.repository.id,
+        id: updatedCode.repository_id,
         update_code_of_conduct: 1,
       },
     });

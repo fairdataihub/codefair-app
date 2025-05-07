@@ -80,6 +80,7 @@ export async function applyContributingTemplate(
       contains_contributing: subjects.contributing.status,
       contributing_content: subjects.contributing.content,
       contributing_path: subjects.contributing.path,
+      contrib_template_title: subjects.contributing.status ? "Custom" : "",
     };
 
     if (existing) {

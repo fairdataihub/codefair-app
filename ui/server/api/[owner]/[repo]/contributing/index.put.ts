@@ -5,6 +5,7 @@ export default defineEventHandler(async (event) => {
 
   const bodySchema = z.object({
     contribContent: z.string(),
+    contribTitle: z.string().optional(),
   });
 
   const { owner, repo } = event.context.params as {
@@ -30,7 +31,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { contribContent } = parsedBody.data;
+  const { contribContent, contribTitle } = parsedBody.data;
 
   const contrib = await prisma.contributingValidation.findFirst({
     where: {
@@ -54,6 +55,7 @@ export default defineEventHandler(async (event) => {
   const updatedContribRequest = await prisma.contributingValidation.update({
     data: {
       contrib_content: contribContent,
+      contrib_template_type: contribTitle,
     },
     where: {
       id: contrib.id,
@@ -69,5 +71,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     contribContent,
+    contribTitle,
   };
 });

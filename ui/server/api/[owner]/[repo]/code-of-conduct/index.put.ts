@@ -5,6 +5,7 @@ export default defineEventHandler(async (event) => {
 
   const bodySchema = z.object({
     codeContent: z.string(),
+    codeTitle: z.string().optional(),
   });
 
   const { owner, repo } = event.context.params as {
@@ -30,7 +31,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { codeContent } = parsedBody.data;
+  const { codeContent, codeTitle } = parsedBody.data;
 
   const code = await prisma.codeofConductValidation.findFirst({
     where: {
@@ -54,6 +55,7 @@ export default defineEventHandler(async (event) => {
   const updatedCodeRequest = await prisma.codeofConductValidation.update({
     data: {
       code_content: codeContent,
+      code_template_type: codeTitle,
     },
     where: {
       id: code.id,
@@ -69,5 +71,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     codeContent,
+    codeTitle,
   };
 });

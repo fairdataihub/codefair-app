@@ -47,5 +47,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     codeContent: code?.code_content || "",
+    codeTitle: code?.code_template_type || "",
   };
 });

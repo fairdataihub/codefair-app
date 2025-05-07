@@ -7,6 +7,7 @@ export default defineEventHandler(async (event) => {
 
   const bodySchema = z.object({
     contribContent: z.string(),
+    contribTitle: z.string().optional(),
   });
 
   const { owner, repo } = event.context.params as {
@@ -32,7 +33,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { contribContent } = parsedBody.data;
+  const { contribContent, contribTitle } = parsedBody.data;
 
   const contrib = await prisma.contributingValidation.findFirst({
     include: {
@@ -188,6 +189,7 @@ export default defineEventHandler(async (event) => {
     data: {
       contrib_content: contribContent,
       contrib_path: contribPath,
+      contrib_template_type: contribTitle ?? "Custom",
       pull_request_url: pullRequestData.html_url,
     },
     include: {
@@ -207,14 +209,14 @@ export default defineEventHandler(async (event) => {
 
   const existingAnalytics = await prisma.analytics.findFirst({
     where: {
-      id: updatedContrib.repository.id,
+      id: updatedContrib.repository_id,
     },
   });
 
   if (!existingAnalytics) {
     await prisma.analytics.create({
       data: {
-        id: updatedContrib.repository.id,
+        id: updatedContrib.repository_id,
         update_contributing: 1,
       },
     });

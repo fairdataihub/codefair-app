@@ -924,7 +924,7 @@ const handleSettingsSelect = (key: string) => {
         subheader="The file serves as a guide for the community and helps to create a safe and inclusive environment for all contributors."
       >
         <template #icon>
-          <Icon name="catppuccin:contributing" size="40" />
+          <Icon name="carbon:collaborate" size="40" />
         </template>
 
         <template #header-extra>

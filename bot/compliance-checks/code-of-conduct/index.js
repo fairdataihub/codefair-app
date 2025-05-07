@@ -78,6 +78,7 @@ export async function applyCodeofConductTemplate(
       contains_cof: subjects.cofc.status,
       code_content: subjects.cofc.content,
       code_path: subjects.cofc.path,
+      code_template_title: subjects.cof.status ? "Custom" : "",
     };
 
     if (existing) {

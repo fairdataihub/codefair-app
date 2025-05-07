@@ -3,6 +3,7 @@ import sanitizeHtml from "sanitize-html";
 import { MdEditor, config } from "md-editor-v3";
 import TargetBlankExtension from "@/utils/TargetBlankExtension";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+import contribJson from "@/assets/data/contributing.json";
 
 config({
   editorConfig: {
@@ -31,7 +32,7 @@ breadcrumbsStore.showBreadcrumbs();
 breadcrumbsStore.setFeature({
   id: "edit-contributing",
   name: "Edit CONTRIBUTING.md",
-  icon: "catppuccin:contributing",
+  icon: "carbon:collaborate",
 });
 
 const route = useRoute();
@@ -39,12 +40,17 @@ const route = useRoute();
 const { owner, repo } = route.params as { owner: string; repo: string };
 
 const contribContent = ref("");
+const contribTitle = ref("");
 
 const displayEditor = ref(false);
 const submitLoading = ref(false);
 
 const showSuccessModal = ref(false);
 const pullRequestURL = ref("");
+const contribOptions = contribJson.map((option) => ({
+  label: option.name,
+  value: option.name,
+}));
 
 const { data, error } = await useFetch(`/api/${owner}/${repo}/contributing`, {
   headers: useRequestHeaders(["cookie"]),
@@ -64,16 +70,30 @@ if (error.value) {
 
 if (data.value) {
   contribContent.value = data.value?.contribContent ?? "";
+  contribTitle.value = data.value?.contribTitle ?? "";
   displayEditor.value = true;
 }
 
 const sanitize = (html: string) => sanitizeHtml(html);
+
+const updateContribContent = (value: string) => {
+  const contrib = contribJson.find((item) => item.name === value);
+
+  if (contrib) {
+    const { template } = contrib;
+    contribTitle.value = value;
+    if (value !== "Custom") {
+      contribContent.value = template;
+    }
+  }
+};
 
 const saveDraft = async () => {
   submitLoading.value = true;
 
   const body = {
     contribContent: contribContent.value,
+    contribTitle: contribTitle.value,
   };
 
   await $fetch(`/api/${owner}/${repo}/contributing`, {
@@ -104,6 +124,7 @@ const saveAndPush = async () => {
 
   const body = {
     contribContent: contribContent.value,
+    contribTitle: contribTitle.value,
   };
 
   await $fetch(`/api/${owner}/${repo}/contributing`, {
@@ -153,7 +174,7 @@ const navigateToPR = () => {
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">
           <h1 class="text-2xl font-bold">
-            Edit CONITRUBITING.md for
+            Edit CONTRIBUTING.md for
             <NuxtLink
               :to="`https://github.com/${owner}/${repo}`"
               target="_blank"
@@ -180,6 +201,24 @@ const navigateToPR = () => {
             helpful as possible.
           </p>
         </div>
+
+        <n-form-item class="mb-3 mt-5" :show-feedback="false" size="large">
+          <template #label>
+            <p class="pb-1 text-base font-bold">
+              Select a Contributing template
+            </p>
+          </template>
+
+          <n-select
+            v-model:value="contribTitle"
+            placeholder="Code of Conduct"
+            clearable
+            size="large"
+            filterable
+            :options="contribOptions"
+            @update:value="updateContribContent"
+          />
+        </n-form-item>
 
         <TransitionFade>
           <n-form-item
