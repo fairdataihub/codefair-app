@@ -424,7 +424,9 @@ export default defineEventHandler(async (event) => {
       //     value: codeMetadataRecord.uniqueIdentifier,
       //   },
       // ],
-      doi: codeMetadataRecord.uniqueIdentifier,
+      doi: /^https?:\/\//.test(codeMetadataRecord.uniqueIdentifier)
+        ? codeMetadataRecord.uniqueIdentifier
+        : `https://doi.org/${codeMetadataRecord.uniqueIdentifier}`,
     }),
     ...(codeMetadataRecord.description && {
       abstract: codeMetadataRecord.description,
