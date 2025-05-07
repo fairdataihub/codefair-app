@@ -2,6 +2,9 @@
 import { renderIssues, createIssue } from "../../utils/renderer/index.js";
 import dbInstance from "../../db.js";
 import { logwatch } from "../../utils/logwatch.js";
+import { applyAdditionalChecksTemplate } from "../../compliance-checks/additional-checks/index.js";
+import { checkForContributingFile } from "../../compliance-checks/contributing/index.js";
+import { checkForCodeofConduct } from "../../compliance-checks/code-of-conduct/index.js";
 import {
   applyLastModifiedTemplate,
   getReleaseById,
@@ -237,7 +240,25 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
     // Update the issue with the new body
     logwatch.success("Successful release, updating the issue body...");
     const badge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${newDepositionId})`;
-    const issueBodyArchiveSection = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
+
+    let issueBodyArchiveSection = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
+
+    const contributing = await checkForContributingFile(
+      context,
+      owner,
+      repository.name
+    );
+    logwatch.info(`Contributing check: ${contributing.status}`);
+    const cofc = await checkForCodeofConduct(context, owner, repository.name);
+    const subjects = { contributing, cofc };
+    issueBodyArchiveSection = await applyAdditionalChecksTemplate(
+      subjects,
+      issueBodyArchiveSection,
+      repository,
+      owner,
+      context
+    );
+
     const finalTemplate = await applyLastModifiedTemplate(
       issueBodyArchiveSection
     );
@@ -278,6 +299,20 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
     // Update the issue with the new body
     // Update the GitHub issue with a status report
     const afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ❌\n***${tagVersion}*** of your software was not successfully released on GitHub and archived on Zenodo. There was an error during the publication process. Please try again later or reach out to the Codefair team for additional help.`;
+    const contributing = await checkForContributingFile(
+      context,
+      owner,
+      repository.name
+    );
+    const cofc = await checkForCodeofConduct(context, owner, repository.name);
+    const subjects = { contributing, cofc };
+    afterUploadString = await applyAdditionalChecksTemplate(
+      subjects,
+      baseTemplate,
+      repository,
+      owner,
+      context
+    );
     const finalUploadString =
       await applyLastModifiedTemplate(afterUploadString);
     await createIssue(
@@ -304,6 +339,13 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
         true
       );
     }
+    logwatch.error(
+      {
+        message: "Error during Zenodo publication process",
+        error: error,
+      },
+      true
+    );
     throw new Error(`Error publishing to Zenodo: ${error.message}`, {
       cause: error,
     });
