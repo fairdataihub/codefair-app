@@ -87,6 +87,8 @@ const updateCodeContent = (value: string) => {
     cofcTitle.value = value;
     if (value !== "Custom") {
       cofcContent.value = template ?? "";
+    } else {
+      cofcContent.value = data.value?.codeContent ?? "";
     }
   }
 };

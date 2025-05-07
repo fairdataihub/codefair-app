@@ -84,6 +84,8 @@ const updateContribContent = (value: string) => {
     contribTitle.value = value;
     if (value !== "Custom") {
       contribContent.value = template;
+    } else {
+      contribContent.value = data.value?.contribContent ?? "";
     }
   }
 };
