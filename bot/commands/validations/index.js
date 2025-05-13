@@ -480,19 +480,19 @@ export async function rerunCWLValidation(
     const license = installation?.LicenseRequest?.contains_license;
     const readme = {
       status: installation?.ReadmeValidation?.contains_readme || false,
-      path: installation?.ReadmeValidation?.readme_path || null,
+      path: installation?.ReadmeValidation?.readme_path || "",
       content: installation?.ReadmeValidation?.readme_content || "",
     };
 
     const contributing = {
       status: installation?.contributingValidation?.contains_contrib || false,
-      path: installation?.contributingValidation?.contrib_path || null,
-      content: installation?.contributingValidation?.cotrib_content || "",
+      path: installation?.contributingValidation?.contrib_path || "",
+      content: installation?.contributingValidation?.contrib_content || "",
     };
 
     const cofc = {
       status: installation?.codeofConductValidation?.contains_code,
-      path: installation?.codeofConductValidation?.code_path || null,
+      path: installation?.codeofConductValidation?.code_path || "",
       content: installation?.codeofConductValidation?.code_content || "",
     };
 
