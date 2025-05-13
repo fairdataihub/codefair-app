@@ -465,6 +465,8 @@ export async function rerunCWLValidation(
         CodeMetadata: true,
         LicenseRequest: true,
         ReadmeValidation: true,
+        ContributingValidation: true,
+        CodeofConductValidation: true,
       },
       where: { owner, repo: repository.name },
     });
@@ -473,13 +475,25 @@ export async function rerunCWLValidation(
       throw new Error("Installation not found in the database");
     }
 
-    const citation = installation.CodeMetadata?.contains_citation;
-    const codemeta = installation.CodeMetadata?.contains_codemeta;
-    const license = installation.LicenseRequest?.contains_license;
+    const citation = installation?.CodeMetadata?.contains_citation;
+    const codemeta = installation?.CodeMetadata?.contains_codemeta;
+    const license = installation?.LicenseRequest?.contains_license;
     const readme = {
       status: installation?.ReadmeValidation?.contains_readme || false,
       path: installation?.ReadmeValidation?.readme_path || null,
       content: installation?.ReadmeValidation?.readme_content || "",
+    };
+
+    const contributing = {
+      status: installation?.contributingValidation?.contains_contrib || false,
+      path: installation?.contributingValidation?.contrib_path || null,
+      content: installation?.contributingValidation?.cotrib_content || "",
+    };
+
+    const cofc = {
+      status: installation?.codeofConductValidation?.contains_code,
+      path: installation?.codeofConductValidation?.code_path || null,
+      content: installation?.codeofConductValidation?.code_content || "",
     };
 
     const cwlObject = await getCWLFiles(context, owner, repository);
@@ -490,6 +504,8 @@ export async function rerunCWLValidation(
       codemeta,
       license,
       readme,
+      contributing,
+      cofc,
     };
 
     const updatedBody = await renderIssues(
