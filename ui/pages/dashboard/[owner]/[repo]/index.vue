@@ -1002,13 +1002,12 @@ const handleSettingsSelect = (key: string) => {
           <p class="text-base">
             <span v-if="!data?.contributingValidation?.contribExists"
               >A CONTRIBUTING.md file was not found in .github, docs or the root
-              of your repository.</span
-            >
+              of your repository.
+            </span>
 
             <span v-else
-              >A {{ data?.contributingValidation?.contribPath }} was
-              found.</span
-            >
+              >A {{ data?.contributingValidation?.contribPath }} was found.
+            </span>
           </p>
         </template>
 
