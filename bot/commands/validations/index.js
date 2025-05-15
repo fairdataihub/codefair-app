@@ -491,7 +491,7 @@ export async function rerunCWLValidation(
     };
 
     const cofc = {
-      status: installation?.codeofConductValidation?.contains_code,
+      status: installation?.codeofConductValidation?.contains_code || false,
       path: installation?.codeofConductValidation?.code_path || "",
       content: installation?.codeofConductValidation?.code_content || "",
     };
