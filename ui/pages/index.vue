@@ -26,10 +26,10 @@ const statsList = ref<StatItem[]>([
     text: "Repositories managed",
   },
   {
-    endValue: 34,
+    endValue: 35,
     icon: "ri:team-fill",
     startValue: 0,
-    text: "Users installed",
+    text: "Individual users and organizations using Codefair",
   },
 ]);
 
