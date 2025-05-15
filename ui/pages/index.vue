@@ -9,16 +9,9 @@ const breadcrumbsStore = useBreadcrumbsStore();
 
 breadcrumbsStore.hideBreadcrumbs();
 
-interface StatItem {
-  endValue: number;
-  icon: string;
-  startValue: number;
-  suffix?: string;
-  text: string;
-}
-
 const statsList = ref<StatItem[]>([
   {
+    id: "repositories-managed",
     endValue: 4000,
     icon: "ri:git-repository-fill",
     startValue: 0,
@@ -26,6 +19,7 @@ const statsList = ref<StatItem[]>([
     text: "Repositories managed",
   },
   {
+    id: "user-installations",
     endValue: 35,
     icon: "ri:team-fill",
     startValue: 0,
