@@ -37,8 +37,9 @@ export default defineNuxtConfig({
             "vueuc",
             "@css-render/vue3-ssr",
             "@juggle/resize-observer",
+            "vue-countup-v3",
           ]
-        : ["@juggle/resize-observer"],
+        : ["@juggle/resize-observer", "vue-countup-v3"],
   },
 
   colorMode: {

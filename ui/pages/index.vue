@@ -1,9 +1,44 @@
 <script setup lang="ts">
+import CountUp from "vue-countup-v3";
+import { ref } from "vue";
+
+import type { CountUpOptions } from "vue-countup-v3";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 const breadcrumbsStore = useBreadcrumbsStore();
 
 breadcrumbsStore.hideBreadcrumbs();
+
+interface StatItem {
+  endValue: number;
+  icon: string;
+  startValue: number;
+  suffix?: string;
+  text: string;
+}
+
+const statsList = ref<StatItem[]>([
+  {
+    endValue: 4000,
+    icon: "ri:git-repository-fill",
+    startValue: 0,
+    suffix: "+",
+    text: "Repositories managed",
+  },
+  {
+    endValue: 35,
+    icon: "ri:team-fill",
+    startValue: 0,
+    text: "Individual users and organizations using Codefair",
+  },
+]);
+
+const countupOptions: CountUpOptions = {
+  enableScrollSpy: true, // only start when scrolled into view
+  scrollSpyDelay: 0, // optional delay (ms)
+  scrollSpyOnce: true, // animate just once
+  separator: ",", // grouping separator
+};
 </script>
 
 <template>
@@ -277,7 +312,69 @@ breadcrumbsStore.hideBreadcrumbs();
       ></div> -->
     </section>
 
-    <!-- SECTION 4: Who are we? -->
+    <!-- SECTION 4: Codefair Stats -->
+    <section
+      style="
+        background: radial-gradient(
+          circle at center,
+          white 10%,
+          var(--codefair-light) 90%
+        );
+      "
+      class="p-8 md:py-16"
+    >
+      <div class="mx-auto max-w-screen-xl px-4">
+        <div
+          class="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-8 shadow-md md:p-12"
+        >
+          <!-- Floating blobs -->
+          <div
+            class="absolute -right-16 -top-16 h-48 w-48 animate-float-item rounded-full bg-indigo-200/50 mix-blend-multiply"
+          ></div>
+
+          <div
+            class="absolute -bottom-16 -left-16 h-48 w-48 animate-float-item rounded-full bg-purple-200/50 mix-blend-multiply"
+          ></div>
+
+          <dl class="relative grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div
+              v-for="stat in statsList"
+              :key="stat.endValue"
+              class="group flex flex-col items-center space-y-4"
+            >
+              <!-- Icon circle -->
+              <div
+                class="rounded-full bg-gradient-to-br from-indigo-50 to-purple-50 p-4 transition-transform duration-300 group-hover:scale-110"
+              >
+                <Icon :name="stat.icon" class="h-8 w-8 text-indigo-600" />
+              </div>
+
+              <!-- Count -->
+              <dt class="text-5xl font-extrabold text-indigo-600">
+                <count-up
+                  :end-val="stat.endValue"
+                  :start-val="stat.startValue"
+                  :duration="2"
+                  :autoplay="false"
+                  :options="countupOptions"
+                >
+                  <template v-if="stat.suffix" #suffix>{{
+                    stat.suffix
+                  }}</template>
+                </count-up>
+              </dt>
+
+              <!-- Label -->
+              <dd class="text-lg font-medium text-gray-700">
+                {{ stat.text }}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: Who are we? -->
     <section
       style="
         background: radial-gradient(
@@ -336,7 +433,7 @@ breadcrumbsStore.hideBreadcrumbs();
       ></div> -->
     </section>
 
-    <!-- SECTION 5: Need help? -->
+    <!-- SECTION 6: Need help? -->
     <section
       style="
         background: radial-gradient(

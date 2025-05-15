@@ -89,6 +89,8 @@ if (error.value) {
           </n-alert>
 
           <p class="pt-2 text-sm">
+            <span class="font-semibold">Last validated: </span>
+
             <time>{{
               dayjs(parseInt(file.last_validated.toString()) * 1000).format(
                 "MMMM DD, YYYY [at] hh:mmA",

@@ -1001,8 +1001,8 @@ const handleSettingsSelect = (key: string) => {
         <template #content>
           <p class="text-base">
             <span v-if="!data?.contributingValidation?.contribExists"
-              >A CODE_OF_CONDUCT.md file was not found in .github, docs or the
-              root of your repository.</span
+              >A CONTRIBUTING.md file was not found in .github, docs or the root
+              of your repository.</span
             >
 
             <span v-else

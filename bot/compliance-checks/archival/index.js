@@ -250,8 +250,7 @@ export async function createNewZenodoDeposition(zenodoToken) {
       }
     );
 
-    const zenodoDepositionInfo = await zenodoRecord.json();
-    return zenodoDepositionInfo;
+    return await zenodoRecord.json();
   } catch (error) {
     throw new Error(`Error creating a new Zenodo deposition: ${error}`, {
       cause: error,
@@ -304,9 +303,7 @@ export async function fetchExistingZenodoDeposition(zenodoToken, depositionId) {
         );
       }
 
-      const draftDepositionInfo = await draftDeposition.json();
-      // console.log("Draft depo fetched: ", draftDepositionInfo);
-      return draftDepositionInfo;
+      return await draftDeposition.json();
     } else if (!zenodoDeposition.ok) {
       const errorText = await zenodoDeposition.text();
       logwatch.error(
@@ -321,9 +318,7 @@ export async function fetchExistingZenodoDeposition(zenodoToken, depositionId) {
       );
     }
 
-    const zenodoDepositionInfo = await zenodoDeposition.json();
-    // console.log("Newly created Zneodo depo: ", zenodoDepositionInfo);
-    return zenodoDepositionInfo;
+    return await zenodoDeposition.json();
   } catch (error) {
     throw new Error(`Error fetching the Zenodo deposition: ${error}`, {
       cause: error,
