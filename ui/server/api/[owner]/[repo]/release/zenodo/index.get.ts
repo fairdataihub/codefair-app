@@ -1,11 +1,10 @@
 import type { User } from "lucia";
+const ZENODO_ENDPOINT = process.env.ZENODO_ENDPOINT || "";
+const ZENODO_API_ENDPOINT = process.env.ZENODO_API_ENDPOINT || "";
+const ZENODO_CLIENT_ID = process.env.ZENODO_CLIENT_ID || "";
+const ZENODO_REDIRECT_URI = process.env.ZENODO_REDIRECT_URI || "";
 
 export default defineEventHandler(async (event) => {
-  const ZENODO_ENDPOINT = process.env.ZENODO_ENDPOINT || "";
-  const ZENODO_API_ENDPOINT = process.env.ZENODO_API_ENDPOINT || "";
-  const ZENODO_CLIENT_ID = process.env.ZENODO_CLIENT_ID || "";
-  const ZENODO_REDIRECT_URI = process.env.ZENODO_REDIRECT_URI || "";
-
   protectRoute(event);
 
   const user = event.context.user as User | null;
