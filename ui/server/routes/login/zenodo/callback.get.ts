@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
 
@@ -15,9 +16,16 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  let parsedState;
+  console.log("Code:", code);
+  console.log("State:", state);
+
+  let userId, owner, repo;
   try {
-    parsedState = JSON.parse(decodeURIComponent(state as string));
+    const parts = decodeURIComponent(state as string).split(":");
+    if (parts.length !== 3) {
+      throw new Error("State does not contain the required parts");
+    }
+    [userId, owner, repo] = parts;
   } catch (error) {
     console.error("Error parsing state:", error);
     throw createError({
@@ -26,19 +34,13 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { githubDetails, owner, repo, userId } = parsedState;
-
-  if (!userId || !owner || !repo || !githubDetails) {
+  if (!userId || !owner || !repo) {
     throw createError({
       status: 400,
       statusMessage: "Missing required state information",
     });
   }
 
-  // console.log("User ID:", userId);
-  // console.log("Owner:", owner);
-  // console.log("Repo:", repo);
-  // console.log("GitHub Details:", githubDetails);
   const urlEncoded = new URLSearchParams({
     client_id: ZENODO_CLIENT_ID,
     client_secret: ZENODO_CLIENT_SECRET,
@@ -65,7 +67,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { access_token, refresh_token } = await oauthTokenRes.json();
+  const payload = await oauthTokenRes.json();
+  console.log(payload);
+  const { access_token, refresh_token } = payload;
 
   const tokenData = {
     expires_at: new Date(Date.now() + 3600 * 1000),
@@ -89,8 +93,5 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  return sendRedirect(
-    event,
-    `/dashboard/${owner}/${repo}/release/zenodo?githubTag=${githubDetails.githubTag || ""}&githubRelease=${githubDetails.githubRelease || ""}`,
-  );
+  return sendRedirect(event, `/dashboard/${owner}/${repo}/release/zenodo`);
 });
