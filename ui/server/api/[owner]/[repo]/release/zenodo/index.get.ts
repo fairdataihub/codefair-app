@@ -79,10 +79,14 @@ export default defineEventHandler(async (event) => {
 
   if (!zenodoTokenInfo) {
     haveValidZenodoToken = false;
+    console.log("No zenodo token found");
   } else if (zenodoTokenInfo && zenodoTokenInfo.expires_at < new Date()) {
     haveValidZenodoToken = false;
+    console.log("Zenodo token has expired");
   } else {
     // Check if the token is valid
+    console.log("Testing if zenodo token is still valid");
+    console.log(zenodoTokenInfo);
     const zenodoTokenInfoResponse = await fetch(
       `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoTokenInfo.token}`,
       {
@@ -90,12 +94,13 @@ export default defineEventHandler(async (event) => {
       },
     );
 
+    const response = await zenodoTokenInfoResponse.json();
+    console.log(response);
+
     if (!zenodoTokenInfoResponse.ok) {
       haveValidZenodoToken = false;
     } else {
       haveValidZenodoToken = true;
-
-      const response = await zenodoTokenInfoResponse.json();
 
       for (const item of response) {
         existingDepositions.push({

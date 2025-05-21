@@ -57,13 +57,11 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!oauthTokenRes.ok) {
-    // console.log(oauthTokenRes);
-    // console.log(oauthTokenRes.json());
-    // console.log(oauthTokenRes.body);
-    console.error("OAuth token request failed:", oauthTokenRes.statusText);
+    const errBody = await oauthTokenRes.text();
+    console.error("Zenodo token error:", oauthTokenRes.status, errBody);
     throw createError({
       status: 500,
-      statusMessage: "Failed to fetch OAuth token",
+      statusMessage: `OAuth exchange failed: ${errBody}`,
     });
   }
 

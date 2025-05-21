@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { App } from "octokit";
 import type { User } from "lucia";
+import { ensureZenodoToken } from "@/server/utils/ensureToken";
 
 export default defineEventHandler(async (event) => {
   const ZENODO_API_ENDPOINT = process.env.ZENODO_API_ENDPOINT || "";
@@ -108,9 +109,14 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  console.log("userid", user?.id);
+  const zenodoToken = await ensureZenodoToken(user?.id || "", true);
+  console.log(zenodoToken);
+  console.log("ZENODO TOKEN REFRESH COMPLETED");
+
   // Get the zenodo deposition
   const zenodoTokenInfoResponse = await fetch(
-    `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoTokenInfo.token}`,
+    `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoToken}`,
     {
       method: "GET",
     },
@@ -126,7 +132,7 @@ export default defineEventHandler(async (event) => {
   if (zenodoDepositionId) {
     // Check if the zenodo deposition exists
     const zenodoDeposition = await fetch(
-      `${ZENODO_API_ENDPOINT}/deposit/depositions/${zenodoDepositionId}?access_token=${zenodoTokenInfo.token}`,
+      `${ZENODO_API_ENDPOINT}/deposit/depositions/${zenodoDepositionId}?access_token=${zenodoToken}`,
       {
         method: "GET",
       },
