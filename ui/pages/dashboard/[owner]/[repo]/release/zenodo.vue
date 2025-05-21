@@ -104,6 +104,56 @@ const lastSelectedGithubRelease = ref<number | null>(null);
 const lastSelectedGithubReleaseTitle = ref<string | null>(null);
 
 const zenodoDraftIsReadyForRelease = ref(false);
+const createDraftGithubReleaseSpinner = ref(false);
+
+const checkGithubReleaseSpinner = ref(false);
+const githubReleaseIsDraft = ref(false);
+const showGithubReleaseIsDraftStausBadge = ref(false);
+
+const zenodoPublishSpinner = ref(false);
+const zenodoDraftSpinner = ref(false);
+
+const showZenodoPublishProgressModal = ref(false);
+const zenodoPublishProgressInterval = ref<any>(null);
+const zenodoPublishStatus = ref<string>("");
+const zenodoPublishDOI = ref<string>("");
+const zenodoBadgeShield = ref<string>("");
+const showZenodoBadgeModal = ref(false);
+
+interface ZenodoFormSnapshot {
+  githubFormIsValid: boolean;
+  githubFormValue: {
+    release: string | null;
+    releaseTitle: string;
+    tag: string | null;
+    tagTitle: string;
+  };
+  githubReleaseIsDraft: boolean;
+  licenseChecked: boolean;
+  metadataChecked: boolean;
+  selectedDeposition: string | null;
+  selectedExistingDeposition: string | null;
+  zenodoDraftIsReadyForRelease: boolean;
+  zenodoFormIsValid: boolean;
+  zenodoFormValue: ZenodoMetadata;
+}
+
+function saveFormState(snapshot: Partial<ZenodoFormSnapshot>) {
+  sessionStorage.setItem("zenodoFormState", JSON.stringify(snapshot));
+}
+
+function restoreFormState(): Partial<ZenodoFormSnapshot> | null {
+  const raw = sessionStorage.getItem("zenodoFormState");
+  if (!raw) return null;
+  console.log("Restoring form state", raw);
+  sessionStorage.removeItem("zenodoFormState");
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 const { data, error } = await useFetch(`/api/${owner}/${repo}/release/zenodo`, {
   headers: useRequestHeaders(["cookie"]),
   method: "GET",
@@ -119,6 +169,7 @@ if (error.value) {
 }
 
 if (data.value) {
+  console.log(data.value);
   zenodoLoginUrl.value = data.value.zenodoLoginUrl;
   selectedDeposition.value = data.value.zenodoDepositionId?.toString() || null;
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
@@ -215,8 +266,6 @@ const allConfirmed = computed(
     license.value?.id !== "Custom",
 );
 
-const createDraftGithubReleaseSpinner = ref(false);
-
 const createDraftGithubRelease = () => {
   githubFormRef.value?.validate(async (errors) => {
     if (!errors) {
@@ -278,10 +327,6 @@ const createDraftGithubRelease = () => {
     }
   });
 };
-
-const checkGithubReleaseSpinner = ref(false);
-const githubReleaseIsDraft = ref(false);
-const showGithubReleaseIsDraftStausBadge = ref(false);
 
 // Set the initial values of the form if the query params are present
 if (githubTag && githubRelease) {
@@ -373,16 +418,6 @@ const handleGithubTagChange = () => {
   checkIfGithubReleaseIsDraft();
 };
 
-const zenodoPublishSpinner = ref(false);
-const zenodoDraftSpinner = ref(false);
-
-const showZenodoPublishProgressModal = ref(false);
-const zenodoPublishProgressInterval = ref<any>(null);
-const zenodoPublishStatus = ref<string>("");
-const zenodoPublishDOI = ref<string>("");
-const zenodoBadgeShield = ref<string>("");
-const showZenodoBadgeModal = ref(false);
-
 const checkForZenodoPublishProgress = async () => {
   await $fetch(`/api/${owner}/${repo}/release/zenodo/status`, {
     headers: useRequestHeaders(["cookie"]),
@@ -422,67 +457,50 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     zenodoDraftSpinner.value = true;
   }
 
-  await $fetch(`/api/${owner}/${repo}/release/zenodo`, {
-    body: JSON.stringify({
-      metadata: zenodoFormValue.value,
-      publish: shouldPublish,
-      release: githubFormValue.value.release,
-      tag:
-        githubFormValue.value.tag !== "new"
-          ? githubFormValue.value.tag
-          : githubFormValue.value.tagTitle,
-      useExistingDeposition: selectedExistingDeposition.value === "existing",
-      zenodoDepositionId:
-        selectedExistingDeposition.value === "existing"
-          ? selectedDeposition.value?.toString()
-          : "",
-    }),
-    headers: useRequestHeaders(["cookie"]),
-    method: "POST",
-  })
-    .then((_response) => {
-      if (githubFormValue.value.tag === "new") {
-        githubTagOptions.value.push({
-          disabled: false,
-          label: githubFormValue.value.tagTitle,
-          value: githubFormValue.value.tagTitle,
-        });
-
-        githubFormValue.value.tag = githubFormValue.value.tagTitle;
-        githubFormValue.value.tagTitle = "";
-      }
-
-      if (shouldPublish) {
-        push.success({
-          title: "Success",
-          message: "Your Zenodo publish process has been started.",
-        });
-        showZenodoPublishProgressModal.value = true;
-
-        zenodoPublishProgressInterval.value = setInterval(() => {
-          checkForZenodoPublishProgress();
-        }, 500);
-      } else {
-        push.success({
-          title: "Success",
-          message: "Your Zenodo draft has been saved.",
-        });
-      }
-    })
-    .catch((error) => {
-      console.error("Failed to start Zenodo publish process:", error);
-      push.error({
-        title: "Failed to start Zenodo publish process",
-        message: "Please try again later",
-      });
-    })
-    .finally(() => {
-      zenodoPublishSpinner.value = false;
-      zenodoDraftSpinner.value = false;
-
-      // Make API call to get the DOI badge for the user
-      fetchZenodoBadge();
+  try {
+    await $fetch(`/api/${owner}/${repo}/release/zenodo`, {
+      body: JSON.stringify({
+        metadata: zenodoFormValue.value,
+        publish: shouldPublish,
+        release: githubFormValue.value.release,
+        tag:
+          githubFormValue.value.tag !== "new"
+            ? githubFormValue.value.tag
+            : githubFormValue.value.tagTitle,
+        useExistingDeposition: selectedExistingDeposition.value === "existing",
+        zenodoDepositionId:
+          selectedExistingDeposition.value === "existing"
+            ? selectedDeposition.value?.toString()
+            : "",
+      }),
+      headers: useRequestHeaders(["cookie"]),
+      method: "POST",
     });
+    zenodoPublishSpinner.value = false;
+    zenodoDraftSpinner.value = false;
+    fetchZenodoBadge();
+
+    push.success({
+      title: "Successfully released and archived on Zenodo",
+      message: "success",
+    });
+  } catch (error: any) {
+    const status = error.response?.status;
+    const msg = error.data?.message;
+    console.error(error);
+
+    if (status === 401 && msg?.toLowerCase().includes("log in")) {
+      push.error({ title: "Zenodo Session Expired", message: msg });
+
+      // return loginToZenodo();
+    }
+
+    console.error("Publish error:", error.data || error);
+    push.error({
+      title: "Failed to start Zenodo publish process",
+      message: msg || "Please try again later",
+    });
+  }
 };
 
 const requestZenodoBadge = () => {
@@ -563,68 +581,26 @@ const validateZenodoForm = () => {
 };
 
 const loginToZenodo = async () => {
+  // save form state
+  saveFormState({
+    githubFormIsValid: githubFormIsValid.value,
+    githubFormValue: githubFormValue.value,
+    githubReleaseIsDraft: githubReleaseIsDraft.value,
+    licenseChecked: licenseChecked.value,
+    metadataChecked: metadataChecked.value,
+    selectedDeposition: selectedDeposition.value,
+    selectedExistingDeposition: selectedExistingDeposition.value,
+    zenodoDraftIsReadyForRelease: zenodoDraftIsReadyForRelease.value,
+    zenodoFormIsValid: zenodoFormIsValid.value,
+    zenodoFormValue: zenodoFormValue.value,
+  });
   // Send api request to purge the Zenodo token
   await $fetch(`/api/user/zenodo`, {
     headers: useRequestHeaders(["cookie"]),
     method: "DELETE",
   })
     .then(() => {
-      const githubDetails = {
-        githubRelease: githubFormValue.value.release,
-        githubTag:
-          githubFormValue.value.tag === "new"
-            ? githubFormValue.value.tagTitle
-            : githubFormValue.value.tag,
-      };
-      // Extract the existing state from the Zenodo login URL
-      const existingStateMatch =
-        zenodoLoginUrl.value.match(/[?&]state=([^&]+)/);
-      let originalState = {};
-
-      if (existingStateMatch) {
-        try {
-          const decodedState = decodeURIComponent(existingStateMatch[1]);
-          const [userId, owner, repo] = decodedState.split(":");
-          originalState = { owner, repo, userId };
-        } catch (error) {
-          console.error("Failed to parse existing state:", error);
-          throw new Error("Invalid state format");
-        }
-      } else {
-        throw new Error("No existing state found in the Zenodo login URL");
-      }
-
-      const updatedState = {
-        ...originalState,
-        githubDetails,
-      };
-      // Encode the updated state as a JSON string
-      const encodedState = encodeURIComponent(JSON.stringify(updatedState));
-      // Replace the existing state parameter in the Zenodo login URL
-      let zenodoLoginUrlWithState;
-
-      if (zenodoLoginUrl.value.includes("state=")) {
-        // Replace the existing state parameter with the updated one
-        zenodoLoginUrlWithState = zenodoLoginUrl.value.replace(
-          /([?&]state=)[^&]+/,
-          `$1${encodedState}`,
-        );
-      } else {
-        // Fallback* If no state parameter exists, add it
-        zenodoLoginUrlWithState = `${zenodoLoginUrl.value}${
-          zenodoLoginUrl.value.includes("?") ? "&" : "?"
-        }state=${encodedState}`;
-      }
-
-      if (!zenodoLoginUrlWithState.includes("state=")) {
-        throw createError({
-          statusCode: 404,
-          statusMessage: "Zenodo login URL not configured properly",
-        });
-      }
-
-      // Redirect to the updated URL
-      window.location.href = zenodoLoginUrlWithState;
+      window.location.href = zenodoLoginUrl.value;
     })
     .catch((error) => {
       console.error("Failed to purge Zenodo token:", error);
@@ -659,6 +635,48 @@ const snippets = computed(() => [
     content: `${codefairDomain}/doi/${owner}/${repo}`,
   },
 ]);
+
+onBeforeMount(() => {
+  const snapshot = restoreFormState();
+  if (!snapshot) return;
+
+  if (snapshot.licenseChecked !== undefined) {
+    licenseChecked.value = snapshot.licenseChecked;
+  }
+  if (snapshot.metadataChecked !== undefined) {
+    metadataChecked.value = snapshot.metadataChecked;
+  }
+  if (snapshot.zenodoFormValue) {
+    zenodoFormValue.value = snapshot.zenodoFormValue;
+  }
+  if (snapshot.githubFormValue) {
+    githubFormValue.value = snapshot.githubFormValue;
+  }
+  if (snapshot.selectedExistingDeposition !== undefined) {
+    selectedExistingDeposition.value = snapshot.selectedExistingDeposition;
+  }
+  if (snapshot.selectedDeposition !== undefined) {
+    selectedDeposition.value = snapshot.selectedDeposition;
+  }
+  if (snapshot.zenodoDraftIsReadyForRelease !== undefined) {
+    zenodoDraftIsReadyForRelease.value = snapshot.zenodoDraftIsReadyForRelease;
+  }
+  if (snapshot.zenodoFormIsValid !== undefined) {
+    zenodoFormIsValid.value = snapshot.zenodoFormIsValid;
+  }
+  if (snapshot.githubFormIsValid !== undefined) {
+    githubFormIsValid.value = snapshot.githubFormIsValid;
+  }
+  if (snapshot.githubReleaseIsDraft !== undefined) {
+    githubReleaseIsDraft.value = snapshot.githubReleaseIsDraft;
+  }
+
+  // window.scrollTo({ behavior: "smooth", top: document.body.scrollHeight });
+  push.success({
+    title: "Logged in and form state restored",
+    message: "You can now resume your Zenodo release process.",
+  });
+});
 
 onMounted(() => {
   // if there are items in the zenodoMetadata object, validate the zenodoForm
