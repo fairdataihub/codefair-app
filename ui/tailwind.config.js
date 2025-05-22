@@ -13,7 +13,7 @@ module.exports = {
     "./pages/**/*.vue",
     "./plugins/**/*.{js,ts}",
   ],
-  darkMode: ["selector", "class"],
+  darkMode: "class",
   plugins: [
     require("tailwindcss-debug-screens"),
     require("@tailwindcss/typography"),
@@ -52,8 +52,8 @@ module.exports = {
           4: "hsl(var(--chart-4))",
           5: "hsl(var(--chart-5))",
         },
-        "codefair-grid": "#c7a8f0",
-        "codefair-light": "#f1e6ff", // Used in backgrounds and gradients
+        "codefair-grid": "var(--codefair-grid)",
+        "codefair-light": "var(--codefair-light)",
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",

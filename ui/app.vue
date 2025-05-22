@@ -16,19 +16,21 @@
 </template>
 
 <script setup lang="ts">
-import { pastelTheme } from "notivue";
+import { computed } from "vue";
+// import { useColorMode } from "@nuxtjs/color-mode";
 import { NConfigProvider, type GlobalThemeOverrides } from "naive-ui";
+import { pastelTheme } from "notivue";
 
-const themeOverrides: GlobalThemeOverrides = {
+const colorMode = useColorMode();
+
+const themeOverrides = computed<GlobalThemeOverrides>(() => ({
   common: {
-    // primaryColor: "#898CF3",
-    primaryColor: "#6366f1",
-    primaryColorHover: "#4F46E5",
-    // primaryColorHover: "#6074aa",
-    primaryColorPressed: "#c7d6ff",
+    primaryColor: colorMode.value === "dark" ? "#4F46E5" : "#6366f1",
+    primaryColorHover: colorMode.value === "dark" ? "#7C3AED" : "#4F46E5",
+    primaryColorPressed: colorMode.value === "dark" ? "#312E81" : "#c7d6ff",
     primaryColorSuppl: "#0ea5e9",
   },
-};
+}));
 
 useHead({
   title: "Codefair",

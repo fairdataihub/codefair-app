@@ -408,8 +408,8 @@ const navigateToPR = () => {
     style="
       background: radial-gradient(
         circle at bottom,
-        var(--codefair-light) 0%,
-        white 80%
+        var(--radial-end) 0%,
+        var(--radial-start) 80%
       );
     "
   >
