@@ -43,14 +43,8 @@ export default defineNuxtConfig({
   },
 
   colorMode: {
-    classPrefix: "",
-    classSuffix: "-mode",
-    componentName: "ColorScheme",
-    fallback: "light", // fallback value if not system preference found
-    globalName: "__NUXT_COLOR_MODE__",
-    hid: "nuxt-color-mode-script",
-    preference: "light", // default value of $colorMode.preference
-    storageKey: "nuxt-color-mode",
+    classSuffix: "",
+    fallback: "light",
   },
 
   compatibilityDate: "2024-09-24",
@@ -67,6 +61,7 @@ export default defineNuxtConfig({
   modules: [
     "motion-v/nuxt",
     "notivue/nuxt",
+    "nuxtjs-naive-ui",
     "@nuxtjs/color-mode",
     "@pinia/nuxt",
     "dayjs-nuxt",
@@ -80,7 +75,6 @@ export default defineNuxtConfig({
       },
     ],
     "nuxt-icon",
-    "nuxtjs-naive-ui",
   ],
 
   notivue: {
