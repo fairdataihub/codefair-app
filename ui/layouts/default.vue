@@ -25,7 +25,7 @@ const toggleMobileMenu = () => {
 
 <template>
   <div
-    class="relative mx-auto flex h-full min-h-screen w-full flex-col bg-white"
+    class="relative mx-auto flex h-full min-h-screen w-full flex-col bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-200"
     :class="{ 'debug-screens': devMode }"
   >
     <!-- <div
@@ -37,7 +37,7 @@ const toggleMobileMenu = () => {
       <header class="mb-0 flex items-center justify-between py-6">
         <a
           href="/"
-          class="inline-flex items-center gap-2.5 text-2xl font-bold text-black md:text-3xl"
+          class="inline-flex items-center gap-2.5 text-2xl font-bold text-black dark:text-white md:text-3xl"
           aria-label="logo"
         >
           <img
@@ -52,14 +52,14 @@ const toggleMobileMenu = () => {
         <nav class="hidden items-center gap-8 lg:flex">
           <NuxtLink
             to="/codefair"
-            class="relative inline-block text-lg font-bold text-gray-600 transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:rounded-lg after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
+            class="relative inline-block text-lg font-bold text-[var(--gray-600-400)] transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:rounded-lg after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
           >
             About
           </NuxtLink>
 
           <NuxtLink
             to="/fairsoftware"
-            class="relative inline-block text-lg font-bold text-gray-600 transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
+            class="relative inline-block text-lg font-bold text-[var(--gray-600-400)] transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
           >
             FAIR Software
           </NuxtLink>
@@ -67,7 +67,7 @@ const toggleMobileMenu = () => {
           <NuxtLink
             v-if="user?.username"
             to="/dashboard"
-            class="relative inline-block text-lg font-bold text-gray-600 transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
+            class="relative inline-block text-lg font-bold text-[var(--gray-600-400)] transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
           >
             Dashboard
           </NuxtLink>
@@ -78,7 +78,7 @@ const toggleMobileMenu = () => {
             <NuxtLink
               to="https://docs.codefair.io/"
               target="_blank"
-              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              class="text-lg font-bold text-[var(--gray-600-400)] transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               <n-popover trigger="hover" placement="top" :show-arrow="false">
                 <template #trigger>
@@ -107,7 +107,7 @@ const toggleMobileMenu = () => {
             <NuxtLink
               to="https://github.com/fairdataihub/codefair-app"
               target="_blank"
-              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              class="text-lg font-bold text-[var(--gray-600-400)] transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               <n-popover trigger="hover" placement="top" :show-arrow="false">
                 <template #trigger>
@@ -132,6 +132,8 @@ const toggleMobileMenu = () => {
                 </template>
               </n-popover>
             </NuxtLink>
+
+            <SwitchColorSwitch />
           </n-flex>
         </nav>
 
@@ -243,7 +245,7 @@ const toggleMobileMenu = () => {
     </div> -->
 
     <div
-      class="relative z-10 grow bg-gradient-to-b from-white to-codefair-light"
+      class="relative z-10 grow bg-gradient-to-b from-white to-codefair-light dark:from-gray-900 dark:to-codefair-grid"
     >
       <div class="mx-auto max-w-screen-xl px-8">
         <ClientOnly>
@@ -306,8 +308,8 @@ const toggleMobileMenu = () => {
       style="
         background: radial-gradient(
           circle at bottom,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
     >
@@ -323,7 +325,9 @@ const toggleMobileMenu = () => {
               class="h-10 w-10 md:h-12 md:w-12"
             />
 
-            <span class="text-2xl font-bold text-black md:text-3xl">
+            <span
+              class="text-2xl font-bold text-black dark:text-white md:text-3xl"
+            >
               Codefair
             </span>
           </div>
@@ -379,7 +383,7 @@ const toggleMobileMenu = () => {
             </div>
           </div>
 
-          <div class="text-sm text-gray-400 md:text-right">
+          <div class="text-sm text-[var(--gray-600-400)] md:text-right">
             <div class="flex items-center gap-1 md:justify-end">
               <span>Made with</span>
               <!-- Heart SVG -->

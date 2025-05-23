@@ -48,7 +48,7 @@ if (error.value) {
         <!-- Your Account Section -->
         <h2 class="pb-4 text-xl font-semibold">Your Account</h2>
 
-        <n-card class="rounded-lg bg-white p-2 shadow-md">
+        <n-card class="rounded-lg bg-[var(--n-card-bg)] p-2 shadow-md">
           <div class="grid grid-cols-[20%_1px_auto_200px] items-center gap-4">
             <div id="repo-avatar-and-name" class="flex items-center space-x-4">
               <!-- Adjusted Avatar Size -->
@@ -58,7 +58,7 @@ if (error.value) {
               />
 
               <div class="flex flex-col">
-                <span class="text-lg font-medium text-gray-700">
+                <span class="text-lg font-medium text-[var(--n-card-text)]">
                   {{ data?.user.username }}
                 </span>
 
@@ -128,14 +128,14 @@ if (error.value) {
 
               <!-- Organization Name and Link -->
               <div class="flex flex-col">
-                <span class="text-lg font-medium text-gray-700">
+                <span class="text-lg font-medium text-[var(--n-card-text)]">
                   {{ organization.name }}
                 </span>
 
                 <NuxtLink
                   :to="`https://github.com/${organization.name}`"
                   target="_blank"
-                  class="truncate text-sm text-gray-500 transition-all hover:text-blue-600 hover:underline"
+                  class="truncate text-sm text-[var(--gray-500-300)] transition-all hover:text-blue-600 hover:underline"
                 >
                   <Icon name="ri:external-link-line" size="13" />
                   {{ organization.name }}
@@ -150,7 +150,7 @@ if (error.value) {
                   Codefair managed repositories:
                 </span>
 
-                <span class="text-sm font-medium text-gray-700">
+                <span class="text-sm font-medium text-[var(--n-card-text)]">
                   {{ organization.repoCount }}
                 </span>
               </div>

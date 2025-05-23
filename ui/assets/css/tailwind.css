@@ -25,31 +25,47 @@ body {
 }
 
 @layer base {
+  
   :root {
+    --n-card-bg: white;
+    --indigo-700-500: oklch(45.7% 0.24 277.023);
+    --gray-600-400: oklch(44.6% 0.03 256.802);
+    --indigo-600-400: oklch(78.5% 0.115 274.713);
+    --indigo-600-400: oklch(51.1% 0.262 276.966);
+    --codefair-grid:    #c7a8f0;
+    --codefair-light:   #f1e6ff;
+    --radial-start:  white;
+    --radial-end:    var(--codefair-light);
+    --text-color: oklch(20.8% 0.042 265.755);
+    --header-color: oklch(35.9% 0.144 278.697);
+    --btn-bg:        #6366f1; /* indigo-500 */
+    --btn-bg-hover:  #4f46e5; /* indigo-600 */
+    --btn-bg-active: #4338ca; /* indigo-700 */
+    --btn-ring:      #93c5fd; /* sky-300 */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
+    
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
+    
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
+    
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-
+    
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-
+    
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
+    
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
+    
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
@@ -59,9 +75,35 @@ body {
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --n-card-text: oklch(37.3% 0.034 259.733);
+    --gray-500-300: oklch(55.1% 0.027 264.364);
   }
-
+  
   .dark {
+    .n-card {
+      background-color: var(--n-card-bg);
+    }
+
+    /* .n-card .span {
+      color: var(--n-card-text);
+    } */
+
+    --n-card-text: #ffffff;
+    --n-card-bg: #1e293b;
+    --gray-500-300: oklch(87.2% 0.01 258.338);
+    --indigo-700-500: oklch(58.5% 0.233 277.117);
+    --gray-600-400: oklch(87.2% 0.01 258.338);
+    --indigo-600-400: oklch(78.5% 0.115 274.713);
+    --codefair-grid:    oklch(0.3618 0.1136 303.98);
+    --codefair-light:   oklch(0.1913 0.0919 306.91);
+    --header-color: oklch(58.5% 0.233 277.117);
+    --radial-start:  oklch(0.2039 0.0196 262.04);       /* e.g. gray-900 */
+    --radial-end:    var(--codefair-grid);
+    --btn-bg:        #818cf8;  /* indigo-400 */
+    --btn-bg-hover:  #a5b4fc;  /* indigo-300 */
+    --btn-bg-active: #6366f1;  /* indigo-500 */
+    --btn-ring:      #c7d2fe;  /* indigo-200 */
+    --text-color: oklch(92.2% 0 0);
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
