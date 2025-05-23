@@ -10,7 +10,7 @@ breadcrumbsStore.hideBreadcrumbs();
   <main class="min-h-screen bg-purple-50">
     <!-- HERO SECTION for Codefair -->
     <section
-      class="relative overflow-hidden bg-gradient-to-b from-white to-codefair-light py-12 md:py-24 dark:from-gray-900 dark:to-codefair-grid"
+      class="relative overflow-hidden bg-gradient-to-b from-white to-codefair-light py-12 dark:from-gray-900 dark:to-codefair-grid md:py-24"
     >
       <!-- Grid pattern -->
       <UiInteractiveGridPattern
@@ -35,12 +35,12 @@ breadcrumbsStore.hideBreadcrumbs();
           class="mt-8 flex flex-col items-center text-center md:mt-0 md:w-1/2 md:items-start md:text-left"
         >
           <h1
-            class="mb-4 text-6xl font-extrabold leading-tight text-indigo-900 sm:text-5xl md:text-6xl"
+            class="mb-4 text-6xl font-extrabold leading-tight text-[var(--header-color)] sm:text-5xl md:text-6xl"
           >
             Codefair
           </h1>
 
-          <p class="font-onest text-gray-700 md:text-lg lg:text-xl">
+          <p class="font-onest text-[var(--text-color)] md:text-lg lg:text-xl">
             Codefair automates the process of making your research software
             FAIR, so you can focus on innovation instead of administration.
           </p>
@@ -49,7 +49,7 @@ breadcrumbsStore.hideBreadcrumbs();
             <NuxtLink
               to="http://fair-biors.org/"
               target="_blank"
-              class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-100 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-flex items-center gap-2 rounded-lg bg-[var(--btn-bg)] px-4 py-3 text-sm font-semibold text-white outline-none transition duration-200 hover:bg-[var(--btn-bg-hover)] focus-visible:ring active:bg-[var(--btn-bg-active)]"
             >
               Learn more about the FAIR4RS principles ->
             </NuxtLink>
@@ -71,11 +71,13 @@ breadcrumbsStore.hideBreadcrumbs();
     >
       <!-- Content -->
       <div class="z-10 mx-auto max-w-screen-xl py-12 text-center">
-        <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+        <h2
+          class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+        >
           What is Codefair?
         </h2>
 
-        <p class="text-justify font-onest text-lg text-slate-800">
+        <p class="text-justify font-onest text-lg text-[var(--text-color)]">
           Codefair is a free and open-source GitHub app that integrates with
           your GitHub repositories to monitor key activities, generate key
           metadata files and automatically generate pull requests for
@@ -87,7 +89,7 @@ breadcrumbsStore.hideBreadcrumbs();
           <NuxtLink
             to="https://github.com/fairdataihub/codefair-app"
             target="_blank"
-            class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+            class="inline-flex items-center gap-2 rounded-lg bg-[var(--btn-bg)] px-4 py-3 text-sm font-semibold text-white outline-none transition duration-200 hover:bg-[var(--btn-bg-hover)] focus-visible:ring active:bg-[var(--btn-bg-active)]"
           >
             Get Codefair ->
           </NuxtLink>
@@ -148,11 +150,13 @@ breadcrumbsStore.hideBreadcrumbs();
         class="mx-auto flex max-w-screen-xl flex-col-reverse items-center gap-8 py-16 md:flex-row-reverse"
       >
         <div class="md:w-1/2">
-          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+          <h2
+            class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+          >
             What is a GitHub App?
           </h2>
 
-          <p class="font-onest text-lg text-slate-800">
+          <p class="font-onest text-lg text-[var(--text-color)]">
             GitHub Apps are integrations you install on GitHub that act like
             independent user's with their own, tightly controlled permissions.
             Once added to one or more repositories (or an entire organization),
@@ -206,11 +210,13 @@ breadcrumbsStore.hideBreadcrumbs();
         </div>
 
         <div class="md:w-1/2">
-          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+          <h2
+            class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+          >
             How Codefair works
           </h2>
 
-          <p class="font-onest text-lg text-slate-800">
+          <p class="font-onest text-lg text-[var(--text-color)]">
             Codefair gets you up and running in seconds and creates a
             “Dashboard” issue in each repo you connect. From that moment on, it
             quietly provides feedback on the FAIR Compliance status of your
@@ -257,11 +263,13 @@ breadcrumbsStore.hideBreadcrumbs();
         </div>
 
         <div class="md:w-1/2">
-          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+          <h2
+            class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+          >
             How is Codefair developed?
           </h2>
 
-          <p class="font-onest text-lg text-slate-800">
+          <p class="font-onest text-lg text-[var(--text-color)]">
             Codefair is developed using
             <NuxtLink
               to="https://probot.github.io"
@@ -327,11 +335,13 @@ breadcrumbsStore.hideBreadcrumbs();
         class="mx-auto flex max-w-screen-xl flex-col-reverse items-center gap-8 py-16 md:flex-row"
       >
         <div class="md:w-1/2">
-          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+          <h2
+            class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+          >
             Who should use Codefair?
           </h2>
 
-          <p class="font-onest text-lg text-slate-800">
+          <p class="font-onest text-lg text-[var(--text-color)]">
             Currently, Codefair helps make software FAIR by following the FAIR
             Biomedical Research Software (FAIR-BioRS) guidelines. However, most
             of the steps in the FAIR-BioRS guidelines are applicable to any

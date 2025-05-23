@@ -15,7 +15,7 @@ const slots = useSlots();
 
 <template>
   <div
-    class="flex w-full gap-4 rounded-lg border border-slate-200 bg-white px-5 py-6 shadow-sm"
+    class="flex w-full gap-4 rounded-lg border border-slate-200 bg-[var(--dashboard-card)] px-5 py-6 shadow-sm"
   >
     <div>
       <slot name="icon"></slot>

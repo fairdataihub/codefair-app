@@ -27,6 +27,7 @@ body {
 @layer base {
   
   :root {
+    --dashboard-card: white;
     --n-card-bg: white;
     --indigo-700-500: oklch(45.7% 0.24 277.023);
     --gray-600-400: oklch(44.6% 0.03 256.802);
@@ -36,12 +37,12 @@ body {
     --codefair-light:   #f1e6ff;
     --radial-start:  white;
     --radial-end:    var(--codefair-light);
-    --text-color: oklch(20.8% 0.042 265.755);
+    --text-color: oklch(27.9% 0.041 260.031);
     --header-color: oklch(35.9% 0.144 278.697);
-    --btn-bg:        #6366f1; /* indigo-500 */
-    --btn-bg-hover:  #4f46e5; /* indigo-600 */
-    --btn-bg-active: #4338ca; /* indigo-700 */
-    --btn-ring:      #93c5fd; /* sky-300 */
+    --btn-bg:        #6366f1;
+    --btn-bg-hover:  #4f46e5; 
+    --btn-bg-active: #4338ca; 
+    --btn-ring:      #93c5fd;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     
@@ -77,6 +78,9 @@ body {
     --chart-5: 27 87% 67%;
     --n-card-text: oklch(37.3% 0.034 259.733);
     --gray-500-300: oklch(55.1% 0.027 264.364);
+    --blob-color-1: oklch(0.8699 0.0622 274.04 / 50%);
+    --blob-color-2: oklch(0.9024 0.0604 306.7 / 50%);
+    --stats-bg: oklch(1 0 0 / 10%);
   }
   
   .dark {
@@ -88,8 +92,12 @@ body {
       color: var(--n-card-text);
     } */
 
-    --n-card-text: #ffffff;
-    --n-card-bg: #1e293b;
+    --stats-bg: oklch(1 0 0 / 20%);
+    --blob-color-1: oklch(0.5735 0.2097 274.04 / 50%);
+    --blob-color-2: oklch(0.6706 0.2047 309.1076010115387 / 50%);
+    --dashboard-card: oklch(37.2% 0.044 257.287);
+    --n-card-text: oklch(1 0 0);
+    --n-card-bg: oklch(0.2795 0.0368 260.03);
     --gray-500-300: oklch(87.2% 0.01 258.338);
     --indigo-700-500: oklch(58.5% 0.233 277.117);
     --gray-600-400: oklch(87.2% 0.01 258.338);
@@ -97,12 +105,12 @@ body {
     --codefair-grid:    oklch(0.3618 0.1136 303.98);
     --codefair-light:   oklch(0.1913 0.0919 306.91);
     --header-color: oklch(58.5% 0.233 277.117);
-    --radial-start:  oklch(0.2039 0.0196 262.04);       /* e.g. gray-900 */
+    --radial-start:  oklch(0.2039 0.0196 262.04);
     --radial-end:    var(--codefair-grid);
-    --btn-bg:        #818cf8;  /* indigo-400 */
-    --btn-bg-hover:  #a5b4fc;  /* indigo-300 */
-    --btn-bg-active: #6366f1;  /* indigo-500 */
-    --btn-ring:      #c7d2fe;  /* indigo-200 */
+    --btn-bg:        oklch(58.5% 0.233 277.117);
+    --btn-bg-hover:  oklch(51.1% 0.262 276.966);
+    --btn-bg-active: oklch(0.5854 0.2041 277.12);
+    --btn-ring:      oklch(0.8699 0.0622 274.04);
     --text-color: oklch(92.2% 0 0);
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
