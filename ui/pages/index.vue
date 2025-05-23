@@ -88,7 +88,7 @@ const countupOptions: CountUpOptions = {
             <NuxtLink
               to="https://github.com/marketplace/codefair-app"
               target="_blank"
-              class="inline-flex items-center gap-2 rounded-lg bg-[var(--btn-bg)] px-4 py-3 text-sm font-semibold text-white outline-none transition duration-200 hover:bg-[var(--btn-bg-hover)] focus-visible:ring active:bg-[var(--btn-bg-active)]"
+              class="inline-block items-center rounded-lg bg-[var(--btn-bg)] px-6 py-3 text-sm font-semibold text-white transition duration-200 hover:bg-[var(--btn-bg-hover)] active:bg-[var(--btn-bg-active)] md:text-lg"
             >
               Get Codefair ->
             </NuxtLink>
@@ -96,7 +96,7 @@ const countupOptions: CountUpOptions = {
             <NuxtLink
               to="https://docs.codefair.io/"
               target="_blank"
-              class="inline-flex items-center gap-2 rounded-lg bg-[var(--btn-bg)] px-4 py-3 text-sm font-semibold text-white outline-none transition duration-200 hover:bg-[var(--btn-bg-hover)] focus-visible:ring active:bg-[var(--btn-bg-active)]"
+              class="inline-block items-center rounded-lg bg-[var(--btn-bg)] px-6 py-3 text-sm font-semibold text-white transition duration-200 hover:bg-[var(--btn-bg-hover)] active:bg-[var(--btn-bg-active)] md:text-lg"
             >
               Read the Documentation
               <Icon name="solar:documents-bold" size="18" />
@@ -176,7 +176,7 @@ const countupOptions: CountUpOptions = {
             <NuxtLink
               to="https://github.com/fairdataihub/codefair-app"
               target="_blank"
-              class="inline-block rounded-lg bg-indigo-500 px-6 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-block rounded-lg bg-[var(--btn-bg)] px-6 py-3 text-sm font-semibold text-white transition duration-200 hover:bg-[var(--btn-bg-hover)] active:bg-[var(--btn-bg-active)] md:text-base"
             >
               <n-flex justify="between" align="center">
                 <span>View the source code</span>
@@ -192,7 +192,7 @@ const countupOptions: CountUpOptions = {
             <NuxtLink
               to="codefair"
               target="_blank"
-              class="inline-block rounded-lg bg-indigo-500 px-6 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-block rounded-lg bg-[var(--btn-bg)] px-6 py-3 text-sm font-semibold text-white transition duration-200 hover:bg-[var(--btn-bg-hover)] active:bg-[var(--btn-bg-active)] md:text-base"
             >
               Learn more about Codefair ->
             </NuxtLink>
@@ -239,7 +239,7 @@ const countupOptions: CountUpOptions = {
             <NuxtLink
               to="fairsoftware"
               target="_blank"
-              class="inline-block rounded-lg bg-indigo-500 px-8 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-block rounded-lg bg-[var(--btn-bg)] px-6 py-3 text-sm font-semibold text-white transition duration-200 hover:bg-[var(--btn-bg-hover)] active:bg-[var(--btn-bg-active)] md:text-base"
             >
               Learn more about FAIR software ->
             </NuxtLink>
@@ -329,15 +329,15 @@ const countupOptions: CountUpOptions = {
     >
       <div class="mx-auto max-w-screen-xl px-4">
         <div
-          class="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-8 shadow-md md:p-12"
+          class="relative overflow-hidden rounded-2xl border border-white/20 bg-[var(--stats-bg)] p-8 shadow-md md:p-12"
         >
           <!-- Floating blobs -->
           <div
-            class="absolute -right-16 -top-16 h-48 w-48 animate-float-item rounded-full bg-indigo-200/50 mix-blend-multiply"
+            class="absolute -right-16 -top-16 h-48 w-48 animate-float-item rounded-full bg-[var(--blob-color-1)] mix-blend-multiply"
           ></div>
 
           <div
-            class="absolute -bottom-16 -left-16 h-48 w-48 animate-float-item rounded-full bg-purple-200/50 mix-blend-multiply"
+            class="absolute -bottom-16 -left-16 h-48 w-48 animate-float-item rounded-full bg-[var(--blob-color-2)] mix-blend-multiply"
           ></div>
 
           <dl class="relative grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -412,7 +412,7 @@ const countupOptions: CountUpOptions = {
             <NuxtLink
               to="https://fairdataihub.org/"
               target="_blank"
-              class="inline-block rounded-lg bg-indigo-500 px-6 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-base"
+              class="inline-block rounded-lg bg-[var(--btn-bg)] px-6 py-3 text-sm font-semibold text-white transition duration-200 hover:bg-[var(--btn-bg-hover)] active:bg-[var(--btn-bg-active)] md:text-base"
             >
               <n-flex justify="between" align="center">
                 <span>Learn more about us</span>
@@ -467,17 +467,17 @@ const countupOptions: CountUpOptions = {
             </p>
 
             <n-flex>
-              <div class="flex flex-col gap-3 sm:flex-row">
-                <NuxtLink
-                  to="https://github.com/fairdataihub/codefair-app/issues"
-                  target="_blank"
-                  class="inline-flex items-center gap-2 rounded-lg bg-[var(--btn-bg)] px-4 py-3 text-sm font-semibold text-white outline-none transition duration-200 hover:bg-[var(--btn-bg-hover)] focus-visible:ring active:bg-[var(--btn-bg-active)]"
-                >
+              <NuxtLink
+                to="https://github.com/fairdataihub/codefair-app/issues"
+                target="_blank"
+                class="inline-block rounded-lg bg-[var(--btn-bg)] px-6 py-3 text-sm font-semibold text-white transition duration-200 hover:bg-[var(--btn-bg-hover)] active:bg-[var(--btn-bg-active)] md:text-base"
+              >
+                <n-flex justify="between" align="center">
                   <Icon name="fa:github" size="16" />
 
                   <span>Open a GitHub issue</span>
-                </NuxtLink>
-              </div>
+                </n-flex>
+              </NuxtLink>
             </n-flex>
           </div>
 
