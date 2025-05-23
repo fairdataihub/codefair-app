@@ -39,7 +39,7 @@ const countupOptions: CountUpOptions = {
   <main class="min-h-screen bg-purple-50">
     <!-- HERO SECTION -->
     <section
-      class="relative overflow-hidden bg-gradient-to-b from-white to-codefair-light py-12 md:py-24"
+      class="relative overflow-hidden bg-gradient-to-b from-white to-codefair-light py-12 dark:from-gray-900 dark:to-codefair-grid md:py-24"
     >
       <!-- Grid pattern behind hero content -->
       <UiInteractiveGridPattern
@@ -64,15 +64,19 @@ const countupOptions: CountUpOptions = {
           class="mt-0 flex flex-col items-center text-center md:w-1/2 md:items-start md:text-left"
         >
           <h1
-            class="mb-4 text-4xl font-extrabold leading-tight text-indigo-900 md:text-6xl"
+            class="mb-4 text-4xl font-extrabold leading-tight text-[var(--header-color)] md:text-6xl"
           >
             Make your research software reusable
             <br class="hidden md:block" />
 
-            <span class="text-indigo-700">without breaking a sweat!</span>
+            <span class="text-[var(--indigo-700-500)]"
+              >without breaking a sweat!</span
+            >
           </h1>
 
-          <p class="font-onest font-medium text-gray-700 md:text-lg lg:text-xl">
+          <p
+            class="font-onest font-medium text-[var(--text-color)] md:text-lg lg:text-xl"
+          >
             Let Codefair handle the complexities of making your research
             software FAIR, so you can focus on what matters most to you.
           </p>
@@ -84,7 +88,7 @@ const countupOptions: CountUpOptions = {
             <NuxtLink
               to="https://github.com/marketplace/codefair-app"
               target="_blank"
-              class="inline-block rounded-lg bg-indigo-500 px-6 py-3 text-base font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-lg"
+              class="inline-flex items-center gap-2 rounded-lg bg-[var(--btn-bg)] px-4 py-3 text-sm font-semibold text-white outline-none transition duration-200 hover:bg-[var(--btn-bg-hover)] focus-visible:ring active:bg-[var(--btn-bg-active)]"
             >
               Get Codefair ->
             </NuxtLink>
@@ -92,7 +96,7 @@ const countupOptions: CountUpOptions = {
             <NuxtLink
               to="https://docs.codefair.io/"
               target="_blank"
-              class="inline-block rounded-lg bg-indigo-500 px-6 py-3 text-base font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700 md:text-lg"
+              class="inline-flex items-center gap-2 rounded-lg bg-[var(--btn-bg)] px-4 py-3 text-sm font-semibold text-white outline-none transition duration-200 hover:bg-[var(--btn-bg-hover)] focus-visible:ring active:bg-[var(--btn-bg-active)]"
             >
               Read the Documentation
               <Icon name="solar:documents-bold" size="18" />
@@ -127,11 +131,11 @@ const countupOptions: CountUpOptions = {
       style="
         background: radial-gradient(
           circle at bottom,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
-      class="p-8 md:py-16"
+      class="p-8 backdrop-blur-xl md:py-16"
     >
       <!-- Content container -->
       <div
@@ -147,11 +151,13 @@ const countupOptions: CountUpOptions = {
         </div>
 
         <div class="md:w-1/2">
-          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+          <h2
+            class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+          >
             What is Codefair?
           </h2>
 
-          <p class="font-onest text-lg text-slate-800">
+          <p class="font-onest text-lg text-[var(--text-color)]">
             Codefair is a free and open source GitHub app that acts as your
             personal assistant when it comes to making your research software
             reusable and especially complying with the
@@ -205,8 +211,8 @@ const countupOptions: CountUpOptions = {
       style="
         background: radial-gradient(
           circle at top,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
       class="p-8 md:py-16"
@@ -215,11 +221,13 @@ const countupOptions: CountUpOptions = {
         class="mx-auto flex max-w-screen-xl flex-col-reverse items-center gap-8 md:flex-row"
       >
         <div class="md:w-1/2">
-          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+          <h2
+            class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+          >
             Why make research software reusable?
           </h2>
 
-          <p class="font-onest text-lg text-slate-800">
+          <p class="font-onest text-lg text-[var(--text-color)]">
             Making research software FAIR, i.e. optimally reusable, is critical
             to enable reproducible and transparent research, prevent duplicate
             effort, and ultimately increase the pace of new discoveries. Also,
@@ -259,8 +267,8 @@ const countupOptions: CountUpOptions = {
       style="
         background: radial-gradient(
           circle at bottom,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
       class="p-8 md:py-16"
@@ -278,11 +286,13 @@ const countupOptions: CountUpOptions = {
         </div>
 
         <div class="md:w-1/2">
-          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+          <h2
+            class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+          >
             Why should you use Codefair?
           </h2>
 
-          <p class="text-lg text-slate-800">
+          <p class="text-lg text-[var(--text-color)]">
             With Codefair, you do not have to think about making your software
             FAIR. Just install Codefair from the GitHub marketplace on your
             repository. Then track FAIR-compliance issues in the Codefair
@@ -311,8 +321,8 @@ const countupOptions: CountUpOptions = {
       style="
         background: radial-gradient(
           circle at center,
-          white 10%,
-          var(--codefair-light) 90%
+          var(--radial-start) 10%,
+          var(--radial-end) 90%
         );
       "
       class="p-8 md:py-16"
@@ -344,7 +354,7 @@ const countupOptions: CountUpOptions = {
               </div>
 
               <!-- Count -->
-              <dt class="text-5xl font-extrabold text-indigo-600">
+              <dt class="text-5xl font-extrabold text-[var(--indigo-600-400)]">
                 <count-up
                   :end-val="stat.endValue"
                   :start-val="stat.startValue"
@@ -359,7 +369,7 @@ const countupOptions: CountUpOptions = {
               </dt>
 
               <!-- Label -->
-              <dd class="text-lg font-medium text-gray-700">
+              <dd class="text-lg font-medium text-[var(--text-color)]">
                 {{ stat.text }}
               </dd>
             </div>
@@ -373,21 +383,23 @@ const countupOptions: CountUpOptions = {
       style="
         background: radial-gradient(
           circle at top,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
-      class="p-8 md:py-16"
+      class="backdrop-blur-xs p-8 md:py-16"
     >
       <div
         class="z-10 mx-auto flex max-w-screen-xl flex-col items-center gap-8 md:flex-row"
       >
         <div class="md:w-1/2">
-          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+          <h2
+            class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+          >
             Who are we?
           </h2>
 
-          <p class="text-lg text-slate-800">
+          <p class="text-lg text-[var(--text-color)]">
             Codefair is developed by the FAIR Data Innovations Hub team, part of
             the nonprofit biomedical research facility, California Medical
             Innovations Institute. We experienced firsthand the challenges of
@@ -432,8 +444,8 @@ const countupOptions: CountUpOptions = {
       style="
         background: radial-gradient(
           circle at center,
-          white 0%,
-          var(--codefair-light) 80%
+          var(--radial-start) 0%,
+          var(--radial-end) 80%
         );
       "
       class="p-8 md:py-16"
@@ -441,11 +453,13 @@ const countupOptions: CountUpOptions = {
       <div class="z-10 mx-auto max-w-screen-xl">
         <div class="flex flex-col gap-8 md:flex-row-reverse md:items-center">
           <div class="md:w-1/2">
-            <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+            <h2
+              class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+            >
               Need help? Have suggestions? Want to contribute?
             </h2>
 
-            <p class="mb-6 text-lg text-slate-800">
+            <p class="mb-6 text-lg text-[var(--text-color)]">
               Reach out via the GitHub issues of the Codefair repo and we’ll be
               happy to connect with you. You can also use the Contact Us form at
               the bottom right of this page. We’re always looking for ways to
@@ -457,7 +471,7 @@ const countupOptions: CountUpOptions = {
                 <NuxtLink
                   to="https://github.com/fairdataihub/codefair-app/issues"
                   target="_blank"
-                  class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 text-sm font-semibold text-white outline-none ring-indigo-300 transition duration-200 hover:bg-indigo-600 focus-visible:ring active:bg-indigo-700"
+                  class="inline-flex items-center gap-2 rounded-lg bg-[var(--btn-bg)] px-4 py-3 text-sm font-semibold text-white outline-none transition duration-200 hover:bg-[var(--btn-bg-hover)] focus-visible:ring active:bg-[var(--btn-bg-active)]"
                 >
                   <Icon name="fa:github" size="16" />
 

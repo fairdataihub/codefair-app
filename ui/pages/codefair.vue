@@ -10,7 +10,7 @@ breadcrumbsStore.hideBreadcrumbs();
   <main class="min-h-screen bg-purple-50">
     <!-- HERO SECTION for Codefair -->
     <section
-      class="relative overflow-hidden bg-gradient-to-b from-white to-codefair-light py-12 md:py-24"
+      class="relative overflow-hidden bg-gradient-to-b from-white to-codefair-light py-12 md:py-24 dark:from-gray-900 dark:to-codefair-grid"
     >
       <!-- Grid pattern -->
       <UiInteractiveGridPattern
@@ -63,8 +63,8 @@ breadcrumbsStore.hideBreadcrumbs();
       style="
         background: radial-gradient(
           circle at bottom,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
       class="px-4 md:px-0"
@@ -132,8 +132,8 @@ breadcrumbsStore.hideBreadcrumbs();
       style="
         background: radial-gradient(
           circle at top,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
       class="px-4 md:px-0"
@@ -187,8 +187,8 @@ breadcrumbsStore.hideBreadcrumbs();
       style="
         background: radial-gradient(
           circle at bottom,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
       class="px-4 md:px-0"
@@ -238,8 +238,8 @@ breadcrumbsStore.hideBreadcrumbs();
       style="
         background: radial-gradient(
           circle at bottom,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
       class="px-4 md:px-0"
@@ -311,8 +311,8 @@ breadcrumbsStore.hideBreadcrumbs();
       style="
         background: radial-gradient(
           circle at top,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
       class="px-4 md:px-0"
