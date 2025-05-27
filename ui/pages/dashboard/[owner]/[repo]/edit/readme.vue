@@ -152,7 +152,7 @@ const navigateToPR = () => {
     >
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">
-          <h1 class="text-2xl font-bold">
+          <h1 class="text-2xl font-bold dark:text-black">
             Edit README for
             <NuxtLink
               :to="`https://github.com/${owner}/${repo}`"
@@ -166,13 +166,13 @@ const navigateToPR = () => {
           <NuxtLink
             to="https://docs.codefair.io/docs/readme.html"
             target="_blank"
-            class="text-blue-400 underline transition-all hover:text-blue-500"
+            class="font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
             >Need help?</NuxtLink
           >
         </div>
 
         <div class="border-b border-dashed py-2">
-          <p class="text-base">
+          <p class="text-base dark:text-gray-700">
             You can edit your README file here. The README file is a markdown
             file that contains information about your project. It is usually the
             first thing that users see when they visit your project on GitHub.

@@ -164,7 +164,7 @@ const countupOptions: CountUpOptions = {
             <NuxtLink
               to="https://www.nature.com/articles/s41597-022-01710-x"
               target="_blank"
-              class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+              class="text-[var(--link-color)] hover:text-[var(--link-hover)] active:text-[var(--link-color)]"
               >Findable, Accessible, Interoperable, Reusable (FAIR) Principles
               for Research Software (FAIR4RS Principles)</NuxtLink
             >. Whether you are developing AI/ML models with Python, data
@@ -303,7 +303,7 @@ const countupOptions: CountUpOptions = {
             <NuxtLink
               to="https://zenodo.org/"
               target="_blank"
-              class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+              class="text-[var(--link-color)] hover:text-[var(--link-hover)] active:text-[var(--link-color)]"
               >Zenodo</NuxtLink
             >, and much more to align with FAIR4RS principles.
           </p>

@@ -27,8 +27,12 @@ body {
 @layer base {
   
   :root {
+    --link-color: oklch(45.7% 0.24 277.023);
+    --link-hover: oklch(49.1% 0.27 292.581);
     --dashboard-card: white;
     --n-card-bg: white;
+    --gray-700-200: oklch(37.3% 0.034 259.733);
+    --gray-500-100: oklch(55.1% 0.027 264.364);
     --indigo-700-500: oklch(45.7% 0.24 277.023);
     --gray-600-400: oklch(44.6% 0.03 256.802);
     --indigo-600-400: oklch(78.5% 0.115 274.713);
@@ -85,17 +89,27 @@ body {
   
   .dark {
     .n-card {
-      background-color: var(--n-card-bg);
+      background-color: oklch(55.1% 0.027 264.364);
+    }
+
+    --n-item-text-color-active: var(--gray-600-400);
+    --gray-700-200: oklch(96.7% 0.003 264.542);
+    --gray-500-100: oklch(86.9% 0.022 252.894);
+    .n-input {
+      background-color: oklch(98.5% 0.001 106.423);
+      mix-blend-mode: multiply;
     }
 
     /* .n-card .span {
       color: var(--n-card-text);
     } */
 
+    --link-color: oklch(67.3% 0.182 276.935);
+    --link-hover: oklch(70.2% 0.183 293.541);
     --stats-bg: oklch(1 0 0 / 20%);
     --blob-color-1: oklch(0.5735 0.2097 274.04 / 50%);
     --blob-color-2: oklch(0.6706 0.2047 309.1076010115387 / 50%);
-    --dashboard-card: oklch(37.2% 0.044 257.287);
+    --dashboard-card: oklch(55.1% 0.027 264.364);
     --n-card-text: oklch(1 0 0);
     --n-card-bg: oklch(0.2795 0.0368 260.03);
     --gray-500-300: oklch(87.2% 0.01 258.338);

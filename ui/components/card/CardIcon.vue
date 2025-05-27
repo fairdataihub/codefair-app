@@ -25,7 +25,7 @@ const showClicked = ref(false);
     <!-- Edit Icon (NuxtLink) -->
     <NuxtLink
       :to="editLink"
-      class="absolute top-2 right-2 text-indigo-500 hover:text-indigo-700"
+      class="absolute right-2 top-2 text-indigo-500 hover:text-indigo-700"
     >
       <Icon name="mdi:pencil" size="1.5rem" />
     </NuxtLink>
@@ -33,7 +33,7 @@ const showClicked = ref(false);
     <div
       v-if="showClicked"
       :to="editLink"
-      class="absolute top-2 left-2 text-green-500"
+      class="absolute left-2 top-2 text-green-500"
     >
       <Icon name="mdi:checkbox-marked-circle" size="1.5rem" />
     </div>
@@ -42,7 +42,7 @@ const showClicked = ref(false);
     <Icon :name="icon" size="3rem" />
 
     <!-- Title -->
-    <h3 class="mt-4 text-center text-lg font-semibold select-none">
+    <h3 class="mt-4 select-none text-center text-lg font-semibold">
       {{ title }}
     </h3>
   </div>

@@ -278,12 +278,12 @@ const navigateToPR = () => {
     <section class="mx-auto bg-white rounded-md border-[1px] border-gray-200 shadow-md max-w-screen-xl p-8">
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">
-          <h1 class="text-2xl font-bold">
+          <h1 class="text-2xl font-bold dark:text-black">
             Edit LICENSE for
             <NuxtLink
               :to="`https://github.com/${owner}/${repo}`"
               target="_blank"
-              class="text-blue-500 underline transition-all hover:text-blue-600"
+              class="text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
             >
               {{ repo }}
             </NuxtLink>
@@ -292,13 +292,13 @@ const navigateToPR = () => {
           <NuxtLink
             to="https://docs.codefair.io/docs/license.html"
             target="_blank"
-            class="text-blue-400 underline transition-all hover:text-blue-500"
+            class="text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
             >Need help?</NuxtLink
           >
         </div>
   
         <div class="border-b border-dashed py-2">
-          <p class="text-base">
+          <p class="text-base dark:text-gray-700">
             You can select a license from the list below and edit further. Once
             you are done, you can save the draft or push the license to the
             repository. If you need help with with deciding which one to pick, you
@@ -306,7 +306,7 @@ const navigateToPR = () => {
             <NuxtLink
               to="https://choosealicense.com"
               target="_blank"
-              class="text-blue-500 underline transition-all hover:text-blue-600"
+              class="text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
               >https://choosealicense.com</NuxtLink
             >. To make your software reusable a license file is expected at the
             root level of your repository. It is important to choose your license

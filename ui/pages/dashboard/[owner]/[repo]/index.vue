@@ -278,7 +278,11 @@ const handleSettingsSelect = (key: string) => {
             >
               <n-button quaternary circle size="large">
                 <template #icon>
-                  <Icon name="humbleicons:dots-vertical" size="20" />
+                  <Icon
+                    name="humbleicons:dots-vertical"
+                    color="var(--gray-500-100)"
+                    size="20"
+                  />
                 </template>
               </n-button>
             </n-dropdown>
@@ -404,7 +408,11 @@ const handleSettingsSelect = (key: string) => {
             >
               <n-button quaternary circle size="large">
                 <template #icon>
-                  <Icon name="humbleicons:dots-vertical" size="20" />
+                  <Icon
+                    name="humbleicons:dots-vertical"
+                    color="var(--gray-500-100)"
+                    size="20"
+                  />
                 </template>
               </n-button>
             </n-dropdown>
@@ -551,7 +559,10 @@ const handleSettingsSelect = (key: string) => {
             >
               <n-button quaternary circle size="large">
                 <template #icon
-                  ><Icon name="humbleicons:dots-vertical" size="20"
+                  ><Icon
+                    name="humbleicons:dots-vertical"
+                    color="var(--gray-500-100)"
+                    size="20"
                 /></template>
               </n-button>
             </n-dropdown>
@@ -871,7 +882,11 @@ const handleSettingsSelect = (key: string) => {
             >
               <n-button quaternary circle size="large">
                 <template #icon>
-                  <Icon name="humbleicons:dots-vertical" size="20" />
+                  <Icon
+                    name="humbleicons:dots-vertical"
+                    color="var(--gray-500-100)"
+                    size="20"
+                  />
                 </template>
               </n-button>
             </n-dropdown>
@@ -978,7 +993,11 @@ const handleSettingsSelect = (key: string) => {
             >
               <n-button quaternary circle size="large">
                 <template #icon>
-                  <Icon name="humbleicons:dots-vertical" size="20" />
+                  <Icon
+                    name="humbleicons:dots-vertical"
+                    color="var(--gray-500-100)"
+                    size="20"
+                  />
                 </template>
               </n-button>
             </n-dropdown>
