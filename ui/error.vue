@@ -118,7 +118,7 @@ if (props.error) {
                 Please visit the
                 <NuxtLink
                   to="/faq"
-                  class="text-indigo-500 transition-all hover:text-indigo-700 hover:underline"
+                  class="text-[var(--link-color)] transition-all hover:text-[var(--link-hover)] hover:underline active:text-[var(--link-color)]"
                   >FAQ</NuxtLink
                 >
                 page for more information.
@@ -150,7 +150,7 @@ if (props.error) {
                 Please visit the
                 <NuxtLink
                   to="/faq"
-                  class="text-purple-500 transition-all hover:text-purple-700 hover:underline"
+                  class="text-[var(--link-color)] transition-all hover:text-[var(--link-hover)] hover:underline active:text-[var(--link-color)]"
                   >FAQ</NuxtLink
                 >
                 page for more information.

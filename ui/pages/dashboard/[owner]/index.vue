@@ -134,7 +134,7 @@ const handleSettingsSelect = (key: string) => {
         </div>
       </div>
 
-      <p class="text-base text-gray-600">
+      <p class="text-base text-[var(--gray-600-400)]">
         Some repositories may not appear here if they have not had any actions
         performed on their main branch yet. Once a couple of actions have been
         processed, the repositories will appear in the list.
@@ -161,14 +161,14 @@ const handleSettingsSelect = (key: string) => {
 
             <!-- Repository Name and Link -->
             <div class="flex max-w-[14rem] flex-col">
-              <span class="text-base text-gray-700">
+              <span class="text-base text-[--gray-700-200]">
                 {{ repo.repo }}
               </span>
 
               <NuxtLink
                 :to="`https://github.com/${owner}/${repo.repo}`"
                 target="_blank"
-                class="truncate text-sm text-gray-500 transition-all hover:text-blue-600 hover:underline"
+                class="truncate text-sm text-[--gray-500-100] transition-all hover:text-[var(--link-hover)] hover:underline"
               >
                 <Icon name="ri:external-link-line" size="12" />
                 {{ owner }}/{{ repo.repo }}
@@ -183,7 +183,7 @@ const handleSettingsSelect = (key: string) => {
               <NuxtLink
                 :to="repo?.latestCommitUrl"
                 target="_blank"
-                class="truncate text-base text-slate-600 transition-all hover:text-blue-600"
+                class="truncate text-base text-[var(--gray-700-200)] transition-all hover:text-[var(--link-hover)] hover:underline"
               >
                 {{
                   repo?.latestCommitMessage ||
@@ -195,7 +195,7 @@ const handleSettingsSelect = (key: string) => {
                 v-if="repo?.latestCommitSha"
                 :to="repo?.latestCommitUrl"
                 target="_blank"
-                class="flex items-center gap-1 text-sm text-gray-400 transition-all hover:text-blue-600 hover:underline"
+                class="flex items-center gap-1 text-sm text-[var(--gray-500-100)] transition-all hover:text-[var(--link-hover)] hover:underline"
               >
                 <Icon name="ri:git-commit-line" size="12" />
                 {{ repo.latestCommitSha?.substring(0, 7) }}

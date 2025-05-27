@@ -265,6 +265,7 @@ const toggleMobileMenu = () => {
 
             <n-breadcrumb-item
               v-if="breadcrumbsStore.owner"
+              style="color: white !important"
               :href="`/dashboard/${breadcrumbsStore.owner}`"
             >
               <Icon name="uil:github" />
@@ -358,7 +359,7 @@ const toggleMobileMenu = () => {
           class="mt-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center"
         >
           <div>
-            <p class="mb-3 max-w-lg text-gray-500">
+            <p class="mb-3 max-w-lg text-[var(--gray-600-400)]">
               With Codefair by your side, you're not just managing repositories
               but you are advocating for the development of FAIR software
             </p>
@@ -368,7 +369,7 @@ const toggleMobileMenu = () => {
               <a
                 href="https://twitter.com/fairdataihub"
                 target="_blank"
-                class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
+                class="text-gray-400 transition duration-100 hover:text-[var(--gray-500-300)] active:text-gray-600"
               >
                 <Icon name="fa:twitter" size="25" />
               </a>
@@ -376,7 +377,7 @@ const toggleMobileMenu = () => {
               <a
                 href="https://github.com/fairdataihub"
                 target="_blank"
-                class="text-gray-400 transition duration-100 hover:text-gray-500 active:text-gray-600"
+                class="text-gray-400 transition duration-100 hover:text-[var(--gray-500-300)] active:text-gray-600"
               >
                 <Icon name="fa:github" size="25" />
               </a>
@@ -409,7 +410,7 @@ const toggleMobileMenu = () => {
 
               <a
                 href="https://fairdataihub.org"
-                class="pl-1 text-indigo-500 transition-all hover:text-indigo-600 active:text-indigo-700"
+                class="pl-1 text-[var(--link-color)] transition-all hover:text-[var(--link-hover)] hover:underline active:text-[var(--link-color)]"
                 target="_blank"
               >
                 FAIR Data Innovations Hub

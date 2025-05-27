@@ -274,7 +274,7 @@ breadcrumbsStore.hideBreadcrumbs();
             <NuxtLink
               to="https://probot.github.io"
               target="_blank"
-              class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+              class="text-[var(--link-color)] hover:text-[var(--link-hover)] active:text-[var(--link-color)]"
               >Probot</NuxtLink
             >
             and is deployed on our own servers. The GitHub app is configured to
@@ -284,7 +284,7 @@ breadcrumbsStore.hideBreadcrumbs();
             <NuxtLink
               to="https://nodejs.org/en"
               target="_blank"
-              class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+              class="text-[var(--link-color)] hover:text-[var(--link-hover)] active:text-[var(--link-color)]"
               >Node.js</NuxtLink
             >
 
@@ -292,7 +292,7 @@ breadcrumbsStore.hideBreadcrumbs();
             <NuxtLink
               to="https://github.com/octokit/octokit.js"
               target="_blank"
-              class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+              class="text-[var(--link-color)] hover:text-[var(--link-hover)] active:text-[var(--link-color)]"
               >Octokit Library</NuxtLink
             >
             to interact with the GitHub API, enabling seamless integration with
@@ -300,7 +300,7 @@ breadcrumbsStore.hideBreadcrumbs();
             <NuxtLink
               to="https://zenodo.org/"
               target="_blank"
-              class="text-indigo-700 hover:text-indigo-500 active:text-indigo-700"
+              class="text-[var(--link-color)] hover:text-[var(--link-hover)] active:text-[var(--link-color)]"
               >Zenodo Archival</NuxtLink
             >, metadata generation, and pull request creation are all handled by
             the app.

@@ -24,11 +24,48 @@ import { pastelTheme } from "notivue";
 const colorMode = useColorMode();
 
 const themeOverrides = computed<GlobalThemeOverrides>(() => ({
+  Alert: {
+    colorInfo:
+      colorMode.value === "dark"
+        ? "oklch(54.6% 0.245 262.881 / 50%)"
+        : "#EDF5FE",
+    titleTextColorInfo: colorMode.value === "dark" ? "#FFFFFF" : "#1E40AF",
+  },
   common: {
     primaryColor: colorMode.value === "dark" ? "#4F46E5" : "#6366f1",
     primaryColorHover: colorMode.value === "dark" ? "#7C3AED" : "#4F46E5",
     primaryColorPressed: colorMode.value === "dark" ? "#312E81" : "#c7d6ff",
     primaryColorSuppl: "#0ea5e9",
+  },
+  Dropdown: {
+    color: colorMode.value === "dark" ? "oklch(98.5% 0.001 106.423)" : "white",
+    optionColorHover:
+      colorMode.value === "dark"
+        ? "oklch(92.9% 0.013 255.508)"
+        : "oklch(92.9% 0.013 255.508)",
+    textColor: colorMode.value === "dark" ? "dark" : "light",
+  },
+  Input: {
+    placeholderColor:
+      colorMode.value === "dark" ? "oklch(70.7% 0.022 261.325)" : "#9ca3af",
+  },
+  Menu: {
+    color: colorMode.value === "dark" ? "oklch(70.4% 0.04 256.788)" : "white",
+    optionColorHover:
+      colorMode.value === "dark"
+        ? "oklch(92.9% 0.013 255.508)"
+        : "oklch(86.9% 0.022 252.894)",
+    textColor: colorMode.value === "dark" ? "dark" : "light",
+  },
+  Tag: {
+    closeIconColorSuccess: "oklch(79.2% 0.209 151.711)",
+    colorInfo: colorMode.value === "dark" ? "#f0f9ff" : "#EFF6FF",
+    colorSuccess:
+      colorMode.value === "dark" ? "oklch(79.2% 0.209 151.711)" : "#EDF7F2",
+    textColorInfo: colorMode.value === "dark" ? "#0c4a6e" : "#1E40AF",
+    textColorSuccess:
+      colorMode.value === "dark" ? "oklch(79.2% 0.209 151.711)" : "#18a058",
+    textColorWarning: colorMode.value === "dark" ? "#eb385c" : "#d03050",
   },
 }));
 
