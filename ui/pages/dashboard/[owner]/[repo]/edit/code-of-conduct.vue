@@ -174,11 +174,11 @@ const navigateToPR = () => {
 <template>
   <main class="pb-8">
     <section
-      class="mx-auto max-w-screen-xl rounded-md border-[1px] border-gray-200 bg-white p-8 shadow-md"
+      class="mx-auto max-w-screen-xl rounded-md border-[1px] border-gray-200 bg-white p-8 shadow-md dark:bg-gray-100"
     >
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">
-          <h1 class="text-2xl font-bold">
+          <h1 class="text-2xl font-bold dark:text-black">
             Edit CODE_OF_CONDUCT.md for
             <NuxtLink
               :to="`https://github.com/${owner}/${repo}`"
@@ -192,13 +192,13 @@ const navigateToPR = () => {
           <NuxtLink
             to="https://docs.codefair.io/docs/code-of-conduct.html"
             target="_blank"
-            class="text-blue-400 underline transition-all hover:text-blue-500"
+            class="font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
             >Need help?</NuxtLink
           >
         </div>
 
         <div class="border-b border-dashed py-2">
-          <p class="text-base">
+          <p class="text-base dark:text-gray-700">
             You can edit your Code of Conduct file here. The Code of Conduct
             file is a markdown file that provides guidelines for the community.
             It helps to create a safe and inclusive environment for all

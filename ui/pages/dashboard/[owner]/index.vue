@@ -124,7 +124,12 @@ const handleSettingsSelect = (key: string) => {
             :show-arrow="true"
             @select="handleSettingsSelect"
           >
-            <n-button type="info" secondary size="large">
+            <n-button
+              type="info"
+              class="dark:bg-[#4068BF] dark:text-stone-100 dark:hover:bg-[#4068BF]/80 dark:hover:text-stone-100"
+              secondary
+              size="large"
+            >
               <template #icon>
                 <Icon name="ic:round-settings" size="16" />
               </template>

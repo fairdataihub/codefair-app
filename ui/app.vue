@@ -53,7 +53,7 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
   Input: {
     color: colorMode.value === "dark" ? "#1e293b" : "white",
     placeholderColor:
-      colorMode.value === "dark" ? "oklch(98.5% 0.002 247.839)" : "#9ca3af",
+      colorMode.value === "dark" ? "oklch(87.2% 0.01 258.338)" : "#9ca3af",
   },
   Menu: {
     color: colorMode.value === "dark" ? "oklch(70.4% 0.04 256.788)" : "white",
@@ -63,14 +63,9 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
         : "oklch(86.9% 0.022 252.894)",
     textColor: colorMode.value === "dark" ? "dark" : "light",
   },
-  Select: {
-    color: colorMode.value === "dark" ? "#1e293b" : "#f8fafc",
-  },
   Tag: {
     closeIconColorSuccess: "oklch(79.2% 0.209 151.711)",
     colorInfo: colorMode.value === "dark" ? "#f0f9ff" : "#EFF6FF",
-    colorSuccess:
-      colorMode.value === "dark" ? "oklch(79.2% 0.209 151.711)" : "#EDF7F2",
     textColorError: colorMode.value === "dark" ? "#f03" : "#d03050",
     textColorInfo: colorMode.value === "dark" ? "#0c4a6e" : "#1E40AF",
     textColorSuccess:

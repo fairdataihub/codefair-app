@@ -28,7 +28,7 @@ const collapseContent = () => {
       }"
     >
       <div
-        class="cursor-pointer rounded-full pt-1 hover:bg-indigo-100"
+        class="cursor-pointer rounded-full hover:bg-indigo-100"
         @click="collapseContent"
       >
         <Icon

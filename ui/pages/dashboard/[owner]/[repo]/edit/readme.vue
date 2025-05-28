@@ -149,7 +149,7 @@ const navigateToPR = () => {
 <template>
   <main class="pb-8">
     <section
-      class="mx-auto max-w-screen-xl rounded-md border-[1px] border-gray-200 bg-white p-8 shadow-md dark:bg-slate-300"
+      class="mx-auto max-w-screen-xl rounded-md border-[1px] border-gray-200 bg-white p-8 shadow-md dark:bg-gray-100"
     >
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">

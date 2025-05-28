@@ -202,7 +202,12 @@ const handleSettingsSelect = (key: string) => {
           :show-arrow="true"
           @select="handleSettingsSelect"
         >
-          <n-button type="info" secondary size="large">
+          <n-button
+            class="dark:bg-[#4068BF] dark:text-stone-100 dark:hover:bg-[#4068BF]/80 dark:hover:text-stone-100"
+            type="info"
+            secondary
+            size="large"
+          >
             <template #icon>
               <Icon name="ic:round-settings" size="16" />
             </template>
@@ -239,9 +244,16 @@ const handleSettingsSelect = (key: string) => {
             <div v-if="data?.readmeValidation?.readmeExists">
               <n-popover trigger="hover">
                 <template #trigger>
-                  <n-tag type="success">
+                  <n-tag
+                    type="success"
+                    class="dark:bg-green-100 dark:text-green-600"
+                  >
                     <template #icon>
-                      <Icon name="icon-park-solid:check-one" size="16" />
+                      <Icon
+                        class="dark:text-green-600"
+                        name="icon-park-solid:check-one"
+                        size="16"
+                      />
                     </template>
 
                     <span> {{ data?.readmeValidation?.readMePath }} found</span>
@@ -257,7 +269,7 @@ const handleSettingsSelect = (key: string) => {
             <div v-else>
               <n-popover trigger="hover">
                 <template #trigger>
-                  <n-tag type="error">
+                  <n-tag type="error" class="dark:bg-red-100">
                     <template #icon>
                       <Icon name="icon-park-solid:close-one" size="16" />
                     </template>
@@ -347,9 +359,16 @@ const handleSettingsSelect = (key: string) => {
                 trigger="hover"
               >
                 <template #trigger>
-                  <n-tag type="success">
+                  <n-tag
+                    type="success"
+                    class="dark:bg-green-100 dark:text-green-600"
+                  >
                     <template #icon>
-                      <Icon name="icon-park-solid:check-one" size="16" />
+                      <Icon
+                        class="dark:text-green-600"
+                        name="icon-park-solid:check-one"
+                        size="16"
+                      />
                     </template>
                     Contains a valid license
                   </n-tag>
@@ -377,6 +396,7 @@ const handleSettingsSelect = (key: string) => {
               <n-tag
                 v-if="data?.licenseRequest?.licenseId === 'Custom'"
                 type="warning"
+                class="ml-2"
               >
                 <template #icon>
                   <Icon name="ic:round-warning" size="16" />
@@ -388,7 +408,7 @@ const handleSettingsSelect = (key: string) => {
             <div v-else>
               <n-popover trigger="hover">
                 <template #trigger>
-                  <n-tag type="error">
+                  <n-tag type="error" class="dark:bg-red-100">
                     <template #icon>
                       <Icon name="icon-park-solid:close-one" size="16" />
                     </template>
@@ -478,6 +498,11 @@ const handleSettingsSelect = (key: string) => {
                       ? 'success'
                       : 'error'
                   "
+                  :class="
+                    data?.codeMetadataRequest?.citationStatus === 'valid'
+                      ? 'dark:bg-green-100 dark:text-green-600'
+                      : 'dark:bg-red-100 dark:text-red-600'
+                  "
                 >
                   <template #icon>
                     <Icon
@@ -485,6 +510,11 @@ const handleSettingsSelect = (key: string) => {
                         data?.codeMetadataRequest?.citationStatus === 'valid'
                           ? 'icon-park-solid:check-one'
                           : 'icon-park-solid:close-one'
+                      "
+                      :class="
+                        data?.codeMetadataRequest?.citationStatus === 'valid'
+                          ? 'dark:text-green-600'
+                          : ''
                       "
                       size="16"
                     />
@@ -520,6 +550,11 @@ const handleSettingsSelect = (key: string) => {
                       ? 'success'
                       : 'error'
                   "
+                  :class="
+                    data?.codeMetadataRequest?.codemetaStatus === 'valid'
+                      ? 'dark:bg-green-100 dark:text-green-600'
+                      : 'dark:bg-red-100 dark:text-red-600'
+                  "
                 >
                   <template #icon>
                     <Icon
@@ -527,6 +562,11 @@ const handleSettingsSelect = (key: string) => {
                         data?.codeMetadataRequest?.codemetaStatus === 'valid'
                           ? 'icon-park-solid:check-one'
                           : 'icon-park-solid:close-one'
+                      "
+                      :class="
+                        data?.codeMetadataRequest?.codemetaStatus === 'valid'
+                          ? 'dark:text-green-600'
+                          : ''
                       "
                       size="16"
                     />
@@ -658,10 +698,17 @@ const handleSettingsSelect = (key: string) => {
                   target="_blank"
                   class="cursor-pointer"
                 >
-                  <n-tag type="success" class="cursor-pointer">
-                    <template #icon
-                      ><Icon name="simple-icons:doi" size="16"
-                    /></template>
+                  <n-tag
+                    type="success"
+                    class="cursor-pointer dark:bg-green-100 dark:text-green-600"
+                  >
+                    <template #icon>
+                      <Icon
+                        class="dark:text-green-600"
+                        name="simple-icons:doi"
+                        size="16"
+                      />
+                    </template>
                     {{ data.zenodoDeposition.lastPublishedZenodoDoi }}
                     <Icon name="ri:external-link-line" size="13" />
                   </n-tag>
@@ -837,9 +884,16 @@ const handleSettingsSelect = (key: string) => {
             <div v-if="data?.codeOfConductValidation?.codeExists">
               <n-popover trigger="hover">
                 <template #trigger>
-                  <n-tag type="success">
+                  <n-tag
+                    type="success"
+                    class="dark:bg-green-100 dark:text-green-600"
+                  >
                     <template #icon>
-                      <Icon name="icon-park-solid:check-one" size="16" />
+                      <Icon
+                        class="dark:text-green-600"
+                        name="icon-park-solid:check-one"
+                        size="16"
+                      />
                     </template>
 
                     <span>
@@ -858,7 +912,7 @@ const handleSettingsSelect = (key: string) => {
             <div v-else>
               <n-popover trigger="hover">
                 <template #trigger>
-                  <n-tag type="error">
+                  <n-tag type="error" class="dark:bg-red-100">
                     <template #icon>
                       <Icon name="icon-park-solid:close-one" size="16" />
                     </template>
@@ -947,9 +1001,16 @@ const handleSettingsSelect = (key: string) => {
             <div v-if="data?.contributingValidation?.contribExists">
               <n-popover trigger="hover">
                 <template #trigger>
-                  <n-tag type="success">
+                  <n-tag
+                    type="success"
+                    class="dark:bg-green-100 dark:text-green-600"
+                  >
                     <template #icon>
-                      <Icon name="icon-park-solid:check-one" size="16" />
+                      <Icon
+                        class="dark:text-green-600"
+                        name="icon-park-solid:check-one"
+                        size="16"
+                      />
                     </template>
 
                     <span>
@@ -969,7 +1030,7 @@ const handleSettingsSelect = (key: string) => {
             <div v-else>
               <n-popover trigger="hover">
                 <template #trigger>
-                  <n-tag type="error">
+                  <n-tag type="error" class="dark:bg-red-100">
                     <template #icon>
                       <Icon name="icon-park-solid:close-one" size="16" />
                     </template>

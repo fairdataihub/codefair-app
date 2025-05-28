@@ -27,6 +27,11 @@ body {
 @layer base {
   
   :root {
+
+    .n-tag--closable {
+      --n-color: rgb(225, 225, 255) !important;
+      border-radius: 4px;
+    }
     --link-color: oklch(45.7% 0.24 277.023);
     --link-hover: oklch(49.1% 0.27 292.581);
     --dashboard-card: white;
@@ -105,6 +110,16 @@ body {
       background-color: white !important;
     }
 
+    .n-base-selection {
+      --n-color: #F9F9FA !important;
+    }
+
+    .n-tag--closable {
+      --n-color: rgb(185, 185, 236) !important;
+      border-radius: 4px;
+    }
+
+
     --n-item-text-color-active: var(--gray-600-400);
     --gray-700-200: oklch(96.7% 0.003 264.542);
     --gray-500-100: oklch(86.9% 0.022 252.894);
@@ -122,7 +137,8 @@ body {
     --stats-bg: oklch(1 0 0 / 20%);
     --blob-color-1: oklch(0.5735 0.2097 274.04 / 50%);
     --blob-color-2: oklch(0.6706 0.2047 309.1076010115387 / 50%);
-    --dashboard-card: oklch(55.1% 0.027 264.364);
+    /* --dashboard-card: oklch(55.1% 0.027 264.364); */
+    --dashboard-card: rgba(158, 164, 176, 0.8);
     --n-card-text: oklch(1 0 0);
     --n-card-bg: oklch(0.2795 0.0368 260.03);
     --gray-500-300: oklch(87.2% 0.01 258.338);

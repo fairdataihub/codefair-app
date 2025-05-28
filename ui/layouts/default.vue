@@ -336,7 +336,7 @@ const toggleMobileMenu = () => {
           <!-- Status Badge -->
           <div>
             <n-badge dot type="success" :show="true" :size="20">
-              <n-tag type="info">
+              <n-tag type="info" class="dark:bg-[#4068BF] dark:text-stone-100">
                 <NuxtLink
                   to="https://status.codefair.io/status/all"
                   target="_blank"
