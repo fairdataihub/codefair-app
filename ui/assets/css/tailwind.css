@@ -88,8 +88,21 @@ body {
   }
   
   .dark {
+
+    .n-input-wrapper {
+      background-color: white;
+    }
+
+    .md-editor-dark {
+      background-color: #171717;
+      --md-bk-color: #171717;
+    }
     .n-card {
       background-color: oklch(55.1% 0.027 264.364);
+    }
+
+    .n-input__input-el {
+      background-color: white !important;
     }
 
     --n-item-text-color-active: var(--gray-600-400);

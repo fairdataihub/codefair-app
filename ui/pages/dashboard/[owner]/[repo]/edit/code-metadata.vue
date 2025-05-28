@@ -466,7 +466,7 @@ const navigateToPR = () => {
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/50">
+            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/75">
               <n-form-item label="Software Name" path="name">
                 <n-input
                   v-model:value="formValue.name"
@@ -512,7 +512,7 @@ const navigateToPR = () => {
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/50">
+            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/75">
               <n-form-item
                 label="Authors"
                 path="authors"
@@ -534,7 +534,7 @@ const navigateToPR = () => {
                         : `Author ${index + 1}`
                     "
                     bordered
-                    class="!bg-[#f9fafb] dark:!bg-[#f9fafb]/50"
+                    class="!bg-[#f9fafb] dark:!bg-[#f9fafb]/75"
                   >
                     <template #header-extra>
                       <n-popconfirm @positive-click="removeAuthor(index)">
@@ -633,7 +633,7 @@ const navigateToPR = () => {
                         :key="roleIndex"
                         :title="role.role || `Role ${roleIndex + 1}`"
                         bordered
-                        class="mb-4 !bg-[#f9fafb] dark:!bg-[#f9fafb]/50"
+                        class="mb-4 !bg-[#f9fafb] dark:!bg-[#f9fafb]/75"
                       >
                         <template #header-extra>
                           <n-button
@@ -731,7 +731,7 @@ const navigateToPR = () => {
 
             <n-divider />
 
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/50">
+            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/75">
               <n-form-item
                 label="Contributors"
                 path="contributors"
@@ -747,7 +747,7 @@ const navigateToPR = () => {
                         : `Contributor ${index + 1}`
                     "
                     bordered
-                    class="!bg-[#f9fafb] dark:!bg-[#f9fafb]/50"
+                    class="!bg-[#f9fafb] dark:!bg-[#f9fafb]/75"
                   >
                     <template #header-extra>
                       <n-popconfirm @positive-click="removeContributor(index)">
@@ -846,7 +846,7 @@ const navigateToPR = () => {
                         :key="roleIndex"
                         :title="role.role || `Role ${roleIndex + 1}`"
                         bordered
-                        class="mb-4 !bg-[#f9fafb] dark:!bg-[#f9fafb]/50"
+                        class="mb-4 !bg-[#f9fafb] dark:!bg-[#f9fafb]/75"
                       >
                         <template #header-extra>
                           <n-button
@@ -959,9 +959,7 @@ const navigateToPR = () => {
           </template>
 
           <template #form>
-            <n-card
-              class="rounded-lg !bg-[#f9fafb] bg-[#f9fafb] dark:!bg-[#f9fafb]/50"
-            >
+            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/75">
               <n-form-item
                 label="Unique Identifier (DOI)"
                 path="uniqueIdentifier"
@@ -1023,7 +1021,7 @@ const navigateToPR = () => {
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/50">
+            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/75">
               <n-form-item label="Code Repository" path="codeRepository">
                 <n-input
                   v-model:value="formValue.codeRepository"
@@ -1071,7 +1069,7 @@ const navigateToPR = () => {
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/50">
+            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/75">
               <n-form-item
                 label="Programming Language"
                 path="programmingLanguages"
@@ -1135,7 +1133,7 @@ const navigateToPR = () => {
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/50">
+            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/75">
               <n-form-item label="Version Number" path="currentVersion">
                 <n-input
                   v-model:value="formValue.currentVersion"
@@ -1188,7 +1186,7 @@ const navigateToPR = () => {
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/50">
+            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/75">
               <n-form-item label="Development Status" path="developmentStatus">
                 <n-select
                   v-model:value="formValue.developmentStatus"

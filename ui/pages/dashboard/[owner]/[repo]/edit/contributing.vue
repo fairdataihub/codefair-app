@@ -4,6 +4,11 @@ import { MdEditor, config } from "md-editor-v3";
 import TargetBlankExtension from "@/utils/TargetBlankExtension";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 import contribJson from "@/assets/data/contributing.json";
+const colorMode = useColorMode();
+const isDark = computed({
+  get: () => colorMode.value === "dark",
+  set: (v) => (colorMode.preference = v ? "dark" : "light"),
+});
 
 config({
   editorConfig: {
@@ -171,11 +176,11 @@ const navigateToPR = () => {
 <template>
   <main class="pb-8">
     <section
-      class="mx-auto max-w-screen-xl rounded-md border-[1px] border-gray-200 bg-white p-8 shadow-md"
+      class="mx-auto max-w-screen-xl rounded-md border-[1px] border-gray-200 bg-white p-8 shadow-md dark:bg-slate-300"
     >
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">
-          <h1 class="text-2xl font-bold">
+          <h1 class="text-2xl font-bold dark:text-black">
             Edit CONTRIBUTING.md for
             <NuxtLink
               :to="`https://github.com/${owner}/${repo}`"
@@ -189,13 +194,13 @@ const navigateToPR = () => {
           <NuxtLink
             to="https://docs.codefair.io/docs/contributing.html"
             target="_blank"
-            class="text-blue-400 underline transition-all hover:text-blue-500"
+            class="font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
             >Need help?</NuxtLink
           >
         </div>
 
         <div class="border-b border-dashed py-2">
-          <p class="text-base">
+          <p class="text-base dark:text-gray-700">
             You can edit your CONTRIBUTING.md file here. The CONTRIBUTING.md
             file is a markdown file that contains information about your
             project. It is usually the first thing that users see when they
@@ -241,6 +246,7 @@ const navigateToPR = () => {
             <MdEditor
               v-model="contribContent"
               language="en-US"
+              :theme="isDark ? 'dark' : 'light'"
               :toolbars-exclude="[
                 'preview',
                 'fullscreen',

@@ -3,6 +3,7 @@ import sanitizeHtml from "sanitize-html";
 import { MdEditor, config } from "md-editor-v3";
 import TargetBlankExtension from "@/utils/TargetBlankExtension";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
+const colorMode = useColorMode();
 
 config({
   editorConfig: {
@@ -148,7 +149,7 @@ const navigateToPR = () => {
 <template>
   <main class="pb-8">
     <section
-      class="mx-auto max-w-screen-xl rounded-md border-[1px] border-gray-200 bg-white p-8 shadow-md"
+      class="mx-auto max-w-screen-xl rounded-md border-[1px] border-gray-200 bg-white p-8 shadow-md dark:bg-slate-300"
     >
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">
@@ -198,7 +199,9 @@ const navigateToPR = () => {
 
             <MdEditor
               v-model="readmeContent"
+              preview-theme="github"
               language="en-US"
+              :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
               :toolbars-exclude="[
                 'preview',
                 'fullscreen',
@@ -207,7 +210,6 @@ const navigateToPR = () => {
                 'github',
                 'catalog',
               ]"
-              preview-theme="github"
               :show-code-row-number="true"
               :sanitize="sanitize"
             />
