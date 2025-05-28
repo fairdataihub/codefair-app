@@ -12,7 +12,7 @@ breadcrumbsStore.hideBreadcrumbs();
 const statsList = ref<StatItem[]>([
   {
     id: "repositories-managed",
-    endValue: 4000,
+    endValue: 400,
     icon: "ri:git-repository-fill",
     startValue: 0,
     suffix: "+",
