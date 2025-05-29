@@ -10,7 +10,7 @@ breadcrumbsStore.hideBreadcrumbs();
   <section class="min-h-screen bg-purple-50">
     <!-- HERO SECTION: "FAIR Software" -->
     <section
-      class="relative overflow-hidden bg-gradient-to-b from-white to-codefair-light py-12 md:py-24"
+      class="relative overflow-hidden bg-gradient-to-b from-white to-codefair-light py-12 dark:from-gray-900 dark:to-codefair-grid md:py-24"
     >
       <!-- Grid pattern -->
       <UiInteractiveGridPattern
@@ -35,12 +35,12 @@ breadcrumbsStore.hideBreadcrumbs();
           class="mt-8 flex flex-col items-center text-center md:mt-0 md:w-1/2 md:items-start md:text-left"
         >
           <h1
-            class="mb-4 text-6xl font-extrabold leading-tight text-indigo-900 sm:text-5xl md:text-6xl"
+            class="mb-4 text-6xl font-extrabold leading-tight text-[var(--header-color)] sm:text-5xl md:text-6xl"
           >
             FAIR Software
           </h1>
 
-          <p class="font-onest text-gray-700 md:text-lg lg:text-xl">
+          <p class="font-onest text-[var(--text-color)] md:text-lg lg:text-xl">
             Making your research software FAIR doesn't have to be complicated!
             Embrace the guidelines and discover how Codefair can simplify the
             process.
@@ -54,18 +54,20 @@ breadcrumbsStore.hideBreadcrumbs();
       style="
         background: radial-gradient(
           circle at bottom,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
     >
       <div class="relative z-10 mx-auto max-w-screen-xl py-10 md:px-8">
         <div class="flex flex-col py-8">
-          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+          <h2
+            class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+          >
             What is a research software?
           </h2>
 
-          <p class="font-onest text-lg text-slate-800">
+          <p class="font-onest text-lg text-[var(--text-color)]">
             The commonly accepted definition of research software is “Any
             software created during the research process or for a research
             purpose.” It can come in many formats and could be developed for
@@ -96,19 +98,21 @@ breadcrumbsStore.hideBreadcrumbs();
       style="
         background: radial-gradient(
           circle at top,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
       class="px-4 md:px-0"
     >
       <div class="mx-auto max-w-screen-xl py-10 md:px-8">
         <div class="flex flex-col py-8">
-          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+          <h2
+            class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+          >
             What does making a research software FAIR mean?
           </h2>
 
-          <p class="text-lg text-slate-800">
+          <p class="text-lg text-[var(--text-color)]">
             The FAIR (Findable, Accessible, Interoperable, Reusable) Principles
             for Research Software (FAIR4RS Principles) are a set of high-level
             instructions established by the research software community to make
@@ -138,23 +142,25 @@ breadcrumbsStore.hideBreadcrumbs();
       style="
         background: radial-gradient(
           circle at top,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
       class="px-4 md:px-0"
     >
       <div class="mx-auto max-w-screen-xl py-10 md:px-8">
         <div class="flex flex-col py-8">
-          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+          <h2
+            class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+          >
             Why should you make your research software FAIR?
           </h2>
 
-          <p class="text-lg text-slate-800">
+          <p class="text-lg text-[var(--text-color)]">
             Making software reusable is critical for many reasons including:
           </p>
 
-          <ul class="list-inside list-disc text-lg text-slate-800">
+          <ul class="list-inside list-disc text-lg text-[var(--text-color)]">
             <li>Enable reproducible, transparent research</li>
 
             <li>Prevent duplicate effort</li>
@@ -162,12 +168,12 @@ breadcrumbsStore.hideBreadcrumbs();
             <li>Increase the pace of scientific discoveries and innovations</li>
           </ul>
 
-          <p class="pt-2 text-lg text-slate-800">
+          <p class="pt-2 text-lg text-[var(--text-color)]">
             In addition to promoting good software development practices, making
             software FAIR can also benefit you personally:
           </p>
 
-          <ol class="list-inside list-disc text-lg text-slate-800">
+          <ol class="list-inside list-disc text-lg text-[var(--text-color)]">
             <li>
               Gain recognition when your software is reused (proper citation)
             </li>
@@ -193,19 +199,21 @@ breadcrumbsStore.hideBreadcrumbs();
       style="
         background: radial-gradient(
           circle at center,
-          white 0%,
-          var(--codefair-light) 90%
+          var(--radial-start) 0%,
+          var(--radial-end) 90%
         );
       "
       class="px-4 md:px-0"
     >
       <div class="mx-auto max-w-screen-xl py-10 md:px-8">
         <div class="flex flex-col py-8">
-          <h2 class="mb-4 text-3xl font-bold text-indigo-900 sm:text-4xl">
+          <h2
+            class="mb-4 text-3xl font-bold text-[var(--header-color)] sm:text-4xl"
+          >
             What are the challenges of making software FAIR?
           </h2>
 
-          <p class="text-lg text-slate-800">
+          <p class="text-lg text-[var(--text-color)]">
             The FAIR4RS Principles, by design, are intended to provide a
             high-level framework for making software reusable and do not provide
             clear actionable instructions. Therefore, making software FAIR
@@ -217,12 +225,12 @@ breadcrumbsStore.hideBreadcrumbs();
         <!-- Solution 1: FAIR-BioRS guidelines -->
         <div class="flex flex-col py-8">
           <h2
-            class="mb-4 text-xl font-bold text-indigo-900 md:mb-4 md:text-3xl"
+            class="mb-4 text-xl font-bold text-[var(--header-color)] md:mb-4 md:text-3xl"
           >
             Solution 1: FAIR-BioRS guidelines
           </h2>
 
-          <p class="text-lg text-slate-800">
+          <p class="text-lg text-[var(--text-color)]">
             To fill this gap, we established the FAIR Biomedical Research
             Software (FAIR-BioRS) guidelines, which are clear, step-by-step
             instructions for making biomedical research software FAIR. Although
@@ -244,12 +252,12 @@ breadcrumbsStore.hideBreadcrumbs();
         <!-- Solution 2: Codefair -->
         <div class="flex flex-col py-8">
           <h2
-            class="mb-4 text-xl font-bold text-indigo-900 md:mb-4 md:text-3xl"
+            class="mb-4 text-xl font-bold text-[var(--header-color)] md:mb-4 md:text-3xl"
           >
             Solution 2: Codefair
           </h2>
 
-          <p class="text-lg text-slate-800">
+          <p class="text-lg text-[var(--text-color)]">
             While these guidelines are designed to be easy to follow, they can
             still be time-consuming to implement (we experienced this
             firsthand). That's why we developed Codefair: to make software FAIR

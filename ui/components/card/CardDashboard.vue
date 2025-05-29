@@ -15,7 +15,7 @@ const slots = useSlots();
 
 <template>
   <div
-    class="flex w-full gap-4 rounded-lg border border-slate-200 bg-white px-5 py-6 shadow-sm"
+    class="flex w-full gap-4 rounded-lg border border-slate-200 bg-[var(--dashboard-card)] px-5 py-6 shadow-sm"
   >
     <div>
       <slot name="icon"></slot>
@@ -31,7 +31,10 @@ const slots = useSlots();
 
             <slot v-else name="title"></slot>
 
-            <p v-if="!slots.subheader" class="text-sm text-slate-500">
+            <p
+              v-if="!slots.subheader"
+              class="text-sm text-[var(--gray-700-200)]"
+            >
               {{ subheader }}
             </p>
 

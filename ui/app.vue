@@ -16,19 +16,62 @@
 </template>
 
 <script setup lang="ts">
-import { pastelTheme } from "notivue";
+import { computed } from "vue";
+// import { useColorMode } from "@nuxtjs/color-mode";
 import { NConfigProvider, type GlobalThemeOverrides } from "naive-ui";
+import { pastelTheme } from "notivue";
 
-const themeOverrides: GlobalThemeOverrides = {
+const colorMode = useColorMode();
+
+const themeOverrides = computed<GlobalThemeOverrides>(() => ({
+  Alert: {
+    colorInfo:
+      colorMode.value === "dark"
+        ? "oklch(54.6% 0.245 262.881 / 50%)"
+        : "#EDF5FE",
+    contentTextColorInfo: colorMode.value === "dark" ? "#FFFFFF" : "#1E3A8A",
+    iconColorInfo: colorMode.value === "dark" ? "#FFFFFF" : "#2080F0",
+    titleTextColorInfo: colorMode.value === "dark" ? "#FFFFFF" : "#1E40AF",
+  },
   common: {
-    // primaryColor: "#898CF3",
-    primaryColor: "#6366f1",
-    primaryColorHover: "#4F46E5",
-    // primaryColorHover: "#6074aa",
-    primaryColorPressed: "#c7d6ff",
+    primaryColor: colorMode.value === "dark" ? "#4F46E5" : "#6366f1",
+    primaryColorHover: colorMode.value === "dark" ? "#7C3AED" : "#4F46E5",
+    primaryColorPressed: colorMode.value === "dark" ? "#312E81" : "#c7d6ff",
     primaryColorSuppl: "#0ea5e9",
   },
-};
+  Dropdown: {
+    color: colorMode.value === "dark" ? "oklch(98.5% 0.001 106.423)" : "white",
+    optionColorHover:
+      colorMode.value === "dark"
+        ? "oklch(92.9% 0.013 255.508)"
+        : "oklch(92.9% 0.013 255.508)",
+    textColor: colorMode.value === "dark" ? "dark" : "light",
+  },
+  DynamicInput: {
+    color: colorMode.value === "dark" ? "#1e293b" : "#f8fafc",
+  },
+  Input: {
+    color: colorMode.value === "dark" ? "#1e293b" : "white",
+    placeholderColor:
+      colorMode.value === "dark" ? "oklch(87.2% 0.01 258.338)" : "#9ca3af",
+  },
+  Menu: {
+    color: colorMode.value === "dark" ? "oklch(70.4% 0.04 256.788)" : "white",
+    optionColorHover:
+      colorMode.value === "dark"
+        ? "oklch(92.9% 0.013 255.508)"
+        : "oklch(86.9% 0.022 252.894)",
+    textColor: colorMode.value === "dark" ? "dark" : "light",
+  },
+  Tag: {
+    closeIconColorSuccess: "oklch(79.2% 0.209 151.711)",
+    colorInfo: colorMode.value === "dark" ? "#f0f9ff" : "#EFF6FF",
+    textColorError: colorMode.value === "dark" ? "#f03" : "#d03050",
+    textColorInfo: colorMode.value === "dark" ? "#0c4a6e" : "#1E40AF",
+    textColorSuccess:
+      colorMode.value === "dark" ? "oklch(79.2% 0.209 151.711)" : "#18a058",
+  },
+}));
 
 useHead({
   title: "Codefair",
