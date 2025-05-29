@@ -333,11 +333,11 @@ const countupOptions: CountUpOptions = {
         >
           <!-- Floating blobs -->
           <div
-            class="absolute -right-16 -top-16 h-48 w-48 animate-float-item rounded-full bg-[var(--blob-color-1)] mix-blend-multiply"
+            class="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[var(--blob-color-1)] mix-blend-multiply"
           ></div>
 
           <div
-            class="absolute -bottom-16 -left-16 h-48 w-48 animate-float-item rounded-full bg-[var(--blob-color-2)] mix-blend-multiply"
+            class="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[var(--blob-color-2)] mix-blend-multiply"
           ></div>
 
           <dl class="relative grid grid-cols-1 gap-8 md:grid-cols-2">
