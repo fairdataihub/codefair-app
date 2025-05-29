@@ -320,8 +320,8 @@ const countupOptions: CountUpOptions = {
     <section
       style="
         background: radial-gradient(
-          circle at center,
-          var(--radial-start) 10%,
+          circle at top,
+          var(--radial-start) 0%,
           var(--radial-end) 90%
         );
       "
@@ -382,7 +382,7 @@ const countupOptions: CountUpOptions = {
     <section
       style="
         background: radial-gradient(
-          circle at top,
+          circle at bottom,
           var(--radial-start) 0%,
           var(--radial-end) 90%
         );
@@ -443,9 +443,9 @@ const countupOptions: CountUpOptions = {
     <section
       style="
         background: radial-gradient(
-          circle at center,
+          circle at top,
           var(--radial-start) 0%,
-          var(--radial-end) 80%
+          var(--radial-end) 90%
         );
       "
       class="p-8 md:py-16"

@@ -29,8 +29,10 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
       colorMode.value === "dark"
         ? "oklch(54.6% 0.245 262.881 / 50%)"
         : "#EDF5FE",
+    colorWarning: colorMode.value === "dark" ? "#FBBF24" : "#FEF3C7",
     contentTextColorInfo: colorMode.value === "dark" ? "#FFFFFF" : "#1E3A8A",
     iconColorInfo: colorMode.value === "dark" ? "#FFFFFF" : "#2080F0",
+    iconColorWarning: colorMode.value === "dark" ? "#000000" : "#F59E0B",
     titleTextColorInfo: colorMode.value === "dark" ? "#FFFFFF" : "#1E40AF",
   },
   common: {
@@ -51,7 +53,7 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
     color: colorMode.value === "dark" ? "#1e293b" : "#f8fafc",
   },
   Input: {
-    color: colorMode.value === "dark" ? "#1e293b" : "white",
+    // color: colorMode.value === "dark" ? "#1e293b" : "white",
     placeholderColor:
       colorMode.value === "dark" ? "oklch(87.2% 0.01 258.338)" : "#9ca3af",
   },
