@@ -414,7 +414,7 @@ const navigateToPR = () => {
     "
   >
     <div
-      class="mx-auto mb-4 max-w-screen-xl rounded border-[1px] border-gray-200 bg-white p-8 shadow-md dark:bg-[var(--dashboard-card)]"
+      class="mx-auto mb-4 max-w-screen-xl rounded border-[1px] border-gray-200 bg-white p-8 shadow-md dark:bg-gray-400"
     >
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">

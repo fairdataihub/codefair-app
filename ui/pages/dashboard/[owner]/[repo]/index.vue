@@ -811,9 +811,14 @@ const handleSettingsSelect = (key: string) => {
             <n-tag
               v-else-if="data?.cwlValidation?.overallStatus === 'invalid'"
               type="error"
+              class="dark:bg-red-100 dark:text-red-600"
             >
               <template #icon>
-                <Icon name="icon-park-solid:close-one" size="16" />
+                <Icon
+                  class="dark:text-red-600"
+                  name="icon-park-solid:close-one"
+                  size="16"
+                />
               </template>
               Invalid CWL file(s)
             </n-tag>
