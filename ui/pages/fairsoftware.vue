@@ -141,7 +141,7 @@ breadcrumbsStore.hideBreadcrumbs();
     <section
       style="
         background: radial-gradient(
-          circle at top,
+          circle at bottom,
           var(--radial-start) 0%,
           var(--radial-end) 90%
         );
@@ -198,7 +198,7 @@ breadcrumbsStore.hideBreadcrumbs();
     <section
       style="
         background: radial-gradient(
-          circle at center,
+          circle at top,
           var(--radial-start) 0%,
           var(--radial-end) 90%
         );

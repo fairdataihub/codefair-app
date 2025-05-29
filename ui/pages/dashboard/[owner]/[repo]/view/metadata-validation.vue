@@ -37,10 +37,12 @@ if (error.value) {
 
 <template>
   <main class="pb-8">
-    <main class="mx-auto max-w-screen-xl rounded-md bg-white p-8 shadow-md">
+    <main
+      class="mx-auto max-w-screen-xl rounded-md bg-white p-8 shadow-md dark:bg-gray-100"
+    >
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">
-          <h1 class="text-2xl font-bold">
+          <h1 class="text-2xl font-bold dark:text-black">
             View Metadata Validation for
             <NuxtLink
               :to="`https://github.com/${owner}/${repo}`"
@@ -54,13 +56,13 @@ if (error.value) {
           <NuxtLink
             to="https://docs.codefair.io/docs/metadata-validation.html"
             target="_blank"
-            class="text-blue-400 underline transition-all hover:text-blue-500"
+            class="font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
             >Need help?</NuxtLink
           >
         </div>
 
         <div class="border-b border-dashed py-2">
-          <p class="text-base">
+          <p class="text-base dark:text-gray-700">
             Metadata validation is a process that ensures both CITATION.cff and
             codemeta.json files are valid against the Codefair validator. The
             validation process checks for the presence of required fields and

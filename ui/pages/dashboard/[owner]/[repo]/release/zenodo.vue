@@ -812,7 +812,7 @@ onBeforeUnmount(() => {
 
             <n-flex
               v-if="license.id && license.id !== 'Custom'"
-              class="border p-2"
+              class="border p-2 dark:bg-indigo-300 dark:text-black"
               align="center"
             >
               <Icon name="tabler:license" size="24" />
@@ -855,8 +855,10 @@ onBeforeUnmount(() => {
               :disabled="license.id === 'Custom'"
               @update:checked="(val: any) => (licenseChecked = val)"
             >
-              I have added and reviewed the license file that is required for
-              the repository to be released on Zenodo.
+              <span class="dark:text-gray-200">
+                I have added and reviewed the license file that is required for
+                the repository to be released on Zenodo.
+              </span>
             </n-checkbox>
           </div>
         </template>
@@ -896,11 +898,13 @@ onBeforeUnmount(() => {
             </p>
 
             <n-checkbox v-model:checked="metadataChecked">
-              I have added and reviewed the <code> citation.CFF </code>
-              and
-              <code> codemeta.json </code>
-              files. I have verified that the content of these files are correct
-              and up-to-date.
+              <span class="dark:text-gray-200">
+                I have added and reviewed the <code> citation.CFF </code>
+                and
+                <code> codemeta.json </code>
+                files. I have verified that the content of these files are
+                correct and up-to-date.
+              </span>
             </n-checkbox>
           </div>
         </template>
@@ -990,6 +994,7 @@ onBeforeUnmount(() => {
                   <n-input
                     v-model:value="githubFormValue.tagTitle"
                     clearable
+                    class="dark:bg-slate-100"
                     placeholder="v1.0.0"
                   />
                 </n-form-item>
@@ -1047,6 +1052,7 @@ onBeforeUnmount(() => {
                     v-if="!zenodoDraftIsReadyForRelease"
                     secondary
                     type="primary"
+                    class="dark:bg-indigo-300"
                     @click="zenodoDraftIsReadyForRelease = true"
                   >
                     <template #icon>
@@ -1080,6 +1086,7 @@ onBeforeUnmount(() => {
                     :loading="createDraftGithubReleaseSpinner"
                     secondary
                     type="primary"
+                    class="dark:bg-indigo-300"
                     @click="createDraftGithubRelease"
                   >
                     <template #icon>
@@ -1246,7 +1253,10 @@ onBeforeUnmount(() => {
                     </n-radio-group>
                   </n-form-item>
 
-                  <n-button @click="validateZenodoForm">
+                  <n-button
+                    class="dark:text-slate-100 dark:hover:border-indigo-200"
+                    @click="validateZenodoForm"
+                  >
                     Confirm metadata
                   </n-button>
                 </n-form>

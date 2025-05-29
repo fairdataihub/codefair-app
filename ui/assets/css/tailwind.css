@@ -123,10 +123,10 @@ body {
     --n-item-text-color-active: var(--gray-600-400);
     --gray-700-200: oklch(96.7% 0.003 264.542);
     --gray-500-100: oklch(86.9% 0.022 252.894);
-    .n-input {
+    /* .n-input {
       background-color: oklch(98.5% 0.001 106.423);
       mix-blend-mode: multiply;
-    }
+    } */
 
     /* .n-card .span {
       color: var(--n-card-text);
