@@ -34,15 +34,15 @@ if (error.value) {
 </script>
 
 <template>
-  <main class="mx-auto max-w-screen-xl bg-white p-8">
+  <main class="mx-auto max-w-screen-xl bg-white p-8 dark:bg-gray-100">
     <n-flex vertical size="large" class="pb-5">
       <div class="flex flex-row justify-between">
-        <h1 class="text-2xl font-bold">
+        <h1 class="text-2xl font-bold dark:text-black">
           View CWL Validation for
           <NuxtLink
             :to="`https://github.com/${owner}/${repo}`"
             target="_blank"
-            class="text-blue-500 underline transition-all hover:text-blue-600"
+            class="text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
           >
             {{ repo }}
           </NuxtLink>
@@ -51,13 +51,13 @@ if (error.value) {
         <NuxtLink
           to="https://docs.codefair.io/docs/cwl-validation.html"
           target="_blank"
-          class="text-blue-400 underline transition-all hover:text-blue-500"
+          class="font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
           >Need help?</NuxtLink
         >
       </div>
 
       <div class="border-b border-dashed py-2">
-        <p class="text-base">
+        <p class="text-base dark:text-gray-700">
           CWL is an open standard for describing how to run command line tools
           and connect them together in workflows. It is used by various workflow
           engines to execute scientific workflows. The CWL validation process

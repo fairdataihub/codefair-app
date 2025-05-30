@@ -275,7 +275,7 @@ const navigateToPR = () => {
 
 <template>
   <main class="pb-8">
-    <section class="mx-auto bg-white rounded-md border-[1px] border-gray-200 shadow-md max-w-screen-xl p-8">
+    <section class="mx-auto bg-white rounded-md border-[1px] border-gray-200 shadow-md max-w-screen-xl p-8 dark:bg-gray-100">
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">
           <h1 class="text-2xl font-bold dark:text-black">

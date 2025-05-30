@@ -183,7 +183,7 @@ const navigateToPR = () => {
             <NuxtLink
               :to="`https://github.com/${owner}/${repo}`"
               target="_blank"
-              class="text-blue-500 underline transition-all hover:text-blue-600"
+              class="text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
             >
               {{ repo }}
             </NuxtLink>
