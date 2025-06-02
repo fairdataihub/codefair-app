@@ -166,7 +166,7 @@ const handleSettingsSelect = (key: string) => {
 
             <!-- Repository Name and Link -->
             <div class="flex max-w-[14rem] flex-col">
-              <span class="text-base text-[--gray-700-200]">
+              <span class="text-base text-[var(--gray-700-200)]">
                 {{ repo.repo }}
               </span>
 
