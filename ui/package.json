@@ -70,7 +70,7 @@
     "@nuxtjs/eslint-config-typescript": "12.1.0",
     "@nuxtjs/google-fonts": "3.2.0",
     "@nuxtjs/tailwindcss": "6.12.0",
-    "@tailwindcss/typography": "0.5.13",
+    "@tailwindcss/typography": "0.5.16",
     "@types/doi-regex": "^0.1.3",
     "@types/sanitize-html": "2.11.0",
     "autoprefixer": "^10.4.21",
