@@ -216,13 +216,15 @@ export default defineEventHandler(async (event) => {
       const matchingRelease = githubReleasesJson.find(
         (release: any) => release.tag_name === tag.name,
       );
-      const isReleased = matchingRelease ? matchingRelease.draft : false;
+
+      // A tag is "released" only if there's a matching non-draft release
+      const released = Boolean(matchingRelease && !matchingRelease.draft);
 
       tagMap.set(tag.name, {
         name: tag.name,
         commit: { sha: tag.commit.sha, url: tag.commit.url },
         node_id: tag.node_id,
-        released: !isReleased,
+        released,
         tarballUrl: tag.tarball_url,
         zipballUrl: tag.zipball_url,
       });
@@ -230,7 +232,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Sort tags and releases by name
-  githubReleases.sort((a, b) => a.name.localeCompare(b.name));
+  githubReleases.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
   // Convert the map back to an array
   const githubTags = Array.from(tagMap.values());
