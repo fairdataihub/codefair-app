@@ -298,7 +298,7 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
   } catch (error) {
     // Update the issue with the new body
     // Update the GitHub issue with a status report
-    const afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ❌\n***${tagVersion}*** of your software was not successfully released on GitHub and archived on Zenodo. There was an error during the publication process. Please try again later or reach out to the Codefair team for additional help.`;
+    let afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ❌\n***${tagVersion}*** of your software was not successfully released on GitHub and archived on Zenodo. There was an error during the publication process. Please try again later or reach out to the Codefair team for additional help.`;
     const contributing = await checkForContributingFile(
       context,
       owner,
@@ -308,7 +308,7 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
     const subjects = { contributing, cofc };
     afterUploadString = await applyAdditionalChecksTemplate(
       subjects,
-      baseTemplate,
+      afterUploadString,
       repository,
       owner,
       context
