@@ -269,7 +269,7 @@ const handleSettingsSelect = (key: string) => {
             <div v-else>
               <n-popover trigger="hover">
                 <template #trigger>
-                  <n-tag type="error" class="dark:bg-red-100">
+                  <n-tag type="error" class="dark:bg-red-100 dark:text-red-600">
                     <template #icon>
                       <Icon name="icon-park-solid:close-one" size="16" />
                     </template>
@@ -382,7 +382,10 @@ const handleSettingsSelect = (key: string) => {
                 trigger="hover"
               >
                 <template #trigger>
-                  <n-tag type="warning">
+                  <n-tag
+                    type="warning"
+                    class="dark:bg-yellow-100 dark:text-yellow-600"
+                  >
                     <template #icon>
                       <Icon name="ic:round-warning" size="16" />
                     </template>
@@ -396,7 +399,7 @@ const handleSettingsSelect = (key: string) => {
               <n-tag
                 v-if="data?.licenseRequest?.licenseId === 'Custom'"
                 type="warning"
-                class="ml-2"
+                class="ml-2 dark:bg-yellow-100 dark:text-yellow-600"
               >
                 <template #icon>
                   <Icon name="ic:round-warning" size="16" />
@@ -408,7 +411,7 @@ const handleSettingsSelect = (key: string) => {
             <div v-else>
               <n-popover trigger="hover">
                 <template #trigger>
-                  <n-tag type="error" class="dark:bg-red-100">
+                  <n-tag type="error" class="dark:bg-red-100 dark:text-red-600">
                     <template #icon>
                       <Icon name="icon-park-solid:close-one" size="16" />
                     </template>
@@ -727,7 +730,10 @@ const handleSettingsSelect = (key: string) => {
               "
               class="flex flex-wrap space-x-2"
             >
-              <n-tag type="warning">
+              <n-tag
+                type="warning"
+                class="dark:bg-yellow-100 dark:text-yellow-600"
+              >
                 <template #icon
                   ><Icon name="ic:round-warning" size="16"
                 /></template>
@@ -739,6 +745,7 @@ const handleSettingsSelect = (key: string) => {
               <n-tag
                 v-if="data?.zenodoDeposition?.zenodoStatus === 'inProgress'"
                 type="info"
+                class="dark:bg-blue-100 dark:text-blue-600"
               >
                 <template #icon
                   ><Icon name="icon-park-solid:loading-three" size="16"
@@ -749,6 +756,7 @@ const handleSettingsSelect = (key: string) => {
               <n-tag
                 v-else-if="data?.zenodoDeposition?.zenodoStatus === 'error'"
                 type="error"
+                class="dark:bg-red-100 dark:text-red-600"
               >
                 <template #icon>
                   <Icon name="icon-park-solid:close-one" size="16" />
@@ -801,6 +809,7 @@ const handleSettingsSelect = (key: string) => {
             <n-tag
               v-if="data?.cwlValidation?.overallStatus === 'valid'"
               type="success"
+              class="dark:bg-green-100 dark:text-green-600"
             >
               <template #icon>
                 <Icon name="icon-park-solid:check-one" size="16" />
@@ -917,7 +926,7 @@ const handleSettingsSelect = (key: string) => {
             <div v-else>
               <n-popover trigger="hover">
                 <template #trigger>
-                  <n-tag type="error" class="dark:bg-red-100">
+                  <n-tag type="error" class="dark:bg-red-100 dark:text-red-600">
                     <template #icon>
                       <Icon name="icon-park-solid:close-one" size="16" />
                     </template>
@@ -1035,7 +1044,7 @@ const handleSettingsSelect = (key: string) => {
             <div v-else>
               <n-popover trigger="hover">
                 <template #trigger>
-                  <n-tag type="error" class="dark:bg-red-100">
+                  <n-tag type="error" class="dark:bg-red-100 dark:text-red-600">
                     <template #icon>
                       <Icon name="icon-park-solid:close-one" size="16" />
                     </template>

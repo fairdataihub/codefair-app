@@ -87,11 +87,13 @@ const toggleMobileMenu = () => {
 
                 <template #default>
                   <div class="w-48 text-center">
-                    <p class="text-sm font-semibold text-indigo-900">
+                    <p
+                      class="text-sm font-semibold text-indigo-900 dark:text-indigo-200"
+                    >
                       Documentation
                     </p>
 
-                    <p class="text-xs text-gray-500">
+                    <p class="text-xs text-gray-500 dark:text-gray-100">
                       Explore the documentation for Codefair.
                       <Icon
                         name="mdi:emoji-robot-happy"
@@ -116,11 +118,13 @@ const toggleMobileMenu = () => {
 
                 <template #default>
                   <div class="w-48 text-center">
-                    <p class="text-sm font-semibold text-indigo-900">
+                    <p
+                      class="text-sm font-semibold text-indigo-900 dark:text-indigo-200"
+                    >
                       GitHub Repository
                     </p>
 
-                    <p class="text-xs text-gray-500">
+                    <p class="text-xs text-gray-500 dark:text-gray-100">
                       View the source code and contribute to the project!
                       <Icon
                         name="mdi:emoji-robot-happy"

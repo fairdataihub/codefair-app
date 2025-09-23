@@ -152,7 +152,7 @@ const handleSettingsSelect = (key: string) => {
         <n-card
           v-for="repo in filteredRepos"
           :key="repo.repositoryId"
-          class="mb-2 rounded-md bg-white p-4 shadow-md"
+          class="mb-2 rounded-md p-4 shadow-md"
         >
           <div
             class="grid grid-cols-[3rem_auto_5px_40rem_150px] items-center gap-4"

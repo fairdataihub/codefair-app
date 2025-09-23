@@ -799,7 +799,7 @@ onBeforeUnmount(() => {
           <div class="flex w-full flex-col space-y-3">
             <n-flex
               v-if="license.id && license.customLicenseTitle != ''"
-              class="border p-2"
+              class="border p-2 dark:bg-indigo-300 dark:text-black"
               align="center"
             >
               <Icon name="tabler:license" size="24" />
@@ -933,7 +933,12 @@ onBeforeUnmount(() => {
 
           <template #header-extra>
             <div v-if="showGithubReleaseIsDraftStausBadge">
-              <n-tag v-if="githubReleaseIsDraft" type="success" size="small">
+              <n-tag
+                v-if="githubReleaseIsDraft"
+                type="success"
+                size="small"
+                class="dark:bg-green-100 dark:text-green-600"
+              >
                 Github release is in draft state
                 <template #icon>
                   <Icon
@@ -946,7 +951,12 @@ onBeforeUnmount(() => {
                 </template>
               </n-tag>
 
-              <n-tag v-else type="error" size="small">
+              <n-tag
+                v-else
+                type="error"
+                size="small"
+                class="dark:bg-red-100 dark:text-red-600"
+              >
                 Github release is not in draft state
                 <template #icon>
                   <Icon

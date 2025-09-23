@@ -414,7 +414,7 @@ const navigateToPR = () => {
     "
   >
     <div
-      class="mx-auto mb-4 max-w-screen-xl rounded border-[1px] border-gray-200 bg-white p-8 shadow-md dark:bg-gray-400"
+      class="mx-auto mb-4 max-w-screen-xl rounded border-[1px] border-gray-200 bg-white p-8 shadow-md dark:bg-gray-600"
     >
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">
@@ -423,7 +423,7 @@ const navigateToPR = () => {
             <NuxtLink
               :to="`https://github.com/${owner}/${repo}`"
               target="_blank"
-              class="text-blue-500 underline transition-all hover:text-blue-600 dark:text-blue-700 dark:hover:text-blue-300"
+              class="text-blue-500 underline transition-all hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
             >
               {{ repo }}
             </NuxtLink>
@@ -432,7 +432,7 @@ const navigateToPR = () => {
           <NuxtLink
             to="https://docs.codefair.io/docs/metadata.html#metadata-editor"
             target="_blank"
-            class="font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)] dark:text-indigo-300 dark:hover:text-purple-700"
+            class="font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)] dark:text-indigo-300 dark:hover:text-indigo-400"
             >Need help?</NuxtLink
           >
         </div>
@@ -461,14 +461,14 @@ const navigateToPR = () => {
             <n-space vertical size="large" class="pr-6">
               <h2 class="dark:text-gray-900">Basic Information</h2>
 
-              <p class="dark:text-gray-600">
+              <p class="dark:text-gray-200">
                 General information of the repository.
               </p>
             </n-space>
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/90">
+            <n-card class="rounded-lg">
               <n-form-item label="Software Name" path="name">
                 <n-input
                   v-model:value="formValue.name"
@@ -507,14 +507,14 @@ const navigateToPR = () => {
             <n-space vertical size="large" class="pr-6 dark:text-gray-200">
               <h2 class="dark:text-gray-900">Authors and Contributors</h2>
 
-              <p class="dark:text-gray-600">
+              <p class="dark:text-gray-200">
                 Information about the authors and contributors of the software.
               </p>
             </n-space>
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/75">
+            <n-card class="rounded-lg">
               <n-form-item
                 label="Authors"
                 path="authors"
@@ -536,7 +536,6 @@ const navigateToPR = () => {
                         : `Author ${index + 1}`
                     "
                     bordered
-                    class="!bg-[#f9fafb] dark:!bg-[#f9fafb]/75"
                   >
                     <template #header-extra>
                       <n-popconfirm @positive-click="removeAuthor(index)">
@@ -635,7 +634,7 @@ const navigateToPR = () => {
                         :key="roleIndex"
                         :title="role.role || `Role ${roleIndex + 1}`"
                         bordered
-                        class="mb-4 !bg-[#f9fafb] dark:!bg-[#f9fafb]/75"
+                        class="mb-4"
                       >
                         <template #header-extra>
                           <n-button
@@ -733,7 +732,7 @@ const navigateToPR = () => {
 
             <n-divider />
 
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/75">
+            <n-card class="rounded-lg">
               <n-form-item
                 label="Contributors"
                 path="contributors"
@@ -953,7 +952,7 @@ const navigateToPR = () => {
             <n-space vertical size="large" class="pr-6">
               <h2 class="dark:text-gray-900">Discoverability</h2>
 
-              <p class="dark:text-gray-600">
+              <p class="dark:text-gray-200">
                 Information to help users discover the software in the
                 repository.
               </p>
@@ -961,7 +960,7 @@ const navigateToPR = () => {
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/90">
+            <n-card class="rounded-lg">
               <n-form-item
                 label="Unique Identifier (DOI)"
                 path="uniqueIdentifier"
@@ -1016,14 +1015,14 @@ const navigateToPR = () => {
             <n-space vertical size="large" class="pr-6">
               <h2 class="dark:text-gray-900">Development Community</h2>
 
-              <p class="dark:text-gray-600">
+              <p class="dark:text-gray-200">
                 Information about the development community of the software.
               </p>
             </n-space>
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/90">
+            <n-card class="rounded-lg">
               <n-form-item label="Code Repository" path="codeRepository">
                 <n-input
                   v-model:value="formValue.codeRepository"
@@ -1063,7 +1062,7 @@ const navigateToPR = () => {
             <n-space vertical size="large" class="pr-6">
               <h2 class="dark:text-gray-900">Software Requirements</h2>
 
-              <p class="dark:text-gray-600">
+              <p class="dark:text-gray-200">
                 Information about the run-time environment required to run the
                 software.
               </p>
@@ -1071,9 +1070,9 @@ const navigateToPR = () => {
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/90">
+            <n-card class="rounded-lg">
               <n-form-item
-                label="Programming Language"
+                label="Programming Languages"
                 path="programmingLanguages"
               >
                 <n-select
@@ -1128,14 +1127,14 @@ const navigateToPR = () => {
           <template #info>
             <h2 class="dark:text-gray-900">Current version of the software</h2>
 
-            <p class="dark:text-gray-600">
+            <p class="dark:text-gray-200">
               Information about the current version of the software and its
               release notes.
             </p>
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/90">
+            <n-card class="rounded-lg">
               <n-form-item label="Version Number" path="currentVersion">
                 <n-input
                   v-model:value="formValue.currentVersion"
@@ -1183,14 +1182,14 @@ const navigateToPR = () => {
             <n-space vertical size="large" class="pr-6">
               <h2 class="dark:text-gray-900">Additional Information</h2>
 
-              <p class="dark:text-gray-600">
+              <p class="dark:text-gray-200">
                 Additional information about the software.
               </p>
             </n-space>
           </template>
 
           <template #form>
-            <n-card class="rounded-lg !bg-[#f9fafb] dark:!bg-[#f9fafb]/90">
+            <n-card class="rounded-lg">
               <n-form-item label="Development Status" path="developmentStatus">
                 <n-select
                   v-model:value="formValue.developmentStatus"
