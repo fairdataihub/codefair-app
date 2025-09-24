@@ -865,7 +865,7 @@ export async function disableCodefairOnRepo(context) {
       data: {
         disabled: true,
         issue_number:
-          context.payload.issue === "deleted"
+          context.payload.action === "deleted"
             ? null
             : installation.issue_number,
       },
