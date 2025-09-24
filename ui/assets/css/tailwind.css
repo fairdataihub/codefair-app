@@ -99,12 +99,16 @@ body {
     --cf-datepicker-panel-divider: oklch(90% 0.01 260);
     --cf-datepicker-panel-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
     --cf-datepicker-item-text: oklch(35% 0.02 260);
-    --cf-datepicker-item-text-active: oklch(22.401% 0.02466 256.481);
+    --cf-datepicker-item-text-active: oklch(100% 0.00011 271.152);
     --cf-datepicker-item-text-current: oklch(38% 0.18 277);
     --cf-datepicker-item-hover-bg: oklch(94% 0.01 260);
     --cf-datepicker-item-active-bg: oklch(87% 0.02 260);
     --cf-datepicker-item-included-bg: oklch(92% 0.03 265);
     --cf-datepicker-icon: oklch(45% 0.02 260);
+
+    .n-date-panel-month__text  {
+      color: oklch(94.639% 0.00144 285.253) !important;
+    }
 
     --cf-collapse-header-bg: oklch(96% 0.01 260);
     --cf-collapse-header-bg-hover: oklch(94% 0.01 260);
@@ -269,6 +273,7 @@ body {
     --gray-500-100: oklch(86.9% 0.022 252.894);
 
     --cf-primary: #4f46e5;
+    --cf-date-text: #7069f0;
     --cf-primary-hover: #6366f1;
     --cf-primary-pressed: #312e81;
     --cf-primary-suppl: #0ea5e9;
@@ -283,7 +288,7 @@ body {
 
     --cf-divider: oklch(34% 0.02 260);
 
-    --cf-popover-bg: oklch(27% 0.02 260);
+    --cf-popover-bg: oklch(35.796% 0.02136 259.424);
     --cf-popover-text: oklch(92% 0.01 260);
     --cf-popover-divider: oklch(38% 0.02 260);
     --cf-popover-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
@@ -309,6 +314,13 @@ body {
     --cf-menu-item-text: oklch(90% 0.01 260);
     --cf-menu-item-text-hover: oklch(98% 0.01 260);
     --cf-menu-item-text-active: oklch(98% 0.01 260);
+
+    --cf-modal-bg: oklch(27% 0.02 260);
+    --cf-modal-header-bg: oklch(22% 0.02 260);
+    --cf-modal-header-text: oklch(92% 0.01 260);
+    --cf-modal-text: oklch(90% 0.01 260);
+    --cf-modal-border: oklch(38% 0.02 260);
+    --cf-modal-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 
     --cf-dropdown-bg: oklch(27% 0.02 260);
     --cf-dropdown-divider: oklch(38% 0.02 260);
@@ -344,6 +356,8 @@ body {
     --cf-datepicker-item-active-bg: oklch(36% 0.02 260);
     --cf-datepicker-item-included-bg: oklch(34% 0.05 265);
     --cf-datepicker-icon: oklch(82% 0.02 260);
+    --cf-datepicker-item-hover-bg: oklch(30% 0.02 260);
+    --cf-calendar-title-text-color: oklch(92% 0.01 260);
 
     --cf-collapse-header-bg: oklch(20% 0.02 260);
     --cf-collapse-header-bg-hover: oklch(25% 0.02 260);
@@ -465,6 +479,14 @@ body {
 
   .h0 {
     @apply font-inter text-3xl font-bold md:text-5xl;
+  }
+
+  .footer-gradient {
+    background: radial-gradient(
+    circle at bottom,
+    var(--radial-start) 0%,
+    var(--radial-end) 90%
+  );
   }
 
   h1,

@@ -94,7 +94,7 @@ const overrides: GlobalThemeOverrides = {
     separatorColor: "var(--cf-breadcrumb-separator)",
   },
   Button: {
-    border: "2px dashed var(--cf-field-border)",
+    border: "2px dashed var(--cf-button-border)",
     borderDisabled: "1px dashed var(--cf-field-border-disabled)",
     borderFocus: "1px dashed var(--cf-field-border-focus)",
     borderFocusPrimary: "1px dashed var(--cf-primary)",
@@ -153,8 +153,10 @@ const overrides: GlobalThemeOverrides = {
     textColor3: "oklch(78% 0.01 260)",
   },
   DatePicker: {
+    calendarTitleColorHover: "var(--cf-datepicker-item-hover-bg)",
+    calendarTitleTextColor: "var(--cf-calendar-title-text-color)",
     iconColor: "var(--cf-datepicker-icon)",
-    itemColorActive: "var(--cf-primary)",
+    itemColorActive: "var(--cf-date-text)",
     itemColorHover: "var(--cf-datepicker-item-hover-bg)",
     itemColorIncluded: "var(--cf-datepicker-item-included-bg)",
 
@@ -232,6 +234,7 @@ const overrides: GlobalThemeOverrides = {
     buttonTextColor: "var(--cf-radio-text-color)",
     buttonTextColorActive: "#fff",
     buttonTextColorHover: "var(--cf-radio-text-color)",
+    colorDisabled: "var(--cf-radio-dot-color-disabled)",
 
     dotColorActive: "var(--cf-radio-dot-color-active)",
     dotColorDisabled: "var(--cf-radio-dot-color-disabled)",

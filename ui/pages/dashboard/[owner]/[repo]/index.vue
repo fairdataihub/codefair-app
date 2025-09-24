@@ -39,6 +39,11 @@ const settingsOptions = [
     key: "view-codefair-settings",
     label: "View Codefair settings",
   },
+  {
+    icon: renderIcon("mdi:help-circle-outline"),
+    key: "help-documentation-site",
+    label: "Need Help?",
+  },
 ];
 
 const codeofConductSettingsOptions = [
@@ -165,6 +170,11 @@ const rerunCwlValidation = async () => {
 
 const handleSettingsSelect = (key: string) => {
   const actions: { [key: string]: () => void } = {
+    "help-documentation-site": () =>
+      navigateTo(
+        "https://docs.codefair.io/docs/ui-dashboard.html#repository-selected",
+        { open: { target: "_blank" } },
+      ),
     "re-fetch-code-of-conduct": () => (showCodeofConductModal.value = true),
     "re-fetch-contributing": () => (showContributingModal.value = true),
     "re-fetch-readme": () => (showReadmeModal.value = true),

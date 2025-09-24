@@ -748,7 +748,6 @@ const navigateToPR = () => {
                         : `Contributor ${index + 1}`
                     "
                     bordered
-                    class="!bg-[#f9fafb] dark:!bg-[#f9fafb]/75"
                   >
                     <template #header-extra>
                       <n-popconfirm @positive-click="removeContributor(index)">
@@ -847,7 +846,6 @@ const navigateToPR = () => {
                         :key="roleIndex"
                         :title="role.role || `Role ${roleIndex + 1}`"
                         bordered
-                        class="mb-4 !bg-[#f9fafb] dark:!bg-[#f9fafb]/75"
                       >
                         <template #header-extra>
                           <n-button
@@ -913,7 +911,7 @@ const navigateToPR = () => {
                       class="w-full"
                       strong
                       type="primary"
-                      dashed
+                      ghost
                       @click="
                         formValue.contributors[index].roles.push({ role: '' })
                       "

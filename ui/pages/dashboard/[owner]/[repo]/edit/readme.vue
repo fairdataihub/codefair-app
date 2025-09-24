@@ -189,7 +189,9 @@ const navigateToPR = () => {
             <template #label>
               <p class="pb-1 text-base font-bold">
                 Edit your README as required
-                <span class="text-right text-xs text-stone-100">
+                <span
+                  class="text-right text-xs text-stone-800 dark:text-stone-200"
+                >
                   (You can use the left panel to edit the content and right
                   panel to preview the changes)
                 </span>

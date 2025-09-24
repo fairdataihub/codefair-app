@@ -309,15 +309,7 @@ const toggleMobileMenu = () => {
       <slot />
     </div>
 
-    <footer
-      style="
-        background: radial-gradient(
-          circle at bottom,
-          var(--radial-start) 0%,
-          var(--radial-end) 90%
-        );
-      "
-    >
+    <footer class="footer-gradient">
       <div
         class="mx-auto max-w-screen-xl border-t-2 border-indigo-200 px-5 py-4"
       >

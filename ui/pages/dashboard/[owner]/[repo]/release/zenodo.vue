@@ -120,19 +120,12 @@ if (error.value) {
 
 if (data.value) {
   zenodoLoginUrl.value = data.value.zenodoLoginUrl;
-  selectedDeposition.value = data.value.zenodoDepositionId?.toString() || null;
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
 
   license.value.id = data.value?.license?.id || "";
   license.value.status = data.value?.license?.status || "";
   license.value.customLicenseTitle =
     data.value?.license?.customLicenseTitle || "";
-
-  selectedExistingDeposition.value = data.value.existingZenodoDepositionId
-    ? "existing"
-    : data.value.existingZenodoDepositionId === null
-      ? null
-      : "new";
 
   selectableDepositions.value = [];
   for (const deposition of data.value.zenodoDepositions) {
@@ -807,7 +800,7 @@ onBeforeUnmount(() => {
 
             <n-flex
               v-if="license.id && license.id !== 'Custom'"
-              class="border p-2 dark:bg-indigo-300 dark:text-black"
+              class="border bg-indigo-200 p-2 dark:bg-indigo-300 dark:text-black"
               align="center"
             >
               <Icon name="tabler:license" size="24" />
@@ -850,7 +843,7 @@ onBeforeUnmount(() => {
               :disabled="license.id === 'Custom'"
               @update:checked="(val: any) => (licenseChecked = val)"
             >
-              <span class="dark:text-gray-200">
+              <span class="text-gray-800 dark:text-gray-200">
                 I have added and reviewed the license file that is required for
                 the repository to be released on Zenodo.
               </span>
@@ -893,7 +886,7 @@ onBeforeUnmount(() => {
             </p>
 
             <n-checkbox v-model:checked="metadataChecked">
-              <span class="dark:text-gray-200">
+              <span class="text-gray-800 dark:text-gray-200">
                 I have added and reviewed the <code> citation.CFF </code>
                 and
                 <code> codemeta.json </code>
@@ -1195,7 +1188,18 @@ onBeforeUnmount(() => {
           </template>
         </CardDashboard>
 
-        <div v-if="selectedExistingDeposition === 'new' || selectedDeposition">
+        <div
+          v-if="
+            (console.log('debug:', {
+              selectedExistingDeposition,
+              selectedDeposition,
+              selectableDepositions,
+              githubTag: githubFormValue.tag,
+              githubRelease: githubFormValue.release,
+            }),
+            selectedExistingDeposition === 'new' || selectedDeposition)
+          "
+        >
           <n-divider />
 
           <h2 class="pb-6">Zenodo metadata</h2>
@@ -1256,7 +1260,8 @@ onBeforeUnmount(() => {
                   </n-form-item>
 
                   <n-button
-                    class="dark:text-slate-100 dark:hover:border-indigo-200"
+                    class="dark:text-slate-100"
+                    type="primary"
                     @click="validateZenodoForm"
                   >
                     Confirm metadata
@@ -1268,7 +1273,7 @@ onBeforeUnmount(() => {
 
           <div
             v-if="
-              (githubFormIsValid || githubReleaseIsDraft) &&
+              githubReleaseIsDraft &&
               zenodoDraftIsReadyForRelease &&
               zenodoFormIsValid
             "
@@ -1292,7 +1297,6 @@ onBeforeUnmount(() => {
                   <n-flex justify="space-between">
                     <n-button
                       :loading="zenodoDraftSpinner"
-                      secondary
                       type="primary"
                       @click="startZenodoPublishProcess(false)"
                     >
@@ -1306,7 +1310,6 @@ onBeforeUnmount(() => {
                     <n-button
                       :loading="zenodoPublishSpinner"
                       type="primary"
-                      color="black"
                       @click="startZenodoPublishProcess(true)"
                     >
                       <template #icon>
@@ -1345,10 +1348,10 @@ onBeforeUnmount(() => {
       size="huge"
       :mask-closable="true"
       :close-on-esc="true"
-      class="w-[600px]"
+      class="w-[600px] dark:bg-gray-800"
     >
       <template #header>
-        <h2 class="text-xl font-bold text-gray-800">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">
           Latest Version DOI Badge
         </h2>
       </template>
@@ -1359,18 +1362,20 @@ onBeforeUnmount(() => {
           <div
             v-for="(snippet, index) in snippets"
             :key="index"
-            class="rounded-md border border-gray-200 bg-white shadow-sm"
+            class="rounded-md border border-gray-200 bg-white shadow-sm dark:border-gray-600 dark:bg-gray-800"
           >
             <!-- Card header with snippet title & copy button -->
             <div
-              class="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-3 py-2"
+              class="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
             >
-              <h4 class="text-sm font-semibold text-gray-600">
+              <h4
+                class="text-sm font-semibold text-gray-600 dark:text-gray-300"
+              >
                 {{ snippet.title }}
               </h4>
 
               <button
-                class="inline-flex items-center text-gray-400 transition-colors hover:text-gray-600"
+                class="inline-flex items-center text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200"
                 @click="copyText(snippet.content)"
               >
                 <Icon name="mdi:content-copy" class="mr-1 h-4 w-4" />
@@ -1380,7 +1385,7 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- Code block -->
-            <div class="bg-gray-50 p-3">
+            <div class="bg-gray-50 p-3 dark:bg-gray-700">
               <pre
                 class="overflow-auto font-mono text-sm"
               ><code>{{ snippet.content.trim() }}</code></pre>
@@ -1397,7 +1402,7 @@ onBeforeUnmount(() => {
       size="huge"
       :mask-closable="false"
       :close-on-esc="false"
-      style="width: 600px"
+      class="w-[600px] dark:bg-gray-800"
     >
       <!-- HEADER SLOT: Show a dynamic title and icon -->
       <template #header>
@@ -1422,7 +1427,7 @@ onBeforeUnmount(() => {
           />
 
           <!-- Dynamic title -->
-          <h2 class="text-xl font-bold text-gray-800">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">
             {{
               zenodoPublishStatus === "inProgress"
                 ? "Zenodo publish in progress"
@@ -1456,7 +1461,7 @@ onBeforeUnmount(() => {
       <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
         <!-- Main success content -->
         <div class="space-y-4">
-          <p class="text-gray-700">
+          <p class="text-gray-700 dark:text-gray-300">
             Your software was successfully archived on Zenodo. We recommend
             reviewing the deposition and adding additional metadata to make your
             software more FAIR. Below is your Zenodo badge. Copy the snippet
@@ -1464,7 +1469,7 @@ onBeforeUnmount(() => {
           </p>
 
           <!-- Subheading -->
-          <h3 class="text-base font-semibold text-gray-900">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
             Latest Version DOI Badge
           </h3>
 
@@ -1473,18 +1478,20 @@ onBeforeUnmount(() => {
             <div
               v-for="(snippet, index) in snippets"
               :key="index"
-              class="rounded-md border border-gray-200 bg-white shadow-sm"
+              class="rounded-md border border-gray-200 bg-white shadow-sm dark:border-gray-600 dark:bg-gray-800"
             >
               <!-- Card header with snippet title & copy button -->
               <div
-                class="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-3 py-2"
+                class="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-3 py-2 dark:border-gray-600 dark:bg-gray-700"
               >
-                <h4 class="text-sm font-semibold text-gray-600">
+                <h4
+                  class="text-sm font-semibold text-gray-600 dark:text-gray-300"
+                >
                   {{ snippet.title }}
                 </h4>
 
                 <button
-                  class="inline-flex items-center text-gray-400 transition-colors hover:text-gray-600"
+                  class="inline-flex items-center text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200"
                   @click="copyText(snippet.content)"
                 >
                   <Icon name="mdi:content-copy" class="mr-1 h-4 w-4" />
@@ -1494,7 +1501,7 @@ onBeforeUnmount(() => {
               </div>
 
               <!-- Code block -->
-              <div class="bg-gray-50 p-3">
+              <div class="bg-gray-50 p-3 dark:bg-gray-700">
                 <pre
                   class="overflow-auto font-mono text-sm"
                 ><code>{{ snippet.content.trim() }}</code></pre>
