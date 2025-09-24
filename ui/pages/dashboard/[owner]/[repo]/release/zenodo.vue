@@ -142,10 +142,6 @@ if (data.value) {
     });
   }
 
-  zenodoFormValue.value.accessRight =
-    data.value.zenodoMetadata.accessRight || null;
-  zenodoFormValue.value.version = data.value.zenodoMetadata.version || "";
-
   lastSelectedUser.value = data.value.lastSelectedUser;
   lastSelectedGithubTag.value = data.value.lastSelectedGithubTag;
   lastSelectedGithubRelease.value = data.value.lastSelectedGithubRelease;
@@ -756,8 +752,7 @@ onBeforeUnmount(() => {
           </div>
 
           <n-button
-            type="primary"
-            ghost
+            type="info"
             class="flex h-6 items-center"
             @click="requestZenodoBadge"
             >Request Zenodo badge</n-button
@@ -1004,7 +999,6 @@ onBeforeUnmount(() => {
                   <n-input
                     v-model:value="githubFormValue.tagTitle"
                     clearable
-                    class="dark:bg-slate-100"
                     placeholder="v1.0.0"
                   />
                 </n-form-item>
@@ -1060,15 +1054,13 @@ onBeforeUnmount(() => {
 
                   <n-button
                     v-if="!zenodoDraftIsReadyForRelease"
-                    secondary
                     type="primary"
-                    class="dark:bg-indigo-300"
+                    :disabled="!githubReleaseIsDraft"
                     @click="zenodoDraftIsReadyForRelease = true"
                   >
                     <template #icon>
                       <Icon name="basil:play-solid" size="16" />
                     </template>
-
                     My draft is ready for release
                   </n-button>
                 </div>

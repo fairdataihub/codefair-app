@@ -99,7 +99,7 @@ body {
     --cf-datepicker-panel-divider: oklch(90% 0.01 260);
     --cf-datepicker-panel-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
     --cf-datepicker-item-text: oklch(35% 0.02 260);
-    --cf-datepicker-item-text-active: oklch(18% 0.02 260);
+    --cf-datepicker-item-text-active: oklch(22.401% 0.02466 256.481);
     --cf-datepicker-item-text-current: oklch(38% 0.18 277);
     --cf-datepicker-item-hover-bg: oklch(94% 0.01 260);
     --cf-datepicker-item-active-bg: oklch(87% 0.02 260);
@@ -116,6 +116,19 @@ body {
     --cf-collapse-arrow: oklch(45% 0.02 260);
     --cf-collapse-arrow-disabled: oklch(75% 0.01 260);
     --cf-collapse-divider: oklch(90% 0.01 260);
+
+    --cf-radio-dot-color: oklch(100% 0.00011 271.152);
+    --cf-radio-dot-color-active: var(--cf-primary);
+    --cf-radio-dot-color-disabled: oklch(88% 0.01 260);
+    --cf-radio-button-bg: oklch(100% 0.00011 271.152);
+    --cf-radio-button-bg-active: var(--cf-primary);
+    --cf-radio-button-bg-disabled: oklch(96% 0.01 260);
+    --cf-radio-button-border: oklch(88% 0.01 260);
+    --cf-radio-button-border-active: var(--cf-primary);
+    --cf-radio-button-border-disabled: oklch(85% 0.01 260);
+    --cf-radio-button-border-hover: oklch(78% 0.02 260);
+    --cf-radio-text-color: oklch(27% 0.02 260);
+    --cf-radio-text-color-disabled: oklch(55% 0.02 260);
 
     --cf-asterisk: oklch(70% 0.22 28);
     --cf-feedback-error: oklch(80% 0.22 17);
@@ -342,6 +355,19 @@ body {
     --cf-collapse-arrow: oklch(82% 0.02 260);
     --cf-collapse-arrow-disabled: oklch(55% 0.01 260);
     --cf-collapse-divider: oklch(34% 0.02 260);
+
+    --cf-radio-dot-color: oklch(23% 0.02 260);
+    --cf-radio-dot-color-active: var(--cf-primary);
+    --cf-radio-dot-color-disabled: oklch(34% 0.02 260);
+    --cf-radio-button-bg: oklch(23% 0.02 260);
+    --cf-radio-button-bg-active: var(--cf-primary);
+    --cf-radio-button-bg-disabled: oklch(20% 0.02 260);
+    --cf-radio-button-border: oklch(34% 0.02 260);
+    --cf-radio-button-border-active: var(--cf-primary);
+    --cf-radio-button-border-disabled: oklch(28% 0.02 260);
+    --cf-radio-button-border-hover: oklch(44% 0.03 260);
+    --cf-radio-text-color: oklch(92% 0.01 260);
+    --cf-radio-text-color-disabled: oklch(65% 0.01 260);
 
     --cf-asterisk: oklch(70% 0.22 28);
     --cf-feedback-error: oklch(80% 0.22 17);

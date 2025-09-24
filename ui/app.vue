@@ -222,6 +222,31 @@ const overrides: GlobalThemeOverrides = {
     dividerColor: "var(--cf-popover-divider)",
     textColor: "var(--cf-popover-text)",
   },
+  Radio: {
+    buttonBorderColor: "var(--cf-radio-button-border)",
+    buttonBorderColorActive: "var(--cf-radio-button-border-active)",
+    buttonBorderColorHover: "var(--cf-radio-button-border-hover)",
+    buttonColor: "var(--cf-radio-button-bg)",
+    buttonColorActive: "var(--cf-radio-button-bg-active)",
+    buttonColorHover: "var(--cf-radio-button-bg)",
+    buttonTextColor: "var(--cf-radio-text-color)",
+    buttonTextColorActive: "#fff",
+    buttonTextColorHover: "var(--cf-radio-text-color)",
+
+    dotColorActive: "var(--cf-radio-dot-color-active)",
+    dotColorDisabled: "var(--cf-radio-dot-color-disabled)",
+
+    labelTextColor: "var(--cf-radio-text-color)",
+    labelTextColorDisabled: "var(--cf-radio-text-color-disabled)",
+
+    radioColor: "var(--cf-radio-dot-color)",
+    radioColorActive: "var(--cf-radio-dot-color-active)",
+    radioColorDisabled: "var(--cf-radio-dot-color-disabled)",
+    radioColorHover: "var(--cf-radio-dot-color)",
+
+    radioDotColorActive: "#fff",
+    radioDotColorDisabled: "var(--cf-radio-text-color-disabled)",
+  },
   Select: {
     peers: {
       InternalSelection: {
