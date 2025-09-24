@@ -265,10 +265,26 @@ export async function createIssue(context, owner, repository, title, body) {
     creator: `${GH_APP_NAME}[bot]`,
     owner,
     repo: repository.name,
-    state: "open",
+    state: "all",
   });
 
   if (issue.data.length > 0) {
+    // If issue has been closed, do nothing
+    // check installation table in db to see if issue is closed
+    const installation = await dbInstance.installation.findUnique({
+      where: { id: repository.id },
+    });
+    if (installation.disabled) {
+      logwatch.info("Repository is disabled, not creating or updating issue.");
+      console.log("Repository is disabled, not creating or updating issue.");
+      return;
+    }
+    const openIssues = issue.data.filter((item) => item.state === "open");
+    if (openIssues.length === 0) {
+      logwatch.info("No open issues found, and the existing issue is closed.");
+      console.log("No open issues found, and the existing issue is closed.");
+      return;
+    }
     // iterate through issues to see if there is an issue with the same title
     let noIssue = false;
     let issueNumber;

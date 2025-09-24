@@ -419,7 +419,7 @@ export default async (app, { getRouter }) => {
       );
 
       // Update the action count if it is greater than 0
-      if (installation?.action_count > 0) {
+      if (installation?.action_count > 0 || installation?.disabled) {
         db.installation.update({
           data: {
             action_count: {
@@ -483,8 +483,8 @@ export default async (app, { getRouter }) => {
     }
   });
 
-  // When an issue is deleted or closed
-  app.on(["issues.deleted", "issues.closed"], async (context) => {
+  // When an issue is closed
+  app.on(["issues.closed"], async (context) => {
     const issueTitle = context.payload.issue.title;
 
     // Verify the issue dashboard is the one that got close/deleted
@@ -498,10 +498,19 @@ export default async (app, { getRouter }) => {
     const { repository } = context.payload;
     const owner = context.payload.repository.owner.login;
     const issueTitle = context.payload.issue.title;
+    const issueAuthor = context.payload.issue.user.login;
 
-    if (issueTitle === ISSUE_TITLE) {
+    if (issueTitle === ISSUE_TITLE && issueAuthor === `${GH_APP_NAME}[bot]`) {
       // Check if the repository is empty
       const emptyRepo = await isRepoEmpty(context, owner, repository.name);
+
+      // remove disabled flag if it exists
+      await db.installation.update({
+        data: {
+          disabled: false,
+        },
+        where: { id: repository.id },
+      });
 
       let latestCommitInfo = {
         latest_commit_sha: "",

@@ -52,14 +52,14 @@ const toggleMobileMenu = () => {
         <nav class="hidden items-center gap-8 lg:flex">
           <NuxtLink
             to="/codefair"
-            class="relative inline-block text-lg font-bold text-[var(--gray-600-400)] transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:rounded-lg after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
+            class="relative inline-block text-lg font-bold text-[var(--gray-600-300)] transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:rounded-lg after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
           >
             About
           </NuxtLink>
 
           <NuxtLink
             to="/fairsoftware"
-            class="relative inline-block text-lg font-bold text-[var(--gray-600-400)] transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
+            class="relative inline-block text-lg font-bold text-[var(--gray-600-300)] transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
           >
             FAIR Software
           </NuxtLink>
@@ -67,7 +67,7 @@ const toggleMobileMenu = () => {
           <NuxtLink
             v-if="user?.username"
             to="/dashboard"
-            class="relative inline-block text-lg font-bold text-[var(--gray-600-400)] transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
+            class="relative inline-block text-lg font-bold text-[var(--gray-600-300)] transition-colors duration-150 after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0 after:bg-indigo-500 after:transition-all after:duration-300 after:content-[''] hover:text-indigo-500 hover:after:w-full active:text-indigo-700"
           >
             Dashboard
           </NuxtLink>
@@ -78,7 +78,7 @@ const toggleMobileMenu = () => {
             <NuxtLink
               to="https://docs.codefair.io/"
               target="_blank"
-              class="text-lg font-bold text-[var(--gray-600-400)] transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              class="text-lg font-bold text-[var(--gray-600-300)] transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               <n-popover trigger="hover" placement="top" :show-arrow="false">
                 <template #trigger>
@@ -87,11 +87,13 @@ const toggleMobileMenu = () => {
 
                 <template #default>
                   <div class="w-48 text-center">
-                    <p class="text-sm font-semibold text-indigo-900">
+                    <p
+                      class="text-sm font-semibold text-indigo-900 dark:text-indigo-200"
+                    >
                       Documentation
                     </p>
 
-                    <p class="text-xs text-gray-500">
+                    <p class="text-xs text-gray-500 dark:text-gray-100">
                       Explore the documentation for Codefair.
                       <Icon
                         name="mdi:emoji-robot-happy"
@@ -107,7 +109,7 @@ const toggleMobileMenu = () => {
             <NuxtLink
               to="https://github.com/fairdataihub/codefair-app"
               target="_blank"
-              class="text-lg font-bold text-[var(--gray-600-400)] transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              class="text-lg font-bold text-[var(--gray-600-300)] transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               <n-popover trigger="hover" placement="top" :show-arrow="false">
                 <template #trigger>
@@ -116,11 +118,13 @@ const toggleMobileMenu = () => {
 
                 <template #default>
                   <div class="w-48 text-center">
-                    <p class="text-sm font-semibold text-indigo-900">
+                    <p
+                      class="text-sm font-semibold text-indigo-900 dark:text-indigo-200"
+                    >
                       GitHub Repository
                     </p>
 
-                    <p class="text-xs text-gray-500">
+                    <p class="text-xs text-gray-500 dark:text-gray-100">
                       View the source code and contribute to the project!
                       <Icon
                         name="mdi:emoji-robot-happy"
@@ -305,15 +309,7 @@ const toggleMobileMenu = () => {
       <slot />
     </div>
 
-    <footer
-      style="
-        background: radial-gradient(
-          circle at bottom,
-          var(--radial-start) 0%,
-          var(--radial-end) 90%
-        );
-      "
-    >
+    <footer class="footer-gradient">
       <div
         class="mx-auto max-w-screen-xl border-t-2 border-indigo-200 px-5 py-4"
       >
@@ -359,7 +355,7 @@ const toggleMobileMenu = () => {
           class="mt-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center"
         >
           <div>
-            <p class="mb-3 max-w-lg text-[var(--gray-600-400)]">
+            <p class="mb-3 max-w-lg text-[var(--gray-600-300)]">
               With Codefair by your side, you're not just managing repositories
               but you are advocating for the development of FAIR software
             </p>
@@ -384,7 +380,7 @@ const toggleMobileMenu = () => {
             </div>
           </div>
 
-          <div class="text-sm text-[var(--gray-600-400)] md:text-right">
+          <div class="text-sm text-[var(--gray-600-300)] md:text-right">
             <div class="flex items-center gap-1 md:justify-end">
               <span>Made with</span>
               <!-- Heart SVG -->

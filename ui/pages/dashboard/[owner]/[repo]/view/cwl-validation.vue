@@ -34,7 +34,7 @@ if (error.value) {
 </script>
 
 <template>
-  <main class="mx-auto max-w-screen-xl bg-white p-8 dark:bg-gray-100">
+  <main class="mx-auto max-w-screen-xl bg-white p-8 dark:bg-gray-600">
     <n-flex vertical size="large" class="pb-5">
       <div class="flex flex-row justify-between">
         <h1 class="text-2xl font-bold dark:text-black">

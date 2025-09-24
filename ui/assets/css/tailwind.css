@@ -13,11 +13,9 @@
 html,
 body {
   width: 100%;
-  margin: 0px;
-  padding: 0px;
+  margin: 0;
+  padding: 0;
   overflow: auto;
-  @apply bg-slate-50;
-  @apply text-slate-700;
 }
 
 body {
@@ -25,140 +23,430 @@ body {
 }
 
 @layer base {
-  
   :root {
-
-    .n-tag--closable {
-      --n-color: rgb(225, 225, 255) !important;
+    .n-tag.n-tag--closable {
+      background-color: #4a41e6;
+      color: white;
       border-radius: 4px;
     }
+    --cf-primary: #4f46e5;
+    --cf-primary-hover: #6366f1;
+    --cf-primary-pressed: #312e81;
+    --cf-primary-suppl: #0ea5e9;
+
+    --cf-text-1: oklch(27% 0.02 260);
+    --cf-text-2: oklch(35% 0.02 260);
+    --cf-text-3: oklch(55% 0.02 260);
+
+    --cf-card-bg: oklch(100% 0.00011 271.152);
+    --cf-card-text: oklch(27% 0.02 260);
+    --cf-card-border: oklch(90% 0.01 260);
+
+    --cf-divider: oklch(90% 0.01 260);
+
+    --cf-popover-bg: oklch(100% 0.00011 271.152);
+    --cf-popover-text: oklch(27% 0.02 260);
+    --cf-popover-divider: oklch(90% 0.01 260);
+    --cf-popover-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+
+    --cf-field-bg: oklch(96% 0.01 260);
+    --cf-field-bg-disabled: oklch(92% 0.01 260);
+    --cf-field-bg-focus: oklch(98% 0.01 260);
+    --cf-field-text: oklch(27% 0.02 260);
+    --cf-field-placeholder: oklch(55% 0.02 260);
+    --cf-field-border: oklch(88% 0.01 260);
+    --cf-field-border-hover: oklch(78% 0.02 260);
+    --cf-field-border-focus: oklch(58% 0.09 265);
+    --cf-field-border-disabled: oklch(85% 0.01 260);
+    --cf-field-ring: 0 0 0 3px rgba(99, 102, 241, 0.35);
+    --cf-caret: oklch(27% 0.02 260);
+    --cf-icon: oklch(55% 0.02 260);
+    --cf-suffix: oklch(65% 0.02 260);
+
+    --cf-menu-bg: oklch(100% 0.00011 271.152);
+    --cf-menu-divider: oklch(90% 0.01 260);
+    --cf-menu-item-hover-bg: oklch(94% 0.01 260);
+    --cf-menu-item-active-bg: oklch(87% 0.02 260);
+    --cf-menu-item-text: oklch(27% 0.02 260);
+    --cf-menu-item-text-hover: oklch(18% 0.02 260);
+    --cf-menu-item-text-active: oklch(22% 0.02 260);
+
+    --cf-dropdown-bg: oklch(100% 0.00011 271.152);
+    --cf-dropdown-divider: oklch(88% 0.01 260);
+    --cf-dropdown-option-hover-bg: oklch(94% 0.01 260);
+    --cf-dropdown-option-active-bg: oklch(87% 0.02 260);
+    --cf-dropdown-option-text: oklch(27% 0.02 260);
+    --cf-dropdown-option-text-hover: oklch(18% 0.02 260);
+    --cf-dropdown-option-text-active: oklch(22% 0.02 260);
+    --cf-dropdown-option-text-child-active: oklch(45% 0.12 270);
+    --cf-dropdown-option-disabled-opacity: 0.52;
+    --cf-dropdown-prefix: oklch(65% 0.02 260);
+    --cf-dropdown-suffix: oklch(65% 0.02 260);
+
+    --cf-tag-bg: oklch(87% 0.03 265);
+    --cf-tag-text: oklch(27% 0.02 260);
+    --cf-tag-border: oklch(78% 0.02 265);
+    --cf-tag-close: oklch(87.233% 0.03544 273.224);
+    --cf-tag-close-hover: oklch(45% 0.15 270);
+
+    --cf-breadcrumb-item-text: oklch(27% 0.02 260);
+    --cf-breadcrumb-item-text-hover: oklch(18% 0.02 260);
+    --cf-breadcrumb-item-text-active: oklch(22% 0.02 260);
+    --cf-breadcrumb-separator: oklch(55% 0.02 260);
+
+    --cf-datepicker-panel-bg: oklch(100% 0.00011 271.152);
+    --cf-datepicker-panel-text: oklch(18% 0.02 260);
+    --cf-datepicker-panel-divider: oklch(90% 0.01 260);
+    --cf-datepicker-panel-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+    --cf-datepicker-item-text: oklch(35% 0.02 260);
+    --cf-datepicker-item-text-active: oklch(100% 0.00011 271.152);
+    --cf-datepicker-item-text-current: oklch(38% 0.18 277);
+    --cf-datepicker-item-hover-bg: oklch(94% 0.01 260);
+    --cf-datepicker-item-active-bg: oklch(87% 0.02 260);
+    --cf-datepicker-item-included-bg: oklch(92% 0.03 265);
+    --cf-datepicker-icon: oklch(45% 0.02 260);
+
+    .n-date-panel-month__text  {
+      color: oklch(94.639% 0.00144 285.253) !important;
+    }
+
+    --cf-collapse-header-bg: oklch(96% 0.01 260);
+    --cf-collapse-header-bg-hover: oklch(94% 0.01 260);
+    --cf-collapse-header-bg-pressed: oklch(92% 0.01 260);
+    --cf-collapse-header-text: oklch(27% 0.02 260);
+    --cf-collapse-header-text-disabled: oklch(55% 0.02 260);
+    --cf-collapse-content-bg: oklch(100% 0.00011 271.152);
+    --cf-collapse-content-text: oklch(35% 0.02 260);
+    --cf-collapse-arrow: oklch(45% 0.02 260);
+    --cf-collapse-arrow-disabled: oklch(75% 0.01 260);
+    --cf-collapse-divider: oklch(90% 0.01 260);
+
+    --cf-radio-dot-color: oklch(100% 0.00011 271.152);
+    --cf-radio-dot-color-active: var(--cf-primary);
+    --cf-radio-dot-color-disabled: oklch(88% 0.01 260);
+    --cf-radio-button-bg: oklch(100% 0.00011 271.152);
+    --cf-radio-button-bg-active: var(--cf-primary);
+    --cf-radio-button-bg-disabled: oklch(96% 0.01 260);
+    --cf-radio-button-border: oklch(88% 0.01 260);
+    --cf-radio-button-border-active: var(--cf-primary);
+    --cf-radio-button-border-disabled: oklch(85% 0.01 260);
+    --cf-radio-button-border-hover: oklch(78% 0.02 260);
+    --cf-radio-text-color: oklch(27% 0.02 260);
+    --cf-radio-text-color-disabled: oklch(55% 0.02 260);
+
+    --cf-asterisk: oklch(70% 0.22 28);
+    --cf-feedback-error: oklch(80% 0.22 17);
+    --cf-feedback-warning: oklch(88% 0.17 80);
+
+    /* Alert colors */
+    --cf-alert-error-bg: oklch(97% 0.013 17);
+    --cf-alert-error-text: oklch(45% 0.22 17);
+    --cf-alert-error-border: oklch(85% 0.05 17);
+    --cf-alert-error-icon: oklch(55% 0.22 17);
+
+    --cf-alert-warning-bg: oklch(97% 0.02 80);
+    --cf-alert-warning-text: oklch(35% 0.15 80);
+    --cf-alert-warning-border: oklch(85% 0.08 80);
+    --cf-alert-warning-icon: oklch(45% 0.18 80);
+
+    --cf-alert-success-bg: oklch(97% 0.013 145);
+    --cf-alert-success-text: oklch(30% 0.15 145);
+    --cf-alert-success-border: oklch(85% 0.05 145);
+    --cf-alert-success-icon: oklch(40% 0.18 145);
+
+    --cf-alert-info-bg: oklch(97% 0.02 220);
+    --cf-alert-info-text: oklch(35% 0.15 220);
+    --cf-alert-info-border: oklch(85% 0.05 220);
+    --cf-alert-info-icon: oklch(45% 0.18 220);
+
+    --cf-alert-neutral-bg: oklch(97% 0.01 260);
+    --cf-alert-neutral-text: oklch(35% 0.02 260);
+    --cf-alert-neutral-border: oklch(88% 0.01 260);
+    --cf-alert-neutral-icon: oklch(55% 0.02 260);
+
     --link-color: oklch(45.7% 0.24 277.023);
     --link-hover: oklch(49.1% 0.27 292.581);
+
     --dashboard-card: white;
     --n-card-bg: white;
-    --gray-700-200: oklch(37.3% 0.034 259.733);
-    --gray-500-100: oklch(55.1% 0.027 264.364);
+
+    --gray-700-200: oklch(27% 0.02 260);
+    --gray-500-100: oklch(55% 0.02 260);
+    --gray-600-300: oklch(35% 0.02 260);
+    --gray-500-300: oklch(55% 0.02 260);
+
     --indigo-700-500: oklch(45.7% 0.24 277.023);
-    --gray-600-400: oklch(44.6% 0.03 256.802);
     --indigo-600-400: oklch(51.1% 0.262 276.966);
-    --codefair-grid:    #c7a8f0;
-    --codefair-light:   #f1e6ff;
-    --radial-start:  white;
-    --radial-end:    var(--codefair-light);
+
+    --codefair-grid: #c7a8f0;
+    --codefair-light: #f1e6ff;
+
+    --radial-start: white;
+    --radial-end: var(--codefair-light);
+
     --text-color: oklch(27.9% 0.041 260.031);
     --header-color: oklch(35.9% 0.144 278.697);
-    --btn-bg:        #6366f1;
-    --btn-bg-hover:  #4f46e5; 
-    --btn-bg-active: #4338ca; 
-    --btn-ring:      #93c5fd;
+
+    --btn-bg: #6366f1;
+    --btn-bg-hover: #4f46e5;
+    --btn-bg-active: #4338ca;
+    --btn-ring: #93c5fd;
+
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-    
+
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-    
+
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    
+
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-    
+
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-    
+
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    
+
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-    
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --n-card-text: oklch(37.3% 0.034 259.733);
-    --gray-500-300: oklch(55.1% 0.027 264.364);
+
+    --n-card-text: oklch(27% 0.02 260);
+
     --blob-color-1: oklch(0.8699 0.0622 274.04 / 50%);
     --blob-color-2: oklch(0.9024 0.0604 306.7 / 50%);
     --stats-bg: oklch(1 0 0 / 10%);
   }
-  
+
   .dark {
-
-    .n-input-wrapper {
-      background-color: white;
+    .md-editor {
+      --md-color: #eaeaea;
+      --md-hover-color: #bbb;
+      --md-bk-color: #000;
+      --md-bk-color-outstand: #333;
+      --md-bk-hover-color: #1b1a1a;
+      --md-border-color: #2d2d2d;
+      --md-border-hover-color: #636262;
+      --md-border-active-color: #777;
+      --md-modal-mask: #00000073;
+      --md-modal-shadow: 0px 6px 24px 2px #00000066;
+      --md-scrollbar-bg-color: #0f0f0f;
+      --md-scrollbar-thumb-color: #2d2d2d;
+      --md-scrollbar-thumb-hover-color: #3a3a3a;
+      --md-scrollbar-thumb-active-color: #3a3a3a;
     }
 
-    .md-editor-dark {
-      background-color: #171717;
-      --md-bk-color: #171717;
-    }
-    .n-card {
-      background-color: oklch(55.1% 0.027 264.364);
+    .ͼ15 {
+      color: white;
     }
 
-    .n-input__input-el {
-      background-color: white !important;
+    .md-editor div.github-theme {
+      color: white;
+    }
+    .md-editor-preview code {
+      background-color: #585d5f;
+      color: white;
     }
 
-    .n-base-selection {
-      --n-color: #F9F9FA !important;
-    }
-
-    .n-tag--closable {
-      --n-color: rgb(185, 185, 236) !important;
+    .n-tag.n-tag--closable {
+      background-color: #4a41e6;
       border-radius: 4px;
     }
 
-
-    --n-item-text-color-active: var(--gray-600-400);
     --gray-700-200: oklch(96.7% 0.003 264.542);
     --gray-500-100: oklch(86.9% 0.022 252.894);
-    /* .n-input {
-      background-color: oklch(98.5% 0.001 106.423);
-      mix-blend-mode: multiply;
-    } */
 
-    /* .n-card .span {
-      color: var(--n-card-text);
-    } */
+    --cf-primary: #4f46e5;
+    --cf-date-text: #7069f0;
+    --cf-primary-hover: #6366f1;
+    --cf-primary-pressed: #312e81;
+    --cf-primary-suppl: #0ea5e9;
+
+    --cf-text-1: oklch(96% 0.01 260);
+    --cf-text-2: oklch(90% 0.01 260);
+    --cf-text-3: oklch(78% 0.01 260);
+
+    --cf-card-bg: oklch(23% 0.02 260);
+    --cf-card-text: oklch(92% 0.01 260);
+    --cf-card-border: oklch(34% 0.02 260);
+
+    --cf-divider: oklch(34% 0.02 260);
+
+    --cf-popover-bg: oklch(35.796% 0.02136 259.424);
+    --cf-popover-text: oklch(92% 0.01 260);
+    --cf-popover-divider: oklch(38% 0.02 260);
+    --cf-popover-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+    --cf-field-bg: oklch(18% 0.02 260);
+    --cf-field-bg-disabled: oklch(16.5% 0.01 260);
+    --cf-field-bg-focus: oklch(19% 0.02 260);
+    --cf-field-text: oklch(96% 0.01 260);
+    --cf-field-placeholder: oklch(78% 0.01 260);
+    --cf-field-border: oklch(34% 0.02 260);
+    --cf-field-border-hover: oklch(44% 0.03 260);
+    --cf-field-border-focus: oklch(58% 0.09 265);
+    --cf-field-border-disabled: oklch(28% 0.02 260);
+    --cf-field-ring: 0 0 0 3px rgba(99, 102, 241, 0.35);
+    --cf-caret: oklch(92% 0.02 260);
+    --cf-icon: oklch(82% 0.02 260);
+    --cf-suffix: oklch(85% 0.01 260);
+
+    --cf-menu-bg: oklch(23% 0.02 260);
+    --cf-menu-divider: oklch(34% 0.02 260);
+    --cf-menu-item-hover-bg: oklch(30% 0.02 260);
+    --cf-menu-item-active-bg: oklch(36% 0.02 260);
+    --cf-menu-item-text: oklch(90% 0.01 260);
+    --cf-menu-item-text-hover: oklch(98% 0.01 260);
+    --cf-menu-item-text-active: oklch(98% 0.01 260);
+
+    --cf-modal-bg: oklch(27% 0.02 260);
+    --cf-modal-header-bg: oklch(22% 0.02 260);
+    --cf-modal-header-text: oklch(92% 0.01 260);
+    --cf-modal-text: oklch(90% 0.01 260);
+    --cf-modal-border: oklch(38% 0.02 260);
+    --cf-modal-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+
+    --cf-dropdown-bg: oklch(27% 0.02 260);
+    --cf-dropdown-divider: oklch(38% 0.02 260);
+    --cf-dropdown-option-hover-bg: oklch(32% 0.02 260);
+    --cf-dropdown-option-active-bg: oklch(36% 0.02 260);
+    --cf-dropdown-option-text: oklch(92% 0.01 260);
+    --cf-dropdown-option-text-hover: oklch(98% 0.01 260);
+    --cf-dropdown-option-text-active: oklch(98% 0.01 260);
+    --cf-dropdown-option-text-child-active: oklch(85% 0.03 270);
+    --cf-dropdown-option-disabled-opacity: 0.52;
+    --cf-dropdown-prefix: oklch(90% 0.02 260);
+    --cf-dropdown-suffix: oklch(90% 0.02 260);
+
+    --cf-tag-bg: oklch(32% 0.05 265);
+    --cf-tag-text: oklch(98.07% 0.00523 248.366);
+    --cf-tag-border: oklch(46% 0.03 265);
+    --cf-tag-close: oklch(67.3% 0.182 276.935);
+    --cf-tag-close-hover: oklch(67.3% 0.182 276.935);
+
+    --cf-breadcrumb-item-text: oklch(92% 0.01 260);
+    --cf-breadcrumb-item-text-hover: oklch(98% 0.01 260);
+    --cf-breadcrumb-item-text-active: oklch(98% 0.01 260);
+    --cf-breadcrumb-separator: oklch(78% 0.01 260);
+
+    --cf-datepicker-panel-bg: oklch(27% 0.02 260);
+    --cf-datepicker-panel-text: oklch(92% 0.01 260);
+    --cf-datepicker-panel-divider: oklch(38% 0.02 260);
+    --cf-datepicker-panel-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    --cf-datepicker-item-text: oklch(90% 0.01 260);
+    --cf-datepicker-item-text-active: oklch(98% 0.01 260);
+    --cf-datepicker-item-text-current: oklch(67.3% 0.182 276.935);
+    --cf-datepicker-item-hover-bg: oklch(32% 0.02 260);
+    --cf-datepicker-item-active-bg: oklch(36% 0.02 260);
+    --cf-datepicker-item-included-bg: oklch(34% 0.05 265);
+    --cf-datepicker-icon: oklch(82% 0.02 260);
+    --cf-datepicker-item-hover-bg: oklch(30% 0.02 260);
+    --cf-calendar-title-text-color: oklch(92% 0.01 260);
+
+    --cf-collapse-header-bg: oklch(20% 0.02 260);
+    --cf-collapse-header-bg-hover: oklch(25% 0.02 260);
+    --cf-collapse-header-bg-pressed: oklch(30% 0.02 260);
+    --cf-collapse-header-text: oklch(92% 0.01 260);
+    --cf-collapse-header-text-disabled: oklch(65% 0.01 260);
+    --cf-collapse-content-bg: oklch(23% 0.02 260);
+    --cf-collapse-content-text: oklch(90% 0.01 260);
+    --cf-collapse-arrow: oklch(82% 0.02 260);
+    --cf-collapse-arrow-disabled: oklch(55% 0.01 260);
+    --cf-collapse-divider: oklch(34% 0.02 260);
+
+    --cf-radio-dot-color: oklch(23% 0.02 260);
+    --cf-radio-dot-color-active: var(--cf-primary);
+    --cf-radio-dot-color-disabled: oklch(34% 0.02 260);
+    --cf-radio-button-bg: oklch(23% 0.02 260);
+    --cf-radio-button-bg-active: var(--cf-primary);
+    --cf-radio-button-bg-disabled: oklch(20% 0.02 260);
+    --cf-radio-button-border: oklch(34% 0.02 260);
+    --cf-radio-button-border-active: var(--cf-primary);
+    --cf-radio-button-border-disabled: oklch(28% 0.02 260);
+    --cf-radio-button-border-hover: oklch(44% 0.03 260);
+    --cf-radio-text-color: oklch(92% 0.01 260);
+    --cf-radio-text-color-disabled: oklch(65% 0.01 260);
+
+    --cf-asterisk: oklch(70% 0.22 28);
+    --cf-feedback-error: oklch(80% 0.22 17);
+    --cf-feedback-warning: oklch(88% 0.17 80);
+
+    /* Alert colors - dark mode */
+    --cf-alert-error-bg: oklch(25% 0.08 17);
+    --cf-alert-error-text: oklch(85% 0.12 17);
+    --cf-alert-error-border: oklch(35% 0.12 17);
+    --cf-alert-error-icon: oklch(75% 0.15 17);
+
+    --cf-alert-warning-bg: oklch(28% 0.08 80);
+    --cf-alert-warning-text: oklch(88% 0.12 80);
+    --cf-alert-warning-border: oklch(40% 0.12 80);
+    --cf-alert-warning-icon: oklch(80% 0.15 80);
+
+    --cf-alert-success-bg: oklch(25% 0.08 145);
+    --cf-alert-success-text: oklch(85% 0.12 145);
+    --cf-alert-success-border: oklch(35% 0.12 145);
+    --cf-alert-success-icon: oklch(75% 0.15 145);
+
+    --cf-alert-info-bg: oklch(25% 0.08 220);
+    --cf-alert-info-text: oklch(85% 0.12 220);
+    --cf-alert-info-border: oklch(35% 0.12 220);
+    --cf-alert-info-icon: oklch(75% 0.15 220);
+
+    --cf-alert-neutral-bg: oklch(25% 0.02 260);
+    --cf-alert-neutral-text: oklch(88% 0.01 260);
+    --cf-alert-neutral-border: oklch(35% 0.02 260);
+    --cf-alert-neutral-icon: oklch(78% 0.01 260);
 
     --link-color: oklch(67.3% 0.182 276.935);
     --link-hover: oklch(70.2% 0.183 293.541);
+
     --stats-bg: oklch(1 0 0 / 20%);
     --blob-color-1: oklch(0.5735 0.2097 274.04 / 50%);
     --blob-color-2: oklch(0.6706 0.2047 309.1076010115387 / 50%);
+
     /* --dashboard-card: oklch(55.1% 0.027 264.364); */
-    --dashboard-card: rgba(158, 164, 176, 0.8);
+    --dashboard-card: rgba(39, 40, 43, 0.8);
+
     --n-card-text: oklch(1 0 0);
     --n-card-bg: oklch(0.2795 0.0368 260.03);
-    --gray-500-300: oklch(87.2% 0.01 258.338);
+
     --indigo-700-500: oklch(58.5% 0.233 277.117);
-    --gray-600-400: oklch(87.2% 0.01 258.338);
     --indigo-600-400: oklch(78.5% 0.115 274.713);
-    --codefair-grid:    oklch(0.3618 0.1136 303.98);
-    --codefair-light:   oklch(0.1913 0.0919 306.91);
+
+    --gray-600-300: oklch(87.2% 0.01 258.338);
+
+    --codefair-grid: oklch(0.3618 0.1136 303.98);
+    --codefair-light: oklch(0.1913 0.0919 306.91);
     --header-color: oklch(58.5% 0.233 277.117);
-    --radial-start:  oklch(0.2039 0.0196 262.04);
-    --radial-end:    var(--codefair-grid);
-    --btn-bg:        oklch(58.5% 0.233 277.117);
-    --btn-bg-hover:  oklch(51.1% 0.262 276.966);
+
+    --radial-start: oklch(0.2039 0.0196 262.04);
+    --radial-end: var(--codefair-grid);
+
+    --btn-bg: oklch(58.5% 0.233 277.117);
+    --btn-bg-hover: oklch(51.1% 0.262 276.966);
     --btn-bg-active: oklch(0.5854 0.2041 277.12);
-    --btn-ring:      oklch(0.8699 0.0622 274.04);
+    --btn-ring: oklch(0.8699 0.0622 274.04);
+
     --text-color: oklch(92.2% 0 0);
+
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
 
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
@@ -181,27 +469,24 @@ body {
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
-  /* inter var - latin */
-  /* @font-face {
-    font-family: "Inter";
-    font-style: normal;
-    font-weight: 100 900;
-    font-display: optional;
-    src: url("/fonts/inter-var-latin.woff2") format("woff2");
-    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
-      U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212,
-      U+2215, U+FEFF, U+FFFD;
-  } */
 
-  /* #region  /**=========== Typography =========== */
   .h0 {
     @apply font-inter text-3xl font-bold md:text-5xl;
+  }
+
+  .footer-gradient {
+    background: radial-gradient(
+    circle at bottom,
+    var(--radial-start) 0%,
+    var(--radial-end) 90%
+  );
   }
 
   h1,
@@ -250,13 +535,13 @@ body {
   }
 
   *::-webkit-scrollbar-track {
-    background: #ffffff;
+    background: transparent;
   }
 
   *::-webkit-scrollbar-thumb {
-    background-color: #919191;
+    background-color: #4338ca;
     border-radius: 15px;
-    border: 3px solid #ffffff;
+    border: 2px solid #4338ca;
   }
 
   /* #endregion  /**======== Scrollbar =========== */
@@ -264,16 +549,22 @@ body {
   .debug {
     outline: 1px solid red;
   }
+
+  /* Base tokens → components pick these up */
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 @layer utilities {
   .animated-underline {
-    background-image: linear-gradient(#33333300, #33333300),
-      linear-gradient(
-        to right,
-        var(--color-primary-400),
-        var(--color-primary-500)
-      );
+    background-image:
+      linear-gradient(#33333300, #33333300),
+      linear-gradient(to right, var(--color-primary-400), var(--color-primary-500));
     background-size:
       100% 2px,
       0 2px;
@@ -285,8 +576,7 @@ body {
   @media (prefers-reduced-motion: no-preference) {
     .animated-underline {
       transition: 0.3s ease;
-      transition-property: background-size, color, background-color,
-        border-color;
+      transition-property: background-size, color, background-color, border-color;
     }
   }
   .animated-underline:hover,
@@ -299,7 +589,8 @@ body {
 
 .link-underline {
   border-bottom-width: 0;
-  background-image: linear-gradient(transparent, transparent),
+  background-image:
+    linear-gradient(transparent, transparent),
     linear-gradient(#fff, #fff);
   background-size: 0 3px;
   background-position: 0 100%;
@@ -308,7 +599,8 @@ body {
 }
 
 .link-underline-black {
-  background-image: linear-gradient(transparent, transparent),
+  background-image:
+    linear-gradient(transparent, transparent),
     linear-gradient(#22d3ee, #22d3ee);
 }
 
@@ -317,11 +609,7 @@ body {
   background-position: 0 100%;
 }
 
-/* #region  Naive UI overrides  */
-
-/* #endregion  Naive UI overrides  */
-
-/* #region  Page Transitions  */
+/* ===== Page Transitions ===== */
 .page-enter-active,
 .page-leave-active {
   transition: all 0.4s;
@@ -332,9 +620,6 @@ body {
   filter: blur(1rem);
 }
 
-/* #endregion  Page Transitions  */
-
-/* #region  Layout Transitions  */
 .layout-enter-active,
 .layout-leave-active {
   transition: all 0.4s;
@@ -345,9 +630,7 @@ body {
   opacity: 0;
 }
 
-/* #endregion  Layout Transitions  */
-
-/* #region  Component Transitions  */
+/* ===== Component Transitions ===== */
 .fade-enter-active,
 .fade-leave-active {
   opacity: 0;
@@ -360,8 +643,7 @@ body {
   opacity: 0;
 }
 
-/* #endregion  Component Transitions  */
-
+/* ===== Misc ===== */
 .loader {
   width: 48px;
   height: 48px;
@@ -385,9 +667,10 @@ body {
 .remove-border {
   --n-border-color: inherit !important;
 }
+
 .override-table-striped tr:nth-child(even) {
   background-color: rgba(240, 249, 255, 0.5);
-  --n-td-color: bg-sky-50;
+  --n-td-color: rgb(240 249 255 / 1);
 }
 
 .override-table-striped tr:nth-child(odd) {
@@ -403,14 +686,7 @@ body {
   list-style-type: disc;
 }
 
-/*.content{*/
-/*        mask-image: linear-gradient(to top, white, transparent)!important;*/
-/*}*/
-
-/*.content::before{*/
-/*  background: url("../../public/images/Meteor.svg");*/
-/*}*/
-
+/* Meteor masked background */
 .content {
   position: relative;
   overflow: hidden;
@@ -420,10 +696,7 @@ body {
 .content::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background-image: url("../../public/images/Meteor.svg");
   background-size: cover;
   background-position: center;
@@ -434,15 +707,4 @@ body {
 .router-link-active .menu-header,
 .menu-header:hover {
   color: #0284c7;
-}
-
-
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
 }

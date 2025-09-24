@@ -45,6 +45,8 @@ export default defineNuxtConfig({
   colorMode: {
     classSuffix: "",
     fallback: "light",
+    preference: "system",
+    storageKey: "nuxt-color-mode",
   },
 
   compatibilityDate: "2024-09-24",
