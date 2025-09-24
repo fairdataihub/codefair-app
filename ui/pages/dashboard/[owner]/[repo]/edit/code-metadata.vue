@@ -459,7 +459,7 @@ const navigateToPR = () => {
         <LayoutLargeForm>
           <template #info>
             <n-space vertical size="large" class="pr-6">
-              <h2 class="dark:text-gray-900">Basic Information</h2>
+              <h2 class="dark:text-gray-100">Basic Information</h2>
 
               <p class="dark:text-gray-200">
                 General information of the repository.
@@ -505,7 +505,7 @@ const navigateToPR = () => {
         <LayoutLargeForm>
           <template #info>
             <n-space vertical size="large" class="pr-6 dark:text-gray-200">
-              <h2 class="dark:text-gray-900">Authors and Contributors</h2>
+              <h2 class="dark:text-gray-100">Authors and Contributors</h2>
 
               <p class="dark:text-gray-200">
                 Information about the authors and contributors of the software.
@@ -950,7 +950,7 @@ const navigateToPR = () => {
         <LayoutLargeForm>
           <template #info>
             <n-space vertical size="large" class="pr-6">
-              <h2 class="dark:text-gray-900">Discoverability</h2>
+              <h2 class="dark:text-gray-100">Discoverability</h2>
 
               <p class="dark:text-gray-200">
                 Information to help users discover the software in the
@@ -1013,7 +1013,7 @@ const navigateToPR = () => {
         <LayoutLargeForm>
           <template #info>
             <n-space vertical size="large" class="pr-6">
-              <h2 class="dark:text-gray-900">Development Community</h2>
+              <h2 class="dark:text-gray-100">Development Community</h2>
 
               <p class="dark:text-gray-200">
                 Information about the development community of the software.
@@ -1060,7 +1060,7 @@ const navigateToPR = () => {
         <LayoutLargeForm>
           <template #info>
             <n-space vertical size="large" class="pr-6">
-              <h2 class="dark:text-gray-900">Software Requirements</h2>
+              <h2 class="dark:text-gray-100">Software Requirements</h2>
 
               <p class="dark:text-gray-200">
                 Information about the run-time environment required to run the
@@ -1125,7 +1125,7 @@ const navigateToPR = () => {
 
         <LayoutLargeForm>
           <template #info>
-            <h2 class="dark:text-gray-900">Current version of the software</h2>
+            <h2 class="dark:text-gray-100">Current version of the software</h2>
 
             <p class="dark:text-gray-200">
               Information about the current version of the software and its
@@ -1180,7 +1180,7 @@ const navigateToPR = () => {
         <LayoutLargeForm :bottom-line="false">
           <template #info>
             <n-space vertical size="large" class="pr-6">
-              <h2 class="dark:text-gray-900">Additional Information</h2>
+              <h2 class="dark:text-gray-100">Additional Information</h2>
 
               <p class="dark:text-gray-200">
                 Additional information about the software.

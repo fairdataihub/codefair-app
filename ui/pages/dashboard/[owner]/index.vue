@@ -139,7 +139,7 @@ const handleSettingsSelect = (key: string) => {
         </div>
       </div>
 
-      <p class="text-base text-[var(--gray-600-400)]">
+      <p class="text-base text-[var(--gray-600-300)]">
         Some repositories may not appear here if they have not had any actions
         performed on their main branch yet. Once a couple of actions have been
         processed, the repositories will appear in the list.

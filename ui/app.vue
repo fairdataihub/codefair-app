@@ -17,8 +17,84 @@ import { NConfigProvider, type GlobalThemeOverrides } from "naive-ui";
 import { pastelTheme } from "notivue";
 
 const overrides: GlobalThemeOverrides = {
+  Alert: {
+    border: "1px solid var(--cf-alert-neutral-border)",
+    borderError: "1px solid var(--cf-alert-error-border)",
+    borderInfo: "1px solid var(--cf-alert-info-border)",
+    borderRadius: "10px",
+    borderSuccess: "1px solid var(--cf-alert-success-border)",
+    borderWarning: "1px solid var(--cf-alert-warning-border)",
+
+    closeBorderRadius: "8px",
+    closeColorHover:
+      "color-mix(in oklch, var(--cf-alert-neutral-text) 10%, transparent)",
+    closeColorHoverError:
+      "color-mix(in oklch, var(--cf-alert-error-text) 15%, transparent)",
+    closeColorHoverInfo:
+      "color-mix(in oklch, var(--cf-alert-info-text) 15%, transparent)",
+    closeColorHoverSuccess:
+      "color-mix(in oklch, var(--cf-alert-success-text) 15%, transparent)",
+    closeColorHoverWarning:
+      "color-mix(in oklch, var(--cf-alert-warning-text) 15%, transparent)",
+    closeColorPressed:
+      "color-mix(in oklch, var(--cf-alert-neutral-text) 20%, transparent)",
+    closeColorPressedError:
+      "color-mix(in oklch, var(--cf-alert-error-text) 25%, transparent)",
+    closeColorPressedInfo:
+      "color-mix(in oklch, var(--cf-alert-info-text) 25%, transparent)",
+    closeColorPressedSuccess:
+      "color-mix(in oklch, var(--cf-alert-success-text) 25%, transparent)",
+    closeColorPressedWarning:
+      "color-mix(in oklch, var(--cf-alert-warning-text) 25%, transparent)",
+    closeIconColor: "var(--cf-alert-neutral-icon)",
+    closeIconColorError: "var(--cf-alert-error-icon)",
+    closeIconColorHover: "var(--cf-alert-neutral-text)",
+    closeIconColorHoverError: "var(--cf-alert-error-text)",
+    closeIconColorHoverInfo: "var(--cf-alert-info-text)",
+    closeIconColorHoverSuccess: "var(--cf-alert-success-text)",
+    closeIconColorHoverWarning: "var(--cf-alert-warning-text)",
+    closeIconColorInfo: "var(--cf-alert-info-icon)",
+    closeIconColorPressed: "var(--cf-alert-neutral-text)",
+    closeIconColorPressedError: "var(--cf-alert-error-text)",
+    closeIconColorPressedInfo: "var(--cf-alert-info-text)",
+    closeIconColorPressedSuccess: "var(--cf-alert-success-text)",
+    closeIconColorPressedWarning: "var(--cf-alert-warning-text)",
+    closeIconColorSuccess: "var(--cf-alert-success-icon)",
+    closeIconColorWarning: "var(--cf-alert-warning-icon)",
+
+    color: "var(--cf-alert-neutral-bg)",
+    colorError: "var(--cf-alert-error-bg)",
+    colorInfo: "var(--cf-alert-info-bg)",
+    colorSuccess: "var(--cf-alert-success-bg)",
+    colorWarning: "var(--cf-alert-warning-bg)",
+
+    contentTextColor: "var(--cf-alert-neutral-text)",
+    contentTextColorError: "var(--cf-alert-error-text)",
+    contentTextColorInfo: "var(--cf-alert-info-text)",
+    contentTextColorSuccess: "var(--cf-alert-success-text)",
+    contentTextColorWarning: "var(--cf-alert-warning-text)",
+
+    iconColor: "var(--cf-alert-neutral-icon)",
+    iconColorError: "var(--cf-alert-error-icon)",
+    iconColorInfo: "var(--cf-alert-info-icon)",
+    iconColorSuccess: "var(--cf-alert-success-icon)",
+    iconColorWarning: "var(--cf-alert-warning-icon)",
+
+    titleTextColor: "var(--cf-alert-neutral-text)",
+    titleTextColorError: "var(--cf-alert-error-text)",
+    titleTextColorInfo: "var(--cf-alert-info-text)",
+    titleTextColorSuccess: "var(--cf-alert-success-text)",
+    titleTextColorWarning: "var(--cf-alert-warning-text)",
+  },
+  Breadcrumb: {
+    itemTextColor: "var(--cf-breadcrumb-item-text)",
+    itemTextColorActive: "var(--cf-breadcrumb-item-text-active)",
+    itemTextColorHover: "var(--cf-breadcrumb-item-text-hover)",
+    itemTextColorPressed: "var(--cf-breadcrumb-item-text-hover)",
+    separatorColor: "var(--cf-breadcrumb-separator)",
+  },
   Button: {
-    border: "1px dashed var(--cf-field-border)",
+    border: "2px dashed var(--cf-field-border)",
     borderDisabled: "1px dashed var(--cf-field-border-disabled)",
     borderFocus: "1px dashed var(--cf-field-border-focus)",
     borderFocusPrimary: "1px dashed var(--cf-primary)",
@@ -58,6 +134,14 @@ const overrides: GlobalThemeOverrides = {
     colorEmbedded: "var(--cf-card-bg)",
     textColor: "var(--cf-card-text)",
   },
+  Collapse: {
+    arrowColor: "var(--cf-collapse-arrow)",
+    arrowColorDisabled: "var(--cf-collapse-arrow-disabled)",
+    dividerColor: "var(--cf-collapse-divider)",
+    itemHeaderTextColor: "var(--cf-collapse-header-text)",
+    itemHeaderTextColorDisabled: "var(--cf-collapse-header-text-disabled)",
+    titleTextColor: "var(--cf-collapse-content-text)",
+  },
   common: {
     primaryColor: "#4f46e5",
     primaryColorHover: "#6366f1",
@@ -69,19 +153,20 @@ const overrides: GlobalThemeOverrides = {
     textColor3: "oklch(78% 0.01 260)",
   },
   DatePicker: {
-    iconColor: "var(--cf-icon)",
+    iconColor: "var(--cf-datepicker-icon)",
     itemColorActive: "var(--cf-primary)",
-    itemColorIncluded:
-      "color-mix(in oklch, var(--cf-primary) 22%, transparent)",
+    itemColorHover: "var(--cf-datepicker-item-hover-bg)",
+    itemColorIncluded: "var(--cf-datepicker-item-included-bg)",
 
-    itemTextColor: "var(--cf-popover-text)",
-    itemTextColorActive: "var(--cf-text-1)",
-    itemTextColorCurrent: "var(--cf-primary-hover)",
-    panelActionDividerColor: "var(--cf-popover-divider)",
-    panelBoxShadow: "var(--cf-popover-shadow)",
-    panelColor: "var(--cf-popover-bg)",
-    panelTextColor: "var(--cf-popover-text)",
-    textColor: "var(--cf-popover-text)",
+    itemTextColor: "var(--cf-datepicker-item-text)",
+    itemTextColorActive: "var(--cf-datepicker-item-text-active)",
+    itemTextColorCurrent: "var(--cf-datepicker-item-text-current)",
+    itemTextColorHover: "var(--cf-datepicker-item-text-active)",
+    panelActionDividerColor: "var(--cf-datepicker-panel-divider)",
+    panelBoxShadow: "var(--cf-datepicker-panel-shadow)",
+    panelColor: "var(--cf-datepicker-panel-bg)",
+    panelTextColor: "var(--cf-datepicker-panel-text)",
+    textColor: "var(--cf-datepicker-panel-text)",
   },
   Divider: {
     color: "var(--cf-divider)",

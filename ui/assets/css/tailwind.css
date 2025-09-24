@@ -24,16 +24,139 @@ body {
 
 @layer base {
   :root {
+    .n-tag.n-tag--closable {
+      background-color: #4a41e6;
+      color: white;
+      border-radius: 4px;
+    }
+    --cf-primary: #4f46e5;
+    --cf-primary-hover: #6366f1;
+    --cf-primary-pressed: #312e81;
+    --cf-primary-suppl: #0ea5e9;
+
+    --cf-text-1: oklch(27% 0.02 260);
+    --cf-text-2: oklch(35% 0.02 260);
+    --cf-text-3: oklch(55% 0.02 260);
+
+    --cf-card-bg: oklch(100% 0.00011 271.152);
+    --cf-card-text: oklch(27% 0.02 260);
+    --cf-card-border: oklch(90% 0.01 260);
+
+    --cf-divider: oklch(90% 0.01 260);
+
+    --cf-popover-bg: oklch(100% 0.00011 271.152);
+    --cf-popover-text: oklch(27% 0.02 260);
+    --cf-popover-divider: oklch(90% 0.01 260);
+    --cf-popover-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+
+    --cf-field-bg: oklch(96% 0.01 260);
+    --cf-field-bg-disabled: oklch(92% 0.01 260);
+    --cf-field-bg-focus: oklch(98% 0.01 260);
+    --cf-field-text: oklch(27% 0.02 260);
+    --cf-field-placeholder: oklch(55% 0.02 260);
+    --cf-field-border: oklch(88% 0.01 260);
+    --cf-field-border-hover: oklch(78% 0.02 260);
+    --cf-field-border-focus: oklch(58% 0.09 265);
+    --cf-field-border-disabled: oklch(85% 0.01 260);
+    --cf-field-ring: 0 0 0 3px rgba(99, 102, 241, 0.35);
+    --cf-caret: oklch(27% 0.02 260);
+    --cf-icon: oklch(55% 0.02 260);
+    --cf-suffix: oklch(65% 0.02 260);
+
+    --cf-menu-bg: oklch(100% 0.00011 271.152);
+    --cf-menu-divider: oklch(90% 0.01 260);
+    --cf-menu-item-hover-bg: oklch(94% 0.01 260);
+    --cf-menu-item-active-bg: oklch(87% 0.02 260);
+    --cf-menu-item-text: oklch(27% 0.02 260);
+    --cf-menu-item-text-hover: oklch(18% 0.02 260);
+    --cf-menu-item-text-active: oklch(22% 0.02 260);
+
+    --cf-dropdown-bg: oklch(100% 0.00011 271.152);
+    --cf-dropdown-divider: oklch(88% 0.01 260);
+    --cf-dropdown-option-hover-bg: oklch(94% 0.01 260);
+    --cf-dropdown-option-active-bg: oklch(87% 0.02 260);
+    --cf-dropdown-option-text: oklch(27% 0.02 260);
+    --cf-dropdown-option-text-hover: oklch(18% 0.02 260);
+    --cf-dropdown-option-text-active: oklch(22% 0.02 260);
+    --cf-dropdown-option-text-child-active: oklch(45% 0.12 270);
+    --cf-dropdown-option-disabled-opacity: 0.52;
+    --cf-dropdown-prefix: oklch(65% 0.02 260);
+    --cf-dropdown-suffix: oklch(65% 0.02 260);
+
+    --cf-tag-bg: oklch(87% 0.03 265);
+    --cf-tag-text: oklch(27% 0.02 260);
+    --cf-tag-border: oklch(78% 0.02 265);
+    --cf-tag-close: oklch(87.233% 0.03544 273.224);
+    --cf-tag-close-hover: oklch(45% 0.15 270);
+
+    --cf-breadcrumb-item-text: oklch(27% 0.02 260);
+    --cf-breadcrumb-item-text-hover: oklch(18% 0.02 260);
+    --cf-breadcrumb-item-text-active: oklch(22% 0.02 260);
+    --cf-breadcrumb-separator: oklch(55% 0.02 260);
+
+    --cf-datepicker-panel-bg: oklch(100% 0.00011 271.152);
+    --cf-datepicker-panel-text: oklch(18% 0.02 260);
+    --cf-datepicker-panel-divider: oklch(90% 0.01 260);
+    --cf-datepicker-panel-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+    --cf-datepicker-item-text: oklch(35% 0.02 260);
+    --cf-datepicker-item-text-active: oklch(18% 0.02 260);
+    --cf-datepicker-item-text-current: oklch(38% 0.18 277);
+    --cf-datepicker-item-hover-bg: oklch(94% 0.01 260);
+    --cf-datepicker-item-active-bg: oklch(87% 0.02 260);
+    --cf-datepicker-item-included-bg: oklch(92% 0.03 265);
+    --cf-datepicker-icon: oklch(45% 0.02 260);
+
+    --cf-collapse-header-bg: oklch(96% 0.01 260);
+    --cf-collapse-header-bg-hover: oklch(94% 0.01 260);
+    --cf-collapse-header-bg-pressed: oklch(92% 0.01 260);
+    --cf-collapse-header-text: oklch(27% 0.02 260);
+    --cf-collapse-header-text-disabled: oklch(55% 0.02 260);
+    --cf-collapse-content-bg: oklch(100% 0.00011 271.152);
+    --cf-collapse-content-text: oklch(35% 0.02 260);
+    --cf-collapse-arrow: oklch(45% 0.02 260);
+    --cf-collapse-arrow-disabled: oklch(75% 0.01 260);
+    --cf-collapse-divider: oklch(90% 0.01 260);
+
+    --cf-asterisk: oklch(70% 0.22 28);
+    --cf-feedback-error: oklch(80% 0.22 17);
+    --cf-feedback-warning: oklch(88% 0.17 80);
+
+    /* Alert colors */
+    --cf-alert-error-bg: oklch(97% 0.013 17);
+    --cf-alert-error-text: oklch(45% 0.22 17);
+    --cf-alert-error-border: oklch(85% 0.05 17);
+    --cf-alert-error-icon: oklch(55% 0.22 17);
+
+    --cf-alert-warning-bg: oklch(97% 0.02 80);
+    --cf-alert-warning-text: oklch(35% 0.15 80);
+    --cf-alert-warning-border: oklch(85% 0.08 80);
+    --cf-alert-warning-icon: oklch(45% 0.18 80);
+
+    --cf-alert-success-bg: oklch(97% 0.013 145);
+    --cf-alert-success-text: oklch(30% 0.15 145);
+    --cf-alert-success-border: oklch(85% 0.05 145);
+    --cf-alert-success-icon: oklch(40% 0.18 145);
+
+    --cf-alert-info-bg: oklch(97% 0.02 220);
+    --cf-alert-info-text: oklch(35% 0.15 220);
+    --cf-alert-info-border: oklch(85% 0.05 220);
+    --cf-alert-info-icon: oklch(45% 0.18 220);
+
+    --cf-alert-neutral-bg: oklch(97% 0.01 260);
+    --cf-alert-neutral-text: oklch(35% 0.02 260);
+    --cf-alert-neutral-border: oklch(88% 0.01 260);
+    --cf-alert-neutral-icon: oklch(55% 0.02 260);
+
     --link-color: oklch(45.7% 0.24 277.023);
     --link-hover: oklch(49.1% 0.27 292.581);
 
     --dashboard-card: white;
     --n-card-bg: white;
 
-    --gray-700-200: oklch(37.3% 0.034 259.733);
-    --gray-500-100: oklch(55.1% 0.027 264.364);
-    --gray-600-400: oklch(44.6% 0.03 256.802);
-    --gray-500-300: oklch(55.1% 0.027 264.364);
+    --gray-700-200: oklch(27% 0.02 260);
+    --gray-500-100: oklch(55% 0.02 260);
+    --gray-600-300: oklch(35% 0.02 260);
+    --gray-500-300: oklch(55% 0.02 260);
 
     --indigo-700-500: oklch(45.7% 0.24 277.023);
     --indigo-600-400: oklch(51.1% 0.262 276.966);
@@ -87,7 +210,7 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
 
-    --n-card-text: oklch(37.3% 0.034 259.733);
+    --n-card-text: oklch(27% 0.02 260);
 
     --blob-color-1: oklch(0.8699 0.0622 274.04 / 50%);
     --blob-color-2: oklch(0.9024 0.0604 306.7 / 50%);
@@ -95,13 +218,38 @@ body {
   }
 
   .dark {
-    .md-editor-dark {
-      background-color: #171717;
-      --md-bk-color: #171717;
+    .md-editor {
+      --md-color: #eaeaea;
+      --md-hover-color: #bbb;
+      --md-bk-color: #000;
+      --md-bk-color-outstand: #333;
+      --md-bk-hover-color: #1b1a1a;
+      --md-border-color: #2d2d2d;
+      --md-border-hover-color: #636262;
+      --md-border-active-color: #777;
+      --md-modal-mask: #00000073;
+      --md-modal-shadow: 0px 6px 24px 2px #00000066;
+      --md-scrollbar-bg-color: #0f0f0f;
+      --md-scrollbar-thumb-color: #2d2d2d;
+      --md-scrollbar-thumb-hover-color: #3a3a3a;
+      --md-scrollbar-thumb-active-color: #3a3a3a;
+    }
+
+    .ͼ15 {
+      color: white;
+    }
+
+    .md-editor div.github-theme {
+      color: white;
+    }
+    .md-editor-preview code {
+      background-color: #585d5f;
+      color: white;
     }
 
     .n-tag.n-tag--closable {
       background-color: #4a41e6;
+      border-radius: 4px;
     }
 
     --gray-700-200: oklch(96.7% 0.003 264.542);
@@ -167,9 +315,63 @@ body {
     --cf-tag-close: oklch(67.3% 0.182 276.935);
     --cf-tag-close-hover: oklch(67.3% 0.182 276.935);
 
+    --cf-breadcrumb-item-text: oklch(92% 0.01 260);
+    --cf-breadcrumb-item-text-hover: oklch(98% 0.01 260);
+    --cf-breadcrumb-item-text-active: oklch(98% 0.01 260);
+    --cf-breadcrumb-separator: oklch(78% 0.01 260);
+
+    --cf-datepicker-panel-bg: oklch(27% 0.02 260);
+    --cf-datepicker-panel-text: oklch(92% 0.01 260);
+    --cf-datepicker-panel-divider: oklch(38% 0.02 260);
+    --cf-datepicker-panel-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    --cf-datepicker-item-text: oklch(90% 0.01 260);
+    --cf-datepicker-item-text-active: oklch(98% 0.01 260);
+    --cf-datepicker-item-text-current: oklch(67.3% 0.182 276.935);
+    --cf-datepicker-item-hover-bg: oklch(32% 0.02 260);
+    --cf-datepicker-item-active-bg: oklch(36% 0.02 260);
+    --cf-datepicker-item-included-bg: oklch(34% 0.05 265);
+    --cf-datepicker-icon: oklch(82% 0.02 260);
+
+    --cf-collapse-header-bg: oklch(20% 0.02 260);
+    --cf-collapse-header-bg-hover: oklch(25% 0.02 260);
+    --cf-collapse-header-bg-pressed: oklch(30% 0.02 260);
+    --cf-collapse-header-text: oklch(92% 0.01 260);
+    --cf-collapse-header-text-disabled: oklch(65% 0.01 260);
+    --cf-collapse-content-bg: oklch(23% 0.02 260);
+    --cf-collapse-content-text: oklch(90% 0.01 260);
+    --cf-collapse-arrow: oklch(82% 0.02 260);
+    --cf-collapse-arrow-disabled: oklch(55% 0.01 260);
+    --cf-collapse-divider: oklch(34% 0.02 260);
+
     --cf-asterisk: oklch(70% 0.22 28);
     --cf-feedback-error: oklch(80% 0.22 17);
     --cf-feedback-warning: oklch(88% 0.17 80);
+
+    /* Alert colors - dark mode */
+    --cf-alert-error-bg: oklch(25% 0.08 17);
+    --cf-alert-error-text: oklch(85% 0.12 17);
+    --cf-alert-error-border: oklch(35% 0.12 17);
+    --cf-alert-error-icon: oklch(75% 0.15 17);
+
+    --cf-alert-warning-bg: oklch(28% 0.08 80);
+    --cf-alert-warning-text: oklch(88% 0.12 80);
+    --cf-alert-warning-border: oklch(40% 0.12 80);
+    --cf-alert-warning-icon: oklch(80% 0.15 80);
+
+    --cf-alert-success-bg: oklch(25% 0.08 145);
+    --cf-alert-success-text: oklch(85% 0.12 145);
+    --cf-alert-success-border: oklch(35% 0.12 145);
+    --cf-alert-success-icon: oklch(75% 0.15 145);
+
+    --cf-alert-info-bg: oklch(25% 0.08 220);
+    --cf-alert-info-text: oklch(85% 0.12 220);
+    --cf-alert-info-border: oklch(35% 0.12 220);
+    --cf-alert-info-icon: oklch(75% 0.15 220);
+
+    --cf-alert-neutral-bg: oklch(25% 0.02 260);
+    --cf-alert-neutral-text: oklch(88% 0.01 260);
+    --cf-alert-neutral-border: oklch(35% 0.02 260);
+    --cf-alert-neutral-icon: oklch(78% 0.01 260);
 
     --link-color: oklch(67.3% 0.182 276.935);
     --link-hover: oklch(70.2% 0.183 293.541);
@@ -186,6 +388,8 @@ body {
 
     --indigo-700-500: oklch(58.5% 0.233 277.117);
     --indigo-600-400: oklch(78.5% 0.115 274.713);
+
+    --gray-600-300: oklch(87.2% 0.01 258.338);
 
     --codefair-grid: oklch(0.3618 0.1136 303.98);
     --codefair-light: oklch(0.1913 0.0919 306.91);

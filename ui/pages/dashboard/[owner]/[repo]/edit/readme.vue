@@ -3,7 +3,6 @@ import sanitizeHtml from "sanitize-html";
 import { MdEditor, config } from "md-editor-v3";
 import TargetBlankExtension from "@/utils/TargetBlankExtension";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
-const colorMode = useColorMode();
 
 config({
   editorConfig: {
@@ -149,11 +148,11 @@ const navigateToPR = () => {
 <template>
   <main class="pb-8">
     <section
-      class="mx-auto max-w-screen-xl rounded-md border-[1px] border-gray-200 bg-white p-8 shadow-md dark:bg-gray-100"
+      class="mx-auto max-w-screen-xl rounded-md border-[1px] border-gray-200 bg-white p-8 shadow-md dark:bg-gray-600"
     >
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">
-          <h1 class="text-2xl font-bold dark:text-black">
+          <h1 class="text-2xl font-bold dark:text-stone-200">
             Edit README for
             <NuxtLink
               :to="`https://github.com/${owner}/${repo}`"
@@ -167,13 +166,13 @@ const navigateToPR = () => {
           <NuxtLink
             to="https://docs.codefair.io/docs/readme.html"
             target="_blank"
-            class="font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
+            class="font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)] dark:text-indigo-300 dark:hover:text-indigo-400"
             >Need help?</NuxtLink
           >
         </div>
 
         <div class="border-b border-dashed py-2">
-          <p class="text-base dark:text-gray-700">
+          <p class="text-base dark:text-gray-100">
             You can edit your README file here. The README file is a markdown
             file that contains information about your project. It is usually the
             first thing that users see when they visit your project on GitHub.
@@ -190,7 +189,7 @@ const navigateToPR = () => {
             <template #label>
               <p class="pb-1 text-base font-bold">
                 Edit your README as required
-                <span class="text-right text-xs text-stone-500">
+                <span class="text-right text-xs text-stone-100">
                   (You can use the left panel to edit the content and right
                   panel to preview the changes)
                 </span>
@@ -201,7 +200,6 @@ const navigateToPR = () => {
               v-model="readmeContent"
               preview-theme="github"
               language="en-US"
-              :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
               :toolbars-exclude="[
                 'preview',
                 'fullscreen',

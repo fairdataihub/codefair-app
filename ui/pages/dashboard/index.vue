@@ -78,7 +78,7 @@ if (error.value) {
             <div class="flex flex-col justify-end">
               <!-- Repo Count -->
               <div class="mb-2 flex flex-row justify-end whitespace-nowrap">
-                <span class="text-sm text-[var(--gray-600-400)]"
+                <span class="text-sm text-[var(--gray-600-300)]"
                   >Codefair managed repositories:&nbsp;</span
                 >
 
@@ -147,7 +147,7 @@ if (error.value) {
               <!-- Repo Count -->
               <div class="flex items-center space-x-1">
                 <span
-                  class="whitespace-nowrap text-sm text-[var(--gray-600-400)]"
+                  class="whitespace-nowrap text-sm text-[var(--gray-600-300)]"
                 >
                   Codefair managed repositories:
                 </span>

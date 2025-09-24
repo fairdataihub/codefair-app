@@ -53,9 +53,7 @@ const toggleCollapse = () => {
     <div
       class="flex items-center justify-between rounded-lg px-6 py-4 transition-all"
       :class="{
-        // header (collapsed state a bit brighter)
         'bg-white dark:bg-[oklch(27%_0.02_260)]': contentCollapsed,
-        // header (expanded state a bit darker)
         'bg-slate-50/50 dark:bg-[oklch(23%_0.02_260)]': !contentCollapsed,
       }"
     >
