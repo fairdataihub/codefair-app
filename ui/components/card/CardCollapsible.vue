@@ -48,13 +48,14 @@ const toggleCollapse = () => {
 
 <template>
   <div
-    class="rounded-lg border bg-white shadow-sm dark:bg-[oklch(23%_0.02_260)]"
+    class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-500 dark:bg-[oklch(23%_0.02_260)]"
   >
     <div
       class="flex items-center justify-between rounded-lg px-6 py-4 transition-all"
       :class="{
         'bg-white dark:bg-[oklch(27%_0.02_260)]': contentCollapsed,
-        'bg-slate-50/50 dark:bg-[oklch(23%_0.02_260)]': !contentCollapsed,
+        'rounded-none border-b border-gray-200 bg-slate-50/50 dark:border-gray-500 dark:bg-[oklch(23%_0.02_260)]':
+          !contentCollapsed,
       }"
     >
       <div>

@@ -307,6 +307,9 @@ body {
     --cf-icon: oklch(82% 0.02 260);
     --cf-suffix: oklch(85% 0.01 260);
 
+    --cf-button-border: oklch(57.995% 0.00625 274.87);
+    --cf-button-border-hover: oklch(57.995% 0.00625 274.87);
+
     --cf-menu-bg: oklch(23% 0.02 260);
     --cf-menu-divider: oklch(34% 0.02 260);
     --cf-menu-item-hover-bg: oklch(30% 0.02 260);
