@@ -864,23 +864,17 @@ export async function disableCodefairOnRepo(context) {
     await dbInstance.installation.update({
       data: {
         disabled: true,
-        issue_number:
-          context.payload.action === "deleted"
-            ? null
-            : installation.issue_number,
+        issue_number: installation.issue_number,
       },
       where: { id: repository.id },
     });
   }
 
-  // If the action was just closing the issue, update the issue body
-  if (context.payload.action === "closed") {
-    // Update the body of the issue to reflect that the repository is disabled
-    await context.octokit.issues.update({
-      body: CLOSED_ISSUE_BODY,
-      issue_number: context.payload.issue.number,
-      owner: repository.owner.login,
-      repo: repository.name,
-    });
-  }
+  // Update the body of the issue to reflect that the repository is disabled
+  await context.octokit.issues.update({
+    body: CLOSED_ISSUE_BODY,
+    issue_number: context.payload.issue.number,
+    owner: repository.owner.login,
+    repo: repository.name,
+  });
 }
