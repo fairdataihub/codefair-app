@@ -1079,9 +1079,7 @@ onBeforeUnmount(() => {
 
                   <n-button
                     :loading="createDraftGithubReleaseSpinner"
-                    secondary
                     type="primary"
-                    class="dark:bg-indigo-300"
                     @click="createDraftGithubRelease"
                   >
                     <template #icon>
