@@ -601,6 +601,7 @@ export async function createZenodoMetadata(
       description: codeMetaContent?.description,
       creators: zenodoCreators,
       access_right: zenodoMetadata.zenodo_metadata.accessRight,
+      subjects: codeMetaContent?.keywords,
       publication_date: new_date,
       license: licenseId,
       version:
@@ -610,6 +611,19 @@ export async function createZenodoMetadata(
     if (addUploadType) {
       metadata.upload_type = "software";
     }
+
+    // const payload = {
+    //   metadata,
+    //   custom_fields: {
+    //     "code:codeRepository": repository.html_url,
+    //     "code:developmentStatus":
+    //       codeMetaContent?.developmentStatus || "unknown",
+    //     "code:programmingLanguage": codeMetaContent?.programmingLanguage || [],
+    //   },
+    // };
+
+    // logwatch.info("Generated Zenodo metadata:");
+    // logwatch.info(zenodoMetadata);
 
     return { metadata };
   } catch (error) {
@@ -633,8 +647,14 @@ export async function updateZenodoMetadata(
 ) {
   try {
     const url = `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`;
-    logwatch.start(`Updating Zenodo metadata for deposition: ${depositionId}`);
-    logwatch.debug(`PUT URL: ${url}`);
+    const logJson = {
+      depositionId,
+      url,
+      metadata,
+      message: `Updating Zenodo metadata for deposition: ${depositionId}`,
+    };
+
+    logwatch.start(logJson, true);
 
     const response = await fetch(url, {
       method: "PUT",
