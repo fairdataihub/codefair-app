@@ -6,7 +6,7 @@
       <div class="mx-auto max-w-screen-xl px-4 md:px-8">
         <div class="flex justify-start">
           <h1
-            class="font-inter mb-4 text-4xl font-bold text-black sm:text-5xl md:text-5xl"
+            class="mb-4 font-inter text-4xl font-bold text-black dark:text-white sm:text-5xl md:text-5xl"
           >
             Frequently Asked Questions
           </h1>
@@ -15,17 +15,17 @@
     </div>
 
     <div
-      class="mx-auto grid max-w-screen-xl px-4 pt-8 text-left md:grid-cols-2 md:gap-x-8 md:px-8 dark:border-gray-700"
+      class="mx-auto grid max-w-screen-xl px-4 pt-8 text-left dark:border-gray-700 md:grid-cols-2 md:gap-x-8 md:px-8"
     >
       <div class="mb-10">
         <h3
           class="mb-4 flex items-start text-lg font-medium text-gray-900 dark:text-white"
         >
-          <Icon name="ri:question-fill" class="mt-1 mr-2" />
+          <Icon name="ri:question-fill" class="mr-2 mt-1" />
           Why are there two GitHub apps with Codefair?
         </h3>
 
-        <p class="ml-4 text-gray-500 dark:text-gray-400">
+        <p class="ml-4 text-gray-500 dark:text-gray-300">
           Codefair has two GitHub apps to provide different features. The main
           app is used to handle the main tasks of Codefair, such as creating
           issues, checking your repositories, and more. We also use a GitHub
@@ -41,12 +41,12 @@
         <h3
           class="mb-4 flex items-start text-lg font-medium text-gray-900 dark:text-white"
         >
-          <Icon name="ri:question-fill" class="mt-1 mr-2" />
+          <Icon name="ri:question-fill" class="mr-2 mt-1" />
           Why am I having trouble accessing my Organization's repositories on
           Codefair?
         </h3>
 
-        <p class="ml-4 text-gray-500 dark:text-gray-400">
+        <p class="ml-4 text-gray-500 dark:text-gray-300">
           You may need to grant Codefair access to your organization so that we
           can verify you have access to the organization you are trying to
           access. If we are unable to verify your access, you will not be able
