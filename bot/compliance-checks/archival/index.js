@@ -647,9 +647,14 @@ export async function updateZenodoMetadata(
 ) {
   try {
     const url = `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}`;
-    logwatch.start(`Updating Zenodo metadata for deposition: ${depositionId}`);
-    logwatch.info(`PUT URL: ${url}`);
-    logwatch.info(`Metadata to be updated: ${JSON.stringify(metadata)}`);
+    const logJson = {
+      depositionId,
+      url,
+      metadata,
+      message: `Updating Zenodo metadata for deposition: ${depositionId}`,
+    };
+
+    logwatch.start(logJson, true);
 
     const response = await fetch(url, {
       method: "PUT",
