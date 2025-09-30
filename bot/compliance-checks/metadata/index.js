@@ -1160,12 +1160,13 @@ export async function applyMetadataTemplate(
       );
     }
 
-    let metadata = {};
-    let validCodemeta = false;
-    let validCitation = false;
+    let metadata = existing?.metadata || {};
+    let validCodemeta = existing?.codemeta_status === "valid";
+    let validCitation = existing?.citation_status === "valid";
 
     if (revalidate) {
       try {
+        // Gather metadata from GitHub API
         metadata = await gatherMetadata(context, owner, repository);
         logwatch.info("gatherMetadata succeeded");
       } catch (err) {
@@ -1174,10 +1175,12 @@ export async function applyMetadataTemplate(
       }
 
       if (existing?.metadata) {
+        // Merge existing metadata from DB, preserving any user edits
         metadata = applyDbMetadata(existing, metadata);
         logwatch.info("applyDbMetadata merged existing onto gathered");
       }
 
+      // Validate and apply codemeta.json if it exists
       if (subjects.codemeta && revalCodemeta) {
         const cm = await getCodemetaContent(context, owner, repository);
         logwatch.info("getCodemetaContent succeeded");
@@ -1197,6 +1200,7 @@ export async function applyMetadataTemplate(
         logwatch.info("applyCodemetaMetadata succeeded");
       }
 
+      // Validate and apply CITATION.cff if it exists
       if (subjects.citation && revalCitation) {
         let cf;
         cf = await getCitationContent(context, owner, repository);
@@ -1218,7 +1222,7 @@ export async function applyMetadataTemplate(
       }
     }
 
-    const dataObject = {
+    let dataObject = {
       contains_citation: subjects.citation,
       contains_codemeta: subjects.codemeta,
       contains_metadata: subjects.citation && subjects.codemeta,
@@ -1233,6 +1237,8 @@ export async function applyMetadataTemplate(
       await dbInstance.codeMetadata.create({ data: dataObject });
       logwatch.info("Created new metadata record in DB");
     } else {
+      // Preserve any existing fields not in dataObject
+      dataObject.metadata = { ...existing.metadata, ...dataObject.metadata };
       await dbInstance.codeMetadata.update({
         where: { repository_id: repoId },
         data: dataObject,

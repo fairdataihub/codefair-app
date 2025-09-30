@@ -41,7 +41,7 @@ const BOT_MADE_PR_TITLES = [
   "feat: ✨ Add code metadata files",
   "feat: ✨ Update code metadata files",
 ];
-const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT, GH_APP_NAME } = process.env;
+const { GH_APP_NAME } = process.env;
 
 /**
  * This is the main entrypoint to your Probot app
