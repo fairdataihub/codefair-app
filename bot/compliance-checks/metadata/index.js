@@ -1136,7 +1136,7 @@ export async function applyMetadataTemplate(
 
     const actor = context.payload?.pusher?.name;
     if (actor && actor !== `${GH_APP_NAME}[bot]`) {
-      logwatch.info(`Push by ${actor}, checking changed files…`);
+      logwatch.info(`Push by ${actor}, checking changed files...`);
       revalidate = revalCitation = revalCodemeta = false;
 
       const { added = [], modified = [] } = context.payload.head_commit || {};
@@ -1160,12 +1160,14 @@ export async function applyMetadataTemplate(
       );
     }
 
-    let metadata = {};
-    let validCodemeta = false;
-    let validCitation = false;
+    // Start with existing metadata if present
+    let metadata = existing?.metadata || {};
+    let validCodemeta = existing?.codemeta_status === "valid";
+    let validCitation = existing?.citation_status === "valid";
 
     if (revalidate) {
       try {
+        // Gather metadata from GitHub API
         metadata = await gatherMetadata(context, owner, repository);
         logwatch.info("gatherMetadata succeeded");
       } catch (err) {
@@ -1173,6 +1175,7 @@ export async function applyMetadataTemplate(
         throw new Error("gatherMetadata failed", { cause: err });
       }
 
+      // Merge existing metadata from DB if present
       if (existing?.metadata) {
         metadata = applyDbMetadata(existing, metadata);
         logwatch.info("applyDbMetadata merged existing onto gathered");
@@ -1233,6 +1236,7 @@ export async function applyMetadataTemplate(
       await dbInstance.codeMetadata.create({ data: dataObject });
       logwatch.info("Created new metadata record in DB");
     } else {
+      dataObject.metadata = { ...existing.metadata, ...dataObject.metadata }; // Preserve any fields not set by gatherMetadata
       await dbInstance.codeMetadata.update({
         where: { repository_id: repoId },
         data: dataObject,
