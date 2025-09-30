@@ -102,7 +102,7 @@ breadcrumbsStore.hideBreadcrumbs();
       >
         <div class="relative aspect-square w-[26rem]">
           <n-image
-            src="/assets/images/latest-dashboard.png"
+            src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/latest-dashboard.png"
             alt="Dashboard"
             loading="lazy"
             class="rounded-lg object-contain shadow-lg"
@@ -111,7 +111,7 @@ breadcrumbsStore.hideBreadcrumbs();
 
         <div class="relative aspect-square w-[26rem]">
           <n-image
-            src="/assets/images/metadata-ui.png"
+            src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/metadata-ui.png"
             alt="Metadata UI"
             loading="lazy"
             class="rounded-lg object-contain shadow-lg"
@@ -120,7 +120,7 @@ breadcrumbsStore.hideBreadcrumbs();
 
         <div class="relative aspect-square w-[26rem]">
           <n-image
-            src="/assets/images/zenodo-top.png"
+            src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/zenodo-top.png"
             alt="Zenodo Release UI"
             loading="lazy"
             class="rounded-lg object-contain shadow-lg"
@@ -172,7 +172,7 @@ breadcrumbsStore.hideBreadcrumbs();
 
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
-            src="/assets/images/Saly-15.png"
+            src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/Saly-15.png"
             alt="Info image"
             loading="lazy"
             class="w-[10rem] md:w-[15rem]"
@@ -202,7 +202,7 @@ breadcrumbsStore.hideBreadcrumbs();
       >
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
-            src="/assets/images/Saly-40.png"
+            src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/Saly-40.png"
             alt="Info image"
             loading="lazy"
             class="w-[15rem] md:w-[14rem]"
@@ -255,7 +255,7 @@ breadcrumbsStore.hideBreadcrumbs();
       >
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
-            src="/assets/images/Saly-39.png"
+            src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/Saly-39.png"
             alt="Info image"
             loading="lazy"
             class="w-[15rem] md:w-[20rem]"
@@ -355,7 +355,7 @@ breadcrumbsStore.hideBreadcrumbs();
 
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
-            src="/assets/images/Saly-22.png"
+            src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/Saly-22.png"
             alt="Info image"
             loading="lazy"
             class="w-[15rem] md:w-[20rem]"

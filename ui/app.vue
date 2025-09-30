@@ -1,11 +1,8 @@
 <template>
-  <n-config-provider :theme-overrides="themeOverrides">
+  <n-config-provider :theme-overrides="overrides">
     <Notivue v-slot="item">
       <Notification :item="item" :theme="pastelTheme" />
     </Notivue>
-    <!-- <Notivue v-slot="item">
-      <Notification :item="item" :theme="pastelTheme" />
-    </Notivue> -->
 
     <NuxtLoadingIndicator color="#be185d" :height="5" />
 
@@ -16,125 +13,289 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-// import { useColorMode } from "@nuxtjs/color-mode";
 import { NConfigProvider, type GlobalThemeOverrides } from "naive-ui";
 import { pastelTheme } from "notivue";
 
-const colorMode = useColorMode();
-
-const themeOverrides = computed<GlobalThemeOverrides>(() => ({
+const overrides: GlobalThemeOverrides = {
   Alert: {
-    colorInfo:
-      colorMode.value === "dark"
-        ? "oklch(54.6% 0.245 262.881 / 50%)"
-        : "#EDF5FE",
-    colorWarning: colorMode.value === "dark" ? "#FBBF24" : "#FEF3C7",
-    contentTextColorInfo: colorMode.value === "dark" ? "#FFFFFF" : "#1E3A8A",
-    iconColorInfo: colorMode.value === "dark" ? "#FFFFFF" : "#2080F0",
-    iconColorWarning: colorMode.value === "dark" ? "#000000" : "#F59E0B",
-    titleTextColorInfo: colorMode.value === "dark" ? "#FFFFFF" : "#1E40AF",
+    border: "1px solid var(--cf-alert-neutral-border)",
+    borderError: "1px solid var(--cf-alert-error-border)",
+    borderInfo: "1px solid var(--cf-alert-info-border)",
+    borderRadius: "10px",
+    borderSuccess: "1px solid var(--cf-alert-success-border)",
+    borderWarning: "1px solid var(--cf-alert-warning-border)",
+
+    closeBorderRadius: "8px",
+    closeColorHover:
+      "color-mix(in oklch, var(--cf-alert-neutral-text) 10%, transparent)",
+    closeColorHoverError:
+      "color-mix(in oklch, var(--cf-alert-error-text) 15%, transparent)",
+    closeColorHoverInfo:
+      "color-mix(in oklch, var(--cf-alert-info-text) 15%, transparent)",
+    closeColorHoverSuccess:
+      "color-mix(in oklch, var(--cf-alert-success-text) 15%, transparent)",
+    closeColorHoverWarning:
+      "color-mix(in oklch, var(--cf-alert-warning-text) 15%, transparent)",
+    closeColorPressed:
+      "color-mix(in oklch, var(--cf-alert-neutral-text) 20%, transparent)",
+    closeColorPressedError:
+      "color-mix(in oklch, var(--cf-alert-error-text) 25%, transparent)",
+    closeColorPressedInfo:
+      "color-mix(in oklch, var(--cf-alert-info-text) 25%, transparent)",
+    closeColorPressedSuccess:
+      "color-mix(in oklch, var(--cf-alert-success-text) 25%, transparent)",
+    closeColorPressedWarning:
+      "color-mix(in oklch, var(--cf-alert-warning-text) 25%, transparent)",
+    closeIconColor: "var(--cf-alert-neutral-icon)",
+    closeIconColorError: "var(--cf-alert-error-icon)",
+    closeIconColorHover: "var(--cf-alert-neutral-text)",
+    closeIconColorHoverError: "var(--cf-alert-error-text)",
+    closeIconColorHoverInfo: "var(--cf-alert-info-text)",
+    closeIconColorHoverSuccess: "var(--cf-alert-success-text)",
+    closeIconColorHoverWarning: "var(--cf-alert-warning-text)",
+    closeIconColorInfo: "var(--cf-alert-info-icon)",
+    closeIconColorPressed: "var(--cf-alert-neutral-text)",
+    closeIconColorPressedError: "var(--cf-alert-error-text)",
+    closeIconColorPressedInfo: "var(--cf-alert-info-text)",
+    closeIconColorPressedSuccess: "var(--cf-alert-success-text)",
+    closeIconColorPressedWarning: "var(--cf-alert-warning-text)",
+    closeIconColorSuccess: "var(--cf-alert-success-icon)",
+    closeIconColorWarning: "var(--cf-alert-warning-icon)",
+
+    color: "var(--cf-alert-neutral-bg)",
+    colorError: "var(--cf-alert-error-bg)",
+    colorInfo: "var(--cf-alert-info-bg)",
+    colorSuccess: "var(--cf-alert-success-bg)",
+    colorWarning: "var(--cf-alert-warning-bg)",
+
+    contentTextColor: "var(--cf-alert-neutral-text)",
+    contentTextColorError: "var(--cf-alert-error-text)",
+    contentTextColorInfo: "var(--cf-alert-info-text)",
+    contentTextColorSuccess: "var(--cf-alert-success-text)",
+    contentTextColorWarning: "var(--cf-alert-warning-text)",
+
+    iconColor: "var(--cf-alert-neutral-icon)",
+    iconColorError: "var(--cf-alert-error-icon)",
+    iconColorInfo: "var(--cf-alert-info-icon)",
+    iconColorSuccess: "var(--cf-alert-success-icon)",
+    iconColorWarning: "var(--cf-alert-warning-icon)",
+
+    titleTextColor: "var(--cf-alert-neutral-text)",
+    titleTextColorError: "var(--cf-alert-error-text)",
+    titleTextColorInfo: "var(--cf-alert-info-text)",
+    titleTextColorSuccess: "var(--cf-alert-success-text)",
+    titleTextColorWarning: "var(--cf-alert-warning-text)",
+  },
+  Breadcrumb: {
+    itemTextColor: "var(--cf-breadcrumb-item-text)",
+    itemTextColorActive: "var(--cf-breadcrumb-item-text-active)",
+    itemTextColorHover: "var(--cf-breadcrumb-item-text-hover)",
+    itemTextColorPressed: "var(--cf-breadcrumb-item-text-hover)",
+    separatorColor: "var(--cf-breadcrumb-separator)",
+  },
+  Button: {
+    border: "2px dashed var(--cf-button-border)",
+    borderDisabled: "1px dashed var(--cf-field-border-disabled)",
+    borderFocus: "1px dashed var(--cf-field-border-focus)",
+    borderFocusPrimary: "1px dashed var(--cf-primary)",
+    borderGhost: "1px solid var(--cf-field-border-hover)",
+    borderHover: "1px dashed var(--cf-field-border-hover)",
+    borderHoverPrimary: "1px dashed var(--cf-primary-hover)",
+    borderPressed: "1px dashed var(--cf-field-border-hover)",
+    borderPressedPrimary: "1px dashed var(--cf-primary-pressed)",
+    borderPrimary: "1px solid transparent",
+
+    color: "transparent",
+    colorDisabled: "transparent",
+    colorFocus: "transparent",
+    colorHover: "transparent",
+    colorHoverPrimary: "var(--cf-primary-hover)",
+    colorPressed: "transparent",
+    colorPressedPrimary: "var(--cf-primary-pressed)",
+    colorPrimary: "var(--cf-primary)",
+
+    textColor: "var(--cf-text-2)",
+    textColorDisabled: "var(--cf-text-3)",
+    textColorFocus: "var(--cf-text-1)",
+    textColorGhost: "var(--cf-text-2)",
+    textColorHover: "var(--cf-text-1)",
+    textColorPressed: "var(--cf-text-1)",
+    textColorPrimary: "#fff",
+    textColorTextFocusPrimary: "var(--cf-primary)",
+    textColorTextHoverPrimary: "var(--cf-primary-hover)",
+    textColorTextPressedPrimary: "var(--cf-primary-pressed)",
+
+    textColorTextPrimary: "var(--cf-primary)",
+  },
+
+  Card: {
+    borderColor: "var(--cf-card-border)",
+    color: "var(--cf-card-bg)",
+    colorEmbedded: "var(--cf-card-bg)",
+    textColor: "var(--cf-card-text)",
+  },
+  Collapse: {
+    arrowColor: "var(--cf-collapse-arrow)",
+    arrowColorDisabled: "var(--cf-collapse-arrow-disabled)",
+    dividerColor: "var(--cf-collapse-divider)",
+    itemHeaderTextColor: "var(--cf-collapse-header-text)",
+    itemHeaderTextColorDisabled: "var(--cf-collapse-header-text-disabled)",
+    titleTextColor: "var(--cf-collapse-content-text)",
   },
   common: {
-    primaryColor: colorMode.value === "dark" ? "#4F46E5" : "#6366f1",
-    primaryColorHover: colorMode.value === "dark" ? "#7C3AED" : "#4F46E5",
-    primaryColorPressed: colorMode.value === "dark" ? "#312E81" : "#c7d6ff",
+    primaryColor: "#4f46e5",
+    primaryColorHover: "#6366f1",
+    primaryColorPressed: "#312e81",
     primaryColorSuppl: "#0ea5e9",
+
+    textColor1: "oklch(96% 0.01 260)",
+    textColor2: "oklch(90% 0.01 260)",
+    textColor3: "oklch(78% 0.01 260)",
+  },
+  DatePicker: {
+    calendarTitleColorHover: "var(--cf-datepicker-item-hover-bg)",
+    calendarTitleTextColor: "var(--cf-calendar-title-text-color)",
+    iconColor: "var(--cf-datepicker-icon)",
+    itemColorActive: "var(--cf-date-text)",
+    itemColorHover: "var(--cf-datepicker-item-hover-bg)",
+    itemColorIncluded: "var(--cf-datepicker-item-included-bg)",
+
+    itemTextColor: "var(--cf-datepicker-item-text)",
+    itemTextColorActive: "var(--cf-datepicker-item-text-active)",
+    itemTextColorCurrent: "var(--cf-datepicker-item-text-current)",
+    itemTextColorHover: "var(--cf-datepicker-item-text-active)",
+    panelActionDividerColor: "var(--cf-datepicker-panel-divider)",
+    panelBoxShadow: "var(--cf-datepicker-panel-shadow)",
+    panelColor: "var(--cf-datepicker-panel-bg)",
+    panelTextColor: "var(--cf-datepicker-panel-text)",
+    textColor: "var(--cf-datepicker-panel-text)",
+  },
+  Divider: {
+    color: "var(--cf-divider)",
   },
   Dropdown: {
-    color: colorMode.value === "dark" ? "oklch(98.5% 0.001 106.423)" : "white",
-    optionColorHover:
-      colorMode.value === "dark"
-        ? "oklch(92.9% 0.013 255.508)"
-        : "oklch(92.9% 0.013 255.508)",
-    textColor: colorMode.value === "dark" ? "dark" : "light",
+    color: "var(--cf-dropdown-bg)",
+    dividerColor: "var(--cf-dropdown-divider)",
+    optionColorActive: "var(--cf-dropdown-option-active-bg)",
+    optionColorHover: "var(--cf-dropdown-option-hover-bg)",
+    optionOpacityDisabled: "var(--cf-dropdown-option-disabled-opacity)",
+    optionTextColor: "var(--cf-dropdown-option-text)",
+    optionTextColorActive: "var(--cf-dropdown-option-text-active)",
+    optionTextColorChildActive: "var(--cf-dropdown-option-text-child-active)",
+    optionTextColorHover: "var(--cf-dropdown-option-text-hover)",
+    prefixColor: "var(--cf-dropdown-prefix)",
+    suffixColor: "var(--cf-dropdown-suffix)",
   },
-  DynamicInput: {
-    color: colorMode.value === "dark" ? "#1e293b" : "#f8fafc",
+  Form: {
+    asteriskColor: "var(--cf-asterisk)",
+    feedbackTextColor: "var(--cf-text-3)",
+    feedbackTextColorError: "var(--cf-feedback-error)",
+    feedbackTextColorWarning: "var(--cf-feedback-warning)",
+    labelTextColor: "var(--cf-text-2)",
   },
   Input: {
-    // color: colorMode.value === "dark" ? "#1e293b" : "white",
-    placeholderColor:
-      colorMode.value === "dark" ? "oklch(87.2% 0.01 258.338)" : "#9ca3af",
+    border: "1px solid var(--cf-field-border)",
+    borderDisabled: "1px solid var(--cf-field-border-disabled)",
+    borderFocus: "1px solid var(--cf-field-border-focus)",
+    borderHover: "1px solid var(--cf-field-border-hover)",
+    boxShadowFocus: "var(--cf-field-ring)",
+    caretColor: "var(--cf-caret)",
+    color: "var(--cf-field-bg)",
+    colorDisabled: "var(--cf-field-bg-disabled)",
+    colorFocus: "var(--cf-field-bg-focus)",
+    iconColor: "var(--cf-icon)",
+    placeholderColor: "var(--cf-field-placeholder)",
+    suffixTextColor: "var(--cf-suffix)",
+    textColor: "var(--cf-field-text)",
   },
   Menu: {
-    color: colorMode.value === "dark" ? "oklch(70.4% 0.04 256.788)" : "white",
-    optionColorHover:
-      colorMode.value === "dark"
-        ? "oklch(92.9% 0.013 255.508)"
-        : "oklch(86.9% 0.022 252.894)",
-    textColor: colorMode.value === "dark" ? "dark" : "light",
+    color: "var(--cf-menu-bg)",
+    dividerColor: "var(--cf-menu-divider)",
+    itemColorActive: "var(--cf-menu-item-active-bg)",
+    itemColorHover: "var(--cf-menu-item-hover-bg)",
+    itemTextColor: "var(--cf-menu-item-text)",
+    itemTextColorActive: "var(--cf-menu-item-text-active)",
+    itemTextColorHover: "var(--cf-menu-item-text-hover)",
+  },
+  Popover: {
+    borderRadius: "10px",
+    boxShadow: "var(--cf-popover-shadow)",
+    color: "var(--cf-popover-bg)",
+    dividerColor: "var(--cf-popover-divider)",
+    textColor: "var(--cf-popover-text)",
+  },
+  Radio: {
+    buttonBorderColor: "var(--cf-radio-button-border)",
+    buttonBorderColorActive: "var(--cf-radio-button-border-active)",
+    buttonBorderColorHover: "var(--cf-radio-button-border-hover)",
+    buttonColor: "var(--cf-radio-button-bg)",
+    buttonColorActive: "var(--cf-radio-button-bg-active)",
+    buttonColorHover: "var(--cf-radio-button-bg)",
+    buttonTextColor: "var(--cf-radio-text-color)",
+    buttonTextColorActive: "#fff",
+    buttonTextColorHover: "var(--cf-radio-text-color)",
+    colorDisabled: "var(--cf-radio-dot-color-disabled)",
+
+    dotColorActive: "var(--cf-radio-dot-color-active)",
+    dotColorDisabled: "var(--cf-radio-dot-color-disabled)",
+
+    labelTextColor: "var(--cf-radio-text-color)",
+    labelTextColorDisabled: "var(--cf-radio-text-color-disabled)",
+
+    radioColor: "var(--cf-radio-dot-color)",
+    radioColorActive: "var(--cf-radio-dot-color-active)",
+    radioColorDisabled: "var(--cf-radio-dot-color-disabled)",
+    radioColorHover: "var(--cf-radio-dot-color)",
+
+    radioDotColorActive: "#fff",
+    radioDotColorDisabled: "var(--cf-radio-text-color-disabled)",
+  },
+  Select: {
+    peers: {
+      InternalSelection: {
+        border: "1px solid var(--cf-field-border)",
+        borderActive: "1px solid var(--cf-field-border-focus)",
+        borderFocus: "1px solid var(--cf-field-border-focus)",
+        borderHover: "1px solid var(--cf-field-border-hover)",
+        boxShadowFocus: "var(--cf-field-ring)",
+        caretColor: "var(--cf-caret)",
+        clearColor: "var(--cf-icon)",
+        clearColorHover: "var(--cf-field-text)",
+        color: "var(--cf-field-bg)",
+        placeholderColor: "var(--cf-field-placeholder)",
+        textColor: "var(--cf-field-text)",
+      },
+
+      InternalSelectMenu: {
+        actionDividerColor: "var(--cf-dropdown-divider)",
+        color: "var(--cf-dropdown-bg)",
+        groupHeaderTextColor: "var(--cf-text-3)",
+
+        optionCheckColor: "oklch(98% 0.01 260)",
+        optionColorActive: "var(--cf-dropdown-option-active-bg)",
+        optionColorActivePending: "oklch(33% 0.02 260)",
+
+        optionColorPending: "var(--cf-dropdown-option-hover-bg)",
+        optionOpacityDisabled: "var(--cf-dropdown-option-disabled-opacity)",
+
+        optionTextColor: "var(--cf-dropdown-option-text)",
+        optionTextColorActive: "var(--cf-dropdown-option-text-active)",
+        optionTextColorDisabled: "var(--cf-text-3)",
+        optionTextColorPressed: "var(--cf-dropdown-option-text-hover)",
+      },
+    },
   },
   Tag: {
-    closeIconColorSuccess: "oklch(79.2% 0.209 151.711)",
-    colorInfo: colorMode.value === "dark" ? "#f0f9ff" : "#EFF6FF",
-    textColorError: colorMode.value === "dark" ? "#f03" : "#d03050",
-    textColorInfo: colorMode.value === "dark" ? "#0c4a6e" : "#1E40AF",
-    textColorSuccess:
-      colorMode.value === "dark" ? "oklch(79.2% 0.209 151.711)" : "#18a058",
-  },
-}));
+    border: "1px solid var(--cf-tag-border)",
+    closeIconColor: "var(--cf-tag-close)",
+    closeIconColorHover: "var(--cf-tag-close-hover)",
+    closeIconColorPressed: "var(--cf-tag-close-hover)",
+    color: "var(--cf-tag-bg)",
 
-useHead({
-  title: "Codefair",
-  bodyAttrs: {
-    class: "test",
+    colorCheckable: "var(--cf-tag-bg)",
+    colorHoverCheckable: "color-mix(in oklab, var(--cf-tag-bg) 85%, black)",
+    colorPressedCheckable: "color-mix(in oklab, var(--cf-tag-bg) 75%, black)",
+    textColor: "var(--cf-tag-text)",
   },
-  link: [
-    { href: "/favicon.ico", rel: "icon", type: "image/x-icon" },
-    {
-      href: "/apple-touch-icon.png",
-      rel: "apple-touch-icon",
-      sizes: "180x180",
-    },
-    {
-      href: "/favicon-16x16.png",
-      rel: "icon",
-      sizes: "16x16",
-      type: "image/png",
-    },
-    {
-      href: "/favicon-32x32.png",
-      rel: "icon",
-      sizes: "32x32",
-      type: "image/png",
-    },
-    {
-      color: "#5bbad5",
-      href: "/safari-pinned-tab.svg",
-      rel: "mask-icon",
-    },
-    {
-      href: "/site.webmanifest",
-      rel: "manifest",
-    },
-  ],
-  meta: [
-    {
-      name: "description",
-      content:
-        "Codefair is a free and open source GitHub app that acts as your personal assistant when it comes to making your research software reusable and especially complying with the Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software (FAIR4RS Principles).",
-    },
-    {
-      name: "msapplication-TileColor",
-      content: "#2b5797",
-    },
-    {
-      name: "theme-color",
-      content: "#ffffff",
-    },
-  ],
-});
-
-useSeoMeta({
-  title: "Codefair",
-  description:
-    "Codefair is a free and open source GitHub app that acts as your personal assistant when it comes to making your research software reusable and especially complying with the Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software (FAIR4RS Principles).",
-  ogDescription:
-    "Codefair is a free and open source GitHub app that acts as your personal assistant when it comes to making your research software reusable and especially complying with the Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software (FAIR4RS Principles).",
-  ogImage:
-    "https://kalai.fairdataihub.org/api/generate?title=codefair&description=Make%20your%20research%20software%20reusable%20without%20breaking%20a%20sweat!&app=codefair&org=fairdataihub",
-  ogTitle: "Codefair",
-  twitterCard: "summary_large_image",
-});
+};
 </script>

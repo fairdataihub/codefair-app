@@ -186,7 +186,7 @@ async function logout() {
       :options="settingOptions"
       placement="bottom-end"
       :show-arrow="true"
-      class="rounded-md bg-white shadow-md"
+      class="rounded-md shadow-md"
       @select="handleSettingsSelect"
     >
       <!-- User Avatar -->

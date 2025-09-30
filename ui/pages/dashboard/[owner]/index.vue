@@ -139,7 +139,7 @@ const handleSettingsSelect = (key: string) => {
         </div>
       </div>
 
-      <p class="text-base text-[var(--gray-600-400)]">
+      <p class="text-base text-[var(--gray-600-300)]">
         Some repositories may not appear here if they have not had any actions
         performed on their main branch yet. Once a couple of actions have been
         processed, the repositories will appear in the list.
@@ -152,7 +152,7 @@ const handleSettingsSelect = (key: string) => {
         <n-card
           v-for="repo in filteredRepos"
           :key="repo.repositoryId"
-          class="mb-2 rounded-md bg-white p-4 shadow-md"
+          class="mb-2 rounded-md p-4 shadow-md"
         >
           <div
             class="grid grid-cols-[3rem_auto_5px_40rem_150px] items-center gap-4"

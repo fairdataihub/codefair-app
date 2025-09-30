@@ -109,14 +109,14 @@ const countupOptions: CountUpOptions = {
         >
           <div class="relative w-[18rem] md:w-[25rem]">
             <img
-              src="/assets/images/second_layer_hero.png"
+              src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/second_layer_hero.png"
               alt="Hero image"
               loading="lazy"
               class="absolute -top-16 left-12 w-[18rem] animate-float-opposite object-cover md:w-[25rem]"
             />
 
             <img
-              src="/assets/images/first_layer_hero.png"
+              src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/first_layer_hero.png"
               alt="Hero image"
               loading="lazy"
               class="relative w-[18rem] animate-float-item object-cover md:w-[25rem]"
@@ -143,7 +143,7 @@ const countupOptions: CountUpOptions = {
       >
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
-            src="/assets/images/Saly-38.png"
+            src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/Saly-38.png"
             alt="Info image"
             loading="lazy"
             class="w-[15rem] md:w-[23rem]"
@@ -248,7 +248,7 @@ const countupOptions: CountUpOptions = {
 
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
-            src="/assets/images/Other 08.png"
+            src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/Other%2008.png"
             alt="Info image"
             loading="lazy"
             class="w-[15rem] md:w-[21rem]"
@@ -278,7 +278,7 @@ const countupOptions: CountUpOptions = {
       >
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
-            src="/assets/images/Saly-16.png"
+            src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/Saly-16.png"
             alt="Info image"
             loading="lazy"
             class="w-[15rem] md:w-[22rem]"
@@ -425,7 +425,7 @@ const countupOptions: CountUpOptions = {
 
         <div class="pointer-events-none flex justify-center md:w-1/2">
           <img
-            src="/assets/images/DRIP_18.png"
+            src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/DRIP_18.png"
             alt="Info image"
             loading="lazy"
             class="w-[15rem] md:w-[20rem]"
@@ -484,7 +484,7 @@ const countupOptions: CountUpOptions = {
           <div class="pointer-events-none flex justify-center md:w-1/2">
             <div class="p-4">
               <img
-                src="/assets/images/Other 02.png"
+                src="https://cdn.jsdelivr.net/gh/fairdataihub/codefair-app@main/ui/public/assets/images/Other%2002.png"
                 alt="Info image"
                 loading="lazy"
                 class="w-[15rem] md:w-[20rem]"

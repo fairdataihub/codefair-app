@@ -182,6 +182,7 @@ export default defineEventHandler(async (event) => {
       prerelease: release.prerelease,
       tagName: release.tag_name,
       targetCommitish: release.target_commitish,
+      updatedAt: release.updated_at,
     });
 
     // Add draft tag to the tag map
@@ -231,16 +232,50 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Sort tags and releases by name
-  githubReleases.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  // sort releases by updatedAt (newest first)
+  githubReleases.sort((a, b) => {
+    const ta = a.updatedAt ? Date.parse(a.updatedAt) : 0;
+    const tb = b.updatedAt ? Date.parse(b.updatedAt) : 0;
+    return tb - ta;
+  });
 
   // Convert the map back to an array
   const githubTags = Array.from(tagMap.values());
 
-  // sort tags alphabetically
-  const githubTagsSorted = githubTags.sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  // sort tags: numeric (semantic versions) first (greatest -> least)
+  const semverRegex = /^v?(\d+(?:\.\d+)*)(?:[-+].*)?$/i;
+
+  const numericTags: { parts: number[]; tag: any }[] = [];
+  const alphaTags: any[] = [];
+
+  for (const tag of githubTags) {
+    const m = String(tag.name).match(semverRegex);
+    if (m) {
+      const parts = m[1].split(".").map((p) => parseInt(p, 10) || 0);
+      numericTags.push({ parts, tag });
+    } else {
+      alphaTags.push(tag);
+    }
+  }
+
+  numericTags.sort((a, b) => {
+    const la = a.parts;
+    const lb = b.parts;
+    const max = Math.max(la.length, lb.length);
+    for (let i = 0; i < max; i++) {
+      const va = la[i] ?? 0;
+      const vb = lb[i] ?? 0;
+      if (va !== vb) {
+        return vb - va;
+      } // descending
+    }
+    return 0;
+  });
+
+  // then alphabetically A-Z
+  alphaTags.sort((a, b) => a.name.localeCompare(b.name));
+
+  const githubTagsSorted = numericTags.map((n) => n.tag).concat(alphaTags);
 
   return {
     existingZenodoDepositionId:

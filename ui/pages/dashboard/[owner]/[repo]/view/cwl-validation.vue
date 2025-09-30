@@ -34,10 +34,12 @@ if (error.value) {
 </script>
 
 <template>
-  <main class="mx-auto max-w-screen-xl bg-white p-8 dark:bg-gray-100">
+  <main
+    class="mx-auto max-w-screen-xl rounded-xl bg-white p-8 dark:bg-gray-600"
+  >
     <n-flex vertical size="large" class="pb-5">
       <div class="flex flex-row justify-between">
-        <h1 class="text-2xl font-bold dark:text-black">
+        <h1 class="text-2xl font-bold dark:text-gray-100">
           View CWL Validation for
           <NuxtLink
             :to="`https://github.com/${owner}/${repo}`"
@@ -57,7 +59,7 @@ if (error.value) {
       </div>
 
       <div class="border-b border-dashed py-2">
-        <p class="text-base dark:text-gray-700">
+        <p class="text-base dark:text-gray-100">
           CWL is an open standard for describing how to run command line tools
           and connect them together in workflows. It is used by various workflow
           engines to execute scientific workflows. The CWL validation process
@@ -89,9 +91,11 @@ if (error.value) {
           </n-alert>
 
           <p class="pt-2 text-sm">
-            <span class="font-semibold">Last validated: </span>
+            <span class="font-semibold text-gray-700 dark:text-gray-100"
+              >Last validated:
+            </span>
 
-            <time>{{
+            <time class="text-gray-500 dark:text-gray-200">{{
               dayjs(parseInt(file.last_validated.toString()) * 1000).format(
                 "MMMM DD, YYYY [at] hh:mmA",
               )

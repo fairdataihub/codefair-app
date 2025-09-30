@@ -7,6 +7,7 @@ interface GitHubRelease {
   htmlUrl: string;
   draft: boolean;
   prerelease: boolean;
+  updatedAt: string;
 }
 
 interface GitHubTag {

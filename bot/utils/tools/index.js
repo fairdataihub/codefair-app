@@ -569,7 +569,7 @@ export function applyLastModifiedTemplate(baseTemplate) {
     .tz("America/Los_Angeles")
     .format("MMM D YYYY, HH:mm:ss");
 
-  return `${baseTemplate}<sub><span style="color: grey;">Last updated ${lastModified} (timezone: America/Los_Angeles)</span></sub>`;
+  return `${baseTemplate}<sub><span style="color: grey;">Last updated ${lastModified} (timezone: America/Los_Angeles)</span></br><span>PLEASE NOTE: deleting this issue will require reinstalling the Codefair GitHub App, but closing the issue will allow you to restore the FAIR Compliance Dashboard.</span></sub>`;
 }
 
 /**
@@ -862,19 +862,19 @@ export async function disableCodefairOnRepo(context) {
   // Update installation table to disable the repository
   if (installation) {
     await dbInstance.installation.update({
-      data: { disabled: true },
+      data: {
+        disabled: true,
+        issue_number: installation.issue_number,
+      },
       where: { id: repository.id },
     });
   }
 
-  // If the action was just closing the issue, update the issue body
-  if (context.payload.action === "closed") {
-    // Update the body of the issue to reflect that the repository is disabled
-    await context.octokit.issues.update({
-      body: CLOSED_ISSUE_BODY,
-      issue_number: context.payload.issue.number,
-      owner: repository.owner.login,
-      repo: repository.name,
-    });
-  }
+  // Update the body of the issue to reflect that the repository is disabled
+  await context.octokit.issues.update({
+    body: CLOSED_ISSUE_BODY,
+    issue_number: context.payload.issue.number,
+    owner: repository.owner.login,
+    repo: repository.name,
+  });
 }

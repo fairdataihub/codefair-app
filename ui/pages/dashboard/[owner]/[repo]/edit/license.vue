@@ -275,15 +275,15 @@ const navigateToPR = () => {
 
 <template>
   <main class="pb-8">
-    <section class="mx-auto bg-white rounded-md border-[1px] border-gray-200 shadow-md max-w-screen-xl p-8 dark:bg-gray-100">
+    <section class="mx-auto bg-white rounded-md border-[1px] border-gray-200 shadow-md max-w-screen-xl p-8 dark:bg-gray-600">
       <n-flex vertical size="large" class="pb-5">
         <div class="flex flex-row justify-between">
-          <h1 class="text-2xl font-bold dark:text-black">
+          <h1 class="text-2xl font-bold dark:text-stone-200">
             Edit LICENSE for
             <NuxtLink
               :to="`https://github.com/${owner}/${repo}`"
               target="_blank"
-              class="text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
+              class="text-blue-500 underline transition-all hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
             >
               {{ repo }}
             </NuxtLink>
@@ -292,13 +292,13 @@ const navigateToPR = () => {
           <NuxtLink
             to="https://docs.codefair.io/docs/license.html"
             target="_blank"
-            class="text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
+            class="font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)] dark:text-indigo-300 dark:hover:text-indigo-400"
             >Need help?</NuxtLink
           >
         </div>
   
         <div class="border-b border-dashed py-2">
-          <p class="text-base dark:text-gray-700">
+          <p class="text-base dark:text-gray-100">
             You can select a license from the list below and edit further. Once
             you are done, you can save the draft or push the license to the
             repository. If you need help with with deciding which one to pick, you
@@ -306,7 +306,7 @@ const navigateToPR = () => {
             <NuxtLink
               to="https://choosealicense.com"
               target="_blank"
-              class="text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
+              class="text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)] dark:text-indigo-300 dark:hover:text-indigo-400"
               >https://choosealicense.com</NuxtLink
             >. To make your software reusable a license file is expected at the
             root level of your repository. It is important to choose your license
@@ -358,7 +358,7 @@ const navigateToPR = () => {
             <template #label>
               <p class="pb-1 text-base font-bold">
                 Edit your license if required
-                <span class="text-right text-xs text-stone-500">
+                <span class="text-right text-xs text-stone-800 dark:text-stone-200">
                   (You can use the left panel to edit the content and right panel
                   to preview the changes)
                 </span>

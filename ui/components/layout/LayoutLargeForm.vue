@@ -36,7 +36,7 @@ const collapseContent = () => {
           size="25"
           class="transition-all hover:text-indigo-500"
           :class="{
-            'text-gray-600': !collapsed,
+            'text-gray-400': !collapsed,
             'rotate-90 text-gray-400': collapsed,
           }"
         />
