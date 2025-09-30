@@ -145,7 +145,7 @@ const toggleMobileMenu = () => {
           v-if="!showMobileMenu"
           id="mobile-menu-button"
           type="button"
-          class="z-20 inline-flex items-center gap-2 rounded-lg bg-gray-200 px-2.5 py-2 text-sm font-semibold text-gray-500 ring-indigo-300 hover:bg-gray-300 focus-visible:ring active:text-gray-700 md:text-base lg:hidden"
+          class="z-20 inline-flex items-center gap-2 rounded-lg bg-gray-100 px-2.5 py-2 text-sm font-semibold text-gray-700 ring-indigo-300 hover:bg-gray-200 focus-visible:ring active:text-gray-700 dark:bg-gray-500/20 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:ring-gray-500 md:text-base lg:hidden"
           @click="toggleMobileMenu"
         >
           <svg
@@ -167,68 +167,120 @@ const toggleMobileMenu = () => {
         <div
           v-show="showMobileMenu"
           id="mobile-menu"
-          class="z-100 fixed inset-0 flex flex-col items-center justify-center gap-6 bg-purple-50 sm:hidden"
-          style="height: fit-content; padding: 6rem"
+          class="fixed inset-0 z-50 flex transform-gpu items-start justify-center transition-all duration-300 ease-in-out lg:hidden"
+          :class="[
+            showMobileMenu
+              ? 'translate-y-0 opacity-100'
+              : 'pointer-events-none -translate-y-full opacity-0',
+          ]"
         >
-          <a
-            href="/"
-            class="absolute left-4 top-4 inline-flex items-center gap-2.5 text-2xl font-bold text-black"
-            aria-label="logo"
-          >
-            <img
-              src="/assets/images/codefair_logo.png"
-              alt="codefair"
-              class="h-10 w-10"
-            />
-
-            Codefair
-          </a>
-
-          <button
-            id="mobile-menu-close"
-            type="button"
-            class="absolute right-4 top-6 text-gray-500"
+          <!-- Background overlay with blur effect -->
+          <div
+            class="absolute inset-0 bg-black/20 backdrop-blur-sm"
             @click="toggleMobileMenu"
+          ></div>
+
+          <!-- Menu content (top sheet, max half viewport height) -->
+          <div
+            class="relative w-full overflow-auto rounded-b-2xl bg-white p-4 pb-10 pt-6 shadow-2xl transition-all duration-300 ease-in-out dark:bg-gray-900"
+            :class="[
+              showMobileMenu
+                ? 'translate-y-0 scale-100'
+                : '-translate-y-4 scale-95',
+            ]"
+            style="max-height: 50vh"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+            <!-- Logo -->
+            <a
+              href="/"
+              class="inline-flex items-center gap-2.5 text-2xl font-bold text-black dark:text-white md:text-3xl"
+              aria-label="logo"
             >
-              <path
-                fill-rule="evenodd"
-                d="M14.95 5.05a1 1 0 00-1.41 0L10 8.59 6.46 5.05a1 1 0 00-1.41 1.41L8.59 10 5.05 13.54a1 1 0 001.41 1.41L10 11.41l3.54 3.54a1 1 0 001.41-1.41L11.41 10l3.54-3.54a1 1 0 000-1.41z"
-                clip-rule="evenodd"
+              <img
+                src="/assets/images/codefair_logo.png"
+                alt="codefair"
+                class="h-10 w-10 md:h-12 md:w-12"
               />
-            </svg>
-          </button>
+              Codefair
+            </a>
 
-          <nav class="flex flex-col gap-6">
-            <NuxtLink
-              to="/codefair"
-              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+            <!-- Close button with improved styling -->
+            <button
+              id="mobile-menu-close"
+              type="button"
+              class="absolute right-6 top-4 rounded-full bg-gray-100 p-2 text-gray-600 transition-all duration-200 hover:rotate-90 hover:bg-gray-200 hover:text-gray-800 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
               @click="toggleMobileMenu"
             >
-              About
-            </NuxtLink>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 transition-transform duration-200"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M14.95 5.05a1 1 0 00-1.41 0L10 8.59 6.46 5.05a1 1 0 00-1.41 1.41L8.59 10 5.05 13.54a1 1 0 001.41 1.41L10 11.41l3.54 3.54a1 1 0 001.41-1.41L11.41 10l3.54-3.54a1 1 0 000-1.41z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
 
-            <NuxtLink
-              to="/fairsoftware"
-              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-              @click="toggleMobileMenu"
-            >
-              FAIR Software
-            </NuxtLink>
+            <!-- Navigation links with staggered animations -->
+            <nav class="mt-20 flex flex-col items-center gap-6">
+              <NuxtLink
+                to="/codefair"
+                class="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 px-6 py-3 text-center text-lg font-bold text-gray-800 transition-all duration-300 hover:scale-105 hover:from-indigo-100 hover:to-purple-100 hover:shadow-lg active:scale-95 dark:from-indigo-900/30 dark:to-purple-900/30 dark:text-gray-200 dark:hover:from-indigo-800/40 dark:hover:to-purple-800/40"
+                @click="toggleMobileMenu"
+              >
+                <span class="relative z-10">About</span>
 
-            <NuxtLink
-              to="https://github.com/fairdataihub/codefair-app"
-              class="text-lg font-bold text-gray-600 transition duration-100 hover:text-indigo-500 active:text-indigo-700"
-              @click="toggleMobileMenu"
-            >
-              GitHub
-            </NuxtLink>
-          </nav>
+                <div
+                  class="absolute inset-0 -translate-x-full bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-10"
+                ></div>
+              </NuxtLink>
+
+              <NuxtLink
+                to="/fairsoftware"
+                class="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-3 text-center text-lg font-bold text-gray-800 transition-all duration-300 hover:scale-105 hover:from-purple-100 hover:to-pink-100 hover:shadow-lg active:scale-95 dark:from-purple-900/30 dark:to-pink-900/30 dark:text-gray-200 dark:hover:from-purple-800/40 dark:hover:to-pink-800/40"
+                @click="toggleMobileMenu"
+              >
+                <span class="relative z-10">FAIR Software</span>
+
+                <div
+                  class="absolute inset-0 -translate-x-full bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-10"
+                ></div>
+              </NuxtLink>
+
+              <NuxtLink
+                to="https://github.com/fairdataihub/codefair-app"
+                target="_blank"
+                class="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-gray-50 to-slate-50 px-6 py-3 text-center text-lg font-bold text-gray-800 transition-all duration-300 hover:scale-105 hover:from-gray-100 hover:to-slate-100 hover:shadow-lg active:scale-95 dark:from-gray-800/30 dark:to-slate-800/30 dark:text-gray-200 dark:hover:from-gray-700/40 dark:hover:to-slate-700/40"
+                @click="toggleMobileMenu"
+              >
+                <span
+                  class="relative z-10 flex items-center justify-center gap-2"
+                >
+                  GitHub
+                  <Icon name="ri:external-link-line" size="18" />
+                </span>
+
+                <div
+                  class="absolute inset-0 -translate-x-full bg-gradient-to-r from-gray-500 to-slate-500 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-10"
+                ></div>
+              </NuxtLink>
+            </nav>
+
+            <!-- Footer section -->
+            <div class="mt-6 flex flex-col items-center gap-3 opacity-75">
+              <div class="flex items-center gap-4">
+                <SwitchColorSwitch />
+              </div>
+
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                Tap anywhere outside to close
+              </p>
+            </div>
+          </div>
         </div>
       </header>
     </div>
