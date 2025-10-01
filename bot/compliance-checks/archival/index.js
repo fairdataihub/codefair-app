@@ -601,7 +601,7 @@ export async function createZenodoMetadata(
       description: codeMetaContent?.description,
       creators: zenodoCreators,
       access_right: zenodoMetadata.zenodo_metadata.accessRight,
-      subjects: codeMetaContent?.keywords,
+      keywords: codeMetaContent?.keywords,
       publication_date: new_date,
       license: licenseId,
       version:
