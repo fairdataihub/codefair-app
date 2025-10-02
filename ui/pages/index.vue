@@ -12,7 +12,7 @@ breadcrumbsStore.hideBreadcrumbs();
 const statsList = ref<StatItem[]>([
   {
     id: "repositories-managed",
-    endValue: 400,
+    endValue: 500,
     icon: "ri:git-repository-fill",
     startValue: 0,
     suffix: "+",
@@ -20,7 +20,7 @@ const statsList = ref<StatItem[]>([
   },
   {
     id: "user-installations",
-    endValue: 35,
+    endValue: 38,
     icon: "ri:team-fill",
     startValue: 0,
     text: "Individual users and organizations using Codefair",
