@@ -9,10 +9,13 @@ const breadcrumbsStore = useBreadcrumbsStore();
 
 breadcrumbsStore.hideBreadcrumbs();
 
+const repositoriesManaged = ref(0);
+const userInstallations = ref(0);
+
 const statsList = ref<StatItem[]>([
   {
     id: "repositories-managed",
-    endValue: 500,
+    endValue: repositoriesManaged.value,
     icon: "ri:git-repository-fill",
     startValue: 0,
     suffix: "+",
@@ -20,7 +23,7 @@ const statsList = ref<StatItem[]>([
   },
   {
     id: "user-installations",
-    endValue: 38,
+    endValue: userInstallations.value,
     icon: "ri:team-fill",
     startValue: 0,
     text: "Individual users and organizations using Codefair",
@@ -33,6 +36,41 @@ const countupOptions: CountUpOptions = {
   scrollSpyOnce: true, // animate just once
   separator: ",", // grouping separator
 };
+
+const { data, error } = await useFetch(`/api/utils/stats`, {
+  headers: useRequestHeaders(["cookie"]),
+});
+
+if (error.value) {
+  console.error("Error fetching stats:", error.value);
+} else if (data.value) {
+  repositoriesManaged.value = data.value.totalRepoCount;
+  userInstallations.value = data.value.uniqueOwnerCount;
+
+  // Update statsList with most recent db stats
+  statsList.value = [
+    {
+      id: "repositories-managed",
+      endValue: repositoriesManaged.value,
+      icon: "ri:git-repository-fill",
+      startValue: 0,
+      suffix: "+",
+      text: "Repositories managed",
+    },
+    {
+      id: "user-installations",
+      endValue: userInstallations.value,
+      icon: "ri:team-fill",
+      startValue: 0,
+      text: "Individual users and organizations using Codefair",
+    },
+  ];
+
+  // if userInstallations is greater than or equal to 50, add a "+" suffix
+  if (userInstallations.value >= 50) {
+    statsList.value[1].suffix = "+";
+  }
+}
 </script>
 
 <template>
