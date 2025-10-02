@@ -1,7 +1,6 @@
 /**
  * @fileoverview Utility functions for the bot
  */
-import { consola } from "consola";
 import { logwatch } from "../logwatch.js";
 import { init } from "@paralleldrive/cuid2";
 import human from "humanparser";
@@ -9,6 +8,7 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone.js";
 import utc from "dayjs/plugin/utc.js";
 import dbInstance from "../../db.js";
+import { updateMetadataDatabase } from "../../compliance-checks/metadata/index.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -744,7 +744,20 @@ export async function iterateCommitDetails(
   return subjects;
 }
 
-export async function ignoreCommitMessage(commitMessage, author) {
+export async function ignoreCommitMessage(
+  commitMessage,
+  author,
+  repository,
+  subjects,
+  owner,
+  context
+) {
+  logwatch.info(`Verifying commit message: ${commitMessage} by ${author}`);
+  logwatch.info(`Known commit messages to ignore: ${IGNORED_COMMIT_MESSAGES}`);
+  logwatch.info(
+    IGNORED_COMMIT_MESSAGES.includes(commitMessage) &&
+      author === `${GH_APP_NAME}[bot]`
+  );
   if (
     IGNORED_COMMIT_MESSAGES.includes(commitMessage) &&
     author === `${GH_APP_NAME}[bot]`
@@ -752,8 +765,12 @@ export async function ignoreCommitMessage(commitMessage, author) {
     logwatch.info(
       `Ignoring commit message: ${commitMessage} by ${author} as it is a known commit message`
     );
+
+    // Update the metadata table to reflect the latest commit information
+    updateMetadataDatabase(repository.id, subjects, repository, owner, context);
     return true;
   }
+  logwatch.info(`Not ignoring commit message: ${commitMessage} by ${author}`);
   return false;
 }
 
