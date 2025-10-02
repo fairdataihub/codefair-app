@@ -1095,6 +1095,119 @@ export async function applyCitationMetadata(citation, metadata, repository) {
   return metadata;
 }
 
+export async function updateMetadataDatabase(
+  repoId,
+  subjects,
+  repository,
+  owner,
+  context
+) {
+  let existing;
+  try {
+    existing = await dbInstance.codeMetadata.findUnique({
+      where: { repository_id: repoId },
+    });
+  } catch (err) {
+    logwatch.error("Failed to fetch existing metadata from DB", err);
+    throw new Error("DB lookup failed", { cause: err });
+  }
+
+  // 2) Determine which files to revalidate
+  let revalidate = true;
+  let revalCitation = true;
+  let revalCodemeta = true;
+
+  const actor = context.payload?.pusher?.name;
+  if (actor && actor !== `${GH_APP_NAME}[bot]`) {
+    logwatch.info(`Push by ${actor}, checking changed files…`);
+    revalidate = revalCitation = revalCodemeta = false;
+
+    const { added = [], modified = [] } = context.payload.head_commit || {};
+
+    if ([...added, ...modified].some((f) => f === "LICENSE")) {
+      revalidate = revalCitation = revalCodemeta = true;
+    }
+
+    // codemeta.json changed?
+    if ([...added, ...modified].some((f) => f === "codemeta.json")) {
+      revalidate = revalCodemeta = true;
+    }
+
+    // CITATION.cff changed?
+    if ([...added, ...modified].some((f) => f === "CITATION.cff")) {
+      revalidate = revalCitation = true;
+    }
+
+    logwatch.info(
+      `Revalidate? ${revalidate}, Codemeta? ${revalCodemeta}, Citation? ${revalCitation}`
+    );
+  }
+
+  let metadata = existing?.metadata || {};
+  let validCodemeta = existing?.codemeta_status === "valid";
+  let validCitation = existing?.citation_status === "valid";
+
+  if (revalidate) {
+    try {
+      // Gather metadata from GitHub API
+      metadata = await gatherMetadata(context, owner, repository);
+      logwatch.info("gatherMetadata succeeded");
+    } catch (err) {
+      logwatch.error("gatherMetadata failed", err);
+      throw new Error("gatherMetadata failed", { cause: err });
+    }
+
+    if (existing?.metadata) {
+      // Merge existing metadata from DB, preserving any user edits
+      metadata = applyDbMetadata(existing, metadata);
+      logwatch.info("applyDbMetadata merged existing onto gathered");
+    }
+
+    // Validate and apply codemeta.json if it exists
+    if (subjects.codemeta && revalCodemeta) {
+      const cm = await getCodemetaContent(context, owner, repository);
+      logwatch.info("getCodemetaContent succeeded");
+
+      try {
+        validCodemeta = await validateMetadata(cm, "codemeta", repository);
+        logwatch.info(`validateMetadata(codemeta) => ${validCodemeta}`);
+      } catch (err) {
+        logwatch.error(
+          "validateMetadata(codemeta) failed; marking invalid",
+          err
+        );
+        validCodemeta = false;
+      }
+
+      metadata = await applyCodemetaMetadata(cm, metadata, repository);
+      logwatch.info("applyCodemetaMetadata succeeded");
+    }
+
+    // Validate and apply CITATION.cff if it exists
+    if (subjects.citation && revalCitation) {
+      let cf;
+      cf = await getCitationContent(context, owner, repository);
+      logwatch.info("getCitationContent succeeded");
+
+      try {
+        validCitation = await validateMetadata(cf, "citation", repository);
+        logwatch.info(`validateMetadata(citation) => ${validCitation}`);
+      } catch (err) {
+        logwatch.error(
+          "validateMetadata(citation) failed; marking invalid",
+          err
+        );
+        validCitation = false;
+      }
+
+      metadata = await applyCitationMetadata(cf, metadata, repository);
+      logwatch.info("applyCitationMetadata succeeded");
+    }
+  }
+
+  return { metadata, validCodemeta, validCitation, existing };
+}
+
 // TODO: Prevent the user from creating/updating metadata if custom license file exists and has no license title
 /**
  * * Applies the metadata template to the base template (CITATION.cff and codemeta.json)
@@ -1119,108 +1232,14 @@ export async function applyMetadataTemplate(
   const url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repoName}/edit/code-metadata`;
 
   try {
-    let existing;
-    try {
-      existing = await dbInstance.codeMetadata.findUnique({
-        where: { repository_id: repoId },
-      });
-    } catch (err) {
-      logwatch.error("Failed to fetch existing metadata from DB", err);
-      throw new Error("DB lookup failed", { cause: err });
-    }
-
-    // 2) Determine which files to revalidate
-    let revalidate = true;
-    let revalCitation = true;
-    let revalCodemeta = true;
-
-    const actor = context.payload?.pusher?.name;
-    if (actor && actor !== `${GH_APP_NAME}[bot]`) {
-      logwatch.info(`Push by ${actor}, checking changed files…`);
-      revalidate = revalCitation = revalCodemeta = false;
-
-      const { added = [], modified = [] } = context.payload.head_commit || {};
-
-      if ([...added, ...modified].some((f) => f === "LICENSE")) {
-        revalidate = revalCitation = revalCodemeta = true;
-      }
-
-      // codemeta.json changed?
-      if ([...added, ...modified].some((f) => f === "codemeta.json")) {
-        revalidate = revalCodemeta = true;
-      }
-
-      // CITATION.cff changed?
-      if ([...added, ...modified].some((f) => f === "CITATION.cff")) {
-        revalidate = revalCitation = true;
-      }
-
-      logwatch.info(
-        `Revalidate? ${revalidate}, Codemeta? ${revalCodemeta}, Citation? ${revalCitation}`
+    const { metadata, validCodemeta, validCitation, existing } =
+      await updateMetadataDatabase(
+        repoId,
+        subjects,
+        repository,
+        owner,
+        context
       );
-    }
-
-    let metadata = existing?.metadata || {};
-    let validCodemeta = existing?.codemeta_status === "valid";
-    let validCitation = existing?.citation_status === "valid";
-
-    if (revalidate) {
-      try {
-        // Gather metadata from GitHub API
-        metadata = await gatherMetadata(context, owner, repository);
-        logwatch.info("gatherMetadata succeeded");
-      } catch (err) {
-        logwatch.error("gatherMetadata failed", err);
-        throw new Error("gatherMetadata failed", { cause: err });
-      }
-
-      if (existing?.metadata) {
-        // Merge existing metadata from DB, preserving any user edits
-        metadata = applyDbMetadata(existing, metadata);
-        logwatch.info("applyDbMetadata merged existing onto gathered");
-      }
-
-      // Validate and apply codemeta.json if it exists
-      if (subjects.codemeta && revalCodemeta) {
-        const cm = await getCodemetaContent(context, owner, repository);
-        logwatch.info("getCodemetaContent succeeded");
-
-        try {
-          validCodemeta = await validateMetadata(cm, "codemeta", repository);
-          logwatch.info(`validateMetadata(codemeta) => ${validCodemeta}`);
-        } catch (err) {
-          logwatch.error(
-            "validateMetadata(codemeta) failed; marking invalid",
-            err
-          );
-          validCodemeta = false;
-        }
-
-        metadata = await applyCodemetaMetadata(cm, metadata, repository);
-        logwatch.info("applyCodemetaMetadata succeeded");
-      }
-
-      // Validate and apply CITATION.cff if it exists
-      if (subjects.citation && revalCitation) {
-        let cf;
-        cf = await getCitationContent(context, owner, repository);
-        logwatch.info("getCitationContent succeeded");
-
-        try {
-          validCitation = await validateMetadata(cf, "citation", repository);
-          logwatch.info(`validateMetadata(citation) => ${validCitation}`);
-        } catch (err) {
-          logwatch.error(
-            "validateMetadata(citation) failed; marking invalid",
-            err
-          );
-          validCitation = false;
-        }
-
-        metadata = await applyCitationMetadata(cf, metadata, repository);
-        logwatch.info("applyCitationMetadata succeeded");
-      }
-    }
 
     let dataObject = {
       contains_citation: subjects.citation,
@@ -1253,8 +1272,20 @@ export async function applyMetadataTemplate(
     }
 
     if (subjects.codemeta && subjects.citation && subjects.license) {
-      const metadataBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-0ea5e9.svg)](${url})`;
-      baseTemplate += `\n\n## Metadata ✔️\n\nA \`CITATION.cff\` and \`codemeta.json\` file are found in the repository. They may need to be updated over time as new people are contributing to the software, etc.\n\n${metadataBadge}\n\n`;
+      const allValid = validCodemeta && validCitation;
+
+      const validationsUrl = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repoName}/view/metadata-validation`;
+      const editBadge = `[![Metadata](https://img.shields.io/badge/Edit_Metadata-0ea5e9.svg)](${url})`;
+      const validationsBadge = `[![View Validations](https://img.shields.io/badge/View_Validations-f59e0b.svg)](${validationsUrl})`;
+
+      const headingIcon = allValid ? "✔️" : "⚠️";
+      const bodyIntro = allValid
+        ? `A \`CITATION.cff\` and \`codemeta.json\` file are found in the repository. They may need to be updated over time as new people are contributing to the software, etc.`
+        : `A \`CITATION.cff\` and \`codemeta.json\` file are found in the repository, but there are **validation issues**. Click **View Validations** to review and resolve them.`;
+
+      const resultsTable = `\n\n| File            | Status      |\n|-----------------|-------------|\n| \`CITATION.cff\`  | ${validCitation ? "✅ Valid" : "❌ Invalid"} |\n| \`codemeta.json\` | ${validCodemeta ? "✅ Valid" : "❌ Invalid"} |\n`;
+
+      baseTemplate += `\n\n## Metadata ${headingIcon}\n\n${bodyIntro}${resultsTable}\n${editBadge} ${validationsBadge}\n\n`;
     }
 
     if (!subjects.license) {
