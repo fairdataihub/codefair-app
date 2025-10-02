@@ -133,6 +133,7 @@ const overrides: GlobalThemeOverrides = {
     color: "var(--cf-card-bg)",
     colorEmbedded: "var(--cf-card-bg)",
     textColor: "var(--cf-card-text)",
+    titleTextColor: "var(--cf-card-text)",
   },
   Collapse: {
     arrowColor: "var(--cf-collapse-arrow)",
