@@ -6,7 +6,7 @@
       <div class="mx-auto max-w-screen-xl px-4 md:px-8">
         <div class="flex justify-start">
           <h1
-            class="font-inter mb-4 text-4xl font-bold text-black sm:text-5xl md:text-5xl"
+            class="mb-4 font-inter text-4xl font-bold text-black sm:text-5xl md:text-5xl"
           >
             Frequently Asked Questions
           </h1>
@@ -15,13 +15,13 @@
     </div>
 
     <div
-      class="mx-auto grid max-w-screen-xl px-4 pt-8 text-left md:grid-cols-2 md:gap-x-8 md:px-8 dark:border-gray-700"
+      class="mx-auto grid max-w-screen-xl px-4 pt-8 text-left dark:border-gray-700 md:grid-cols-2 md:gap-x-8 md:px-8"
     >
       <div class="mb-10">
         <h3
           class="mb-4 flex items-start text-lg font-medium text-gray-900 dark:text-white"
         >
-          <Icon name="ri:question-fill" class="mt-1 mr-2" />
+          <Icon name="ri:question-fill" class="mr-2 mt-1" />
           Why are there two GitHub apps with Codefair?
         </h3>
 
@@ -41,7 +41,7 @@
         <h3
           class="mb-4 flex items-start text-lg font-medium text-gray-900 dark:text-white"
         >
-          <Icon name="ri:question-fill" class="mt-1 mr-2" />
+          <Icon name="ri:question-fill" class="mr-2 mt-1" />
           Why am I having trouble accessing my Organization's repositories on
           Codefair?
         </h3>

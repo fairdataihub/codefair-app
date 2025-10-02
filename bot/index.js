@@ -41,7 +41,7 @@ const BOT_MADE_PR_TITLES = [
   "feat: ✨ Add code metadata files",
   "feat: ✨ Update code metadata files",
 ];
-const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT, GH_APP_NAME } = process.env;
+const { GH_APP_NAME } = process.env;
 
 /**
  * This is the main entrypoint to your Probot app
@@ -166,6 +166,7 @@ export default async (app, { getRouter }) => {
     // Event for when a push is made to the repository (listens to all branches)
     const owner = context.payload.repository.owner.login;
     const { repository } = context.payload;
+    logwatch.info(`Push made to ${repository.name}`);
 
     // If push is not going to the default branch don't do anything
     if (
@@ -196,7 +197,7 @@ export default async (app, { getRouter }) => {
     if (!installation || installation.disabled) {
       return;
     } else {
-      // Verify if repository name has changed
+      // Verify if repository name has changed and update commit details to db
       verifyRepoName(installation.repo, repository, owner, db.installation);
 
       if (installation?.action_count > 0) {
@@ -236,7 +237,11 @@ export default async (app, { getRouter }) => {
     // Ignore pushes when bot updates the metadata files
     const ignoreBotEvent = await ignoreCommitMessage(
       latestCommitInfo.latest_commit_message,
-      context.payload.head_commit.author
+      context.payload.head_commit.author.username,
+      repository,
+      { citation: true, codemeta: true },
+      owner,
+      context
     );
     if (ignoreBotEvent) {
       return;

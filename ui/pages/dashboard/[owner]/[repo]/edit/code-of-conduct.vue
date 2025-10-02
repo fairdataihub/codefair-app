@@ -300,6 +300,7 @@ const navigateToPR = () => {
           size="huge"
           role="dialog"
           aria-modal="true"
+          class="dark:bg-gray-600"
         >
           A pull request to update the Code of Conduct file has been submitted.
           Please approve the pull request to make the changes live.

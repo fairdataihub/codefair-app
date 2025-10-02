@@ -35,7 +35,14 @@ export async function reRenderDashboard(context, owner, repository, issueBody) {
   // Run database queries in parallel using Promise.all
   logwatch.start("Re-rendering issue dashboard...");
   try {
-    const [licenseResponse, metadataResponse, cwlResponse] = await Promise.all([
+    const [
+      licenseResponse,
+      metadataResponse,
+      cwlResponse,
+      readmeResponse,
+      contributingResponse,
+      cofcResponse,
+    ] = await Promise.all([
       dbInstance.licenseRequest.findUnique({
         where: {
           repository_id: repository.id,
@@ -51,12 +58,34 @@ export async function reRenderDashboard(context, owner, repository, issueBody) {
           repository_id: repository.id,
         },
       }),
+      dbInstance.readmeValidation.findUnique({
+        where: {
+          repository_id: repository.id,
+        },
+      }),
+      dbInstance.contributingValidation.findUnique({
+        where: {
+          repository_id: repository.id,
+        },
+      }),
+      dbInstance.codeofConductValidation.findUnique({
+        where: {
+          repository_id: repository.id,
+        },
+      }),
     ]);
 
     const license = !!licenseResponse?.license_id;
     const citation = !!metadataResponse?.contains_citation;
     const codemeta = !!metadataResponse?.contains_codemeta;
     const cwl = !!cwlResponse?.contains_cwl_files;
+    const readme = {
+      status: !!readmeResponse?.contains_readme,
+      path: readmeResponse?.readme_path,
+      content: readmeResponse?.readme_content,
+    };
+    const contributing = !!contributingResponse?.contains_contrib;
+    const cofc = !!cofcResponse?.contains_code;
 
     const cwlObject = {
       contains_cwl_files: cwl,
@@ -69,6 +98,9 @@ export async function reRenderDashboard(context, owner, repository, issueBody) {
       codemeta,
       cwl: cwlObject,
       license,
+      readme,
+      contributing,
+      cofc,
     };
 
     const issueBody = await renderIssues(
@@ -109,6 +141,20 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
   const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`;
   const { depositionId, releaseId, tagVersion, userWhoSubmitted } =
     parseZenodoInfo(issueBody);
+  const [contributingResponse, cofcResponse] = await Promise.all([
+    dbInstance.contributingValidation.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
+    }),
+    dbInstance.codeofConductValidation.findUnique({
+      where: {
+        repository_id: repository.id,
+      },
+    }),
+  ]);
+  const contributing = !!contributingResponse?.contains_contrib;
+  const cofc = !!cofcResponse?.contains_cofc;
 
   // console.log("Parsed Zenodo info:", {
   //   depositionId,
@@ -165,8 +211,16 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
     const zenodoDoi = zenodoDepositionInfo.metadata.prereserve_doi.doi;
 
     // Update progress in the GitHub issue
-    const tempString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. A draft deposition was created and will be adding the necessary files and metadata.`;
-    const finalTempString = await applyLastModifiedTemplate(tempString);
+    const tempString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo. A draft deposition was created and will be adding the necessary files and metadata.\n\n`;
+    let afterUploadString = await applyAdditionalChecksTemplate(
+      { contributing, cofc },
+      tempString,
+      repository,
+      owner,
+      context
+    );
+
+    const finalTempString = await applyLastModifiedTemplate(afterUploadString);
     await createIssue(context, owner, repository, ISSUE_TITLE, finalTempString);
 
     // 5. Update the CITATION.cff and codemeta.json files with the DOI provided by Zenodo
@@ -217,7 +271,14 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
 
     // Update the GitHub issue with a status report
     logwatch.info("Updating the GitHub issue with a status report...");
-    const afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo under the version ${newZenodoMetadata.metadata.version}. All assets from the GitHub repository's draft release have been successfully uploaded to the Zenodo deposition draft.`;
+    afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release 🔄\n***${tagVersion}*** of your software is being released on GitHub and archived on Zenodo under the version ${newZenodoMetadata.metadata.version}. All assets from the GitHub repository's draft release have been successfully uploaded to the Zenodo deposition draft.\n\n`;
+    afterUploadString = await applyAdditionalChecksTemplate(
+      { contributing, cofc },
+      afterUploadString,
+      repository,
+      owner,
+      context
+    );
     const finalUploadString =
       await applyLastModifiedTemplate(afterUploadString);
     await createIssue(
@@ -241,18 +302,10 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
     logwatch.success("Successful release, updating the issue body...");
     const badge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${newDepositionId})`;
 
-    let issueBodyArchiveSection = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}`;
+    let issueBodyArchiveSection = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ✔️\n***${tagVersion}*** of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:\n\n${badge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadge}\n\n`;
 
-    const contributing = await checkForContributingFile(
-      context,
-      owner,
-      repository.name
-    );
-    logwatch.info(`Contributing check: ${contributing.status}`);
-    const cofc = await checkForCodeofConduct(context, owner, repository.name);
-    const subjects = { contributing, cofc };
     issueBodyArchiveSection = await applyAdditionalChecksTemplate(
-      subjects,
+      { contributing, cofc },
       issueBodyArchiveSection,
       repository,
       owner,
@@ -298,16 +351,10 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
   } catch (error) {
     // Update the issue with the new body
     // Update the GitHub issue with a status report
-    let afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ❌\n***${tagVersion}*** of your software was not successfully released on GitHub and archived on Zenodo. There was an error during the publication process. Please try again later or reach out to the Codefair team for additional help.`;
-    const contributing = await checkForContributingFile(
-      context,
-      owner,
-      repository.name
-    );
-    const cofc = await checkForCodeofConduct(context, owner, repository.name);
-    const subjects = { contributing, cofc };
+    let afterUploadString = `${issueBodyNoArchiveSection}\n\n## FAIR Software Release ❌\n***${tagVersion}*** of your software was not successfully released on GitHub and archived on Zenodo. There was an error during the publication process. Please try again later or reach out to the Codefair team for additional help.\n\n`;
+
     afterUploadString = await applyAdditionalChecksTemplate(
-      subjects,
+      { contributing, cofc },
       afterUploadString,
       repository,
       owner,

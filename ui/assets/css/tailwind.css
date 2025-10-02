@@ -105,6 +105,14 @@ body {
     --cf-datepicker-item-active-bg: oklch(87% 0.02 260);
     --cf-datepicker-item-included-bg: oklch(92% 0.03 265);
     --cf-datepicker-icon: oklch(45% 0.02 260);
+    --cf-datepicker-item-hover-bg: oklch(56.113% 0.00722 255.648);
+
+    .n-dynamic-input {
+      & * {
+        border: 2px !important;
+        box-shadow: none !important;
+      }
+    }
 
     .n-date-panel-month__text  {
       color: oklch(94.639% 0.00144 285.253) !important;
