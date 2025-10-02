@@ -144,9 +144,15 @@ const rules = ref<FormRules>({
     trigger: "blur",
     type: "array",
     validator: (_rule, value) => {
-      if (value.length === 0) {
+      if (!value || value.length === 0) {
         return new Error("Please input at least one keyword");
       }
+      // Check for uniqueness
+      const uniqueCount = new Set(value).size;
+      if (uniqueCount !== value.length) {
+        return new Error("Please ensure all keywords are unique");
+      }
+
       // Check if empty strings are present in the array
       const emptyStrings = value.filter((item: string) => item === "");
       if (emptyStrings.length > 0) {
@@ -1302,6 +1308,7 @@ const navigateToPR = () => {
         size="huge"
         role="dialog"
         aria-modal="true"
+        class="dark:bg-gray-600"
       >
         A pull request to update the code metadata files has been submitted.
         Please approve the pull request to make the changes live.
