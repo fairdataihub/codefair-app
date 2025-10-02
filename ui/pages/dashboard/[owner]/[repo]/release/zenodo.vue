@@ -377,7 +377,7 @@ const checkForZenodoPublishProgress = async () => {
     headers: useRequestHeaders(["cookie"]),
     method: "GET",
   })
-    .then((response) => {
+    .then(async (response) => {
       if (
         response.zenodoWorkflowStatus === "published" ||
         response.zenodoWorkflowStatus === "error"
@@ -387,6 +387,13 @@ const checkForZenodoPublishProgress = async () => {
         zenodoPublishDOI.value = response.zenodoDoi;
 
         clearInterval(zenodoPublishProgressInterval.value);
+        if (response.zenodoWorkflowStatus === "published") {
+          await $fetch(`/api/utils`, {
+            body: JSON.stringify({ owner, repo }),
+            headers: useRequestHeaders(["cookie"]),
+            method: "POST",
+          });
+        }
       }
 
       if (response.zenodoWorkflowStatus === "inProgress") {
