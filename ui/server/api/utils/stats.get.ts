@@ -6,12 +6,9 @@ export default defineEventHandler(async () => {
     const uniqueOwners = new Set(
       installations.map((installation) => installation.owner),
     );
-    let uniqueOwnerCount = uniqueOwners.size;
-    const totalRepoCount = Math.floor(installations.length / 100) * 100;
+    const uniqueOwnerCount = Math.floor(uniqueOwners.size / 5) * 5;
+    const totalRepoCount = Math.floor(installations.length / 10) * 10;
     // If greater than or equal to 50, round to nearest 10
-    if (uniqueOwnerCount >= 50) {
-      uniqueOwnerCount = Math.floor(uniqueOwnerCount / 10) * 10;
-    }
     return {
       totalRepoCount,
       uniqueOwnerCount,

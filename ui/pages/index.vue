@@ -26,6 +26,7 @@ const statsList = ref<StatItem[]>([
     endValue: userInstallations.value,
     icon: "ri:team-fill",
     startValue: 0,
+    suffix: "+",
     text: "Individual users and organizations using Codefair",
   },
 ]);
@@ -48,28 +49,8 @@ if (error.value) {
   userInstallations.value = data.value.uniqueOwnerCount;
 
   // Update statsList with most recent db stats
-  statsList.value = [
-    {
-      id: "repositories-managed",
-      endValue: repositoriesManaged.value,
-      icon: "ri:git-repository-fill",
-      startValue: 0,
-      suffix: "+",
-      text: "Repositories managed",
-    },
-    {
-      id: "user-installations",
-      endValue: userInstallations.value,
-      icon: "ri:team-fill",
-      startValue: 0,
-      text: "Individual users and organizations using Codefair",
-    },
-  ];
-
-  // if userInstallations is greater than or equal to 50, add a "+" suffix
-  if (userInstallations.value >= 50) {
-    statsList.value[1].suffix = "+";
-  }
+  statsList.value[0].endValue = repositoriesManaged.value;
+  statsList.value[1].endValue = userInstallations.value;
 }
 </script>
 
