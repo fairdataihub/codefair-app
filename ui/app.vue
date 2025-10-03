@@ -250,6 +250,7 @@ const overrides: GlobalThemeOverrides = {
 
     radioDotColorActive: "#fff",
     radioDotColorDisabled: "var(--cf-radio-text-color-disabled)",
+    textColor: "var(--cf-radio-text-color)",
   },
   Select: {
     peers: {

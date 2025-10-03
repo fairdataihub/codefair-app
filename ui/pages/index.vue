@@ -1,21 +1,19 @@
 <script setup lang="ts">
+import { ref, watch } from "vue";
 import CountUp from "vue-countup-v3";
-import { ref } from "vue";
-
 import type { CountUpOptions } from "vue-countup-v3";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 const breadcrumbsStore = useBreadcrumbsStore();
-
 breadcrumbsStore.hideBreadcrumbs();
 
-const repositoriesManaged = ref(0);
-const userInstallations = ref(0);
+const repositoriesManaged = ref<number | null>(null);
+const userInstallations = ref<number | null>(null);
 
 const statsList = ref<StatItem[]>([
   {
     id: "repositories-managed",
-    endValue: repositoriesManaged.value,
+    endValue: 0,
     icon: "ri:git-repository-fill",
     startValue: 0,
     suffix: "+",
@@ -23,7 +21,7 @@ const statsList = ref<StatItem[]>([
   },
   {
     id: "user-installations",
-    endValue: userInstallations.value,
+    endValue: 0,
     icon: "ri:team-fill",
     startValue: 0,
     suffix: "+",
@@ -32,26 +30,38 @@ const statsList = ref<StatItem[]>([
 ]);
 
 const countupOptions: CountUpOptions = {
-  enableScrollSpy: true, // only start when scrolled into view
-  scrollSpyDelay: 0, // optional delay (ms)
-  scrollSpyOnce: true, // animate just once
-  separator: ",", // grouping separator
+  enableScrollSpy: true,
+  scrollSpyOnce: true,
+  separator: ",",
 };
 
-const { data, error } = await useFetch(`/api/utils/stats`, {
+// Perform a client-only fetch
+const { data, error } = await useFetch("/api/utils/stats", {
   headers: useRequestHeaders(["cookie"]),
+  server: false,
 });
 
-if (error.value) {
-  console.error("Error fetching stats:", error.value);
-} else if (data.value) {
-  repositoriesManaged.value = data.value.totalRepoCount;
-  userInstallations.value = data.value.uniqueOwnerCount;
+watch(
+  () => data.value,
+  (newVal) => {
+    if (newVal) {
+      repositoriesManaged.value = (newVal as any).totalRepoCount ?? 0;
+      userInstallations.value = (newVal as any).uniqueOwnerCount ?? 0;
 
-  // Update statsList with most recent db stats
-  statsList.value[0].endValue = repositoriesManaged.value;
-  statsList.value[1].endValue = userInstallations.value;
-}
+      statsList.value[0].endValue = repositoriesManaged.value ?? 0;
+      statsList.value[1].endValue = userInstallations.value ?? 0;
+    }
+  },
+);
+
+watch(
+  () => error.value,
+  (err) => {
+    if (err) {
+      console.error("Error fetching stats:", err);
+    }
+  },
+);
 </script>
 
 <template>
