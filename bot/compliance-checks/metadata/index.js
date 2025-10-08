@@ -655,7 +655,17 @@ export async function updateMetadataIdentifier(
 
     // console.log("Zenodo metadata", zenodoMetadata);
 
-    citationFile.doi = identifier;
+    // Normalize the provided identifier and ensure we produce a doi.org URL
+    let doiUrl = "";
+    const identifierString = String(identifier || "").trim();
+
+    // If identifier is already a URL, use it as is
+    if (/^https?:\/\//i.test(identifierString)) {
+      doiUrl = identifierString;
+    } else {
+      doiUrl = `https://doi.org/${identifierString}`;
+    }
+    citationFile.doi = doiUrl;
     citationFile["date-released"] = updated_date;
     citationFile.version = zenodoMetadata?.zenodo_metadata?.version;
     codeMetaFile.identifier = identifier;
