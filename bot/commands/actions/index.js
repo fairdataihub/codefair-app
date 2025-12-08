@@ -3,8 +3,6 @@ import { renderIssues, createIssue } from "../../utils/renderer/index.js";
 import dbInstance from "../../db.js";
 import { logwatch } from "../../utils/logwatch.js";
 import { applyAdditionalChecksTemplate } from "../../compliance-checks/additional-checks/index.js";
-import { checkForContributingFile } from "../../compliance-checks/contributing/index.js";
-import { checkForCodeofConduct } from "../../compliance-checks/code-of-conduct/index.js";
 import {
   applyLastModifiedTemplate,
   getReleaseById,

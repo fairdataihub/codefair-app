@@ -447,7 +447,7 @@ body {
     --header-color: oklch(58.5% 0.233 277.117);
 
     --radial-start: oklch(0.2039 0.0196 262.04);
-    --radial-end: var(--codefair-grid);
+    --radial-end: oklch(0.3618 0.1136 303.98);
 
     --btn-bg: oklch(58.5% 0.233 277.117);
     --btn-bg-hover: oklch(51.1% 0.262 276.966);
