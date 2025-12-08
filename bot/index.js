@@ -404,7 +404,7 @@ export default async (app, { getRouter }) => {
     const potentialBot = context.payload.sender.login;
 
     // Return if the issue title is not FAIR Compliance Dashboard or the sender is not the bot
-    if (issueTitle != ISSUE_TITLE || potentialBot != `${GH_APP_NAME}[bot]`) {
+    if (issueTitle !== ISSUE_TITLE || potentialBot !== `${GH_APP_NAME}[bot]`) {
       logwatch.info(
         "issues.edited: Issue title is not FAIR Compliance Dashboard or the editor is not the bot, ignoring..."
       );
