@@ -654,18 +654,29 @@ export async function updateMetadataIdentifier(
     }
 
     // console.log("Zenodo metadata", zenodoMetadata);
+    const DOI_REGEX = /10\.\d{4,9}(?:\.\d+)?\/[-A-Za-z0-9:/_.;()[\]\\]+/;
 
     // Normalize the provided identifier and ensure we produce a doi.org URL
-    let doiUrl = "";
-    const identifierString = String(identifier || "").trim();
+    let doiValue = "";
+    const identifierString = String(identifier ?? "").trim();
 
-    // If identifier is already a URL, use it as is
-    if (/^https?:\/\//i.test(identifierString)) {
-      doiUrl = identifierString;
-    } else {
-      doiUrl = `https://doi.org/${identifierString}`;
+    if (identifierString) {
+      // Case 1: it's a DOI resolver URL like https://doi.org/10.5281/zenodo.1003150
+      const doiUrlMatch = identifierString.match(
+        /^https?:\/\/(?:dx\.)?doi\.org\/(.+)/i
+      );
+
+      if (doiUrlMatch && doiUrlMatch[1]) {
+        const extracted = doiUrlMatch[1].trim();
+        const extractedMatch = extracted.match(DOI_REGEX);
+        doiValue = extractedMatch ? extractedMatch[0] : extracted;
+      } else {
+        // Case 2: it's maybe a bare DOI or some identifier string
+        const directDoiMatch = identifierString.match(DOI_REGEX);
+        doiValue = directDoiMatch ? directDoiMatch[0] : identifierString;
+      }
     }
-    citationFile.doi = doiUrl;
+    citationFile.doi = doiValue;
     citationFile["date-released"] = updated_date;
     citationFile.version = zenodoMetadata?.zenodo_metadata?.version;
     codeMetaFile.identifier = identifier;
