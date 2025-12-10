@@ -406,6 +406,32 @@ export default defineEventHandler(async (event) => {
     }),
   }));
 
+  // Extract a DOI (without resolver URL) from the uniqueIdentifier when applicable
+  let doiValue: string | undefined;
+  const DOI_REGEX = /10\.\d{4,9}(?:\.\d+)?\/[-A-Za-z0-9:/_.;()[\]\\]+/;
+
+  if (codeMetadataRecord.uniqueIdentifier) {
+    const uid = String(codeMetadataRecord.uniqueIdentifier).trim();
+
+    // Checks if DOI pattern match (10.5281/zenodo.1003150)
+    const doiMatch = uid.match(DOI_REGEX);
+
+    if (doiMatch) {
+      doiValue = doiMatch[0];
+    } else {
+      // If it's a DOI resolver URL like https://doi.org/10.5281/zenodo.1003150
+      const urlMatch = uid.match(/https?:\/\/(?:dx\.)?doi\.org\/(.+)/i);
+      if (urlMatch && urlMatch[1]) {
+        const extracted = urlMatch[1].trim();
+        const extractedMatch = extracted.match(DOI_REGEX);
+        doiValue = extractedMatch ? extractedMatch[0] : extracted;
+      } else {
+        // Fallback to the raw value if nothing matched (keeps previous behaviour)
+        doiValue = uid;
+      }
+    }
+  }
+
   const citationCFF = {
     title: codeMetadataRecord.name,
     authors: citationAuthors,
@@ -415,8 +441,7 @@ export default defineEventHandler(async (event) => {
     type: "software",
     ...(codeMetadataRecord.uniqueIdentifier && {
       /**
-       * * Using the DOI as the identifier for the citation.cff file
-       * * This is not ideal but it is a good way to maintain consistency
+      // Note: Disabled to avoid redundancy with the dedicated doi field
        */
       // identifiers: [
       //   {
@@ -424,9 +449,7 @@ export default defineEventHandler(async (event) => {
       //     value: codeMetadataRecord.uniqueIdentifier,
       //   },
       // ],
-      doi: /^https?:\/\//.test(codeMetadataRecord.uniqueIdentifier)
-        ? codeMetadataRecord.uniqueIdentifier
-        : `https://doi.org/${codeMetadataRecord.uniqueIdentifier}`,
+      ...(doiValue && { doi: doiValue }),
     }),
     ...(codeMetadataRecord.description && {
       abstract: codeMetadataRecord.description,
