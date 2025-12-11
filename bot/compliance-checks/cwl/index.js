@@ -201,7 +201,7 @@ export async function applyCWLTemplate(
 ) {
   const privateRepo = await isRepoPrivate(context, owner, repository.name);
   const identifier = createId();
-  const overallSection = `## Language Specific Standards\n\nTo make your software FAIR is it important to follow language specific standards and best practices. Codefair will check below that your code complies with applicable standards,`;
+  const overallSection = `## Language Specific Standards\n\nTo make your software FAIR is it important to follow language specific standards and best practices. Codefair will check below that your code complies with applicable standards,\n\n`;
   let url = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/view/cwl-validation`;
 
   // Delete file entries from db if they were removed from the repository
@@ -425,7 +425,7 @@ export async function applyCWLTemplate(
   }
 
   const cwlBadge = `[![CWL](https://img.shields.io/badge/View_CWL_Report-0ea5e9.svg)](${url})`;
-  baseTemplate += `${overallSection}\n\n### CWL Validations ${validOverall ? "✔️" : "❗"}\n\nCodefair has detected that you are following the Common Workflow Language (CWL) standard to describe your command line tool. Codefair ran the [cwltool validator](https://cwltool.readthedocs.io/en/latest/) and ${validOverall ? `all ***${subjects.cwl.files.length}*** CWL file(s) in your repository are valid.` : `***${failedCount}/${subjects.cwl.files.length}*** CWL file(s) in your repository are not valid.`}\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Validation result |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}\n\n`;
+  baseTemplate += `${overallSection}### CWL Validations ${validOverall ? "✔️" : "❗"}\n\nCodefair has detected that you are following the Common Workflow Language (CWL) standard to describe your command line tool. Codefair ran the [cwltool validator](https://cwltool.readthedocs.io/en/latest/) and ${validOverall ? `all ***${subjects.cwl.files.length}*** CWL file(s) in your repository are valid.` : `***${failedCount}/${subjects.cwl.files.length}*** CWL file(s) in your repository are not valid.`}\n\n<details>\n<summary>Summary of the validation report</summary>\n\n| File | Validation result |\n| :---- | :----: |\n${tableContent}</details>\n\nTo view the full report of each CWL file or to rerun the validation, click the "View CWL Report" button below.\n\n${cwlBadge}\n\n`;
 
   logwatch.success("CWL template section applied");
   return baseTemplate;

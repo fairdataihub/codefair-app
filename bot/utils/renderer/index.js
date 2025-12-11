@@ -71,7 +71,7 @@ export async function renderIssues(
       `# Check the FAIRness of your software\n\n` +
       `This issue is your repository's dashboard for all things FAIR. Keep it open as making ` +
       `and keeping software FAIR is a continuous process that evolves along with the software. ` +
-      `You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.`;
+      `You can read the [documentation](https://docs.codefair.io/docs/dashboard.html) to learn more.\n\n`;
 
     // ── README
     step = "applyReadme";
@@ -219,18 +219,6 @@ export async function renderIssues(
     logwatch.success(`renderIssues complete`, { owner, repo: repository.name });
     return baseTemplate;
   } catch (err) {
-    // logwatch.error(
-    //   {
-    //     message: `renderIssues failed at step "${step}"`,
-    //     owner,
-    //     repo: repository.name,
-    //     error: { message: err.message, stack: err.stack, cause: err.cause },
-    //   },
-    //   true
-    // );
-    // throw new Error(`Error rendering issue [${step}]: ${err.message}`, {
-    //   cause: err,
-    // });
     logwatch.error(
       {
         message: `renderIssues failed at step "${step}"`,

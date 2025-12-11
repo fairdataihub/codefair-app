@@ -170,9 +170,17 @@ export async function applyArchivalTemplate(baseTemplate, repository, owner) {
   const archiveTitle = `\n\n## FAIR Software Release`;
   const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
   const alreadyReleaseText = ` of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:`;
-  const firstReleaseBadgeButton = `[![Create Release](https://img.shields.io/badge/Create_Release-dc2626.svg)](${badgeURL})`;
-  const releaseBadgeButton = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`;
-  const newReleaseText = `To make your software FAIR, it is necessary to archive it in an archival repository like Zenodo every time you make a release. When you are ready to make your next release, click the "Create release" button below to easily create a FAIR release where your metadata files are updated (including with a DOI) before creating a GitHub release and archiving it.\n\n`;
+  const firstReleaseBadgeButton = `[![Create Release on Zenodo](https://img.shields.io/badge/Create_Release_on_Zenodo-dc2626.svg)](${badgeURL})`;
+  const releaseBadgeButton = `[![Create Release on Zenodo](https://img.shields.io/badge/Create_Release_on_Zenodo-00bcd4.svg)](${badgeURL})`;
+  const newReleaseText = `To make your software FAIR, it is necessary to archive it in an archival repository like Zenodo every time you make a release. When you are ready to make your next release, click the "Create release" button below to easily create a FAIR release where your metadata files are updated (including with a DOI) before creating a GitHub release and archiving it on Zenodo.\n\n`;
+  const noLicenseText = `\n\nTo make your software FAIR, a license file is required. Please add a license file to your repository to enable FAIR release functionality. Once a license file is detected, you will be able to create FAIR releases that are archived on Zenodo with updated metadata and DOIs.`;
+  const noLicenseBadge = `![FAIR Release not checked](https://img.shields.io/badge/FAIR_Release_Not_Checked-fbbf24)`;
+
+  if (!subjects.license) {
+    logwatch.info("License not found. Skipping FAIR release check.");
+    baseTemplate += `${archiveTitle}\n\n${noLicenseText}\n\n${noLicenseBadge}\n\n`;
+    return baseTemplate;
+  }
 
   let existingZenodoDep = await dbInstance.zenodoDeposition.findUnique({
     where: {
@@ -183,7 +191,7 @@ export async function applyArchivalTemplate(baseTemplate, repository, owner) {
   if (!existingZenodoDep) {
     //
     logwatch.info("Zenodo deposition not found in the database.");
-    baseTemplate += `${archiveTitle} ❌\n\n${newReleaseText}\n\n${firstReleaseBadgeButton}`;
+    baseTemplate += `${archiveTitle} ❌\n\n${newReleaseText}\n\n${firstReleaseBadgeButton}\n\n`;
   } else if (
     existingZenodoDep?.last_published_zenodo_doi === null ||
     existingZenodoDep?.last_published_zenodo_doi === undefined
@@ -197,7 +205,7 @@ export async function applyArchivalTemplate(baseTemplate, repository, owner) {
     });
 
     if (!existingZenodoDep || !existingZenodoDep?.last_published_zenodo_doi) {
-      baseTemplate += `${archiveTitle} ❌\n\n${newReleaseText}\n\n${firstReleaseBadgeButton}`;
+      baseTemplate += `${archiveTitle} ❌\n\n${newReleaseText}\n\n${firstReleaseBadgeButton}\n\n`;
     } else {
       logwatch.info(existingZenodoDep);
       const lastVersion = existingZenodoDep.github_tag_name;

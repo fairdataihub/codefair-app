@@ -115,11 +115,7 @@ export async function applyReadmeTemplate(
       : `A README file was not found within your .github, docs or root of your repository. The README file is a markdown file that contains information about your project. It is usually the first thing that users see when they visit your project on GitHub. Try to make it as informative and helpful as possible. Click on the badge below to create a file with Codefair's editor.`;
 
     return (
-      baseTemplate +
-      `\n\n` +
-      `${header}\n\n` +
-      `${desc}\n\n` +
-      `${readmeBadge}\n\n`
+      baseTemplate + `${header}\n\n` + `${desc}\n\n` + `${readmeBadge}\n\n`
     );
   } catch (error) {
     throw new Error(`Error constructing README section: ${error.message}`, {
