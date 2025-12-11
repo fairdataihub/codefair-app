@@ -497,6 +497,12 @@ export default async (app, { getRouter }) => {
   // When an issue is closed
   app.on(["issues.closed"], async (context) => {
     const issueTitle = context.payload.issue.title;
+    const botAuthor = context.payload.issue.user.login;
+
+    // Only proceed if the issue was created by the bot
+    if (botAuthor !== `${GH_APP_NAME}[bot]`) {
+      return;
+    }
 
     // Verify the issue dashboard is the one that got close/deleted
     if (issueTitle === ISSUE_TITLE) {

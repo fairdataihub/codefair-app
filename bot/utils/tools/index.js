@@ -569,7 +569,7 @@ export function applyLastModifiedTemplate(baseTemplate) {
     .tz("America/Los_Angeles")
     .format("MMM D YYYY, HH:mm:ss");
 
-  return `${baseTemplate}<sub><span style="color: grey;">Last updated ${lastModified} (timezone: America/Los_Angeles)</span></br><span>PLEASE NOTE: deleting this issue will require reinstalling the Codefair GitHub App, but closing the issue will allow you to restore the FAIR Compliance Dashboard.</span></sub>`;
+  return `${baseTemplate}<sub><span style="color: grey;">Last updated ${lastModified} (timezone: America/Los_Angeles)</span></br><span>PLEASE NOTE: deleting this issue will require reinstalling the Codefair GitHub App, but closing the issue will allow you to restore the FAIR Compliance Dashboard by reopening the issue.</span></sub>`;
 }
 
 /**
