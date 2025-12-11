@@ -189,7 +189,12 @@ export async function renderIssues(
 
     // ── ARCHIVAL
     step = "applyArchival";
-    baseTemplate = await applyArchivalTemplate(baseTemplate, repository, owner);
+    baseTemplate = await applyArchivalTemplate(
+      baseTemplate,
+      repository,
+      owner,
+      subjects
+    );
     logwatch.info(`Archival template applied`, {
       owner,
       repo: repository.name,

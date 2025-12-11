@@ -166,7 +166,12 @@ export function parseZenodoInfo(issueBody) {
  * @param {Object} context - GitHub context
  * @returns {String} String of updated base template with archival information
  */
-export async function applyArchivalTemplate(baseTemplate, repository, owner) {
+export async function applyArchivalTemplate(
+  baseTemplate,
+  repository,
+  owner,
+  subjects
+) {
   const archiveTitle = `\n\n## FAIR Software Release`;
   const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
   const alreadyReleaseText = ` of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:`;
