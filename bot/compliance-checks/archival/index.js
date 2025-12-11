@@ -178,7 +178,7 @@ export async function applyArchivalTemplate(
   const firstReleaseBadgeButton = `[![Create Release on Zenodo](https://img.shields.io/badge/Create_Release_on_Zenodo-dc2626.svg)](${badgeURL})`;
   const releaseBadgeButton = `[![Create Release on Zenodo](https://img.shields.io/badge/Create_Release_on_Zenodo-00bcd4.svg)](${badgeURL})`;
   const newReleaseText = `To make your software FAIR, it is necessary to archive it in an archival repository like Zenodo every time you make a release. When you are ready to make your next release, click the "Create release" button below to easily create a FAIR release where your metadata files are updated (including with a DOI) before creating a GitHub release and archiving it on Zenodo.\n\n`;
-  const noLicenseText = `\n\nTo make your software FAIR, a license file is required. Please add a license file to your repository to enable FAIR release functionality. Once a license file is detected, you will be able to create FAIR releases that are archived on Zenodo with updated metadata and DOIs.`;
+  const noLicenseText = `\n\nTo make your software FAIR, a license file is required.\n> [!WARNING]\n> Codefair will run this check after a LICENSE file is detected in your repository.`;
   const noLicenseBadge = `![FAIR Release not checked](https://img.shields.io/badge/FAIR_Release_Not_Checked-fbbf24)`;
 
   if (!subjects.license) {
