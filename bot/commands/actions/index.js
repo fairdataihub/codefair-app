@@ -136,7 +136,7 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
     issueBody.indexOf("## FAIR Software Release")
   );
   const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
-  const releaseBadge = `[![Create Release](https://img.shields.io/badge/Create_Release-00bcd4.svg)](${badgeURL})`;
+  const releaseBadge = `[![Create Release on Zenodo](https://img.shields.io/badge/Create_Release_on_Zenodo-00bcd4.svg)](${badgeURL})`;
   const { depositionId, releaseId, tagVersion, userWhoSubmitted } =
     parseZenodoInfo(issueBody);
   const [contributingResponse, cofcResponse] = await Promise.all([
