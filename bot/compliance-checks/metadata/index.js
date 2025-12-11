@@ -1312,7 +1312,7 @@ export async function applyMetadataTemplate(
     if (!subjects.license) {
       // License was not found
       const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
-      baseTemplate += `## Metadata\n\nTo make your software FAIR a \`CITATION.cff\` and \`codemeta.json\` metadata files are expected at the root level of your repository. A LICENSE file is dependent for these files to be checked and validated.Codefair will check for these files after a license file is detected.\n\n${metadataBadge}\n\n`;
+      baseTemplate += `## Metadata\n\nTo make your software FAIR a \`CITATION.cff\` and \`codemeta.json\` metadata files are expected at the root level of your repository.\n> [!WARNING]\n> Codefair will run this check after a LICENSE file is detected in your repository.\n\n${metadataBadge}\n\n`;
     }
 
     return baseTemplate;
