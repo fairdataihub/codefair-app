@@ -30,16 +30,13 @@ export default defineNuxtConfig({
   },
 
   build: {
-    transpile:
-      process.env.NODE_ENV === "production"
-        ? [
-            "naive-ui",
-            "vueuc",
-            "@css-render/vue3-ssr",
-            "@juggle/resize-observer",
-            "vue-countup-v3",
-          ]
-        : ["@juggle/resize-observer", "vue-countup-v3"],
+    transpile: [
+      "naive-ui",
+      "vueuc",
+      "@css-render/vue3-ssr",
+      "@juggle/resize-observer",
+      "vue-countup-v3",
+    ],
   },
 
   colorMode: {
@@ -76,7 +73,7 @@ export default defineNuxtConfig({
         },
       },
     ],
-    "nuxt-icon",
+    "@nuxt/icon",
   ],
 
   notivue: {

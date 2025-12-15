@@ -11,3 +11,4 @@ public/assets/css/styles.css
 nuxt-app/.nuxt/
 .vercel
 bot/yarn-error.log
+.vscode/
