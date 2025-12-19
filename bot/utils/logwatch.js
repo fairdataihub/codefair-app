@@ -17,6 +17,15 @@ class Logwatch {
   }
 
   /**
+   * Helper to format message for console output
+   */
+  _formatForConsole(message) {
+    return typeof message === "object"
+      ? JSON.stringify(message, null, 2)
+      : message;
+  }
+
+  /**
    * Internal method to send log to endpoint
    * @param {string} level - Log level
    * @param {string|object} message - Log message or JSON object
@@ -63,7 +72,7 @@ class Logwatch {
    * @param {boolean} [isJson=false] - Whether the message is a JSON object
    */
   trace(message, isJson = false) {
-    consola.trace(message);
+    consola.trace(this._formatForConsole(message));
     this._sendLog("trace", message, isJson ? "json" : "text");
   }
 
@@ -73,7 +82,7 @@ class Logwatch {
    * @param {boolean} [isJson=false] - Whether the message is a JSON object
    */
   debug(message, isJson = false) {
-    consola.debug(message);
+    consola.debug(this._formatForConsole(message));
     this._sendLog("debug", message, isJson ? "json" : "text");
   }
 
@@ -83,7 +92,7 @@ class Logwatch {
    * @param {boolean} [isJson=false] - Whether the message is a JSON object
    */
   info(message, isJson = false) {
-    consola.info(message);
+    consola.info(this._formatForConsole(message));
     this._sendLog("info", message, isJson ? "json" : "text");
   }
 
@@ -93,7 +102,7 @@ class Logwatch {
    * @param {boolean} [isJson=false] - Whether the message is a JSON object
    */
   start(message, isJson = false) {
-    consola.start(message);
+    consola.start(this._formatForConsole(message));
     this._sendLog("info", message, isJson ? "json" : "text");
   }
 
@@ -103,7 +112,7 @@ class Logwatch {
    * @param {boolean} [isJson=false] - Whether the message is a JSON object
    */
   success(message, isJson = false) {
-    consola.success(message);
+    consola.success(this._formatForConsole(message));
     this._sendLog("info", message, isJson ? "json" : "text");
   }
 
@@ -113,7 +122,7 @@ class Logwatch {
    * @param {boolean} [isJson=false] - Whether the message is a JSON object
    */
   warn(message, isJson = false) {
-    consola.warn(message);
+    consola.warn(this._formatForConsole(message));
     this._sendLog("warning", message, isJson ? "json" : "text");
   }
 
@@ -123,7 +132,7 @@ class Logwatch {
    * @param {boolean} [isJson=false] - Whether the message is a JSON object
    */
   error(message, isJson = false) {
-    consola.error(message);
+    consola.error(this._formatForConsole(message));
     this._sendLog("error", message, isJson ? "json" : "text");
   }
 
@@ -133,13 +142,13 @@ class Logwatch {
    * @param {boolean} [isJson=false] - Whether the message is a JSON object
    */
   critical(message, isJson = false) {
-    consola.fatal(message);
+    consola.fatal(this._formatForConsole(message));
     this._sendLog("critical", message, isJson ? "json" : "text");
   }
 
   /** Explicit JSON logging */
   json(level = "debug", message) {
-    consola[level](message);
+    consola[level](this._formatForConsole(message));
     this._sendLog(level, message, "json");
   }
 }
