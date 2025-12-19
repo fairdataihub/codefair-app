@@ -1,10 +1,11 @@
 import { checkForLicense } from "./license/index.js";
-import { checkForCitation } from "./citation/index.js";
-import { checkForCodeMeta } from "./codemeta/index.js";
 import { getCWLFiles } from "./cwl/index.js";
 import { checkForReadme } from "./readme/index.js";
-import { checkForContributingFile } from "./contributing/index.js";
-import { checkForCodeofConduct } from "./code-of-conduct/index.js";
+import { checkMetadataFilesExists } from "./metadata/index.js";
+import {
+  checkForCodeofConduct,
+  checkForContributingFile,
+} from "./additional-checks/index.js";
 import logwatch from "../utils/logwatch.js";
 
 /**
@@ -36,8 +37,12 @@ export async function runComplianceChecks(
   };
   const readme = await checkForReadme(context, owner, repository.name);
   const license = await checkForLicense(context, owner, repository.name);
-  const citation = await checkForCitation(context, owner, repository.name);
-  const codemeta = await checkForCodeMeta(context, owner, repository.name);
+  const { citation, codemeta } = await checkMetadataFilesExists(
+    context,
+    owner,
+    repository
+  );
+
   const contributing = await checkForContributingFile(
     context,
     owner,

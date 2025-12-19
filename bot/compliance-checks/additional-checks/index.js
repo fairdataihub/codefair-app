@@ -1,7 +1,100 @@
 import prisma from "../../db.js";
+import { checkForFile } from "../../utils/tools/index.js";
 import { createId } from "../../utils/tools/index.js";
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const db = prisma;
+
+/**
+ * * Check if a Code of conduct file exists (CODE_OF_CONDUCT.md, CODE_OF_CONDUCT.txt, or CODE_OF_CONDUCT)
+ * @param {Object} context - The context of the GitHub Event
+ * @param {String} owner - The owner of the repository
+ * @param {String} repoName - The name of the repository
+ * @returns {Boolean} - True if a CODE_OF_CONDUCT file exists, false otherwise
+ */
+export async function checkForCodeofConduct(context, owner, repoName) {
+  const cofcFilesTypes = [
+    "CODE_OF_CONDUCT.md",
+    "CODE_OF_CONDUCT.txt",
+    "CODE_OF_CONDUCT",
+    "docs/CODE_OF_CONDUCT.md",
+    "docs/CODE_OF_CONDUCT.txt",
+    "docs/CODE_OF_CONDUCT",
+    ".github/CODE_OF_CONDUCT.md",
+    ".github/CODE_OF_CONDUCT.txt",
+    ".github/CODE_OF_CONDUCT",
+  ];
+
+  for (const filePath of cofcFilesTypes) {
+    const cofc = await checkForFile(context, owner, repoName, filePath);
+    if (cofc) {
+      const content = await context.octokit.repos.getContent({
+        owner,
+        repo: repoName,
+        path: filePath,
+      });
+      const contentData = Buffer.from(content.data.content, "base64").toString(
+        "utf-8"
+      );
+
+      return {
+        status: true,
+        path: filePath,
+        content: contentData,
+      };
+    }
+  }
+  return {
+    path: "No Code of Conduct file found",
+    status: false,
+    content: "",
+  };
+}
+
+/**
+ * * Check if a CONTRIBUTING file exists (CONTRIBUTING.md)
+ * @param {Object} context - The context of the GitHub Event
+ * @param {String} owner - The owner of the repository
+ * @param {String} repoName - The name of the repository
+ * @returns {Boolean} - True if a CONTRIBUTING file exists, false otherwise
+ */
+export async function checkForContributingFile(context, owner, repoName) {
+  const contributingFilesTypes = [
+    "CONTRIBUTING.md",
+    "CONTRIBUTING.txt",
+    "CONTRIBUTING",
+    "docs/CONTRIBUTING.md",
+    "docs/CONTRIBUTING.txt",
+    "docs/CONTRIBUTING",
+    ".github/CONTRIBUTING.md",
+    ".github/CONTRIBUTING.txt",
+    ".github/CONTRIBUTING",
+  ];
+
+  for (const filePath of contributingFilesTypes) {
+    const contrib = await checkForFile(context, owner, repoName, filePath);
+    if (contrib) {
+      const content = await context.octokit.repos.getContent({
+        owner,
+        repo: repoName,
+        path: filePath,
+      });
+      const contentData = Buffer.from(content.data.content, "base64").toString(
+        "utf-8"
+      );
+
+      return {
+        status: true,
+        path: filePath,
+        content: contentData,
+      };
+    }
+  }
+  return {
+    path: "No Contributing file found",
+    status: false,
+    content: "",
+  };
+}
 
 export async function applyAdditionalChecksTemplate(
   subjects,
@@ -108,7 +201,7 @@ export async function applyAdditionalChecksTemplate(
 
     const section =
       `## Additional Recommendations\n\n` +
-      `Although these files aren not part of the core FAIR compliance checks, ` +
+      `Although these files are not part of the core FAIR compliance checks, ` +
       `Codefair recommends including them to improve project governance, community engagement, and contributor experience:\n\n` +
       additionalSubjects
         .map(
