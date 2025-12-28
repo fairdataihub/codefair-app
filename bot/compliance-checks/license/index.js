@@ -17,7 +17,7 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  * @returns {boolean} - Returns true if a license is found in the repository, false otherwise
  */
 export async function checkForLicense(context, owner, repoName) {
-  const readmeFilesTypes = [
+  const licenseFilesTypes = [
     "LICENSE.md",
     "LICENSE.txt",
     "LICENSE",
@@ -29,23 +29,38 @@ export async function checkForLicense(context, owner, repoName) {
     ".github/LICENSE",
   ];
 
-  for (const filePath of readmeFilesTypes) {
-    const readme = await checkForFile(context, owner, repoName, filePath);
-    if (readme) {
-      const content = await context.octokit.repos.getContent({
+  for (const filePath of licenseFilesTypes) {
+    const file = await checkForFile(context, owner, repoName, filePath);
+    if (file) {
+      // Get the actual file content from the repository
+      const fileContent = await context.octokit.rest.repos.getContent({
         owner,
         repo: repoName,
         path: filePath,
       });
-      const contentData = Buffer.from(content.data.content, "base64").toString(
-        "utf-8"
-      );
+
+      const contentData = Buffer.from(
+        fileContent.data.content,
+        "base64"
+      ).toString("utf-8");
+
+      // Try to get the detected license information for the repository
+      let spdxId = null;
+      try {
+        const repoLicense = await context.octokit.rest.licenses.getForRepo({
+          owner,
+          repo: repoName,
+        });
+        spdxId = repoLicense.data?.license?.spdx_id || null;
+      } catch (error) {
+        logwatch.warn(`Could not detect license SPDX ID: ${error.message}`);
+      }
 
       return {
         status: true,
         path: filePath,
         content: contentData,
-        spdx_id: content.data?.license?.spdx_id || null,
+        spdx_id: spdxId,
       };
     }
   }
