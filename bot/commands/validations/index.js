@@ -244,7 +244,7 @@ export async function rerunMetadataValidation(
 
     // Get license status (needed for metadata checks)
     const licenseCheck = await checkForLicense(context, owner, repository.name);
-    subjects.license = licenseCheck?.status;
+    subjects.license = licenseCheck;
 
     // Force revalidation by creating a synthetic context that looks like bot push
     const syntheticContext = {
