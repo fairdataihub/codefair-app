@@ -18,15 +18,9 @@ const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
  */
 export async function checkForLicense(context, owner, repoName) {
   const licenseFilesTypes = [
+    "LICENSE",
     "LICENSE.md",
     "LICENSE.txt",
-    "LICENSE",
-    "docs/LICENSE.md",
-    "docs/LICENSE.txt",
-    "docs/LICENSE",
-    ".github/LICENSE.md",
-    ".github/LICENSE.txt",
-    ".github/LICENSE",
   ];
 
   for (const filePath of licenseFilesTypes) {
@@ -79,7 +73,7 @@ export function validateLicense(license, existingLicense) {
 
   // Check for specific license conditions
   if (licenseId === "no-license" || !licenseId) {
-    logwatch.info(`No license or 'no-license' found for repo: ${repoName}`);
+    logwatch.info(`No license or 'no-license' found`);
     licenseId = null;
     licenseContent = "";
     licenseContentEmpty = true;
@@ -88,18 +82,14 @@ export function validateLicense(license, existingLicense) {
   if (licenseId === "NOASSERTION") {
     if (licenseContentEmpty) {
       // No assertion and no content indicates no valid license
-      logwatch.info(
-        `No assertion ID with no content provided for repo: ${repoName}`
-      );
+      logwatch.info(`No assertion ID with no content provided`);
       licenseId = null;
     } else {
       // Custom license with content provided
       licenseContentEmpty = false;
       if (existingLicense?.license_content.trim() !== licenseContent.trim()) {
         licenseId = "Custom"; // New custom license
-        logwatch.info(
-          `Custom license with new content provided for repo: ${repoName}`
-        );
+        logwatch.info(`Custom license with new content provided`);
       } else if (existingLicense?.license_id) {
         licenseId = existingLicense.license_id; // Use existing custom license ID
         logwatch.info("Custom license with existing content provided");
