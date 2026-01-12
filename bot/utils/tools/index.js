@@ -650,8 +650,11 @@ export async function iterateCommitDetails(
     if (commits[i]?.added?.length > 0) {
       // Iterate through the added files
       for (let j = 0; j < commits[i]?.added.length; j++) {
-        if (commits[i].added[j] === "LICENSE") {
-          subjects.license = true;
+        if (
+          ["LICENSE", "LICENSE.md", "LICENSE.txt"].includes(commits[i].added[j])
+        ) {
+          const license = await checkForLicense(context, owner, repoName);
+          subjects.license = license;
           continue;
         }
         if (commits[i].added[j] === "CITATION.cff") {
@@ -686,7 +689,7 @@ export async function iterateCommitDetails(
       }
     }
 
-    // Iterate through the remove files
+    // Iterate through the removed files
     if (commits[i]?.removed?.length > 0) {
       for (let j = 0; j < commits[i]?.removed.length; j++) {
         const fileSplit = commits[i]?.removed[j].split(".");
@@ -694,8 +697,17 @@ export async function iterateCommitDetails(
           removedCWLFiles.push(commits[i].removed[j]);
           continue;
         }
-        if (commits[i]?.removed[j] === "LICENSE") {
-          subjects.license = false;
+        if (
+          ["LICENSE", "LICENSE.md", "LICENSE.txt"].includes(
+            commits[i]?.removed[j]
+          )
+        ) {
+          subjects.license = {
+            path: "No LICENSE file found",
+            status: false,
+            content: "",
+            spdx_id: null,
+          };
           continue;
         }
         if (commits[i]?.removed[j] === "CITATION.cff") {
