@@ -5,7 +5,8 @@ import { logwatch } from "../../utils/logwatch.js";
 import { applyLastModifiedTemplate } from "../../utils/tools/index.js";
 import {
   checkForLicense,
-  validateLicense,
+  updateLicenseDatabase,
+  applyLicenseTemplate,
 } from "../../compliance-checks/license/index.js";
 import { getCWLFiles } from "../../compliance-checks/cwl/index.js";
 import {
@@ -368,37 +369,50 @@ export async function rerunLicenseValidation(
   issueBody
 ) {
   // Run the license validation again
-  logwatch.start("Rerunning License Validation...");
+  const repoInfo = `${owner}/${repository.name}`;
+  logwatch.start(`Rerunning License Validation for repo: ${repoInfo}...`);
+
   try {
+    // Step 1: Check for license
+    logwatch.info(`Fetching license information for ${repoInfo}`);
     const license = await checkForLicense(context, owner, repository.name);
 
     if (!license) {
       throw new Error("License not found in the repository");
     }
 
-    // Update the database with the license information
+    logwatch.info(
+      `License found: ${license.license || "unknown"} at ${license.path || "unknown path"}`
+    );
+
+    // Step 2: Update the database with the license information
+    logwatch.info(`Updating license database for ${repoInfo}`);
     await updateLicenseDatabase(repository, license);
 
-    // Update the issue body
+    // Step 3: Prepare issue body
     const issueBodyRemovedCommand = issueBody.substring(
       0,
       issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
     );
 
-    // Generate new license section
+    // Step 4: Generate new license section
+    logwatch.info(`Generating new license section for ${repoInfo}`);
     let newLicenseSection = "";
+    const subjects = { license };
     newLicenseSection = await applyLicenseTemplate(
-      license,
+      subjects,
       newLicenseSection,
       repository,
       owner,
       context
     );
-    // Parse the existing issue body to replace just the license section
+
+    // Step 5: Parse the existing issue body to replace just the license section
     const issueBodyWithoutTimestamp = issueBodyRemovedCommand;
     const licenseStartMarker = "## LICENSE";
     const licenseStartIndex =
       issueBodyWithoutTimestamp.indexOf(licenseStartMarker);
+
     if (licenseStartIndex === -1) {
       throw new Error("Could not find LICENSE section in issue body");
     }
@@ -408,6 +422,7 @@ export async function rerunLicenseValidation(
       licenseStartIndex + licenseStartMarker.length
     );
     const nextSectionMatch = afterLicenseStart.match(/\n## /);
+
     let updatedBody;
     if (nextSectionMatch) {
       // There's another section after LICENSE
@@ -424,29 +439,49 @@ export async function rerunLicenseValidation(
         newLicenseSection; // New LICENSE section
     }
 
-    const lastModified = await applyLastModifiedTemplate(updatedBody);
+    // Step 6: Update the issue
+    logwatch.info(`Updating issue for ${repoInfo}`);
+    const lastModified = applyLastModifiedTemplate(updatedBody);
     await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+
+    logwatch.info(
+      `License validation rerun completed successfully for ${repoInfo}`
+    );
   } catch (error) {
-    // Remove the command from the issue body
-    const issueBodyRemovedCommand = issueBody.substring(
-      0,
-      issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
+    logwatch.error(
+      {
+        message: "Failed to rerun license validation",
+        repo: repoInfo,
+        error: error.message,
+        stack: error.stack,
+        cause: error.cause,
+      },
+      true
     );
-    const lastModified = await applyLastModifiedTemplate(
-      issueBodyRemovedCommand
-    );
-    await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
-    if (error.cause) {
-      logwatch.error(
+
+    // Restore issue body without command
+    try {
+      const issueBodyRemovedCommand = issueBody.substring(
+        0,
+        issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
+      );
+      const lastModified = applyLastModifiedTemplate(issueBodyRemovedCommand);
+      await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+    } catch (restoreError) {
+      logwatch.warn(
         {
-          message: "Error.cause message for License Validation",
-          error: error.cause,
-          stack: error?.stack,
+          message: "Failed to restore issue body after error",
+          repo: repoInfo,
+          error: restoreError.message,
         },
         true
       );
     }
-    throw new Error("Error rerunning license validation", error);
+
+    throw new Error(
+      `Error rerunning license validation for ${repoInfo}: ${error.message}`,
+      { cause: error }
+    );
   }
 }
 

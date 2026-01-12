@@ -199,7 +199,7 @@ async function validateCodemeta(metadataInfo) {
 
     if (result.message === "valid") {
       return ValidationResult.valid(
-        `Valid according to schema v${result.version}`,
+        `Codemeta is valid according to schema v${result.version}`,
         { version: result.version }
       );
     } else {
@@ -631,6 +631,8 @@ export async function updateMetadataDatabase(
       }
     }
 
+    logwatch.info(`subjects.citation: ${subjects.citation}`);
+    logwatch.info(`revalidationNeeds.citation: ${revalidationNeeds.citation}`);
     // Process CITATION.cff if it exists and needs revalidation
     if (subjects.citation && revalidationNeeds.citation) {
       try {
@@ -1684,7 +1686,7 @@ export async function applyMetadataTemplate(
     const validationsUrl = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repoName}/view/metadata-validation`;
 
     // Render appropriate template based on state
-    if (!subjects.license) {
+    if (!subjects.license.status) {
       // No license - metadata check not run
       const metadataBadge = `![Metadata](https://img.shields.io/badge/Metadata_Not_Checked-fbbf24)`;
       baseTemplate += `## Metadata\n\nTo make your software FAIR a \`CITATION.cff\` and \`codemeta.json\` metadata files are expected at the root level of your repository.\n> [!WARNING]\n> Codefair will run this check after a LICENSE file is detected in your repository.\n\n${metadataBadge}\n\n`;
@@ -1719,7 +1721,17 @@ export async function applyMetadataTemplate(
       const citationDisplay = getValidationDisplay(result.citationValidation);
       const codemetaDisplay = getValidationDisplay(result.codemetaValidation);
 
-      const resultsTable = `\n\n| File            | Status      | Message |\n|-----------------|-------------|----------|\n| \`CITATION.cff\`  | ${citationDisplay.emoji} ${citationDisplay.text} | ${result.citationValidation.message} |\n| \`codemeta.json\` | ${codemetaDisplay.emoji} ${codemetaDisplay.text} | ${result.codemetaValidation.message} |\n`;
+      // Escape pipe characters and remove newlines in validation messages to prevent breaking the markdown table
+      const sanitizeMessage = (msg) =>
+        (msg || "").replace(/\|/g, "\\|").replace(/\n/g, " ");
+      const citationMessage = sanitizeMessage(
+        result.citationValidation.message
+      );
+      const codemetaMessage = sanitizeMessage(
+        result.codemetaValidation.message
+      );
+
+      const resultsTable = `\n\n| File            | Status      | Message |\n|-----------------|-------------|----------|\n| \`CITATION.cff\`  | ${citationDisplay.emoji} ${citationDisplay.text} | ${citationMessage} |\n| \`codemeta.json\` | ${codemetaDisplay.emoji} ${codemetaDisplay.text} | ${codemetaMessage} |\n`;
 
       baseTemplate += `## Metadata ${headingIcon}\n\n${bodyIntro}${resultsTable}\n${editBadge} ${validationsBadge}\n\n`;
     }
