@@ -4,7 +4,7 @@ import json
 import re
 import subprocess
 import jsonschema
-from flask_restx import Api, Resource
+from flask_restx import Api, Resource, fields
 
 
 api = Api(
@@ -187,16 +187,25 @@ class ValidateCodemeta(Resource):
     @api.response(200, "Success")
     @api.response(400, "Validation Error")
     @api.expect(
-        api.parser().add_argument(
-            "file_content",
-            type=str,
-            help="The content of the codemeta.json file",
-            required=True,
+        api.model(
+            "CodemetaValidation",
+            {
+                "file_content": fields.Raw(
+                    required=True, description="The content of the codemeta.json file"
+                )
+            },
         )
     )
     def post(self):
         """Validate a codemeta.json file"""
         file_content = api.payload.get("file_content")
+
+        # Add null check
+        if file_content is None:
+            return {
+                "message": "Validation Error",
+                "error": "file_content is required",
+            }, 400
 
         # if file content is string, convert to json
         if isinstance(file_content, str):

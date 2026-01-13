@@ -181,7 +181,7 @@ export async function applyArchivalTemplate(
   const noLicenseText = `\n\nTo make your software FAIR, a license file is required.\n> [!WARNING]\n> Codefair will run this check after a LICENSE file is detected in your repository.`;
   const noLicenseBadge = `![FAIR Release not checked](https://img.shields.io/badge/FAIR_Release_Not_Checked-fbbf24)`;
 
-  if (!subjects.license) {
+  if (!subjects.license.status) {
     logwatch.info("License not found. Skipping FAIR release check.");
     baseTemplate += `${archiveTitle}\n\n${noLicenseText}\n\n${noLicenseBadge}\n\n`;
     return baseTemplate;

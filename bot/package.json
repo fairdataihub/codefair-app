@@ -31,7 +31,8 @@
     "prisma:db:pull": "prisma db pull",
     "prisma:generate": "prisma generate",
     "scripts:truncate:tables": "tsx ./scripts/prismaM.ts",
-    "analytics": "tsx ./scripts/analytics.ts"
+    "analytics": "tsx ./scripts/analytics.ts",
+    "reset": "rm -rf node_modules && rm -rf .nuxt && rm -rf .output && rm -rf dist && yarn install"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",

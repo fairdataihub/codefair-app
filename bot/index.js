@@ -267,6 +267,7 @@ export default async (app, { getRouter }) => {
         owner
       );
     }
+
     const issueBody = await renderIssues(
       context,
       owner,

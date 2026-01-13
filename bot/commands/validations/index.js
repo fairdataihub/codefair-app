@@ -3,22 +3,22 @@ import { renderIssues, createIssue } from "../../utils/renderer/index.js";
 import dbInstance from "../../db.js";
 import { logwatch } from "../../utils/logwatch.js";
 import { applyLastModifiedTemplate } from "../../utils/tools/index.js";
-import { validateLicense } from "../../compliance-checks/license/index.js";
+import {
+  checkForLicense,
+  updateLicenseDatabase,
+  applyLicenseTemplate,
+} from "../../compliance-checks/license/index.js";
 import { getCWLFiles } from "../../compliance-checks/cwl/index.js";
 import {
-  validateMetadata,
-  getCitationContent,
-  getCodemetaContent,
-  gatherMetadata,
-  convertDateToUnix,
-  applyDbMetadata,
-  applyCodemetaMetadata,
-  applyCitationMetadata,
+  checkMetadataFilesExists,
+  updateMetadataDatabase,
+  applyMetadataTemplate,
 } from "../../compliance-checks/metadata/index.js";
 import { checkForReadme } from "../../compliance-checks/readme/index.js";
-import { createId } from "../../utils/tools/index.js";
-import { checkForCodeofConduct } from "../../compliance-checks/code-of-conduct/index.js";
-import { checkForContributingFile } from "../../compliance-checks/contributing/index.js";
+import {
+  checkForContributingFile,
+  checkForCodeofConduct,
+} from "../../compliance-checks/additional-checks/index.js";
 
 const ISSUE_TITLE = `FAIR Compliance Dashboard`;
 const db = dbInstance;
@@ -234,125 +234,131 @@ export async function rerunMetadataValidation(
   repository,
   issueBody
 ) {
-  logwatch.start("Validating metadata files...");
+  const repoInfo = `${owner}/${repository.name}`;
+  logwatch.start(
+    `Rerunning metadata validation for repo: ${repository.name} (ID: ${repository.id})`
+  );
+
   try {
-    let metadata = await gatherMetadata(context, owner, repository);
-    let containsCitation = false,
-      containsCodemeta = false,
-      validCitation = false,
-      validCodemeta = false;
+    // Check which metadata files exist
+    const subjects = await checkMetadataFilesExists(context, owner, repository);
 
-    let existingMetadataEntry = await db.codeMetadata.findUnique({
-      where: {
-        repository_id: repository.id,
+    // Get license status (needed for metadata checks)
+    const licenseCheck = await checkForLicense(context, owner, repository.name);
+    subjects.license = licenseCheck;
+
+    // Force revalidation by creating a synthetic context that looks like bot push
+    const syntheticContext = {
+      ...context,
+      payload: {
+        ...context.payload,
+        pusher: { name: `${process.env.GH_APP_NAME}[bot]` }, // Triggers full revalidation
       },
-    });
+    };
 
-    if (existingMetadataEntry?.metadata) {
-      // Update the metadata variable
-      containsCitation = existingMetadataEntry.contains_citation;
-      containsCodemeta = existingMetadataEntry.contains_codemeta;
-      metadata = applyDbMetadata(existingMetadataEntry, metadata);
-    } else {
-      // create blank entry to prevent issues down the line
-      existingMetadataEntry = await db.codeMetadata.create({
-        data: {
-          identifier: createId(),
-          repository: {
-            connect: {
-              id: repository.id,
-            },
-          },
-        },
-      });
-    }
+    await updateMetadataDatabase(
+      repository.id,
+      subjects,
+      repository,
+      owner,
+      syntheticContext
+    );
 
-    const citation = await getCitationContent(context, owner, repository);
-    const codemeta = await getCodemetaContent(context, owner, repository);
+    // Generate new metadata section
+    let newMetadataSection = "";
+    newMetadataSection = await applyMetadataTemplate(
+      subjects,
+      newMetadataSection,
+      repository,
+      owner,
+      syntheticContext
+    );
 
-    if (codemeta) {
-      containsCodemeta = true;
-      validCodemeta = await validateMetadata(codemeta, "codemeta", repository);
-      metadata = await applyCodemetaMetadata(codemeta, metadata, repository);
-    }
-
-    if (citation) {
-      containsCitation = true;
-      validCitation = await validateMetadata(citation, "citation", repository);
-      metadata = await applyCitationMetadata(citation, metadata, repository);
-      // consola.info("Metadata so far after citation update", JSON.stringify(metadata, null, 2));
-    }
-
-    // Ensure all dates have been converted to ISO strings split by the T
-    if (metadata.creationDate) {
-      metadata.creationDate = convertDateToUnix(metadata.creationDate);
-    }
-    if (metadata.firstReleaseDate) {
-      metadata.firstReleaseDate = convertDateToUnix(metadata.firstReleaseDate);
-    }
-    if (metadata.currentVersionReleaseDate) {
-      metadata.currentVersionReleaseDate = convertDateToUnix(
-        metadata.currentVersionReleaseDate
-      );
-    }
-
-    // update the database with the metadata information
-    if (existingMetadataEntry) {
-      await db.codeMetadata.update({
-        data: {
-          codemeta_status: validCodemeta ? "valid" : "invalid",
-          citation_status: validCitation ? "valid" : "invalid",
-          contains_citation: containsCitation,
-          contains_codemeta: containsCodemeta,
-          metadata: metadata,
-        },
-        where: {
-          repository_id: repository.id,
-        },
-      });
-    } else {
-      await db.codeMetadata.create({
-        data: {
-          codemeta_status: validCodemeta ? "valid" : "invalid",
-          citation_status: validCitation ? "valid" : "invalid",
-          contains_citation: containsCitation,
-          contains_codemeta: containsCodemeta,
-          metadata: metadata,
-        },
-        where: {
-          repository_id: repository.id,
-        },
-      });
-    }
-
-    const issueBodyRemovedCommand = issueBody.substring(
+    // Parse the existing issue body to replace just the metadata section
+    const issueBodyWithoutTimestamp = issueBody.substring(
       0,
       issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
     );
-    const lastModified = await applyLastModifiedTemplate(
-      issueBodyRemovedCommand
+
+    // Find the metadata section boundaries
+    const metadataStartMarker = "## Metadata";
+    const metadataStartIndex =
+      issueBodyWithoutTimestamp.indexOf(metadataStartMarker);
+
+    if (metadataStartIndex === -1) {
+      throw new Error("Could not find Metadata section in issue body");
+    }
+
+    // Find the next section (starts with ## or end of string)
+    const afterMetadataStart = issueBodyWithoutTimestamp.substring(
+      metadataStartIndex + metadataStartMarker.length
     );
-    await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+    const nextSectionMatch = afterMetadataStart.match(/\n## /);
+
+    let updatedBody;
+    if (nextSectionMatch) {
+      // There's another section after Metadata
+      const nextSectionIndex =
+        metadataStartIndex +
+        metadataStartMarker.length +
+        nextSectionMatch.index;
+
+      updatedBody =
+        issueBodyWithoutTimestamp.substring(0, metadataStartIndex) + // Before Metadata
+        newMetadataSection + // New Metadata section
+        issueBodyWithoutTimestamp.substring(nextSectionIndex); // After Metadata
+    } else {
+      // Metadata is the last section
+      updatedBody =
+        issueBodyWithoutTimestamp.substring(0, metadataStartIndex) + // Before Metadata
+        newMetadataSection; // New Metadata section
+    }
+
+    // Add timestamp
+    updatedBody = applyLastModifiedTemplate(updatedBody);
+
+    // Update the issue
+    await createIssue(context, owner, repository, ISSUE_TITLE, updatedBody);
+    logwatch.info(
+      `Metadata validation rerun completed for repo: ${repository.name} (ID: ${repository.id})`
+    );
   } catch (error) {
-    // Remove the command from the issue body
-    const issueBodyRemovedCommand = issueBody.substring(
-      0,
-      issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
+    logwatch.error(
+      {
+        message: "Failed to rerun metadata validation",
+        repo: repoInfo,
+        error: error.message,
+        stack: error.stack,
+      },
+      true
     );
-    const lastModified = await applyLastModifiedTemplate(
-      issueBodyRemovedCommand
-    );
-    await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
-    if (error.cause) {
-      logwatch.error(
+
+    // rrestore issue body without command
+    try {
+      const issueBodyRemovedCommand = issueBody.substring(
+        0,
+        issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
+      );
+      const lastModified = applyLastModifiedTemplate(issueBodyRemovedCommand);
+
+      await context.octokit.issues.update({
+        owner,
+        repo: repository.name,
+        issue_number: context.payload.issue.number,
+        body: lastModified,
+      });
+    } catch (restoreError) {
+      logwatch.warn(
         {
-          message: "Error.cause message for Metadata Validation",
-          error: error.cause,
+          message: "Failed to restore issue body after error",
+          repo: repoInfo,
+          error: restoreError.message,
         },
         true
       );
     }
-    throw new Error("Error rerunning metadata validation", error);
+
+    throw error;
   }
 }
 
@@ -363,91 +369,119 @@ export async function rerunLicenseValidation(
   issueBody
 ) {
   // Run the license validation again
-  logwatch.start("Rerunning License Validation...");
+  const repoInfo = `${owner}/${repository.name}`;
+  logwatch.start(`Rerunning License Validation for repo: ${repoInfo}...`);
+
   try {
-    const licenseRequest = await context.octokit.rest.licenses.getForRepo({
-      owner,
-      repo: repository.name,
-    });
-
-    const existingLicense = await db.licenseRequest.findUnique({
-      where: {
-        repository_id: repository.id,
-      },
-    });
-
-    const license = !!licenseRequest.data.license;
+    // Step 1: Check for license
+    logwatch.info(`Fetching license information for ${repoInfo}`);
+    const license = await checkForLicense(context, owner, repository.name);
 
     if (!license) {
       throw new Error("License not found in the repository");
     }
 
-    const { licenseId, licenseContent, licenseContentEmpty } = validateLicense(
-      licenseRequest,
-      existingLicense
+    logwatch.info(
+      `License found: ${license.license || "unknown"} at ${license.path || "unknown path"}`
     );
 
-    logwatch.info({
-      message: `License validation complete`,
-      licenseId,
-      licenseContent,
-      licenseContentEmpty,
-    });
+    // Step 2: Update the database with the license information
+    logwatch.info(`Updating license database for ${repoInfo}`);
+    await updateLicenseDatabase(repository, license);
 
-    // Update the database with the license information
-    if (existingLicense) {
-      await db.licenseRequest.update({
-        data: {
-          license_id: licenseId,
-          license_content: licenseContent,
-          license_status: licenseContentEmpty ? "invalid" : "valid",
-        },
-        where: {
-          repository_id: repository.id,
-        },
-      });
-    } else {
-      await db.licenseRequest.create({
-        data: {
-          license_id: licenseId,
-          license_content: licenseContent,
-          license_status: licenseContentEmpty ? "invalid" : "valid",
-        },
-        where: {
-          repository_id: repository.id,
-        },
-      });
+    // Step 3: Prepare issue body
+    const issueBodyRemovedCommand = issueBody.substring(
+      0,
+      issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
+    );
+
+    // Step 4: Generate new license section
+    logwatch.info(`Generating new license section for ${repoInfo}`);
+    let newLicenseSection = "";
+    const subjects = { license };
+    newLicenseSection = await applyLicenseTemplate(
+      subjects,
+      newLicenseSection,
+      repository,
+      owner,
+      context
+    );
+
+    // Step 5: Parse the existing issue body to replace just the license section
+    const issueBodyWithoutTimestamp = issueBodyRemovedCommand;
+    const licenseStartMarker = "## LICENSE";
+    const licenseStartIndex =
+      issueBodyWithoutTimestamp.indexOf(licenseStartMarker);
+
+    if (licenseStartIndex === -1) {
+      throw new Error("Could not find LICENSE section in issue body");
     }
 
-    // Update the issue body
-    const issueBodyRemovedCommand = issueBody.substring(
-      0,
-      issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
+    // Find the next section (starts with ## or end of string)
+    const afterLicenseStart = issueBodyWithoutTimestamp.substring(
+      licenseStartIndex + licenseStartMarker.length
     );
-    const lastModified = await applyLastModifiedTemplate(
-      issueBodyRemovedCommand
-    );
+    const nextSectionMatch = afterLicenseStart.match(/\n## /);
+
+    let updatedBody;
+    if (nextSectionMatch) {
+      // There's another section after LICENSE
+      const nextSectionIndex =
+        licenseStartIndex + licenseStartMarker.length + nextSectionMatch.index;
+      updatedBody =
+        issueBodyWithoutTimestamp.substring(0, licenseStartIndex) + // Before LICENSE
+        newLicenseSection + // New LICENSE section
+        issueBodyWithoutTimestamp.substring(nextSectionIndex); // After LICENSE
+    } else {
+      // LICENSE is the last section
+      updatedBody =
+        issueBodyWithoutTimestamp.substring(0, licenseStartIndex) + // Before LICENSE
+        newLicenseSection; // New LICENSE section
+    }
+
+    // Step 6: Update the issue
+    logwatch.info(`Updating issue for ${repoInfo}`);
+    const lastModified = applyLastModifiedTemplate(updatedBody);
     await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+
+    logwatch.info(
+      `License validation rerun completed successfully for ${repoInfo}`
+    );
   } catch (error) {
-    // Remove the command from the issue body
-    const issueBodyRemovedCommand = issueBody.substring(
-      0,
-      issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
+    logwatch.error(
+      {
+        message: "Failed to rerun license validation",
+        repo: repoInfo,
+        error: error.message,
+        stack: error.stack,
+        cause: error.cause,
+      },
+      true
     );
-    const lastModified = await applyLastModifiedTemplate(
-      issueBodyRemovedCommand
-    );
-    await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
-    if (error.cause) {
-      logwatch.error(
+
+    // Restore issue body without command
+    try {
+      const issueBodyRemovedCommand = issueBody.substring(
+        0,
+        issueBody.indexOf(`<sub><span style="color: grey;">Last updated`)
+      );
+      const lastModified = applyLastModifiedTemplate(issueBodyRemovedCommand);
+      await createIssue(context, owner, repository, ISSUE_TITLE, lastModified);
+    } catch (restoreError) {
+      logwatch.warn(
         {
-          message: "Error.cause message for License Validation",
-          error: error.cause,
+          message: "Failed to restore issue body after error",
+          repo: repoInfo,
+          error: restoreError.message,
         },
         true
       );
     }
-    throw new Error("Error rerunning license validation", error);
+
+    throw new Error(
+      `Error rerunning license validation for ${repoInfo}: ${error.message}`,
+      { cause: error }
+    );
   }
 }
 
