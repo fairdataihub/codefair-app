@@ -172,6 +172,19 @@ body {
     --cf-alert-neutral-border: oklch(88% 0.01 260);
     --cf-alert-neutral-icon: oklch(55% 0.02 260);
 
+    /* Modal colors - light mode */
+    --cf-modal-bg: oklch(100% 0.00011 271.152);
+    --cf-modal-header-bg: oklch(97% 0.01 260);
+    --cf-modal-header-text: oklch(27% 0.02 260);
+    --cf-modal-text: oklch(35% 0.02 260);
+    --cf-modal-border: oklch(90% 0.01 260);
+    --cf-modal-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    --cf-modal-close-icon: oklch(55% 0.02 260);
+    --cf-modal-close-icon-hover: oklch(27% 0.02 260);
+    --cf-modal-close-bg-hover: oklch(94% 0.01 260);
+    --cf-modal-icon-info: oklch(45% 0.18 220);
+    --cf-modal-action-space: 12px;
+
     --link-color: oklch(45.7% 0.24 277.023);
     --link-hover: oklch(49.1% 0.27 292.581);
 
@@ -332,6 +345,11 @@ body {
     --cf-modal-text: oklch(90% 0.01 260);
     --cf-modal-border: oklch(38% 0.02 260);
     --cf-modal-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    --cf-modal-close-icon: oklch(78% 0.01 260);
+    --cf-modal-close-icon-hover: oklch(98% 0.01 260);
+    --cf-modal-close-bg-hover: oklch(32% 0.02 260);
+    --cf-modal-icon-info: oklch(75% 0.15 220);
+    --cf-modal-action-space: 12px;
 
     --cf-dropdown-bg: oklch(27% 0.02 260);
     --cf-dropdown-divider: oklch(38% 0.02 260);
