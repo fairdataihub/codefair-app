@@ -507,7 +507,7 @@ export async function updateMetadataDatabase(
   };
   let citationValidation = {
     isValid: existing.citation_status === "valid",
-    status: existing.citation || "",
+    status: existing.citation_status || "",
     message: existing.citation_validation_message || "Not yet validated",
   };
 

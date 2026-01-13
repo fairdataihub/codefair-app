@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone.js";
 import utc from "dayjs/plugin/utc.js";
 import dbInstance from "../../db.js";
+import { checkForLicense } from "../../compliance-checks/license/index.js";
 import { updateMetadataDatabase } from "../../compliance-checks/metadata/index.js";
 
 dayjs.extend(utc);
@@ -653,7 +654,11 @@ export async function iterateCommitDetails(
         if (
           ["LICENSE", "LICENSE.md", "LICENSE.txt"].includes(commits[i].added[j])
         ) {
-          const license = await checkForLicense(context, owner, repoName);
+          const license = await checkForLicense(
+            context,
+            owner,
+            repository.name
+          );
           subjects.license = license;
           continue;
         }
