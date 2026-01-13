@@ -628,6 +628,7 @@ export async function updateMetadataDatabase(
           },
           true
         );
+        codemetaValidation = ValidationResult.error(error);
       }
     }
 
