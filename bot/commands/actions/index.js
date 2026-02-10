@@ -73,7 +73,13 @@ export async function reRenderDashboard(context, owner, repository, issueBody) {
       }),
     ]);
 
-    const license = !!licenseResponse?.license_id;
+    // Build license object that matches what renderIssues/applyLicenseTemplate expects
+    const license = {
+      status: !!licenseResponse?.contains_license,
+      content: licenseResponse?.license_content || "",
+      spdx_id: licenseResponse?.license_id || null,
+      path: "LICENSE",
+    };
     const citation = !!metadataResponse?.contains_citation;
     const codemeta = !!metadataResponse?.contains_codemeta;
     const cwl = !!cwlResponse?.contains_cwl_files;
@@ -83,7 +89,7 @@ export async function reRenderDashboard(context, owner, repository, issueBody) {
       content: readmeResponse?.readme_content,
     };
     const contributing = !!contributingResponse?.contains_contrib;
-    const cofc = !!cofcResponse?.contains_code;
+    const cofc = !!cofcResponse?.contains_cofc;
 
     const cwlObject = {
       contains_cwl_files: cwl,
