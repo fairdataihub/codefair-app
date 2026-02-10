@@ -2,12 +2,410 @@ import { error } from "console";
 import dbInstance from "../../db.js";
 import { logwatch } from "../../utils/logwatch.js";
 import fs from "fs";
+import yaml from "js-yaml";
+import { getCodemetaContent, getCitationContent } from "../metadata/index.js";
+
 const licensesJson = JSON.parse(
   fs.readFileSync("./public/assets/data/licenses.json", "utf8")
 );
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
 const { ZENODO_ENDPOINT, ZENODO_API_ENDPOINT } = process.env;
+
+// Identifier type constants
+const IDENTIFIER_TYPE = {
+  ZENODO_DOI: "zenodo_doi",
+  OTHER_DOI: "other_doi",
+  NON_DOI: "non_doi",
+};
+
+const ZENODO_DOI_PREFIX = "10.5281/zenodo.";
+const DOI_REGEX = /10\.\d{4,9}(?:\.\d+)?\/[-A-Za-z0-9:/_.;()[\]\\]+/;
+
+/**
+ * Extract a DOI from various string formats
+ * Handles: https://doi.org/..., dx.doi.org/..., bare DOI
+ * @param {String} value - The string that may contain a DOI
+ * @returns {String|null} - The extracted DOI or null
+ */
+function extractDOIFromString(value) {
+  if (!value || typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+
+  // Case 1: URL format (https://doi.org/... or dx.doi.org/...)
+  const urlMatch = trimmed.match(/^https?:\/\/(?:dx\.)?doi\.org\/(.+)/i);
+  if (urlMatch && urlMatch[1]) {
+    const extracted = urlMatch[1].trim();
+    const doiMatch = extracted.match(DOI_REGEX);
+    return doiMatch ? doiMatch[0] : null;
+  }
+
+  // Case 2: Bare DOI
+  const directMatch = trimmed.match(DOI_REGEX);
+  return directMatch ? directMatch[0] : null;
+}
+
+/**
+ * Classify an identifier as Zenodo DOI, Other DOI, or Non-DOI
+ * @param {String} identifier - The identifier to classify
+ * @returns {Object|null} - { type, value, displayValue, zenodoId? } or null
+ */
+function classifyIdentifier(identifier) {
+  if (!identifier || typeof identifier !== "string") {
+    return null;
+  }
+
+  const trimmed = identifier.trim();
+  if (!trimmed) return null;
+
+  // Try to extract DOI
+  const doi = extractDOIFromString(trimmed);
+
+  if (doi) {
+    // Check if it's a Zenodo DOI (prefix 10.5281/zenodo.)
+    if (doi.startsWith(ZENODO_DOI_PREFIX)) {
+      const zenodoId = doi.replace(ZENODO_DOI_PREFIX, "");
+      return {
+        type: IDENTIFIER_TYPE.ZENODO_DOI,
+        value: doi,
+        displayValue: doi,
+        zenodoId: zenodoId,
+      };
+    }
+    return {
+      type: IDENTIFIER_TYPE.OTHER_DOI,
+      value: doi,
+      displayValue: doi,
+    };
+  }
+
+  // Non-DOI identifier
+  return {
+    type: IDENTIFIER_TYPE.NON_DOI,
+    value: trimmed,
+    displayValue: trimmed,
+  };
+}
+
+/**
+ * Extract identifiers from codemeta.json content
+ * The identifier field can be a string, an array of strings, or an object with @id
+ * @param {Object|String} codemetaContent - Parsed or raw codemeta.json content
+ * @returns {Array} - Array of classified identifiers
+ */
+function extractIdentifiersFromCodemeta(codemetaContent) {
+  const identifiers = [];
+
+  if (!codemetaContent) return identifiers;
+
+  let content = codemetaContent;
+  if (typeof codemetaContent === "string") {
+    try {
+      content = JSON.parse(codemetaContent);
+    } catch (e) {
+      logwatch.warn(
+        "Failed to parse codemeta.json content for identifier extraction"
+      );
+      return identifiers;
+    }
+  }
+
+  const rawIdentifier = content?.identifier;
+
+  if (!rawIdentifier) return identifiers;
+
+  // Handle array of identifiers
+  if (Array.isArray(rawIdentifier)) {
+    for (const item of rawIdentifier) {
+      const id =
+        typeof item === "object" ? item["@id"] || item.id || item.value : item;
+      const classified = classifyIdentifier(id);
+      if (classified)
+        identifiers.push({ ...classified, source: "codemeta.json" });
+    }
+  }
+  // Handle object with @id
+  else if (typeof rawIdentifier === "object") {
+    const id = rawIdentifier["@id"] || rawIdentifier.id || rawIdentifier.value;
+    const classified = classifyIdentifier(id);
+    if (classified)
+      identifiers.push({ ...classified, source: "codemeta.json" });
+  }
+  // Handle string
+  else if (typeof rawIdentifier === "string") {
+    const classified = classifyIdentifier(rawIdentifier);
+    if (classified)
+      identifiers.push({ ...classified, source: "codemeta.json" });
+  }
+
+  return identifiers;
+}
+
+/**
+ * Extract DOI from CITATION.cff content
+ * @param {Object|String} citationContent - Parsed YAML or raw CITATION.cff content
+ * @returns {Array} - Array of classified identifiers
+ */
+function extractIdentifiersFromCitation(citationContent) {
+  const identifiers = [];
+
+  if (!citationContent) return identifiers;
+
+  let content = citationContent;
+  if (typeof citationContent === "string") {
+    try {
+      content = yaml.load(citationContent);
+    } catch (e) {
+      logwatch.warn(
+        "Failed to parse CITATION.cff content for identifier extraction"
+      );
+      return identifiers;
+    }
+  }
+
+  // CITATION.cff uses 'doi' field (not 'identifier')
+  const rawDoi = content?.doi;
+
+  if (rawDoi) {
+    const classified = classifyIdentifier(rawDoi);
+    if (classified) identifiers.push({ ...classified, source: "CITATION.cff" });
+  }
+
+  return identifiers;
+}
+
+/**
+ * Fetch metadata files and extract all identifiers
+ * @param {Object} context - GitHub context object
+ * @param {String} owner - Repository owner
+ * @param {Object} repository - Repository information
+ * @returns {Object} - { identifiers: Array, errors: Array }
+ */
+async function fetchAndExtractIdentifiers(context, owner, repository) {
+  const identifiers = [];
+  const errors = [];
+
+  // Fetch codemeta.json
+  try {
+    const codemetaResult = await getCodemetaContent(context, owner, repository);
+    if (codemetaResult && codemetaResult.content) {
+      const codemetaIds = extractIdentifiersFromCodemeta(
+        codemetaResult.content
+      );
+      identifiers.push(...codemetaIds);
+    }
+  } catch (err) {
+    if (err.status !== 404) {
+      errors.push({ file: "codemeta.json", error: err.message });
+      logwatch.warn(
+        `Error fetching codemeta.json for identifier extraction: ${err.message}`
+      );
+    }
+  }
+
+  // Fetch CITATION.cff
+  try {
+    const citationResult = await getCitationContent(context, owner, repository);
+    if (citationResult && citationResult.content) {
+      const citationIds = extractIdentifiersFromCitation(
+        citationResult.content
+      );
+      identifiers.push(...citationIds);
+    }
+  } catch (err) {
+    if (err.status !== 404) {
+      errors.push({ file: "CITATION.cff", error: err.message });
+      logwatch.warn(
+        `Error fetching CITATION.cff for identifier extraction: ${err.message}`
+      );
+    }
+  }
+
+  // Deduplicate identifiers by value
+  const uniqueIdentifiers = [];
+  const seen = new Set();
+  for (const id of identifiers) {
+    if (!seen.has(id.value)) {
+      seen.add(id.value);
+      uniqueIdentifiers.push(id);
+    }
+  }
+
+  return { identifiers: uniqueIdentifiers, errors };
+}
+
+/**
+ * Prioritize identifiers: Zenodo DOIs first, then other DOIs, then non-DOIs
+ * @param {Array} identifiers - Array of classified identifiers
+ * @returns {Object} - { primary: Identifier|null, others: Array }
+ */
+function prioritizeIdentifiers(identifiers) {
+  if (!identifiers || identifiers.length === 0) {
+    return { primary: null, others: [] };
+  }
+
+  // Sort: Zenodo DOIs first, then other DOIs, then non-DOIs
+  const sorted = [...identifiers].sort((a, b) => {
+    const priority = {
+      [IDENTIFIER_TYPE.ZENODO_DOI]: 0,
+      [IDENTIFIER_TYPE.OTHER_DOI]: 1,
+      [IDENTIFIER_TYPE.NON_DOI]: 2,
+    };
+    return priority[a.type] - priority[b.type];
+  });
+
+  return {
+    primary: sorted[0],
+    others: sorted.slice(1),
+  };
+}
+
+/**
+ * Create a badge for a Zenodo DOI
+ * @param {String} doi - The DOI value
+ * @param {String} zenodoId - The Zenodo record ID
+ * @returns {String} - Markdown badge
+ */
+function createZenodoDOIBadge(doi, zenodoId) {
+  const escapedDoi = doi.replace(/-/g, "--");
+  return `[![DOI](https://img.shields.io/badge/DOI-${escapedDoi}-blue)](${ZENODO_ENDPOINT}/records/${zenodoId})`;
+}
+
+/**
+ * Create a badge for a non-Zenodo DOI
+ * @param {String} doi - The DOI value
+ * @returns {String} - Markdown badge
+ */
+function createOtherDOIBadge(doi) {
+  const escapedDoi = doi.replace(/-/g, "--");
+  return `[![DOI](https://img.shields.io/badge/DOI-${escapedDoi}-gray)](https://doi.org/${doi})`;
+}
+
+/**
+ * Render template for a single identifier
+ * @param {Object} identifier - The classified identifier
+ * @param {String} releaseBadge - Badge for creating next release
+ * @param {String} firstReleaseBadge - Badge for creating first release
+ * @returns {String} - Template string
+ */
+function renderSingleIdentifierTemplate(
+  identifier,
+  releaseBadge,
+  firstReleaseBadge
+) {
+  const archiveTitle = `\n\n## FAIR Software Release`;
+
+  switch (identifier.type) {
+    case IDENTIFIER_TYPE.ZENODO_DOI: {
+      // One Zenodo DOI found - checkmark
+      const zenodoBadge = createZenodoDOIBadge(
+        identifier.value,
+        identifier.zenodoId
+      );
+      return (
+        `${archiveTitle} ✔️\n\n` +
+        `A Zenodo DOI was found in your metadata files. This indicates your software may already be archived on Zenodo.\n\n` +
+        `${zenodoBadge}\n\n` +
+        `To automate your next archival with your GitHub Release, click the button below:\n\n` +
+        `${releaseBadge}\n\n`
+      );
+    }
+
+    case IDENTIFIER_TYPE.OTHER_DOI: {
+      // One Other DOI found - info icon
+      const otherBadge = createOtherDOIBadge(identifier.value);
+      return (
+        `${archiveTitle} ℹ️\n\n` +
+        `A DOI was found in your metadata files. However, Codefair currently only supports automated archival through Zenodo.\n\n` +
+        `${otherBadge}\n\n` +
+        `> [!NOTE]\n` +
+        `> Clicking the button below will create an additional Zenodo archive alongside your existing DOI.\n\n` +
+        `${firstReleaseBadge}\n\n`
+      );
+    }
+
+    case IDENTIFIER_TYPE.NON_DOI: {
+      // One Non-DOI found - info icon
+      return (
+        `${archiveTitle} ℹ️\n\n` +
+        `A non-DOI identifier was found in your metadata files. For FAIR compliance, we recommend obtaining a DOI through Zenodo.\n\n` +
+        `Identifier: \`${identifier.value}\`\n\n` +
+        `${firstReleaseBadge}\n\n`
+      );
+    }
+
+    default:
+      return "";
+  }
+}
+
+/**
+ * Render template for multiple identifiers
+ * @param {Object} primary - The primary identifier
+ * @param {Array} others - Other identifiers
+ * @param {String} releaseBadge - Badge for creating next release
+ * @param {String} firstReleaseBadge - Badge for creating first release
+ * @returns {String} - Template string
+ */
+function renderMultipleIdentifiersTemplate(
+  primary,
+  others,
+  releaseBadge,
+  firstReleaseBadge
+) {
+  const archiveTitle = `\n\n## FAIR Software Release`;
+  const hasZenodo = primary.type === IDENTIFIER_TYPE.ZENODO_DOI;
+
+  let template = "";
+
+  if (hasZenodo) {
+    // Multiple with Zenodo - info icon, Zenodo is primary
+    const zenodoBadge = createZenodoDOIBadge(primary.value, primary.zenodoId);
+    template +=
+      `${archiveTitle} ℹ️\n\n` +
+      `This repository is already archived on Zenodo. To automate future GitHub releases to Zenodo, click the button below:\n\n` +
+      `**Primary:** ${zenodoBadge}\n\n` +
+      `${releaseBadge}\n\n`;
+  } else {
+    // Multiple without Zenodo - info icon
+    let primaryBadge;
+    if (primary.type === IDENTIFIER_TYPE.OTHER_DOI) {
+      primaryBadge = createOtherDOIBadge(primary.value);
+    } else {
+      primaryBadge = `\`${primary.value}\``;
+    }
+    template +=
+      `${archiveTitle} ℹ️\n\n` +
+      `Multiple identifiers were found in your metadata files. No Zenodo DOI was detected. Currently Codefair supports automated archival through Zenodo.\n\n` +
+      `**Primary:** ${primaryBadge}\n\n` +
+      `> [!NOTE]\n` +
+      `> Clicking the button below will create an additional Zenodo archive. We recommend consolidating to one archival platform when possible.\n\n` +
+      `${firstReleaseBadge}\n\n`;
+  }
+
+  // Add expandable section for other identifiers
+  if (others.length > 0) {
+    template += `<details>\n<summary>Additional identifiers found (${others.length})</summary>\n\n`;
+    for (const id of others) {
+      if (id.type === IDENTIFIER_TYPE.ZENODO_DOI) {
+        template += `- ${createZenodoDOIBadge(id.value, id.zenodoId)} (from ${id.source})\n`;
+      } else if (id.type === IDENTIFIER_TYPE.OTHER_DOI) {
+        template += `- ${createOtherDOIBadge(id.value)} (from ${id.source})\n`;
+      } else {
+        template += `- \`${id.value}\` (from ${id.source})\n`;
+      }
+    }
+    template += `\n</details>\n\n`;
+  }
+
+  // Add info note for multiple identifiers with Zenodo
+  if (hasZenodo && others.length > 0) {
+    template += `> ℹ️ Multiple identifiers detected. Zenodo is shown as primary since it's supported for automation.\n\n`;
+  }
+
+  return template;
+}
 
 /**
  * * Update the GitHub release to not be a draft
@@ -159,14 +557,15 @@ export function parseZenodoInfo(issueBody) {
 
 /**
  * * Apply the archival template to the base template
- * @param {Object} subjects - Subjects of the repository
+ * @param {Object} context - GitHub context object
  * @param {String} baseTemplate - Base template for the issue
  * @param {Object} repository - GitHub repository information
  * @param {String} owner - GitHub owner
- * @param {Object} context - GitHub context
+ * @param {Object} subjects - Subjects of the repository
  * @returns {String} String of updated base template with archival information
  */
 export async function applyArchivalTemplate(
+  context,
   baseTemplate,
   repository,
   owner,
@@ -177,51 +576,28 @@ export async function applyArchivalTemplate(
   const alreadyReleaseText = ` of your software was successfully released on GitHub and archived on Zenodo. You can view the Zenodo archive by clicking the button below:`;
   const firstReleaseBadgeButton = `[![Create Release on Zenodo](https://img.shields.io/badge/Create_Release_on_Zenodo-dc2626.svg)](${badgeURL})`;
   const releaseBadgeButton = `[![Create Release on Zenodo](https://img.shields.io/badge/Create_Release_on_Zenodo-00bcd4.svg)](${badgeURL})`;
-  const newReleaseText = `To make your software FAIR, it is necessary to archive it in an archival repository like Zenodo every time you make a release. When you are ready to make your next release, click the "Create release" button below to easily create a FAIR release where your metadata files are updated (including with a DOI) before creating a GitHub release and archiving it on Zenodo.\n\n`;
   const noLicenseText = `\n\nTo make your software FAIR, a license file is required.\n> [!WARNING]\n> Codefair will run this check after a LICENSE file is detected in your repository.`;
   const noLicenseBadge = `![FAIR Release not checked](https://img.shields.io/badge/FAIR_Release_Not_Checked-fbbf24)`;
 
+  // License must exist
   if (!subjects.license.status) {
     logwatch.info("License not found. Skipping FAIR release check.");
     baseTemplate += `${archiveTitle}\n\n${noLicenseText}\n\n${noLicenseBadge}\n\n`;
     return baseTemplate;
   }
 
+  // STEP 1: Check for existing Codefair release in database
   let existingZenodoDep = await dbInstance.zenodoDeposition.findUnique({
     where: {
       repository_id: repository.id,
     },
   });
 
-  if (!existingZenodoDep) {
-    //
-    logwatch.info("Zenodo deposition not found in the database.");
-    baseTemplate += `${archiveTitle} ❌\n\n${newReleaseText}\n\n${firstReleaseBadgeButton}\n\n`;
-  } else if (
-    existingZenodoDep?.last_published_zenodo_doi === null ||
-    existingZenodoDep?.last_published_zenodo_doi === undefined
-  ) {
-    // Refetch the Zenodo deposition information again in case of delay in db update
-    logwatch.info("Refetching Zenodo deposition information...");
-    existingZenodoDep = await dbInstance.zenodoDeposition.findUnique({
-      where: {
-        repository_id: repository.id,
-      },
-    });
-
-    if (!existingZenodoDep || !existingZenodoDep?.last_published_zenodo_doi) {
-      baseTemplate += `${archiveTitle} ❌\n\n${newReleaseText}\n\n${firstReleaseBadgeButton}\n\n`;
-    } else {
-      logwatch.info(existingZenodoDep);
-      const lastVersion = existingZenodoDep.github_tag_name;
-      const zenodoId = existingZenodoDep.zenodo_id;
-      const zenodoDoi = existingZenodoDep.last_published_zenodo_doi;
-      const zenodoDOIBadge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${zenodoId})`;
-      baseTemplate += `${archiveTitle} ✔️\n\n***${lastVersion}***${alreadyReleaseText}\n\n${zenodoDOIBadge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadgeButton}\n\n`;
-    }
-  } else {
-    // entry does exist, update the existing one
-    logwatch.info("Zenodo deposition found in the database.");
+  // If we have a successful previous Codefair release with published DOI
+  if (existingZenodoDep?.last_published_zenodo_doi) {
+    logwatch.info(
+      "Zenodo deposition with published DOI found in the database."
+    );
     const response = await dbInstance.zenodoDeposition.update({
       data: {
         existing_zenodo_deposition_id: true,
@@ -232,12 +608,51 @@ export async function applyArchivalTemplate(
       },
     });
 
-    // Fetch the DOI content
     const lastVersion = response.github_tag_name;
     const zenodoId = response.zenodo_id;
     const zenodoDoi = response.last_published_zenodo_doi;
     const zenodoDOIBadge = `[![DOI](https://img.shields.io/badge/DOI-${zenodoDoi}-blue)](${ZENODO_ENDPOINT}/records/${zenodoId})`;
     baseTemplate += `${archiveTitle} ✔️\n\n***${lastVersion}***${alreadyReleaseText}\n\n${zenodoDOIBadge}\n\nReady to create your next FAIR release? Click the button below:\n\n${releaseBadgeButton}\n\n`;
+    return baseTemplate;
+  }
+
+  // STEP 2: No Codefair release - search metadata files for identifiers
+  logwatch.info(
+    "No previous Codefair release found. Searching metadata files for identifiers..."
+  );
+
+  const { identifiers, errors } = await fetchAndExtractIdentifiers(
+    context,
+    owner,
+    repository
+  );
+
+  if (errors.length > 0) {
+    logwatch.warn({ message: "Errors during identifier extraction", errors });
+  }
+
+  const { primary, others } = prioritizeIdentifiers(identifiers);
+
+  // STEP 3: Display based on identifier count and type
+  if (!primary) {
+    // Zero identifiers - first time release
+    const newReleaseText = `To make your software FAIR, it is necessary to archive it in an archival repository like Zenodo every time you make a release. When you are ready to make your first release, click the "Create release" button below to easily create a FAIR release where your metadata files are updated (including with a DOI) before creating a GitHub release and archiving it on Zenodo.`;
+    baseTemplate += `${archiveTitle} ❌\n\n${newReleaseText}\n\n${firstReleaseBadgeButton}\n\n`;
+  } else if (identifiers.length === 1) {
+    // Single identifier
+    baseTemplate += renderSingleIdentifierTemplate(
+      primary,
+      releaseBadgeButton,
+      firstReleaseBadgeButton
+    );
+  } else {
+    // Multiple identifiers
+    baseTemplate += renderMultipleIdentifiersTemplate(
+      primary,
+      others,
+      releaseBadgeButton,
+      firstReleaseBadgeButton
+    );
   }
 
   return baseTemplate;
