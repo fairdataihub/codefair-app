@@ -59,7 +59,7 @@ const pendingLicenseName = ref("");
 const originalLicenseId = ref<string | null>(null);
 
 // User can only "Confirm and save" if their license was flagged as Custom (needs verification)
-// Otherwise, they're changing licenses and should go through the PR flow
+// Otherwise, they're changing licenses and will go through the PR flow
 const canConfirmExistingContent = computed(
   () => originalLicenseId.value === "Custom",
 );
