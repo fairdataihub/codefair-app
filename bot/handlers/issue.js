@@ -104,7 +104,7 @@ export function registerIssueHandlers(app, db) {
 
       // Update the action count if it is greater than 0
       if (installation?.action_count > 0 || installation?.disabled) {
-        db.installation.update({
+        await db.installation.update({
           data: {
             action_count: {
               set:
