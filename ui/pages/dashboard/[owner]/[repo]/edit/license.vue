@@ -100,10 +100,12 @@ const sanitize = (html: string) => sanitizeHtml(html);
 
 const updateLicenseContent = async (value: string) => {
   if (!value) {
+    licenseId.value = null;
     return;
   }
 
   if (value === "Custom") {
+    licenseId.value = value;
     licenseContent.value = data.value?.licenseContent || "";
     customLicenseTitle.value = data.value?.customLicenseTitle || "";
     push.warning({
@@ -127,7 +129,8 @@ const updateLicenseContent = async (value: string) => {
     return;
   }
 
-  // No existing content, fetch fresh template
+  // No existing content, update ID and fetch fresh template
+  licenseId.value = value;
   await fetchLicenseTemplate(value);
 };
 
@@ -187,7 +190,7 @@ const confirmLicenseFetchFresh = async () => {
 };
 
 const cancelLicenseSelection = () => {
-  // User cancelled, revert to previous license ID
+  // User cancelled, licenseId doesn't change
   showConfirmLicenseModal.value = false;
   pendingLicenseId.value = null;
   pendingLicenseName.value = "";
@@ -416,7 +419,7 @@ const navigateToPR = () => {
           </template>
 
           <n-select
-            v-model:value="licenseId"
+            :value="licenseId"
             placeholder="MIT License Modern Variant"
             clearable
             size="large"
