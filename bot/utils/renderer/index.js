@@ -115,7 +115,7 @@ export async function renderIssues(
       if (pr.data.state === "open") {
         baseTemplate +=
           `\n\nA pull request for the LICENSE is open:\n\n` +
-          `[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prUrl.pull_request_url})`;
+          `[![License](https://img.shields.io/badge/View_PR-6366f1.svg)](${prUrl.pull_request_url})\n\n`;
       } else {
         await dbInstance.licenseRequest.update({
           where: { repository_id: repository.id },
@@ -190,6 +190,7 @@ export async function renderIssues(
     // ── ARCHIVAL
     step = "applyArchival";
     baseTemplate = await applyArchivalTemplate(
+      context,
       baseTemplate,
       repository,
       owner,

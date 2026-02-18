@@ -5,8 +5,39 @@ import { logwatch } from "../../utils/logwatch.js";
 import dbInstance from "../../db.js";
 import { createId } from "../../utils/tools/index.js";
 import { checkForFile } from "../../utils/tools/index.js";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+const licensesJson = require("../../public/assets/data/licenses.json");
 
 const CODEFAIR_DOMAIN = process.env.CODEFAIR_APP_DOMAIN;
+
+/**
+ * Check if a license ID is a valid SPDX identifier
+ * @param {string} licenseId - The license ID to check
+ * @returns {boolean} - True if the license ID is valid SPDX
+ */
+function isValidSpdxLicense(licenseId) {
+  if (!licenseId || licenseId === "Custom" || licenseId === "NOASSERTION") {
+    return false;
+  }
+  return licensesJson.some((license) => license.licenseId === licenseId);
+}
+
+/**
+ * Normalize content for comparison (removes extra whitespace and normalizes line endings)
+ * @param {string} content - The content to normalize
+ * @returns {string} - Normalized content
+ */
+function normalizeContent(content) {
+  if (!content) return "";
+  return content
+    .replace(/\r\n/g, "\n") // Normalize line endings
+    .replace(/\r/g, "\n")
+    .replace(/[ \t]+/g, " ") // Collapse multiple spaces/tabs
+    .replace(/\n\s*\n/g, "\n\n") // Normalize multiple blank lines
+    .trim();
+}
 
 /**
  * * Check if a license is found in the repository
@@ -81,14 +112,39 @@ export function validateLicense(license, existingLicense) {
       logwatch.info(`No assertion ID with no content provided`);
       licenseId = null;
     } else {
-      // Custom license with content provided
+      // License content exists but GitHub couldn't identify it
       licenseContentEmpty = false;
-      if (existingLicense?.license_content.trim() !== licenseContent.trim()) {
-        licenseId = "Custom"; // New custom license
-        logwatch.info(`Custom license with new content provided`);
+
+      // Normalize content for comparison
+      const normalizedExisting = normalizeContent(existingLicense?.license_content);
+      const normalizedNew = normalizeContent(licenseContent);
+      const contentChanged = normalizedExisting !== normalizedNew;
+
+      // Check if we have a valid SPDX license already stored in the database
+      const existingIsValidSpdx = isValidSpdxLicense(existingLicense?.license_id);
+
+      if (contentChanged) {
+        // Content has changed - require user verification regardless of existing SPDX
+        // User may have updated the same license OR switched to a different one
+        licenseId = "Custom";
+        logwatch.info(
+          `License content changed, setting to Custom for user verification. ` +
+            `Previous license: ${existingLicense?.license_id || "none"}`
+        );
+      } else if (existingIsValidSpdx) {
+        // Content matches and we have a valid SPDX - preserve it
+        licenseId = existingLicense.license_id;
+        logwatch.info(
+          `Preserving existing valid SPDX license: ${licenseId} (content unchanged)`
+        );
       } else if (existingLicense?.license_id) {
-        licenseId = existingLicense.license_id; // Use existing custom license ID
-        logwatch.info("Custom license with existing content provided");
+        // Content matches and we have some license ID (could be "Custom") - preserve it
+        licenseId = existingLicense.license_id;
+        logwatch.info(`Using existing license ID: ${licenseId} (content unchanged)`);
+      } else {
+        // No existing license ID at all
+        licenseId = "Custom";
+        logwatch.info(`No existing license ID, marking as Custom`);
       }
     }
   }
@@ -110,7 +166,7 @@ export async function updateLicenseDatabase(repository, license) {
       `Updating existing license entry for repo: ${repository.name} (ID: ${repository.id})`
     );
 
-    // If license exists, validate it
+    // If license exists in repo, validate it
     if (license.status) {
       ({ licenseId, licenseContent, licenseContentEmpty } = validateLicense(
         license,
@@ -124,8 +180,17 @@ export async function updateLicenseDatabase(repository, license) {
         licenseContentEmpty,
         repo: `${repository.name} (ID: ${repository.id})`,
       });
+    } else if (existingLicense.pull_request_url) {
+      // License file not in repo but there's a pending PR - preserve existing data
+      // The user may have created a PR that hasn't been merged yet
+      logwatch.info(
+        `License not found but PR pending (${existingLicense.pull_request_url}), preserving existing license_id: ${existingLicense.license_id}`
+      );
+      licenseId = existingLicense.license_id;
+      licenseContent = existingLicense.license_content;
+      licenseContentEmpty = !licenseContent;
     }
-    await dbInstance.licenseRequest.update({
+    existingLicense = await dbInstance.licenseRequest.update({
       data: {
         contains_license: license.status,
         license_status: licenseContentEmpty ? "invalid" : "valid",
@@ -191,7 +256,7 @@ export async function applyLicenseTemplate(
   if (subjects.license.status && licenseId && licenseId !== "Custom") {
     baseTemplate += `## LICENSE ✔️\n\nA \`LICENSE\` file is found at the root level of the repository.\n\n${licenseBadge}\n\n`;
   } else if (subjects.license.status && licenseId === "Custom" && !customTitle) {
-    baseTemplate += `## LICENSE ❗\n\nA custom \`LICENSE\` file has been found at the root level of this repository.\n > [!NOTE]\n> While using a custom license is normally acceptable for Zenodo, please note that Zenodo's API currently cannot handle custom licenses. If you plan to make a FAIR release, you will be required to select a license from the SPDX license list to ensure proper archival and compliance.\n\nClick the "Edit license" button below to provide a license title or to select a new license.\n\n${licenseBadge}\n\n`;
+    baseTemplate += `## LICENSE ❗\n\nYour \`LICENSE\` file needs verification. This can happen when:\n- Your license content was modified and we need you to confirm the license type\n- You're using a license that GitHub doesn't recognize but may still be a valid SPDX license\n- You're using a truly custom license\n\n> [!NOTE]\n> If you plan to archive on Zenodo, you'll need to select a license from the SPDX license list. Custom licenses are not currently supported by Zenodo's API.\n\nClick the "Edit license" button below to **confirm your license type** (select from the dropdown and choose "Keep existing content") or provide a custom license title.\n\n${licenseBadge}\n\n`;
   } else if (subjects.license.status && licenseId === "Custom" && customTitle) {
     baseTemplate += `## LICENSE ✔️\n\nA custom \`LICENSE\` file titled as **${customTitle}**, has been found at the root level of this repository. If you would like to update the title or change license, click the "Edit license" button below.\n\n${licenseBadge}\n\n`;
   } else {
