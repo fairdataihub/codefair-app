@@ -262,14 +262,27 @@ function prioritizeIdentifiers(identifiers) {
 }
 
 /**
+ * Create a shields.io-safe label from a DOI value.
+ * Shields treats `-` as a separator in labels and requires it to be doubled;
+ * after that the whole label segment must be URL-encoded so that characters
+ * like `/`, `(`, `)` are safe in the badge URL.
+ * @param {String} doi - The DOI value
+ * @returns {String} - URL-encoded shields.io label
+ */
+function createShieldsLabelFromDOI(doi) {
+  const shieldsEscaped = String(doi).replace(/-/g, "--");
+  return encodeURIComponent(shieldsEscaped).replace(/\(/g, "%28").replace(/\)/g, "%29");
+}
+
+/**
  * Create a badge for a Zenodo DOI
  * @param {String} doi - The DOI value
  * @param {String} zenodoId - The Zenodo record ID
  * @returns {String} - Markdown badge
  */
 function createZenodoDOIBadge(doi, zenodoId) {
-  const escapedDoi = doi.replace(/-/g, "--");
-  return `[![DOI](https://img.shields.io/badge/DOI-${escapedDoi}-blue)](${ZENODO_ENDPOINT}/records/${zenodoId})`;
+  const label = createShieldsLabelFromDOI(doi);
+  return `[![DOI](https://img.shields.io/badge/DOI-${label}-blue)](${ZENODO_ENDPOINT}/records/${zenodoId})`;
 }
 
 /**
@@ -278,8 +291,8 @@ function createZenodoDOIBadge(doi, zenodoId) {
  * @returns {String} - Markdown badge
  */
 function createOtherDOIBadge(doi) {
-  const escapedDoi = doi.replace(/-/g, "--");
-  return `[![DOI](https://img.shields.io/badge/DOI-${escapedDoi}-gray)](https://doi.org/${doi})`;
+  const label = createShieldsLabelFromDOI(doi);
+  return `[![DOI](https://img.shields.io/badge/DOI-${label}-gray)](https://doi.org/${doi})`;
 }
 
 /**
@@ -1321,3 +1334,19 @@ export async function deleteFileFromZenodo(
     });
   }
 }
+
+// Exported for testing
+export {
+  extractDOIFromString,
+  classifyIdentifier,
+  extractIdentifiersFromCodemeta,
+  extractIdentifiersFromCitation,
+  fetchAndExtractIdentifiers,
+  prioritizeIdentifiers,
+  renderSingleIdentifierTemplate,
+  renderMultipleIdentifiersTemplate,
+  createShieldsLabelFromDOI,
+  createZenodoDOIBadge,
+  createOtherDOIBadge,
+  IDENTIFIER_TYPE,
+};
