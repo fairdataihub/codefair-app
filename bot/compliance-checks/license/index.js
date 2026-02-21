@@ -207,6 +207,13 @@ export async function updateLicenseDatabase(repository, license) {
     logwatch.info(
       `Creating new license entry for repo: ${repository.name} (ID: ${repository.id})`
     );
+    // If license exists in repo, validate it (handles NOASSERTION/custom cases)
+    if (license.status) {
+      ({ licenseId, licenseContent, licenseContentEmpty } = validateLicense(
+        license,
+        null
+      ));
+    }
     existingLicense = await dbInstance.licenseRequest.create({
       data: {
         identifier: createId(),
