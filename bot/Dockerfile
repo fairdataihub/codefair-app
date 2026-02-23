@@ -47,13 +47,13 @@ COPY --from=builder /app/prisma ./prisma
 
 # Create app directory structure and copy files
 COPY api ./api
-COPY compliance-checks ./compliance-checks
 COPY commands ./commands
+COPY compliance-checks ./compliance-checks
+COPY handlers ./handlers
 COPY prisma ./prisma
 COPY public ./public
 COPY scripts ./scripts
 COPY utils ./utils
-COPY commands ./commands
 
 # Copy configuration files
 COPY app.yml db.js main.js index.js ./
