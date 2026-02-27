@@ -2,17 +2,18 @@
   "title": "Codemeta.json 2.0 Schema",
   "description": "Schema to validate a subset of Codemeta.json files, version 2.0",
   "type": "object",
-  "required": [
-    "@context",
-    "type",
-    "name",
-    "description",
-    "author"
+  "oneOf": [
+    { "required": ["@context", "@type", "name", "description", "author"] },
+    { "required": ["@context", "type", "name", "description", "author"] }
   ],
   "properties": {
     "@context": {
       "type": "string",
       "enum": ["https://doi.org/10.5063/schema/codemeta-2.0"]
+    },
+    "@type": {
+      "type": "string",
+      "enum": ["SoftwareSourceCode"]
     },
     "type": {
       "type": "string",
@@ -28,12 +29,19 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["@type", "name"],
+        "required": ["@type"],
         "properties": {
           "@type": {
+            "type": "string",
+            "enum": ["Person", "Organization"]
+          },
+          "@id": {
             "type": "string"
           },
           "id": {
+            "type": "string"
+          },
+          "name": {
             "type": "string"
           },
           "familyName": {
@@ -43,21 +51,19 @@
             "type": "string"
           },
           "affiliation": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": ["Organization"]
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "@type": { "type": "string" },
+                  "name": { "type": "string" }
+                }
               },
-              "name": {
-                "type": "string"
-              }
-            }
-
+              { "type": "string" }
+            ]
           },
           "email": {
-            "type": "string",
-            "format": "email"
+            "type": "string"
           },
           "orcid": {
             "type": "string"
@@ -130,12 +136,11 @@
       }
     },
     "programmingLanguage": {
-      "type": "array",
       "description": "The programming languages used in the software",
-      "minItems": 1,
-      "items": {
-        "type": "string"
-      }
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      ]
     },
     "relatedLink": {
       "type": "array",
@@ -165,12 +170,11 @@
       }
     },
     "runtimePlatform": {
-      "type": "array",
       "description": "The runtime platforms on which the software runs",
-      "minItems": 1,
-      "items": {
-        "type": "string"
-      }
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      ]
     },
     "softwareRequirements": {
       "type": "array",
