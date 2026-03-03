@@ -1223,6 +1223,7 @@ export async function uploadReleaseAssetsToZenodo(
             Accept: "application/json",
             Authorization: `Bearer ${zenodoToken}`,
             "Content-Type": "application/octet-stream",
+            "Content-Length": String(assetBuffer.length),
           },
         });
 
@@ -1265,11 +1266,14 @@ export async function uploadReleaseAssetsToZenodo(
       `Uploading repository archive "${archiveFilename}" to Zenodo at: ${archiveUploadUrl}`
     );
 
+    const archiveBuffer = Buffer.from(repositoryArchive);
     const uploadZipResponse = await fetch(archiveUploadUrl, {
       method: "PUT",
-      body: repositoryArchive,
+      body: archiveBuffer,
       headers: {
         Authorization: `Bearer ${zenodoToken}`,
+        "Content-Type": "application/octet-stream",
+        "Content-Length": String(archiveBuffer.length),
       },
     });
 
