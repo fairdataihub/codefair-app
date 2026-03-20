@@ -83,6 +83,8 @@ For detailed instructions on setting up running the application locally, please 
 Codefair is developed using [Probot](https://probot.github.io/docs/) and is deployed on a server as a serverless function. The GitHub app is configured to receive webhooks for important actions such as pushing code, opening or closing issues, opening or merging pull requests and commenting on discussions.
 By leveraging a serverless environment on a server, Codefair can automatically scale to handle the workload of the GitHub app. The app is written in [Node.js](https://nodejs.org/en) and utilizes the [Octokit library](https://github.com/octokit) to interact with the GitHub API enabling seamless integration with GitHub's features and functionality.
 
+We archive major releases on Zenodo (major fixes are not archived to keep the workflow streamlined and prevent overloading Zenodo with similar code).
+
 ## Contributing
 
 <a href="https://github.com/fairdataihub/codefair-app/graphs/contributors">
