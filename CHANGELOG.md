@@ -5,45 +5,74 @@ All notable changes the Codefair App will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [v3.4.0] - TBD
+## v4.0.0 - TBD
 
 ### Added
 
+- Upgrade UI to Nuxt v4.
+- Update CITATION.cff generation to align with Citation File Format schema v1.3.0.
+- Abstract bot event listeners into dedicated handler files for improved maintainability.
+- Detect existing Zenodo archivals when determining FAIR archival release status.
 - Feature to provide users with a Zenodo badge that links to the Zenodo archive of their repository.
 - Added a new button to retrieve the badge formats of the last Zenodo release.
 - Add a new endpoint to retrieve the user's GitHub token for use in the profile dropdown.
 - Abstracted FAIR compliance checks into one call to allow plugability of different checks.
+- README.md compliance check: bot detects the presence of a README and provides a UI editor to create or update it.
+- CONTRIBUTING.md compliance check: bot detects contributing guidelines file and provides a UI editor.
+- CODE_OF_CONDUCT.md compliance check: bot detects code of conduct file and provides a UI editor with templates.
+- Bot file restructured with a plugin architecture to support modular compliance checks.
+- Database migrations for README, CONTRIBUTING, CODE_OF_CONDUCT, and analytics tracking.
+- Full dark mode UI with light/dark toggle.
+- Markdown editor adapts to dark/light mode.
+- Live stats display on the home page (managed repositories and organizations/users).
+- Added note to the GitHub FAIR Compliance Dashboard issue when it is closed/deleted.
+- Images migrated to jsDelivr CDN for improved load performance.
+- Mobile navigation menu improvements.
+- GitHub releases sorted by last updated and tags sorted from greatest to least.
+- Codemeta keywords are now used when populating Zenodo metadata on release.
+- Updated UI of the dashboards to improve user experience.
+- Redesigned `/dashboard` page with improved layout.
+- Update the profile status to include a dropdown to switch between personal and organization dashboards.
+- Show count of Codefair-managed repositories in the dashboard.
+- Add external link icon to GitHub link in the navigation bar.
+
+### Changed
+
+- Major refactor of license compliance workflow: LICENSE file is now only checked at the repository root (matching GitHub's SPDX detection behavior).
+- Major refactor of metadata compliance workflow: cleaner function boundaries for checking, updating, and applying metadata templates.
+- Rework Zenodo workflow to allow users to create a draft GitHub release before signing into Zenodo.
+- Improve SPDX license validation and add a verification step to the workflow.
+- Updated GitHub issue text for clarity in the FAIR Compliance Dashboard.
+- UI redesign.
+- Hide "Okay" button on Zenodo release status popup until it is clickable.
 - Abstracted commit details workflow into one call.
-- UI redesign
+
+### Fixed
+
+- Fix large file uploads to Zenodo that were failing silently.
+- Update codemeta.json validation to correctly use the 2.0 schema when the file specifies `@context` version 2.0.
+- Add codemeta 2.0 schema to the bot Docker image.
+- Prevent concurrent bot workflow conflicts when multiple events fire simultaneously.
+- Validate newly added license entries against the SPDX license list.
+- Fix citation identifier to be stored as a URL during a Zenodo release.
+- Full Codefair run will trigger after action state is set to 0.
+- Fixed the re-validate option bug: previously, a single variable was incorrectly used to load both re-validation modals. This change introduces distinct variables for each modal.
+- GitHub FAIR Compliance issue is re-rendered after a successful Zenodo release.
+- Existing Zenodo drafts are now correctly calling different endpoints compared to new drafts.
+- Proper enabling/disabling of tags and releases in the Zenodo workflow.
+- Correct field used for verifying GitHub payload action.
+- Removed duplicate CSS and corrected CSS variable application in dark mode.
+- Preserve existing metadata fields when re-validation is not triggered.
+- Remove broken secondary prop from button component.
+- Gather releases and tags independently via separate API calls to ensure accurate data for Zenodo workflow.
+- Fix sorting of dashboard repositories by last updated timestamp.
+- Codemeta validation schemas split into separate schemas for version 2.0 and 3.0.
+- Codemeta v3.0 schema updated to include variations of certain fields.
 
 ### Removed
 
+- Removed MongoDB libraries and legacy migration scripts (Postgres is the sole database).
 - Bread crumb in /dashboard page.
-
-### Fixed
-
-- Configure redirect URL for Zenodo OAuth to try and prevent blank page after successful login. Better error handling for Zenodo OAuth when redirect URL is not successful.
-- Full Codefair run will trigger after action state is set to 0.
-- Fixed the re-validate option bug: previously, a single variable was incorrectly used to load both re-validation modals. This change introduces distinct variables for each modal.
-- Existing Zenodo drafts are now correctly calling different endpoints compared to new drafts.
-
-## v3.3.0 - TBD
-
-### Added
-
-- Updated UI of the dashboards to improve user experience.
-- Rework Zenodo workflow to allow users to create a draft release on GitHub before signing into Zenodo.
-- Update the profile status to include a dropdown of organizations to switch between dashboards.
-- Add a new endpoint to retrieve the user's GitHub token for use in the profile dropdown.
-- Hide "Okay" button on popup that shows Zenodo release status until it is clickable.
-
-### Fixed
-
-- Gather releases and tags independently to ensure accurate data collection for Zenodo workflow.
-- Update placeholder for Contributor and Author URI fields in the metadata template to mention ORCID are valid inputs.
-- Codemeta validation schemas were split in two for version 2.0 and 3.0
-- Codemeta validation schema for version 3.0 was updated to include variations of certain fields.
-
 
 ## v3.2.1 - 12-12-2024
 
