@@ -68,6 +68,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fix sorting of dashboard repositories by last updated timestamp.
 - Codemeta validation schemas split into separate schemas for version 2.0 and 3.0.
 - Codemeta v3.0 schema updated to include variations of certain fields.
+- Added pagination fetching when fetching for Zenodo depositions.
 
 ### Removed
 
