@@ -49,13 +49,11 @@ const license = ref({
 const selectedExistingDeposition = ref<string | null>(null);
 const selectedDeposition = ref<string | null>(null);
 const selectableDepositions = ref<Array<SelectOption | SelectGroupOption>>([]);
-const depositionConceptMap = ref<Record<string, string>>({});
+const zenodoEndpoint = ref("");
 
-const selectedDepositionDoiUrl = computed(() => {
-  if (!selectedDeposition.value) return null;
-  const conceptrecid = depositionConceptMap.value[selectedDeposition.value];
-  if (!conceptrecid) return null;
-  return `https://doi.org/10.5281/zenodo.${conceptrecid}`;
+const selectedDepositionRecordUrl = computed(() => {
+  if (!selectedDeposition.value || !zenodoEndpoint.value) return null;
+  return `${zenodoEndpoint.value}/records/${selectedDeposition.value}`;
 });
 
 const zenodoFormIsValid = ref(false);
@@ -136,14 +134,12 @@ if (data.value) {
     data.value?.license?.customLicenseTitle || "";
 
   selectableDepositions.value = [];
-  depositionConceptMap.value = {};
+  zenodoEndpoint.value = data.value.zenodoEndpoint || "";
   for (const deposition of data.value.zenodoDepositions) {
     selectableDepositions.value.push({
       label: deposition.title,
       value: deposition.id.toString(),
     });
-    depositionConceptMap.value[deposition.id.toString()] =
-      deposition.conceptrecid;
   }
 
   lastSelectedUser.value = data.value.lastSelectedUser;
@@ -284,7 +280,13 @@ const githubReleaseIsDraft = ref(false);
 const showGithubReleaseIsDraftStausBadge = ref(false);
 
 // Set the initial values of the form if the query params are present
-if (githubTag && githubRelease) {
+// Use explicit null/undefined checks — empty strings from the callback URL are valid falsy values
+if (
+  githubTag != null &&
+  githubTag !== "" &&
+  githubRelease != null &&
+  githubRelease !== ""
+) {
   githubFormValue.value.tag = githubTag.toString();
   githubFormValue.value.release = githubRelease.toString();
   zenodoDraftIsReadyForRelease.value = true;
@@ -1201,19 +1203,21 @@ onBeforeUnmount(() => {
                 />
 
                 <div
-                  v-if="selectedDepositionDoiUrl"
+                  v-if="selectedDepositionRecordUrl"
                   class="mt-3 flex items-center gap-2 text-sm"
                 >
                   <Icon name="simple-icons:zenodo" size="16" class="shrink-0" />
 
-                  <span class="text-gray-600 dark:text-gray-400">DOI:</span>
+                  <span class="text-gray-600 dark:text-gray-400"
+                    >View on Zenodo:</span
+                  >
 
                   <NuxtLink
-                    :to="selectedDepositionDoiUrl"
+                    :to="selectedDepositionRecordUrl"
                     target="_blank"
                     class="text-blue-500 underline transition-all hover:text-blue-700"
                   >
-                    {{ selectedDepositionDoiUrl }}
+                    {{ selectedDepositionRecordUrl }}
                   </NuxtLink>
                 </div>
               </div>

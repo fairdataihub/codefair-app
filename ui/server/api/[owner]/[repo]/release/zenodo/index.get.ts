@@ -80,31 +80,32 @@ export default defineEventHandler(async (event) => {
 
   if (!zenodoTokenInfo) {
     haveValidZenodoToken = false;
-  } else if (zenodoTokenInfo && zenodoTokenInfo.expires_at < new Date()) {
+  } else if (zenodoTokenInfo.expires_at < new Date()) {
     haveValidZenodoToken = false;
   } else {
-    // Fetch all depositions using pagination (Zenodo default is 25, max is 500)
-    const pageSize = 500;
+    // Token exists in DB and is not expired — mark as connected
+    haveValidZenodoToken = true;
+
+    // Fetch all depositions using pagination (Zenodo default is 25, max is 100)
+    const pageSize = 100;
     let page = 1;
     let keepFetching = true;
 
     while (keepFetching) {
-      const zenodoTokenInfoResponse = await fetch(
+      const zenodoDepositionsResponse = await fetch(
         `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoTokenInfo.token}&size=${pageSize}&page=${page}`,
         {
           method: "GET",
         },
       );
 
-      if (!zenodoTokenInfoResponse.ok) {
-        haveValidZenodoToken = false;
+      if (!zenodoDepositionsResponse.ok) {
+        // Depositions fetch failed — connection is still valid, just no list available
         keepFetching = false;
         break;
       }
 
-      haveValidZenodoToken = true;
-
-      const response = await zenodoTokenInfoResponse.json();
+      const response = await zenodoDepositionsResponse.json();
 
       for (const item of response) {
         existingDepositions.push({
@@ -313,6 +314,7 @@ export default defineEventHandler(async (event) => {
     },
     zenodoDepositionId: zenodoDeposition?.zenodo_id || null,
     zenodoDepositions: existingDepositions,
+    zenodoEndpoint: ZENODO_ENDPOINT,
     zenodoLoginUrl: zenodoLoginUrl || "",
     zenodoMetadata,
     zenodoWorkflowStatus: zenodoDeposition?.status || "",
