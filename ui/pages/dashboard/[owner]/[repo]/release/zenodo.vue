@@ -49,6 +49,14 @@ const license = ref({
 const selectedExistingDeposition = ref<string | null>(null);
 const selectedDeposition = ref<string | null>(null);
 const selectableDepositions = ref<Array<SelectOption | SelectGroupOption>>([]);
+const depositionConceptMap = ref<Record<string, string>>({});
+
+const selectedDepositionDoiUrl = computed(() => {
+  if (!selectedDeposition.value) return null;
+  const conceptrecid = depositionConceptMap.value[selectedDeposition.value];
+  if (!conceptrecid) return null;
+  return `https://doi.org/10.5281/zenodo.${conceptrecid}`;
+});
 
 const zenodoFormIsValid = ref(false);
 const zenodoFormRef = ref<FormInst | null>(null);
@@ -128,11 +136,14 @@ if (data.value) {
     data.value?.license?.customLicenseTitle || "";
 
   selectableDepositions.value = [];
+  depositionConceptMap.value = {};
   for (const deposition of data.value.zenodoDepositions) {
     selectableDepositions.value.push({
       label: deposition.title,
       value: deposition.id.toString(),
     });
+    depositionConceptMap.value[deposition.id.toString()] =
+      deposition.conceptrecid;
   }
 
   lastSelectedUser.value = data.value.lastSelectedUser;
@@ -1188,6 +1199,23 @@ onBeforeUnmount(() => {
                   clearable
                   :options="selectableDepositions"
                 />
+
+                <div
+                  v-if="selectedDepositionDoiUrl"
+                  class="mt-3 flex items-center gap-2 text-sm"
+                >
+                  <Icon name="simple-icons:zenodo" size="16" class="shrink-0" />
+
+                  <span class="text-gray-600 dark:text-gray-400">DOI:</span>
+
+                  <NuxtLink
+                    :to="selectedDepositionDoiUrl"
+                    target="_blank"
+                    class="text-blue-500 underline transition-all hover:text-blue-700"
+                  >
+                    {{ selectedDepositionDoiUrl }}
+                  </NuxtLink>
+                </div>
               </div>
             </div>
           </template>

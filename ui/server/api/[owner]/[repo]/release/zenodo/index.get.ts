@@ -83,17 +83,25 @@ export default defineEventHandler(async (event) => {
   } else if (zenodoTokenInfo && zenodoTokenInfo.expires_at < new Date()) {
     haveValidZenodoToken = false;
   } else {
-    // Check if the token is valid
-    const zenodoTokenInfoResponse = await fetch(
-      `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoTokenInfo.token}`,
-      {
-        method: "GET",
-      },
-    );
+    // Fetch all depositions using pagination (Zenodo default is 25, max is 500)
+    const pageSize = 500;
+    let page = 1;
+    let keepFetching = true;
 
-    if (!zenodoTokenInfoResponse.ok) {
-      haveValidZenodoToken = false;
-    } else {
+    while (keepFetching) {
+      const zenodoTokenInfoResponse = await fetch(
+        `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoTokenInfo.token}&size=${pageSize}&page=${page}`,
+        {
+          method: "GET",
+        },
+      );
+
+      if (!zenodoTokenInfoResponse.ok) {
+        haveValidZenodoToken = false;
+        keepFetching = false;
+        break;
+      }
+
       haveValidZenodoToken = true;
 
       const response = await zenodoTokenInfoResponse.json();
@@ -107,6 +115,13 @@ export default defineEventHandler(async (event) => {
           submitted: item.submitted,
         });
         rawData.push(item);
+      }
+
+      // If fewer results than page size were returned, we've reached the last page
+      if (response.length < pageSize) {
+        keepFetching = false;
+      } else {
+        page++;
       }
     }
   }
