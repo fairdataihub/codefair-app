@@ -27,20 +27,22 @@ model Session {
 }
 
 model Installation {
-  id                      Int                      @id
-  owner                   String
-  repo                    String
-  installation_id         Int
-  latest_commit_date      String                   @default("")
-  latest_commit_message   String                   @default("")
-  latest_commit_sha       String                   @default("")
-  latest_commit_url       String                   @default("")
-  disabled                Boolean                  @default(false)
-  issue_number            Int                      @default(0)
-  owner_is_organization   Boolean                  @default(false)
-  action_count            Int                      @default(0)
-  created_at              DateTime                 @default(now())
-  updated_at              DateTime                 @updatedAt
+  id                    Int      @id
+  owner                 String
+  repo                  String
+  installation_id       Int
+  latest_commit_date    String   @default("")
+  latest_commit_message String   @default("")
+  latest_commit_sha     String   @default("")
+  latest_commit_url     String   @default("")
+  disabled              Boolean  @default(false)
+  issue_number          Int      @default(0)
+  owner_is_organization Boolean  @default(false)
+  action_count          Int      @default(0)
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  use_central_api       Boolean  @default(false)
+
   CodeMetadata            CodeMetadata?
   CwlValidation           CwlValidation?
   LicenseRequest          LicenseRequest?

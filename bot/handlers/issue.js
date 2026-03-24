@@ -94,6 +94,14 @@ export function registerIssueHandlers(app, db) {
     });
 
     if (installation) {
+      // Repository is managed by the Nuxt central API
+      if (installation.use_central_api) {
+        logwatch.info(
+          `[issues.edited] ${context.payload.repository.name} uses central API, skipping Probot handler`
+        );
+        return;
+      }
+
       // Verify for repository name change
       verifyRepoName(
         installation.repo,

@@ -49,6 +49,14 @@ export function registerPushHandler(app, db) {
 
     if (!installation || installation.disabled) {
       return;
+    }
+
+    // Repository is handled by the Nuxt central API
+    if (installation.use_central_api) {
+      logwatch.info(
+        `[push] ${repository.name} uses central API, skipping Probot handler`
+      );
+      return;
     } else {
       // Verify if repository name has changed and update commit details to db
       verifyRepoName(installation.repo, repository, owner, db.installation);
