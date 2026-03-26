@@ -45,40 +45,36 @@ Your coding assistant to make research software reusable without breaking a swea
 
 <br />
 
-## Description
+## About
+Codefair is an open-source platform that acts as your personal assistant for making research software FAIR (Findable, Accessible, Interoperable, and Reusable), as defined by the [FAIR Principles for Research Software](https://doi.org/10.1038/s41597-022-01710-x). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, Codefair is here to assist you. It currently integrates with GitHub through a dedicated GitHub App, which evaluates your repository and opens a persistent issue called the FAIR Compliance Dashboard. This dashboard shows point-by-point how your software meets FAIR requirements and what's still missing. It updates automatically on every push to the main branch, so compliance becomes an ongoing, incremental process rather than a one-time checklist. For each gap, an action button links to codefair.io, where simple interfaces backed by automation help you resolve it, often ending with Codefair submitting a pull request on your behalf. Support for GitLab and other platforms is planned in the future. We provide more details on the platform's website at [codefair.io](https://codefair.io/).
 
-Codefair is your personal assistant when it comes to making your research software reusable and especially complying with the [Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software](https://doi.org/10.1038/s41597-022-01710-x). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, Codefair is here to assist you. By communicating with you through GitHub issues and submitting pull requests, Codefair will make sure that your software follows best coding practices, provides metadata in standard format, includes a license file, is archived on Zenodo, and much more. With Codefair by your side, you're not just developing software but you're advocating for better software practices. Learn more on the app's website [codefair.io](https://codefair.io/).
-
-![screenshot of the License issue up to where is it closed with the PR](https://imgur.com/fcOuzTC.png)
-
----
+![Screenshot of a GitHub issue opened by Codefair](https://imgur.com/fcOuzTC.png)
+*Screenshot of a GitHub issue, called the FAIR Compliance Dashboard, opened by Codefair*
 
 ## Getting started
 
-### Installing
+### 1. Install the app
 
-1. Install Codefair from the [GitHub market place](https://github.com/marketplace/codefair-app) on the GitHub organizations or repositories of your choice
-2. Code as usual
-3. Track FAIR compliance issues through the Codefair issue dashboard and address them through the Codefair website.
+Install the Codefair GitHub app from the [GitHub marketplace](https://github.com/marketplace/codefair-app) on the GitHub organizations or repositories of your choice.
 
 > [!NOTE]
 > While Codefair is free, installing it via the GitHub Marketplace may still require a credit card to be associated with your (or your organization’s) GitHub account. To circumvent this requirement, you can alternatively install Codefair directly from the [app page](https://github.com/apps/codefair-io).
 
-### Documentation
+### 2. Code as usual
+Codefair runs in the background, so no change to your workflow is required. You can keep coding as usual.
+
+### 3. Track FAIR compliance issues through the Codefair issue dashboard 
+After installation (and on each subsequent push), Codefair opens or updates an issue in your repository summarising its FAIR compliance status. Check the issue from time to time and click the links in the issue to visit [codefair.io](https://codefair.io/) for resolving any outstanding items. Codefair will typically submit a pull request with the fix once you are done.
+
+## Documentation
 
 See our [dedicated webpage](https://docs.codefair.io/docs/installation.html) for full details on what permissions are used and the features Codefair provides.
 
-## Run the GitHub app locally
+---
 
-For detailed instructions on setting up and running the application locally, please refer to our [documentation site](https://docs.codefair.io/dev/running-locally.html).
+## For Contributors
 
-## How Codefair is developed
-
-Codefair is developed using [Octokit](https://github.com/octokit) and [Nuxt](https://nuxt.com/), and is deployed on a virtual machine hosted on Azure. The GitHub app is configured to receive webhooks for important actions such as pushing code, opening or closing issues, opening or merging pull requests, and commenting on discussions. These events drive Codefair's automated workflows, enabling seamless integration with GitHub's features and functionality.
-
-We archive major releases on Zenodo (minor updates are not archived to keep the workflow streamlined and prevent overloading Zenodo with similar code).
-
-## Contributing
+### Contributing
 
 <a href="https://github.com/fairdataihub/codefair-app/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=fairdataihub/codefair-app" />
@@ -88,15 +84,26 @@ Contributions are always welcome!
 
 If you are interested in reporting/fixing issues and contributing directly to the code base, please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information on what we're looking for and how to get started.
 
-## Codefair Live Status
+### Run the GitHub app locally
 
-View the live status of Codefair at [status.codefair.io](https://status.codefair.io/). You can check the status of the app, including any incidents or outages that may affect its performance. The status page provides real-time updates on the app's availability and performance, ensuring that you are always informed about its current state.
+For detailed instructions on setting up and running the application locally, please refer to our [documentation site](https://docs.codefair.io/dev/running-locally.html).
+
+### How Codefair is developed
+
+Codefair is developed using [Octokit](https://github.com/octokit) and [Nuxt](https://nuxt.com/), and is deployed on a virtual machine hosted on Azure. The GitHub app is configured to receive webhooks for important actions such as pushing code, opening or closing issues, opening or merging pull requests, and commenting on discussions. These events drive Codefair's automated workflows, enabling seamless integration with GitHub's features and functionality.
+
+We archive major releases on Zenodo (minor updates are not archived to keep the workflow streamlined and prevent overloading Zenodo with similar code).
+
+
+### Codefair Live Status
+
+View the live status of Codefair at [status.codefair.io](https://status.codefair.io/).
 
 ---
 
 ## Issues and Feedback
 
-To report any issues with the software, suggest improvements, or request a new feature, please open a new issue via the [Issues](https://github.com/fairdataihub/codefair-app/issues) tab. Alternatively, you can also use our [contact form](https://tally.so/r/3E0dao). Provide adequate information (operating system, steps leading to error, etc.) so we can help you efficiently.
+To report any issues with the software, suggest improvements, or request a new feature, please open a new issue via the [Issues](https://github.com/fairdataihub/codefair-app/issues) tab. Alternatively, you can also use our [contact form](https://tally.so/r/3E0dao). Provide adequate information (operating system, steps leading to the error, etc.) so we can help you efficiently.
 
 ## License
 
