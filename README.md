@@ -45,19 +45,13 @@ Your coding assistant to make research software reusable without breaking a swea
 
 <br />
 
----
-
-## Codefair Live Status
-
-View the live status of Codefair at [status.codefair.io](https://status.codefair.io/). You can check the status of the app, including any incidents or outages that may affect its performance. The status page provides real-time updates on the app's availability and performance, ensuring that you are always informed about its current state.
-
----
-
 ## Description
 
 Codefair is your personal assistant when it comes to making your research software reusable and especially complying with the [Findable, Accessible, Interoperable, Reusable (FAIR) Principles for Research Software](https://doi.org/10.1038/s41597-022-01710-x). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, Codefair is here to assist you. By communicating with you through GitHub issues and submitting pull requests, Codefair will make sure that your software follows best coding practices, provides metadata in standard format, includes a license file, is archived on Zenodo, and much more. With Codefair by your side, you're not just developing software but you're advocating for better software practices. Learn more on the app's website [codefair.io](https://codefair.io/).
 
 ![screenshot of the License issue up to where is it closed with the PR](https://imgur.com/fcOuzTC.png)
+
+---
 
 ## Getting started
 
@@ -80,8 +74,7 @@ For detailed instructions on setting up and running the application locally, ple
 
 ## How Codefair is developed
 
-Codefair is developed using [Probot](https://probot.github.io/docs/) and is deployed on a server as a serverless function. The GitHub app is configured to receive webhooks for important actions such as pushing code, opening or closing issues, opening or merging pull requests, and commenting on discussions.
-By leveraging a serverless environment on a server, Codefair can automatically scale to handle the workload of the GitHub app. The app is written in [Node.js](https://nodejs.org/en) and utilizes the [Octokit library](https://github.com/octokit) to interact with the GitHub API, enabling seamless integration with GitHub's features and functionality.
+Codefair is developed using [Octokit](https://github.com/octokit) and [Nuxt](https://nuxt.com/), and is deployed on a virtual machine hosted on Azure. The GitHub app is configured to receive webhooks for important actions such as pushing code, opening or closing issues, opening or merging pull requests, and commenting on discussions. These events drive Codefair's automated workflows, enabling seamless integration with GitHub's features and functionality.
 
 We archive major releases on Zenodo (minor updates are not archived to keep the workflow streamlined and prevent overloading Zenodo with similar code).
 
@@ -94,6 +87,12 @@ We archive major releases on Zenodo (minor updates are not archived to keep the 
 Contributions are always welcome!
 
 If you are interested in reporting/fixing issues and contributing directly to the code base, please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information on what we're looking for and how to get started.
+
+## Codefair Live Status
+
+View the live status of Codefair at [status.codefair.io](https://status.codefair.io/). You can check the status of the app, including any incidents or outages that may affect its performance. The status page provides real-time updates on the app's availability and performance, ensuring that you are always informed about its current state.
+
+---
 
 ## Issues and Feedback
 
