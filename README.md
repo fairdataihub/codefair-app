@@ -48,7 +48,7 @@ Your coding assistant to make research software reusable without breaking a swea
 ## About
 Codefair is an open-source platform that acts as your personal assistant for making research software FAIR (Findable, Accessible, Interoperable, and Reusable), as defined by the [FAIR Principles for Research Software](https://doi.org/10.1038/s41597-022-01710-x). Whether you are developing artificial intelligence (AI)/machine learning (ML) models with Python, data visualization tools with Jupyter notebook, or data analysis code with R, Codefair is here to assist you. It currently integrates with GitHub through a dedicated GitHub App, which evaluates your repository and opens a persistent issue called the FAIR Compliance Dashboard. This dashboard shows point-by-point how your software meets FAIR requirements and what's still missing. It updates automatically on every push to the main branch, so compliance becomes an ongoing, incremental process rather than a one-time checklist. For each gap, an action button links to codefair.io, where simple interfaces backed by automation help you resolve it, often ending with Codefair submitting a pull request on your behalf. Support for GitLab and other platforms is planned in the future. We provide more details on the platform's website at [codefair.io](https://codefair.io/).
 
-![Screenshot of a GitHub issue opened by Codefair](https://imgur.com/l5bAEs2.png)
+![Screenshot of a GitHub issue opened by Codefair](https://imgur.com/pSSdd9U.png)
 
 *Screenshot of a GitHub issue, called the FAIR Compliance Dashboard, opened by Codefair*
 
