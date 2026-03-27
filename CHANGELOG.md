@@ -49,6 +49,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fix Zenodo file deletion using wrong API endpoint (`/records/` InvenioRDM) and wrong identifier (filename instead of file ID); corrected to use the legacy deposit API (`/deposit/depositions/{id}/files/{file_id}`).
+- Fix repository archive downloaded from default branch head instead of the release target; now uses `target_commitish` from the draft release so the correct source is archived.
+- Add request timeouts to all Zenodo API `fetch` calls to prevent the publication workflow from hanging indefinitely on network stalls (60s for metadata/publish, 300s for file uploads).
 - Fix large file uploads to Zenodo that were failing silently.
 - Update codemeta.json validation to correctly use the 2.0 schema when the file specifies `@context` version 2.0.
 - Add codemeta 2.0 schema to the bot Docker image.

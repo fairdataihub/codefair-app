@@ -88,8 +88,16 @@ export async function reRenderDashboard(context, owner, repository, issueBody) {
       path: readmeResponse?.readme_path,
       content: readmeResponse?.readme_content,
     };
-    const contributing = !!contributingResponse?.contains_contrib;
-    const cofc = !!cofcResponse?.contains_cofc;
+    const contributing = {
+      status: !!contributingResponse?.contains_contrib,
+      path: contributingResponse?.contrib_path || "",
+      content: contributingResponse?.contrib_content || "",
+    };
+    const cofc = {
+      status: !!cofcResponse?.contains_code,
+      path: cofcResponse?.code_path || "",
+      content: cofcResponse?.code_content || "",
+    };
 
     const cwlObject = {
       contains_cwl_files: cwl,
@@ -139,7 +147,7 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
   );
   const issueBodyNoArchiveSection = issueBodyRemovedCommand.substring(
     0,
-    issueBody.indexOf("## FAIR Software Release")
+    issueBodyRemovedCommand.indexOf("## FAIR Software Release")
   );
   const badgeURL = `${CODEFAIR_DOMAIN}/dashboard/${owner}/${repository.name}/release/zenodo`;
   const releaseBadge = `[![Create Release on Zenodo](https://img.shields.io/badge/Create_Release_on_Zenodo-00bcd4.svg)](${badgeURL})`;
@@ -157,8 +165,16 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
       },
     }),
   ]);
-  const contributing = !!contributingResponse?.contains_contrib;
-  const cofc = !!cofcResponse?.contains_cofc;
+  const contributing = {
+    status: !!contributingResponse?.contains_contrib,
+    path: contributingResponse?.contrib_path || "",
+    content: contributingResponse?.contrib_content || "",
+  };
+  const cofc = {
+    status: !!cofcResponse?.contains_code,
+    path: cofcResponse?.code_path || "",
+    content: cofcResponse?.code_content || "",
+  };
 
   // console.log("Parsed Zenodo info:", {
   //   depositionId,
@@ -259,7 +275,8 @@ export async function publishToZenodo(context, owner, repository, issueBody) {
     const repositoryArchive = await downloadRepositoryZip(
       context,
       owner,
-      repository.name
+      repository.name,
+      draftRelease.data.target_commitish
     );
 
     await uploadReleaseAssetsToZenodo(

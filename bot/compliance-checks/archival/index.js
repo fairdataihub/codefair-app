@@ -458,13 +458,19 @@ export async function publishZenodoDeposition(zenodoToken, depositionId) {
     const url = `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/actions/publish`;
     logwatch.info(`Sending POST request to: ${url}`);
 
+    const publishController = new AbortController();
+    const publishTimeout = setTimeout(
+      () => publishController.abort(),
+      60_000
+    );
     const publishDeposition = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${zenodoToken}`,
       },
-    });
+      signal: publishController.signal,
+    }).finally(() => clearTimeout(publishTimeout));
 
     logwatch.info(
       `Received response with status: ${publishDeposition.status} ${publishDeposition.statusText}`
@@ -864,7 +870,7 @@ export async function getZenodoDepositionInfo(depositionId, zenodoToken) {
             await deleteFileFromZenodo(
               depositionId,
               zenodoToken,
-              file.filename
+              file.id
             );
             logwatch.success(`File "${file.filename}" deleted successfully.`);
           } catch (fileError) {
@@ -905,7 +911,7 @@ export async function getZenodoDepositionInfo(depositionId, zenodoToken) {
             await deleteFileFromZenodo(
               newZenodoVersion.record_id,
               zenodoToken,
-              file.filename
+              file.id
             );
             logwatch.success(
               `File "${file.filename}" deleted from new draft successfully.`
@@ -1097,6 +1103,11 @@ export async function updateZenodoMetadata(
 
     logwatch.start(logJson, true);
 
+    const updateMetadataController = new AbortController();
+    const updateMetadataTimeout = setTimeout(
+      () => updateMetadataController.abort(),
+      60_000
+    );
     const response = await fetch(url, {
       method: "PUT",
       headers: {
@@ -1104,7 +1115,8 @@ export async function updateZenodoMetadata(
         Authorization: `Bearer ${zenodoToken}`,
       },
       body: JSON.stringify(metadata),
-    });
+      signal: updateMetadataController.signal,
+    }).finally(() => clearTimeout(updateMetadataTimeout));
 
     // Log the status for debugging purposes
     logwatch.debug(
@@ -1216,6 +1228,11 @@ export async function uploadReleaseAssetsToZenodo(
         // Upload the file to Zenodo
         const uploadUrl = `${bucket_url}/${asset.name}`;
         logwatch.info(`Uploading asset to Zenodo at: ${uploadUrl}`);
+        const assetUploadController = new AbortController();
+        const assetUploadTimeout = setTimeout(
+          () => assetUploadController.abort(),
+          300_000
+        );
         const uploadAssetResponse = await fetch(uploadUrl, {
           method: "PUT",
           body: assetBuffer, // Upload the raw file directly
@@ -1225,7 +1242,8 @@ export async function uploadReleaseAssetsToZenodo(
             "Content-Type": "application/octet-stream",
             "Content-Length": String(assetBuffer.length),
           },
-        });
+          signal: assetUploadController.signal,
+        }).finally(() => clearTimeout(assetUploadTimeout));
 
         if (!uploadAssetResponse.ok) {
           // Attempt to capture error details
@@ -1267,6 +1285,11 @@ export async function uploadReleaseAssetsToZenodo(
     );
 
     const archiveBuffer = Buffer.from(repositoryArchive);
+    const archiveUploadController = new AbortController();
+    const archiveUploadTimeout = setTimeout(
+      () => archiveUploadController.abort(),
+      300_000
+    );
     const uploadZipResponse = await fetch(archiveUploadUrl, {
       method: "PUT",
       body: archiveBuffer,
@@ -1275,7 +1298,8 @@ export async function uploadReleaseAssetsToZenodo(
         "Content-Type": "application/octet-stream",
         "Content-Length": String(archiveBuffer.length),
       },
-    });
+      signal: archiveUploadController.signal,
+    }).finally(() => clearTimeout(archiveUploadTimeout));
 
     if (!uploadZipResponse.ok) {
       let errorDetails = "";
@@ -1316,13 +1340,16 @@ export async function uploadReleaseAssetsToZenodo(
 export async function deleteFileFromZenodo(
   depositionId,
   zenodoToken,
-  fileName
+  fileId
 ) {
   try {
     const deleteFile = await fetch(
-      `${ZENODO_API_ENDPOINT}/records/${depositionId}/draft/files/${fileName}?access_token=${zenodoToken}`,
+      `${ZENODO_API_ENDPOINT}/deposit/depositions/${depositionId}/files/${fileId}`,
       {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${zenodoToken}`,
+        },
       }
     );
 
