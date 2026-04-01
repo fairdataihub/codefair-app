@@ -1,5 +1,6 @@
 import { getInstallationOctokit } from "../github-app/client";
 import type {
+  CommitDetails,
   CommitFileOptions,
   ContributorInfo,
   CreatePROptions,
@@ -219,6 +220,30 @@ export class GitHubRepositoryProvider implements RepositoryProvider {
       { headers, owner, ref: `heads/${branch}`, repo },
     );
     return data.object.sha;
+  }
+
+  /**
+   * Fetches metadata for the HEAD commit of a branch.
+   * @param owner - The repository owner.
+   * @param repo - The repository name.
+   * @param branch - The branch name.
+   * @returns SHA, message, HTML URL, and committer date for the HEAD commit.
+   */
+  async getLatestCommit(
+    owner: string,
+    repo: string,
+    branch: string,
+  ): Promise<CommitDetails> {
+    const { data } = await this.octokit.request(
+      "GET /repos/{owner}/{repo}/commits/{ref}",
+      { headers, owner, ref: branch, repo },
+    );
+    return {
+      date: data.commit.committer?.date ?? "",
+      message: data.commit.message,
+      sha: data.sha,
+      url: data.html_url,
+    };
   }
 
   /**

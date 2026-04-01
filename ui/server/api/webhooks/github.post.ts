@@ -1,7 +1,15 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { App } from "octokit";
-
-const GH_APP_NAME = process.env.GH_APP_NAME!;
+import { logwatch } from "~/server/utils/logwatch";
+import { handlePush } from "~/server/services/webhooks/push";
+import { handlePullRequest } from "~/server/services/webhooks/pull-request";
+import {
+  handleIssueClosed,
+  handleIssueReopened,
+} from "~/server/services/webhooks/issues";
+import {
+  handleInstallationAdded,
+  handleInstallationRemoved,
+} from "~/server/services/webhooks/installation";
 
 /**
  * Verify the GitHub webhook HMAC-SHA256 signature.
@@ -11,7 +19,9 @@ function verifySignature(rawBody: string, signature: string | null): boolean {
   if (!signature) return false;
   const secret = process.env.WEBHOOK_SECRET;
   if (!secret) {
-    console.warn("[webhook] WEBHOOK_SECRET is not set — skipping verification");
+    logwatch.warn(
+      "[webhook] WEBHOOK_SECRET is not set — skipping verification",
+    );
     return true;
   }
   const expected =
@@ -23,143 +33,43 @@ function verifySignature(rawBody: string, signature: string | null): boolean {
   }
 }
 
-/**
- * Build an installation-scoped Octokit client.
- */
-function getInstallationOctokit(installationId: number) {
-  if (!process.env.GH_APP_PRIVATE_KEY) {
-    throw new Error("GH_APP_PRIVATE_KEY is not set");
-  }
-  const app = new App({
-    appId: process.env.GH_APP_ID!,
-    oauth: {
-      clientId: null as unknown as string,
-      clientSecret: null as unknown as string,
-    },
-    privateKey: process.env.GH_APP_PRIVATE_KEY.replace(/\\n/g, "\n"),
-  });
-  return app.getInstallationOctokit(installationId);
-}
-
-async function handlePush(payload: any) {
-  const owner: string = payload.repository.owner.login;
-  const repoName: string = payload.repository.name;
-  const defaultBranch: string = payload.repository.default_branch;
-
-  // Only act on pushes to the default branch
-  if (payload.ref !== `refs/heads/${defaultBranch}`) {
-    console.log(
-      `[webhook/push] Ignoring push to non-default branch: ${payload.ref}`,
-    );
-    return;
-  }
-
-  console.log(`[webhook/push] Processing push to ${owner}/${repoName}`);
-
-  // Look up the installation record
-  const installation = await prisma.installation.findUnique({
-    where: { id: payload.repository.id },
-  });
-
-  if (!installation || installation.disabled) {
-    console.log(
-      `[webhook/push] No active installation for ${owner}/${repoName}`,
-    );
-    return;
-  }
-
-  if (!payload.installation?.id) {
-    console.error("[webhook/push] Missing installation.id in payload");
-    return;
-  }
-
-  // Get an Octokit client authenticated as the GitHub App installation
-  const octokit = await getInstallationOctokit(payload.installation.id);
-
-  // ------------------------------------------------------------------
-  // PoC compliance check: README detection (simplest possible check)
-  // ------------------------------------------------------------------
-  const readmePaths = [
-    "README.md",
-    "README.txt",
-    "README",
-    "docs/README.md",
-    "docs/README.txt",
-    "docs/README",
-    ".github/README.md",
-    ".github/README.txt",
-    ".github/README",
-  ];
-
-  let readmeResult: { path: string; status: boolean } = {
-    path: "No README file found",
-    status: false,
-  };
-
-  for (const filePath of readmePaths) {
-    try {
-      await octokit.request("GET /repos/{owner}/{repo}/contents/{path}", {
-        owner,
-        path: filePath,
-        repo: repoName,
-      });
-      readmeResult = { path: filePath, status: true };
-      break;
-    } catch (err: any) {
-      if (err.status !== 404) {
-        console.warn(
-          `[webhook/push] Unexpected error checking ${filePath}:`,
-          err.message,
-        );
-      }
-    }
-  }
-
-  console.log(
-    `[webhook/push] README check for ${owner}/${repoName}:`,
-    readmeResult,
-  );
-
-  if (!installation.issue_number) {
-    console.log(
-      `[webhook/push] No dashboard issue for ${owner}/${repoName} — skipping comment`,
-    );
-    return;
-  }
-
-  const statusEmoji = readmeResult.status ? "✅" : "❌";
-  const commentBody =
-    `**[PoC] Nuxt webhook handler — push event processed**\n\n` +
-    `- Repository: \`${owner}/${repoName}\`\n` +
-    `- Commit: \`${payload.head_commit?.id?.slice(0, 7) ?? "unknown"}\`\n` +
-    `- README check: ${statusEmoji} ${readmeResult.status ? `found at \`${readmeResult.path}\`` : "not found"}\n\n` +
-    `_This comment was posted by the Nuxt server (not Probot) to confirm webhook auth + Octokit auth both work._`;
-
-  try {
-    await octokit.request(
-      "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-      {
-        body: commentBody,
-        issue_number: installation.issue_number,
-        owner,
-        repo: repoName,
-      },
-    );
-    console.log(
-      `[webhook/push] Posted PoC comment on issue #${installation.issue_number}`,
-    );
-  } catch (err: any) {
-    console.error("[webhook/push] Failed to post comment:", err.message);
-  }
-}
-
 async function routeWebhookEvent(event: string, payload: any) {
   switch (event) {
     case "push":
       await handlePush(payload);
       break;
+    case "pull_request":
+      if (payload.action === "opened" || payload.action === "closed") {
+        await handlePullRequest(payload);
+      }
+      break;
+    case "issues":
+      if (payload.action === "reopened") {
+        await handleIssueReopened(payload);
+      } else if (payload.action === "closed") {
+        await handleIssueClosed(payload);
+      } else if (payload.action === "edited") {
+        logwatch.info(
+          `[webhook] Ignoring edited issue event for ${payload.repository.full_name}#${payload.issue.number}`,
+        );
+      }
+      break;
+    case "installation":
+      if (payload.action === "created") {
+        await handleInstallationAdded(payload);
+      } else if (payload.action === "deleted") {
+        await handleInstallationRemoved(payload);
+      }
+      break;
+    case "installation_repositories":
+      if (payload.action === "added") {
+        await handleInstallationAdded(payload);
+      } else if (payload.action === "removed") {
+        await handleInstallationRemoved(payload);
+      }
+      break;
     default:
-      console.log(`[webhook] Unhandled event: ${event}`);
+      logwatch.info(`[webhook] Unhandled event: ${event}`);
   }
 }
 

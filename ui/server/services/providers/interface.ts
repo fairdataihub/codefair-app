@@ -1,5 +1,12 @@
 // Supporting types
 
+export interface CommitDetails {
+  date: string;
+  message: string;
+  sha: string;
+  url: string;
+}
+
 export interface RepoInfo {
   name: string;
   defaultBranch: string;
@@ -96,6 +103,12 @@ export interface RepositoryProvider {
   // Read
 
   getRepoInfo(owner: string, repo: string): Promise<RepoInfo>;
+
+  getLatestCommit(
+    owner: string,
+    repo: string,
+    branch: string,
+  ): Promise<CommitDetails>;
 
   /**
    * Returns the file content at `path`, or `null` when the file does not

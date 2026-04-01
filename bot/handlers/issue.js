@@ -161,6 +161,15 @@ export function registerIssueHandlers(app, db) {
     const issueAuthor = context.payload.issue.user.login;
 
     if (issueTitle === ISSUE_TITLE && issueAuthor === `${GH_APP_NAME}[bot]`) {
+      const installation = await db.installation.findUnique({
+        where: { id: repository.id },
+      });
+      if (installation?.use_central_api) {
+        logwatch.info(
+          `[issues.reopened] ${repository.name} uses central API, skipping Probot handler`
+        );
+        return;
+      }
       // Check if the repository is empty
       const emptyRepo = await isRepoEmpty(context, owner, repository.name);
 

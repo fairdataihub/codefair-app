@@ -2,7 +2,16 @@ import { GitHubRepositoryProvider } from "~/server/services/providers/github";
 import { runComplianceChecks } from "~/server/services/compliance/index";
 import { createOrUpdateDashboardIssue } from "~/server/services/dashboard/manager";
 import prisma from "~/server/utils/prisma";
+import { saveLatestCommit } from "~/server/utils/github";
+import { logwatch } from "~/server/utils/logwatch";
 
+/**
+ * Handles a `installation.created` or `installation_repositories.added` webhook event.
+ * Upserts an Installation + Analytics record for each repository and runs an initial
+ * compliance check. Repositories beyond the first 3 have their action count capped to
+ * avoid overwhelming the API on large bulk installs.
+ * @param payload - The raw GitHub webhook payload.
+ */
 export async function handleInstallationAdded(payload: any) {
   const repositories: any[] =
     payload.repositories ?? payload.repositories_added ?? [];
@@ -13,8 +22,8 @@ export async function handleInstallationAdded(payload: any) {
 
   for (const repo of repositories) {
     repoCount++;
-    const applyActionLimit = repoCount > 5;
-    const actionCount = applyActionLimit ? 5 : 0;
+    const applyActionLimit = repoCount > 10;
+    const actionCount = applyActionLimit ? 3 : 0;
 
     try {
       const provider = await GitHubRepositoryProvider.create(installationId);
@@ -23,50 +32,39 @@ export async function handleInstallationAdded(payload: any) {
       const rootEntries = await provider.listDirectory(owner, repo.name, "");
       const emptyRepo = rootEntries.length === 0;
 
-      // Gather latest commit SHA if repo is not empty
-      let latestCommitSha = "";
-      const latestCommitDate = "";
-      const latestCommitMessage = "";
-      const latestCommitUrl = "";
-
-      if (!emptyRepo) {
-        try {
-          const repoInfo = await provider.getRepoInfo(owner, repo.name);
-          const sha = await provider.getBranchSha(
-            owner,
-            repo.name,
-            repoInfo.defaultBranch,
-          );
-          latestCommitSha = sha;
-        } catch {
-          // Non-fatal — leave defaults as ""
-        }
-      }
-
       // Upsert Installation record — new repos get use_central_api: true
       await (prisma.installation as any).upsert({
         create: {
           id: repo.id,
           action_count: actionCount,
           installation_id: installationId,
-          latest_commit_date: latestCommitDate,
-          latest_commit_message: latestCommitMessage,
-          latest_commit_sha: latestCommitSha,
-          latest_commit_url: latestCommitUrl,
           owner,
           repo: repo.name,
           use_central_api: true,
         },
         update: {
-          latest_commit_date: latestCommitDate,
-          latest_commit_message: latestCommitMessage,
-          latest_commit_sha: latestCommitSha,
-          latest_commit_url: latestCommitUrl,
           owner,
           repo: repo.name,
         },
         where: { id: repo.id },
       });
+
+      // Save latest commit info if the repo is not empty
+      if (!emptyRepo) {
+        try {
+          const repoInfo = await provider.getRepoInfo(owner, repo.name);
+          const commit = await provider.getLatestCommit(
+            owner,
+            repo.name,
+            repoInfo.defaultBranch,
+          );
+          await saveLatestCommit(repo.id, commit);
+        } catch (err: any) {
+          logwatch.warn(
+            `[webhook/installation.added] Could not save latest commit for ${owner}/${repo.name}: ${err.message}`,
+          );
+        }
+      }
 
       // Upsert Analytics record
       await prisma.analytics.upsert({
@@ -76,7 +74,7 @@ export async function handleInstallationAdded(payload: any) {
       });
 
       if (applyActionLimit) {
-        console.log(
+        logwatch.info(
           `[webhook/installation.added] Action limit applied to ${owner}/${repo.name} (repo #${repoCount})`,
         );
         continue;
@@ -98,33 +96,38 @@ export async function handleInstallationAdded(payload: any) {
         subjects,
         emptyRepo,
       );
-      console.log(
+      logwatch.success(
         `[webhook/installation.added] Dashboard created for ${owner}/${repo.name}`,
       );
     } catch (err: any) {
-      console.error(
-        `[webhook/installation.added] Failed for ${owner}/${repo.name}:`,
-        err.message,
+      logwatch.error(
+        `[webhook/installation.added] Failed for ${owner}/${repo.name}: ${err.message}`,
       );
     }
   }
 }
 
+/**
+ * Handles a `installation.deleted` or `installation_repositories.removed` webhook event.
+ * Deletes the Installation record for each removed repository; cascade deletes in the
+ * schema clean up all child records automatically.
+ * @param payload - The raw GitHub webhook payload.
+ */
 export async function handleInstallationRemoved(payload: any) {
   const repositories: any[] =
     payload.repositories ?? payload.repositories_removed ?? [];
 
   for (const repo of repositories) {
     try {
-      // Cascade deletes in schema handle all child records
       await prisma.installation.delete({ where: { id: repo.id } });
-      console.log(`[webhook/installation.removed] Deleted ${repo.full_name}`);
+      logwatch.success(
+        `[webhook/installation.removed] Deleted ${repo.full_name}`,
+      );
     } catch (err: any) {
       // P2025 = record not found — safe to ignore
       if (err.code !== "P2025") {
-        console.error(
-          `[webhook/installation.removed] Failed for ${repo.full_name}:`,
-          err.message,
+        logwatch.error(
+          `[webhook/installation.removed] Failed for ${repo.full_name}: ${err.message}`,
         );
       }
     }
