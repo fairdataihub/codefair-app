@@ -86,9 +86,12 @@ const metadataSettingsOptions = [
   },
 ];
 
-const { data, error } = await useFetch(`/api/${owner}/${repo}/dashboard`, {
-  headers: useRequestHeaders(["cookie"]),
-});
+const { data, error, refresh } = await useFetch(
+  `/api/${owner}/${repo}/dashboard`,
+  {
+    headers: useRequestHeaders(["cookie"]),
+  },
+);
 
 if (error.value) {
   if (error.value.statusMessage === "installation-not-found") {
@@ -125,6 +128,7 @@ const rerunCodefairChecks = async (rerunType: string) => {
       headers: useRequestHeaders(["cookie"]),
       method: "POST",
     });
+    await refresh();
     push.success({
       title: "Success",
       message: "Request submitted successfully.",
