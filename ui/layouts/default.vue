@@ -467,7 +467,7 @@ const toggleMobileMenu = () => {
 
             <!-- Year -->
             <div class="mt-2">
-              © 2025 - FAIR Data Innovations Hub. All rights reserved.
+              © {{ new Date().getFullYear() }} - FAIR Data Innovations Hub. All rights reserved.
             </div>
           </div>
         </div>
