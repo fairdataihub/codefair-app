@@ -40,6 +40,8 @@ registry:
 # Configure builder setup.
 builder:
   arch: amd64
+  cache:
+    type: gha
 
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 #
