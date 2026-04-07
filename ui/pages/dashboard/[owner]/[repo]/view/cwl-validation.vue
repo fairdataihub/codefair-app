@@ -12,6 +12,9 @@ const breadcrumbsStore = useBreadcrumbsStore();
 breadcrumbsStore.showBreadcrumbs();
 
 const { owner, repo } = route.params as { owner: string; repo: string };
+const expandedNames = ref<string[]>(
+  route.query.file ? [route.query.file as string] : [],
+);
 
 const { data, error } = await useFetch(`/api/${owner}/${repo}/cwl-validation`, {
   headers: useRequestHeaders(["cookie"]),
@@ -71,7 +74,10 @@ if (error.value) {
         </p>
       </div>
 
-      <n-collapse :trigger-areas="['main', 'arrow']">
+      <n-collapse
+        v-model:expanded-names="expandedNames"
+        :trigger-areas="['main', 'arrow']"
+      >
         <n-collapse-item
           v-for="file in data?.files"
           :key="file.path"

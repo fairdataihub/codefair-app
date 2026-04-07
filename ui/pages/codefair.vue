@@ -272,38 +272,24 @@ breadcrumbsStore.hideBreadcrumbs();
           <p class="font-onest text-lg text-[var(--text-color)]">
             Codefair is developed using
             <NuxtLink
-              to="https://probot.github.io"
+              to="https://github.com/octokit"
               target="_blank"
               class="text-[var(--link-color)] hover:text-[var(--link-hover)] active:text-[var(--link-color)]"
-              >Probot</NuxtLink
+              >Octokit</NuxtLink
             >
-            and is deployed on our own servers. The GitHub app is configured to
-            receive webhooks for important actions such as pushing code, opening
-            or closing issues, opening or merging pull requests, and commenting
-            on discussions. The app is written in
+            and
             <NuxtLink
-              to="https://nodejs.org/en"
+              to="https://nuxt.com/"
               target="_blank"
               class="text-[var(--link-color)] hover:text-[var(--link-hover)] active:text-[var(--link-color)]"
-              >Node.js</NuxtLink
+              >Nuxt</NuxtLink
             >
-
-            and utilizes the
-            <NuxtLink
-              to="https://github.com/octokit/octokit.js"
-              target="_blank"
-              class="text-[var(--link-color)] hover:text-[var(--link-hover)] active:text-[var(--link-color)]"
-              >Octokit Library</NuxtLink
-            >
-            to interact with the GitHub API, enabling seamless integration with
+            and is deployed on a virtual machine hosted on Azure. The GitHub app
+            is configured to receive webhooks for important actions such as
+            pushing code, opening or closing issues, opening or merging pull
+            requests, and commenting on discussions. These events drive
+            Codefair's automated workflows, enabling seamless integration with
             GitHub's features and functionality.
-            <NuxtLink
-              to="https://zenodo.org/"
-              target="_blank"
-              class="text-[var(--link-color)] hover:text-[var(--link-hover)] active:text-[var(--link-color)]"
-              >Zenodo Archival</NuxtLink
-            >, metadata generation, and pull request creation are all handled by
-            the app.
           </p>
         </div>
       </div>

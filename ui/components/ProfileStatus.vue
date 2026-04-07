@@ -5,7 +5,7 @@ import { Icon } from "#components";
 
 // User-related states and utilities
 const user = useUser();
-console.log(user);
+const orgs = useOrgs();
 
 const loggedIn = computed(() => !!user.value);
 const loading = ref(true); // Tracks loading state for data fetching
@@ -24,130 +24,134 @@ type DropdownOption = {
 
 const settingOptions = ref<DropdownOption[]>([]);
 
-// Fetch user data and organizations if logged in
-// TODO: Consider if there are methods to improve perfomance as this is called on every page load
-if (loggedIn.value) {
-  try {
-    // TODO: Convert all this to a api function call
-    // Get the user access token from the database
-    const userToken = await $fetch("/api/user/token", {
-      headers: useRequestHeaders(["cookie"]),
-      method: "GET",
-    });
-
-    // Fetch the organizations the user is a member of
-    const orgFetch = await fetch(`https://api.github.com/user/orgs`, {
-      headers: {
-        Authorization: `Bearer ${userToken.access_token}`,
-      },
-    });
-
-    if (!orgFetch.ok) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Failed to fetch user organizations",
-      });
+function buildSettingOptions(uniqueOrgs: any[]) {
+  let count = 0;
+  const orgChildren: any[] = [];
+  uniqueOrgs.forEach((org: any) => {
+    if (count === 1) {
+      orgChildren.push({ key: `d1`, type: "divider" });
     }
+    orgChildren.push({
+      icon: () =>
+        h("img", {
+          alt: org.name,
+          src: org.avatar
+            ? org.avatar
+            : `https://api.dicebear.com/9.x/identicon/svg?seed=${org.id}&backgroundColor=ffffff&backgroundType=gradientLinear`,
+          style: "width: 24px; height: 24px; border-radius: 50%;",
+        }),
+      key: `/dashboard/${org.name}`,
+      label: org.name,
+    });
+    count++;
+  });
 
-    const organizationsOne = await orgFetch.json();
+  settingOptions.value = [
+    {
+      children: orgChildren,
+      icon: renderIcon("mdi:cog"),
+      key: "switch-org",
+      label: "Switch Organization",
+    },
+    {
+      icon: renderIcon("mdi:account"),
+      key: "view-profile",
+      label: "View Profile",
+    },
+    {
+      icon: renderIcon("mdi:logout"),
+      key: "logout",
+      label: "Logout",
+    },
+  ];
+}
 
-    // Fetch additional organization details
-    const orgDetails = await fetch(
-      `https://api.github.com/users/${user.value?.username}/orgs`,
-      {
+// Fetch user data and organizations if logged in, using cached state if available
+if (loggedIn.value) {
+  if (orgs.value) {
+    // Already fetched this session — rebuild dropdown from cache
+    buildSettingOptions(orgs.value);
+    loading.value = false;
+  } else {
+    try {
+      // Get the user access token from the database
+      const userToken = await $fetch("/api/user/token", {
+        headers: useRequestHeaders(["cookie"]),
+        method: "GET",
+      });
+
+      // Fetch the organizations the user is a member of
+      const orgFetch = await fetch(`https://api.github.com/user/orgs`, {
         headers: {
           Authorization: `Bearer ${userToken.access_token}`,
         },
-      },
-    );
-
-    if (!orgDetails.ok) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Failed to fetch user organization details",
       });
-    }
 
-    const organizationsTwo = await orgDetails.json();
-
-    // Combine and deduplicate organizations
-    const combinedOrgs = [
-      ...organizationsOne.map((org: any) => ({
-        id: org.id,
-        name: org.login,
-        avatar: org.avatar_url,
-        description: org.description,
-      })),
-      ...organizationsTwo.map((org: any) => ({
-        id: org.id,
-        name: org.login,
-        avatar: org.avatar_url,
-        description: org.description,
-      })),
-    ];
-
-    const uniqueOrgs = combinedOrgs.filter(
-      (org, index, self) => index === self.findIndex((t) => t.id === org.id),
-    );
-
-    // Include user information in the uniqueOrgs array
-    // Add a border to separate user from organizations
-
-    uniqueOrgs.unshift({
-      id: user.value?.github_id,
-      name: user.value?.username,
-      avatar: `https://avatars.githubusercontent.com/u/${user.value?.github_id}?v=4`,
-      description: "Your personal account",
-    });
-
-    // Map organizations to dropdown options
-    let count = 0;
-    const orgChildren: any[] = [];
-    uniqueOrgs.forEach((org: any) => {
-      if (count === 1) {
-        orgChildren.push({
-          key: `d1`,
-          type: "divider",
+      if (!orgFetch.ok) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: "Failed to fetch user organizations",
         });
       }
-      orgChildren.push({
-        icon: () =>
-          h("img", {
-            alt: org.name,
-            src: org.avatar
-              ? org.avatar
-              : `https://api.dicebear.com/9.x/identicon/svg?seed=${org.id}&backgroundColor=ffffff&backgroundType=gradientLinear`,
-            style: "width: 24px; height: 24px; border-radius: 50%;",
-          }),
-        key: `/dashboard/${org.name}`,
-        label: org.name,
-      });
-      count++;
-    });
 
-    // Update settingOptions with organizations
-    settingOptions.value = [
-      {
-        children: orgChildren,
-        icon: renderIcon("mdi:cog"),
-        key: "switch-org",
-        label: "Switch Organization",
-      },
-      {
-        icon: renderIcon("mdi:account"),
-        key: "view-profile",
-        label: "View Profile",
-      },
-      {
-        icon: renderIcon("mdi:logout"),
-        key: "logout",
-        label: "Logout",
-      },
-    ];
-  } catch (error) {
-    console.error("Error fetching organizations or user data:", error);
-  } finally {
-    loading.value = false;
+      const organizationsOne = await orgFetch.json();
+
+      // Fetch additional organization details
+      const orgDetails = await fetch(
+        `https://api.github.com/users/${user.value?.username}/orgs`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken.access_token}`,
+          },
+        },
+      );
+
+      if (!orgDetails.ok) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: "Failed to fetch user organization details",
+        });
+      }
+
+      const organizationsTwo = await orgDetails.json();
+
+      // Combine and deduplicate organizations
+      const combinedOrgs = [
+        ...organizationsOne.map((org: any) => ({
+          id: org.id,
+          name: org.login,
+          avatar: org.avatar_url,
+          description: org.description,
+        })),
+        ...organizationsTwo.map((org: any) => ({
+          id: org.id,
+          name: org.login,
+          avatar: org.avatar_url,
+          description: org.description,
+        })),
+      ];
+
+      const uniqueOrgs = combinedOrgs.filter(
+        (org, index, self) => index === self.findIndex((t) => t.id === org.id),
+      );
+
+      // Include user's personal account at the top
+      uniqueOrgs.unshift({
+        id: user.value?.github_id,
+        name: user.value?.username,
+        avatar: `https://avatars.githubusercontent.com/u/${user.value?.github_id}?v=4`,
+        description: "Your personal account",
+      });
+
+      // Cache for subsequent navigations
+      orgs.value = uniqueOrgs;
+
+      buildSettingOptions(uniqueOrgs);
+    } catch (error) {
+      console.error("Error fetching organizations or user data:", error);
+    } finally {
+      loading.value = false;
+    }
   }
 } else {
   loading.value = false; // Set loading to false if not logged in

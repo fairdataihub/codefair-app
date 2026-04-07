@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { push } from "notivue";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 import { Icon } from "#components";
 
@@ -86,9 +87,12 @@ const metadataSettingsOptions = [
   },
 ];
 
-const { data, error } = await useFetch(`/api/${owner}/${repo}/dashboard`, {
-  headers: useRequestHeaders(["cookie"]),
-});
+const { data, error, refresh } = await useFetch(
+  `/api/${owner}/${repo}/dashboard`,
+  {
+    headers: useRequestHeaders(["cookie"]),
+  },
+);
 
 if (error.value) {
   if (error.value.statusMessage === "installation-not-found") {
@@ -116,56 +120,132 @@ if (
 
 const hideConfirmation = () => (showModal.value = false);
 
-const rerunCodefairChecks = async (rerunType: string) => {
+const rerunCodefairChecks = (rerunType: string) => {
   hideConfirmation();
-  push.info({ title: "Submitting request", message: "Please wait..." });
-  try {
-    await $fetch(`/api/${owner}/${repo}/rerun`, {
-      body: { rerunType },
-      headers: useRequestHeaders(["cookie"]),
-      method: "POST",
-    });
-    push.success({
-      title: "Success",
-      message: "Request submitted successfully.",
-    });
-  } catch (err: any) {
-    push.error({
-      title: "Error",
-      message:
-        err.statusMessage === "Validation already requested"
-          ? "Request already submitted. Please wait."
-          : "Failed to submit request. Try again later.",
-    });
-  }
-};
-
-const handlePositiveClick = async (reRunType: string) => {
   loading.value = true;
-  await rerunCodefairChecks(reRunType);
-  loading.value = false;
-  showLicenseModal.value = false;
+
+  const es = new EventSource(
+    `/api/${owner}/${repo}/rerun?rerunType=${encodeURIComponent(rerunType)}`,
+  );
+
+  // Persist until replaced by the next toast; cleared and recreated on each progress step
+  let runningToast: ReturnType<typeof push.info> | null = null;
+  // Guard against onerror firing after a clean stream close
+  let settled = false;
+
+  const setRunningMessage = (message: string) => {
+    runningToast?.clear();
+    runningToast = push.info({ duration: Infinity, message, title: "Running" });
+  };
+
+  const settle = (fn: () => void) => {
+    if (settled) return;
+    settled = true;
+    es.close();
+    runningToast?.clear();
+    loading.value = false;
+    fn();
+  };
+
+  es.addEventListener("running", (e: MessageEvent) => {
+    const { message } = JSON.parse(e.data);
+    setRunningMessage(message);
+  });
+
+  es.addEventListener("progress", (e: MessageEvent) => {
+    const { message } = JSON.parse(e.data);
+    setRunningMessage(message);
+  });
+
+  es.addEventListener("complete", async () => {
+    settle(async () => {
+      await refresh();
+      push.success({
+        message: "Compliance checks finished successfully.",
+        title: "Complete",
+      });
+    });
+  });
+
+  es.addEventListener("fail", (e: MessageEvent) => {
+    const { message } = JSON.parse(e.data);
+    settle(() => {
+      push.error({ message, title: "Error" });
+    });
+  });
+
+  es.onerror = () => {
+    settle(() => {
+      push.error({
+        message: "Connection failed. Please try again.",
+        title: "Error",
+      });
+    });
+  };
 };
 
-const rerunCwlValidation = async () => {
+const handlePositiveClick = (reRunType: string) => {
+  showLicenseModal.value = false;
+  rerunCodefairChecks(reRunType);
+};
+
+const rerunCwlValidation = () => {
   cwlValidationRerunRequestLoading.value = true;
-  try {
-    await $fetch(`/api/${owner}/${repo}/cwl-validation/rerun`, {
-      headers: useRequestHeaders(["cookie"]),
-      method: "POST",
-    });
-    push.success({ title: "Success", message: "CWL revalidation requested." });
-  } catch (err: any) {
-    push.error({
-      title: "Error",
-      message:
-        err.statusMessage === "Validation already requested"
-          ? "Already requested. Please wait."
-          : "Failed to submit CWL revalidation. Try again later.",
-    });
-  } finally {
+
+  const es = new EventSource(`/api/${owner}/${repo}/cwl-validation/rerun`);
+
+  let runningToast: ReturnType<typeof push.info> | null = null;
+  let settled = false;
+
+  const setRunningMessage = (message: string) => {
+    runningToast?.clear();
+    runningToast = push.info({ duration: Infinity, message, title: "Running" });
+  };
+
+  const settle = (fn: () => void) => {
+    if (settled) return;
+    settled = true;
+    es.close();
+    runningToast?.clear();
     cwlValidationRerunRequestLoading.value = false;
-  }
+    fn();
+  };
+
+  es.addEventListener("running", (e: MessageEvent) => {
+    const { message } = JSON.parse(e.data);
+    setRunningMessage(message);
+  });
+
+  es.addEventListener("progress", (e: MessageEvent) => {
+    const { message } = JSON.parse(e.data);
+    setRunningMessage(message);
+  });
+
+  es.addEventListener("complete", () => {
+    settle(() => {
+      refresh();
+      push.success({
+        message: "CWL validation completed successfully.",
+        title: "Complete",
+      });
+    });
+  });
+
+  es.addEventListener("fail", (e: MessageEvent) => {
+    const { message } = JSON.parse(e.data);
+    settle(() => {
+      push.error({ message, title: "Error" });
+    });
+  });
+
+  es.onerror = () => {
+    settle(() => {
+      push.error({
+        message: "Connection failed. Please try again.",
+        title: "Error",
+      });
+    });
+  };
 };
 
 const handleSettingsSelect = (key: string) => {
