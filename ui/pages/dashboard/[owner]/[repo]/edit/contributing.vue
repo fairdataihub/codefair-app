@@ -236,7 +236,7 @@ const navigateToPR = () => {
             <template #label>
               <p class="pb-1 text-base font-bold">
                 Edit your CONITRUBITING.md as required
-                <span class="text-right text-xs text-stone-100">
+                <span class="text-right text-xs dark:text-stone-100">
                   (You can use the left panel to edit the content and right
                   panel to preview the changes)
                 </span>
