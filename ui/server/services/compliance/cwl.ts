@@ -178,13 +178,13 @@ export async function validateCWLFile(
         output?: string;
       };
       if (response.status === 400) {
-        return [false, errorData.output ?? "Validation error"];
+        return [false, errorData.error || errorData.output || "Validation error"];
       }
       return [false, "Error validating CWL file"];
     }
 
-    const data = (await response.json()) as { output?: string };
-    return [true, data.output ?? "Valid"];
+    const data = (await response.json()) as { error?: string; output?: string };
+    return [true, data.error || data.output || "Valid"];
   } catch {
     return [false, "Error validating CWL file"];
   }
