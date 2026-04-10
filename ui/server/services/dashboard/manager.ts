@@ -377,19 +377,13 @@ async function _renderAndUpsertFromDbState(
   let openIssue: IssueRef | null = null;
 
   if (installation?.issue_number) {
-    try {
-      const issues = await provider.listIssues(owner, repo, {
-        creator: provider.getBotLogin(),
-        state: "open",
-      });
-      const existing = issues.find(
-        (i) => i.number === installation.issue_number && i.state === "open",
-      );
-      if (existing) {
-        openIssue = existing;
-      }
-    } catch {
-      // Continue without a cached open-issue reference
+    const fetched = await provider.getIssue(
+      owner,
+      repo,
+      installation.issue_number,
+    );
+    if (fetched?.state === "open") {
+      openIssue = fetched;
     }
   }
 

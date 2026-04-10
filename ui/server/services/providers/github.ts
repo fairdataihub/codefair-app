@@ -399,6 +399,36 @@ export class GitHubRepositoryProvider implements RepositoryProvider {
   }
 
   /**
+   * Fetches a single issue by number.
+   * @param owner - The repository owner.
+   * @param repo - The repository name.
+   * @param issueNumber - The issue number to fetch.
+   * @returns The issue reference, or null if the issue does not exist.
+   */
+  async getIssue(
+    owner: string,
+    repo: string,
+    issueNumber: number,
+  ): Promise<IssueRef | null> {
+    try {
+      const { data } = await this.octokit.request(
+        "GET /repos/{owner}/{repo}/issues/{issue_number}",
+        { headers, issue_number: issueNumber, owner, repo },
+      );
+      return {
+        title: data.title,
+        body: data.body ?? null,
+        htmlUrl: data.html_url,
+        number: data.number,
+        state: data.state as "open" | "closed",
+        userLogin: data.user?.login ?? null,
+      };
+    } catch {
+      return null; // 404 — issue was deleted
+    }
+  }
+
+  /**
    * Creates a new issue in the repository.
    * @param owner - The repository owner.
    * @param repo - The repository name.

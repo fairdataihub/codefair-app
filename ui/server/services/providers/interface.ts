@@ -171,6 +171,12 @@ export interface RepositoryProvider {
 
   // Issues
 
+  getIssue(
+    owner: string,
+    repo: string,
+    issueNumber: number,
+  ): Promise<IssueRef | null>;
+
   listIssues(
     owner: string,
     repo: string,
