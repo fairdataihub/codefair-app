@@ -105,6 +105,7 @@ jobs:
       GH_OAUTH_CLIENT_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
       WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
       UI_LOGWATCH_URL: ${{ secrets.UI_LOGWATCH_URL }}
+      VALIDATOR_URL: ${{ secrets.VALIDATOR_URL }}
       ZENODO_API_ENDPOINT: ${{ secrets.ZENODO_API_ENDPOINT }}
       ZENODO_ENDPOINT: ${{ secrets.ZENODO_ENDPOINT }}
       ZENODO_CLIENT_ID: ${{ secrets.ZENODO_CLIENT_ID }}
