@@ -17,27 +17,45 @@ export async function handlePush(payload: any) {
 
   // Only act on pushes to the default branch
   if (payload.ref !== `refs/heads/${defaultBranch}`) {
-    logwatch.info(
-      `[webhook/push] Ignoring push to non-default branch: ${payload.ref}`,
-    );
+    logwatch.info({
+      action: "push",
+      branch: payload.ref,
+      message: "Ignoring push to non-default branch",
+      owner,
+      repo: repoName,
+    });
     return;
   }
 
-  logwatch.info(`[webhook/push] Processing push to ${owner}/${repoName}`);
+  logwatch.info({
+    action: "push",
+    installationId: payload.installation?.id,
+    message: "Processing push",
+    owner,
+    repo: repoName,
+  });
 
   const installation = await prisma.installation.findUnique({
     where: { id: payload.repository.id },
   });
 
   if (!installation || installation.disabled) {
-    logwatch.info(
-      `[webhook/push] No active installation for ${owner}/${repoName}`,
-    );
+    logwatch.info({
+      action: "push",
+      message: "No active installation or disabled",
+      owner,
+      repo: repoName,
+    });
     return;
   }
 
   if (!payload.installation?.id) {
-    logwatch.error("[webhook/push] Missing installation.id in payload");
+    logwatch.error({
+      action: "push",
+      message: "Missing installation.id in payload",
+      owner,
+      repo: repoName,
+    });
     return;
   }
 
@@ -69,10 +87,22 @@ export async function handlePush(payload: any) {
         installation.id,
         subjects,
       );
+      logwatch.success({
+        action: "push",
+        installationId: payload.installation.id,
+        message: "Compliance run complete",
+        owner,
+        repo: repoName,
+      });
     } catch (err: any) {
-      logwatch.error(
-        `[webhook/push] Central API compliance run failed for ${owner}/${repoName}: ${err.message}`,
-      );
+      logwatch.error({
+        action: "push",
+        error: err.message,
+        installationId: payload.installation.id,
+        message: "Central API compliance run failed",
+        owner,
+        repo: repoName,
+      });
     }
   }
 }

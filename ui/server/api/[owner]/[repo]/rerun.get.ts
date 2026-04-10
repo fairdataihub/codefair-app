@@ -53,6 +53,13 @@ export default defineEventHandler(async (event) => {
   }
 
   if (!installation.use_central_api) {
+    logwatch.warn({
+      action: "rerun",
+      message: "Central API mode not enabled — rerun rejected",
+      owner,
+      repo,
+      rerunType,
+    });
     throw createError({
       statusCode: 400,
       statusMessage: "Central API mode required for rerun",
@@ -79,12 +86,16 @@ export default defineEventHandler(async (event) => {
   // Run compliance checks in the background and stream progress to the client
   (async () => {
     try {
-      logwatch.info(logCtx, true);
+      logwatch.info({ ...logCtx, message: "Rerun started" });
       await push("running", "Connecting to repository...");
 
       const provider = await GitHubRepositoryProvider.create(
         installation.installation_id,
       );
+      logwatch.info({
+        ...logCtx,
+        message: "Provider created, running compliance checks",
+      });
       await push("progress", "Running compliance checks...");
 
       const subjects = await runComplianceChecks(
@@ -94,6 +105,10 @@ export default defineEventHandler(async (event) => {
         installation.id,
         RERUN_OPTIONS[rerunType],
       );
+      logwatch.info({
+        ...logCtx,
+        message: "Compliance checks complete, updating dashboard",
+      });
       await push("progress", "Saving results to database...");
 
       await createOrUpdateDashboardIssue(
@@ -107,10 +122,18 @@ export default defineEventHandler(async (event) => {
       );
       await push("progress", "Updating GitHub issue...");
 
-      logwatch.success({ ...logCtx, result: "complete" }, true);
+      logwatch.success({
+        ...logCtx,
+        message: "Rerun complete",
+        result: "complete",
+      });
       await push("complete", "All checks completed successfully.");
     } catch (error: any) {
-      logwatch.error({ ...logCtx, error: error?.message }, true);
+      logwatch.error({
+        ...logCtx,
+        error: error?.message,
+        message: "Rerun failed",
+      });
       await push("fail", "Checks failed. Please try again.");
     } finally {
       await eventStream.close();

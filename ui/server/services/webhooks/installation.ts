@@ -25,6 +25,13 @@ export async function handleInstallationAdded(payload: any) {
     const applyActionLimit = repoCount > 10;
     const actionCount = applyActionLimit ? 3 : 0;
 
+    const logCtx = {
+      action: "installation.added",
+      installationId,
+      owner,
+      repo: repo.name,
+    };
+
     try {
       const provider = await GitHubRepositoryProvider.create(installationId);
 
@@ -60,9 +67,11 @@ export async function handleInstallationAdded(payload: any) {
           );
           await saveLatestCommit(repo.id, commit);
         } catch (err: any) {
-          logwatch.warn(
-            `[webhook/installation.added] Could not save latest commit for ${owner}/${repo.name}: ${err.message}`,
-          );
+          logwatch.warn({
+            ...logCtx,
+            error: err.message,
+            message: "Could not save latest commit",
+          });
         }
       }
 
@@ -74,9 +83,11 @@ export async function handleInstallationAdded(payload: any) {
       });
 
       if (applyActionLimit) {
-        logwatch.info(
-          `[webhook/installation.added] Action limit applied to ${owner}/${repo.name} (repo #${repoCount})`,
-        );
+        logwatch.info({
+          ...logCtx,
+          message: "Action limit applied — skipping compliance run",
+          repoNumber: repoCount,
+        });
         continue;
       }
 
@@ -96,13 +107,9 @@ export async function handleInstallationAdded(payload: any) {
         subjects,
         emptyRepo,
       );
-      logwatch.success(
-        `[webhook/installation.added] Dashboard created for ${owner}/${repo.name}`,
-      );
+      logwatch.success({ ...logCtx, message: "Dashboard created" });
     } catch (err: any) {
-      logwatch.error(
-        `[webhook/installation.added] Failed for ${owner}/${repo.name}: ${err.message}`,
-      );
+      logwatch.error({ ...logCtx, error: err.message, message: "Failed" });
     }
   }
 }
@@ -116,19 +123,28 @@ export async function handleInstallationAdded(payload: any) {
 export async function handleInstallationRemoved(payload: any) {
   const repositories: any[] =
     payload.repositories ?? payload.repositories_removed ?? [];
+  const owner: string = payload.installation?.account?.login;
+  const installationId: number = payload.installation?.id;
 
   for (const repo of repositories) {
+    const logCtx = {
+      action: "installation.removed",
+      installationId,
+      owner,
+      repo: repo.name ?? repo.full_name,
+    };
+
     try {
       await prisma.installation.delete({ where: { id: repo.id } });
-      logwatch.success(
-        `[webhook/installation.removed] Deleted ${repo.full_name}`,
-      );
+      logwatch.success({ ...logCtx, message: "Installation deleted" });
     } catch (err: any) {
       // P2025 = record not found — safe to ignore
       if (err.code !== "P2025") {
-        logwatch.error(
-          `[webhook/installation.removed] Failed for ${repo.full_name}: ${err.message}`,
-        );
+        logwatch.error({
+          ...logCtx,
+          error: err.message,
+          message: "Failed to delete installation",
+        });
       }
     }
   }

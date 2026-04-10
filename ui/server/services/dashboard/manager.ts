@@ -162,9 +162,13 @@ async function fetchArchivalIdentifiers(
         all.push(...extractIdentifiersFromCodemeta(file.content));
       }
     } catch (err: any) {
-      logwatch.warn(
-        `[archival] Failed to fetch codemeta.json for identifier extraction: ${err?.message}`,
-      );
+      logwatch.warn({
+        action: "archival",
+        error: err?.message,
+        message: "Failed to fetch codemeta.json for identifier extraction",
+        owner,
+        repo,
+      });
     }
   }
 
@@ -175,9 +179,13 @@ async function fetchArchivalIdentifiers(
         all.push(...extractIdentifiersFromCitation(file.content));
       }
     } catch (err: any) {
-      logwatch.warn(
-        `[archival] Failed to fetch CITATION.cff for identifier extraction: ${err?.message}`,
-      );
+      logwatch.warn({
+        action: "archival",
+        error: err?.message,
+        message: "Failed to fetch CITATION.cff for identifier extraction",
+        owner,
+        repo,
+      });
     }
   }
 
@@ -548,9 +556,12 @@ export async function createOrUpdateDashboardIssue(
     where: { id: repositoryId },
   });
   if (installation?.disabled) {
-    logwatch.info(
-      `[dashboard] Skipping update - installation disabled for ${owner}/${repo}`,
-    );
+    logwatch.info({
+      action: "dashboard.update",
+      message: "Skipping update — installation disabled",
+      owner,
+      repo,
+    });
     return;
   }
 
@@ -642,13 +653,16 @@ export async function refreshDashboardFromDb(
     where: { id: repositoryId },
   });
   if (installation?.disabled) {
-    logwatch.info(
-      `[dashboard] Skipping refresh - installation disabled for ${owner}/${repo}`,
-    );
+    logwatch.info({
+      action: "dashboard.refresh",
+      message: "Skipping refresh — installation disabled",
+      owner,
+      repo,
+    });
     return;
   }
 
-  const { subjects, cwlSummary } = await _subjectsFromDb(repositoryId);
+  const { cwlSummary, subjects } = await _subjectsFromDb(repositoryId);
 
   await _renderAndUpsertFromDbState(
     provider,
@@ -694,15 +708,23 @@ async function upsertIssue(
     try {
       await provider.updateIssue(owner, repo, openIssue.number, body);
       await saveIssueNumber(repositoryId, openIssue.number);
-      logwatch.success(
-        `[dashboard] Updated issue #${openIssue.number} for ${owner}/${repo}`,
-      );
+      logwatch.success({
+        action: "dashboard.upsert",
+        issueNumber: openIssue.number,
+        message: "Updated existing issue",
+        owner,
+        repo,
+      });
       return;
     } catch (err: any) {
       if (!err?.message?.includes("deleted")) throw err;
-      logwatch.warn(
-        `[dashboard] Issue #${openIssue.number} was deleted - recreating for ${owner}/${repo}`,
-      );
+      logwatch.warn({
+        action: "dashboard.upsert",
+        issueNumber: openIssue.number,
+        message: "Issue was deleted — recreating",
+        owner,
+        repo,
+      });
       // disabled is already checked in createOrUpdateDashboardIssue before we get here
       const created = await provider.createIssue(
         owner,
@@ -711,9 +733,13 @@ async function upsertIssue(
         body,
       );
       await saveIssueNumber(repositoryId, created.number);
-      logwatch.success(
-        `[dashboard] Recreated issue #${created.number} for ${owner}/${repo}`,
-      );
+      logwatch.success({
+        action: "dashboard.upsert",
+        issueNumber: created.number,
+        message: "Recreated deleted issue",
+        owner,
+        repo,
+      });
       return;
     }
   }
@@ -737,9 +763,13 @@ async function upsertIssue(
       body,
     );
     await saveIssueNumber(repositoryId, created.number);
-    logwatch.success(
-      `[dashboard] Created issue #${created.number} for ${owner}/${repo}`,
-    );
+    logwatch.success({
+      action: "dashboard.upsert",
+      issueNumber: created.number,
+      message: "Created new issue",
+      owner,
+      repo,
+    });
     return;
   }
 
@@ -753,17 +783,25 @@ async function upsertIssue(
       body,
     );
     await saveIssueNumber(repositoryId, created.number);
-    logwatch.success(
-      `[dashboard] Recreated issue #${created.number} for ${owner}/${repo}`,
-    );
+    logwatch.success({
+      action: "dashboard.upsert",
+      issueNumber: created.number,
+      message: "Recreated closed issue",
+      owner,
+      repo,
+    });
     return;
   }
 
   await provider.updateIssue(owner, repo, foundOpen.number, body);
   await saveIssueNumber(repositoryId, foundOpen.number);
-  logwatch.success(
-    `[dashboard] Updated issue #${foundOpen.number} for ${owner}/${repo}`,
-  );
+  logwatch.success({
+    action: "dashboard.upsert",
+    issueNumber: foundOpen.number,
+    message: "Updated existing issue",
+    owner,
+    repo,
+  });
 }
 
 /**

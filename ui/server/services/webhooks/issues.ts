@@ -50,13 +50,22 @@ export async function handleIssueReopened(payload: any) {
       installation.id,
       subjects,
     );
-    logwatch.success(
-      `[webhook/issues.reopened] Dashboard re-rendered for ${owner}/${repoName}`,
-    );
+    logwatch.success({
+      action: "issues.reopened",
+      installationId: payload.installation?.id,
+      message: "Dashboard re-rendered",
+      owner,
+      repo: repoName,
+    });
   } catch (err: any) {
-    logwatch.error(
-      `[webhook/issues.reopened] Failed for ${owner}/${repoName}: ${err.message}`,
-    );
+    logwatch.error({
+      action: "issues.reopened",
+      error: err.message,
+      installationId: payload.installation?.id,
+      message: "Failed to re-render dashboard",
+      owner,
+      repo: repoName,
+    });
   }
 }
 
@@ -86,12 +95,21 @@ export async function handleIssueClosed(payload: any) {
       data: { disabled: true },
       where: { id: installation.id },
     });
-    logwatch.info(
-      `[webhook/issues.closed] Dashboard disabled for ${owner}/${repoName}`,
-    );
+    logwatch.info({
+      action: "issues.closed",
+      installationId: payload.installation?.id,
+      message: "Dashboard disabled",
+      owner,
+      repo: repoName,
+    });
   } catch (err: any) {
-    logwatch.error(
-      `[webhook/issues.closed] Failed for ${owner}/${repoName}: ${err.message}`,
-    );
+    logwatch.error({
+      action: "issues.closed",
+      error: err.message,
+      installationId: payload.installation?.id,
+      message: "Failed to disable dashboard",
+      owner,
+      repo: repoName,
+    });
   }
 }

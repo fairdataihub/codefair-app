@@ -79,7 +79,12 @@ export async function handlePullRequest(payload: any) {
   }
 
   if (!payload.installation?.id) {
-    logwatch.error("[webhook/pull_request] Missing installation.id in payload");
+    logwatch.error({
+      action: `pull_request.${action}`,
+      message: "Missing installation.id in payload",
+      owner,
+      repo: repoName,
+    });
     return;
   }
 
@@ -88,7 +93,7 @@ export async function handlePullRequest(payload: any) {
       payload.installation.id,
     );
 
-    const updatePrUrl = PR_TITLE_TO_MODEL[prTitle];
+    const updatePrUrl = PR_TITLE_TO_MODEL[prTitle]!;
     if (action === "closed") {
       // Guard: only handle PRs created by the bot
       const botLogin = `${process.env.GH_APP_NAME}[bot]`;
@@ -101,9 +106,15 @@ export async function handlePullRequest(payload: any) {
       try {
         await provider.deleteBranch(owner, repoName, branchName);
       } catch (branchErr: any) {
-        logwatch.warn(
-          `[webhook/pull_request.closed] Branch delete failed for ${owner}/${repoName} (may already be gone): ${branchErr.message}`,
-        );
+        logwatch.warn({
+          action: `pull_request.${action}`,
+          branch: branchName,
+          error: branchErr.message,
+          installationId: payload.installation.id,
+          message: "Branch delete failed — may already be gone",
+          owner,
+          repo: repoName,
+        });
       }
 
       // Merged PRs: the push event fires immediately after and handles the re-render
@@ -114,12 +125,21 @@ export async function handlePullRequest(payload: any) {
     // Compliance state hasn't changed — only the PR URL — so we skip
     // the file-scan checks and render directly from existing DB state.
     await refreshDashboardFromDb(provider, owner, repoName, installation.id);
-    logwatch.success(
-      `[webhook/pull_request.${action}] Dashboard re-rendered for ${owner}/${repoName}`,
-    );
+    logwatch.success({
+      action: `pull_request.${action}`,
+      installationId: payload.installation.id,
+      message: "Dashboard re-rendered",
+      owner,
+      repo: repoName,
+    });
   } catch (err: any) {
-    logwatch.error(
-      `[webhook/pull_request.${action}] Handler failed for ${owner}/${repoName}: ${err.message}`,
-    );
+    logwatch.error({
+      action: `pull_request.${action}`,
+      error: err.message,
+      installationId: payload.installation?.id,
+      message: "Handler failed",
+      owner,
+      repo: repoName,
+    });
   }
 }

@@ -39,6 +39,13 @@ export default defineEventHandler(async (event) => {
   }
 
   if (!cwlValidationRequest.repository.use_central_api) {
+    logwatch.warn({
+      action: "rerun-cwl",
+      installationId: cwlValidationRequest.repository.installation_id,
+      message: "Central API mode not enabled — CWL rerun rejected",
+      owner,
+      repo,
+    });
     throw createError({
       statusCode: 400,
       statusMessage: "Central API mode required for rerun",
@@ -64,12 +71,16 @@ export default defineEventHandler(async (event) => {
   // Run CWL compliance checks in the background and stream progress to the client
   (async () => {
     try {
-      logwatch.info(logCtx, true);
+      logwatch.info({ ...logCtx, message: "CWL rerun started" });
       await push("running", "Connecting to repository...");
 
       const provider = await GitHubRepositoryProvider.create(
         cwlValidationRequest.repository.installation_id,
       );
+      logwatch.info({
+        ...logCtx,
+        message: "Provider created, scanning for CWL files",
+      });
       await push("progress", "Scanning for CWL files...");
 
       const subjects = await runComplianceChecks(
@@ -79,6 +90,10 @@ export default defineEventHandler(async (event) => {
         cwlValidationRequest.repository.id,
         { checks: ["cwl"] },
       );
+      logwatch.info({
+        ...logCtx,
+        message: "CWL checks complete, updating dashboard",
+      });
       await push("progress", "Saving results to database...");
 
       await createOrUpdateDashboardIssue(
@@ -101,10 +116,18 @@ export default defineEventHandler(async (event) => {
       });
       await push("progress", "Updating GitHub issue...");
 
-      logwatch.success({ ...logCtx, result: "complete" }, true);
+      logwatch.success({
+        ...logCtx,
+        message: "CWL rerun complete",
+        result: "complete",
+      });
       await push("complete", "CWL validation completed successfully.");
     } catch (error: any) {
-      logwatch.error({ ...logCtx, error: error?.message }, true);
+      logwatch.error({
+        ...logCtx,
+        error: error?.message,
+        message: "CWL rerun failed",
+      });
       await push("fail", "CWL validation failed. Please try again.");
     } finally {
       await eventStream.close();
