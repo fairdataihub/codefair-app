@@ -1,12 +1,20 @@
 import { consola } from "consola";
 
 type LogLevel = "trace" | "debug" | "info" | "warning" | "error" | "critical";
-type MessageType = "text" | "json";
+
+export interface LogContext {
+  action: string;
+  installationId?: number;
+  message: string;
+  owner?: string;
+  repo?: string;
+  [key: string]: unknown;
+}
 
 interface LogPayload {
   level: LogLevel;
   message: string;
-  type: MessageType;
+  type: "text" | "json";
 }
 
 class Logwatch {
@@ -22,14 +30,14 @@ class Logwatch {
       : String(message);
   }
 
-  private _send(level: LogLevel, message: unknown, asJson = false): void {
+  private _send(level: LogLevel, message: unknown): void {
     if (!this.endpoint) return;
 
+    const isObject = typeof message === "object" && message !== null;
     const payload: LogPayload = {
       level,
-      message:
-        typeof message === "object" ? JSON.stringify(message) : String(message),
-      type: asJson ? "json" : "text",
+      message: isObject ? JSON.stringify(message) : String(message),
+      type: isObject ? "json" : "text",
     };
 
     fetch(this.endpoint, {
@@ -39,39 +47,39 @@ class Logwatch {
     }).catch((err) => consola.error("Logwatch send failed:", err));
   }
 
-  trace(message: unknown, asJson = false): void {
+  trace(message: unknown): void {
     consola.trace(this._format(message));
-    this._send("trace", message, asJson);
+    this._send("trace", message);
   }
 
-  debug(message: unknown, asJson = false): void {
+  debug(message: unknown): void {
     consola.debug(this._format(message));
-    this._send("debug", message, asJson);
+    this._send("debug", message);
   }
 
-  info(message: unknown, asJson = false): void {
+  info(message: unknown): void {
     consola.info(this._format(message));
-    this._send("info", message, asJson);
+    this._send("info", message);
   }
 
-  success(message: unknown, asJson = false): void {
+  success(message: unknown): void {
     consola.success(this._format(message));
-    this._send("info", message, asJson);
+    this._send("info", message);
   }
 
-  warn(message: unknown, asJson = false): void {
+  warn(message: unknown): void {
     consola.warn(this._format(message));
-    this._send("warning", message, asJson);
+    this._send("warning", message);
   }
 
-  error(message: unknown, asJson = false): void {
+  error(message: unknown): void {
     consola.error(this._format(message));
-    this._send("error", message, asJson);
+    this._send("error", message);
   }
 
-  critical(message: unknown, asJson = false): void {
+  critical(message: unknown): void {
     consola.fatal(this._format(message));
-    this._send("critical", message, asJson);
+    this._send("critical", message);
   }
 }
 
