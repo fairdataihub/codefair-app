@@ -54,7 +54,7 @@ if (error.value) {
           </h1>
 
           <NuxtLink
-            to="https://docs.codefair.io/docs/metadata-validation.html"
+            to="https://docs.codefair.io/docs/metadata.html#about-metadata-validation"
             target="_blank"
             class="font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)]"
             >Need help?</NuxtLink
