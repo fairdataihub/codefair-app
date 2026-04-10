@@ -59,6 +59,7 @@ env:
     - ZENODO_CLIENT_ID
     - ZENODO_CLIENT_SECRET
     - ZENODO_REDIRECT_URI
+    - UI_LOGWATCH_URL
   clear:
     NODE_ENV: production
 
