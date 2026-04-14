@@ -94,7 +94,6 @@ export default defineNuxtConfig({
     public: {
       codefairDomain: process.env.CODEFAIR_APP_DOMAIN,
     },
-    validatorUrl: process.env.VALIDATOR_URL ?? "",
   },
 
   vite: {
