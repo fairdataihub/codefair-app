@@ -1,6 +1,6 @@
 import { consola } from "consola";
 
-type LogLevel = "trace" | "debug" | "info" | "warning" | "error" | "critical";
+type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
 export interface LogContext {
   action: string;
@@ -14,7 +14,7 @@ export interface LogContext {
 interface LogPayload {
   level: LogLevel;
   message: string;
-  content?: string;
+  raw?: string;
   type: "text" | "json";
 }
 
@@ -41,7 +41,7 @@ class Logwatch {
       payload = {
         level,
         message: (message as LogContext).message,
-        content: JSON.stringify(message),
+        raw: JSON.stringify(message),
         type: "json",
       };
     } else {
@@ -81,7 +81,7 @@ class Logwatch {
 
   warn(message: unknown): void {
     consola.warn(this._format(message));
-    this._send("warning", message);
+    this._send("warn", message);
   }
 
   error(message: unknown): void {
@@ -91,7 +91,7 @@ class Logwatch {
 
   critical(message: unknown): void {
     consola.fatal(this._format(message));
-    this._send("critical", message);
+    this._send("fatal", message);
   }
 }
 
