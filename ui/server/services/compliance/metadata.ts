@@ -6,7 +6,7 @@ import type { RepositoryProvider } from "../providers/interface";
 import prisma from "~/server/utils/prisma";
 import { createId } from "~/server/utils/cuid";
 
-const VALIDATOR_URL = process.env.VALIDATOR_URL ?? "";
+const VALIDATOR_URL = useRuntimeConfig().validatorUrl as string;
 
 // == Types =====================================================================
 
