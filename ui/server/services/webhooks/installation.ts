@@ -32,6 +32,8 @@ export async function handleInstallationAdded(payload: any) {
       repo: repo.name,
     };
 
+    logwatch.info({ ...logCtx, message: "Processing repository" });
+
     try {
       const provider = await GitHubRepositoryProvider.create(installationId);
 
@@ -55,9 +57,15 @@ export async function handleInstallationAdded(payload: any) {
         },
         where: { id: repo.id },
       });
+      logwatch.info({ ...logCtx, message: "Installation record upserted" });
 
       // Save latest commit info if the repo is not empty
-      if (!emptyRepo) {
+      if (emptyRepo) {
+        logwatch.info({
+          ...logCtx,
+          message: "Empty repository detected - skipping commit save",
+        });
+      } else {
         try {
           const repoInfo = await provider.getRepoInfo(owner, repo.name);
           const commit = await provider.getLatestCommit(
@@ -66,6 +74,7 @@ export async function handleInstallationAdded(payload: any) {
             repoInfo.defaultBranch,
           );
           await saveLatestCommit(repo.id, commit);
+          logwatch.info({ ...logCtx, message: "Latest commit saved" });
         } catch (err: any) {
           logwatch.warn({
             ...logCtx,
@@ -81,6 +90,7 @@ export async function handleInstallationAdded(payload: any) {
         update: {},
         where: { id: repo.id },
       });
+      logwatch.info({ ...logCtx, message: "Analytics record upserted" });
 
       if (applyActionLimit) {
         logwatch.info({

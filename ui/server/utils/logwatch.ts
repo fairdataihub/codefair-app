@@ -14,6 +14,7 @@ export interface LogContext {
 interface LogPayload {
   level: LogLevel;
   message: string;
+  content?: string;
   type: "text" | "json";
 }
 
@@ -34,11 +35,22 @@ class Logwatch {
     if (!this.endpoint) return;
 
     const isObject = typeof message === "object" && message !== null;
-    const payload: LogPayload = {
-      level,
-      message: isObject ? JSON.stringify(message) : String(message),
-      type: isObject ? "json" : "text",
-    };
+    let payload: LogPayload;
+
+    if (isObject && "message" in (message as object)) {
+      payload = {
+        level,
+        message: (message as LogContext).message,
+        content: JSON.stringify(message),
+        type: "json",
+      };
+    } else {
+      payload = {
+        level,
+        message: isObject ? JSON.stringify(message) : String(message),
+        type: isObject ? "json" : "text",
+      };
+    }
 
     fetch(this.endpoint, {
       body: JSON.stringify(payload),

@@ -384,6 +384,13 @@ async function _renderAndUpsertFromDbState(
     );
     if (fetched?.state === "open") {
       openIssue = fetched;
+      logwatch.info({
+        action: "dashboard.upsert",
+        issueNumber: installation.issue_number,
+        message: "Using stored issue number for upsert",
+        owner,
+        repo,
+      });
     }
   }
 
@@ -552,7 +559,8 @@ export async function createOrUpdateDashboardIssue(
   if (installation?.disabled) {
     logwatch.info({
       action: "dashboard.update",
-      message: "Skipping update — installation disabled",
+      issueNumber: installation.issue_number ?? undefined,
+      message: "Skipping update - installation disabled",
       owner,
       repo,
     });
@@ -649,7 +657,8 @@ export async function refreshDashboardFromDb(
   if (installation?.disabled) {
     logwatch.info({
       action: "dashboard.refresh",
-      message: "Skipping refresh — installation disabled",
+      issueNumber: installation.issue_number ?? undefined,
+      message: "Skipping refresh - installation disabled",
       owner,
       repo,
     });
@@ -715,7 +724,7 @@ async function upsertIssue(
       logwatch.warn({
         action: "dashboard.upsert",
         issueNumber: openIssue.number,
-        message: "Issue was deleted — recreating",
+        message: "Issue was deleted - recreating",
         owner,
         repo,
       });
