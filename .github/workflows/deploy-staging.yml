@@ -106,6 +106,8 @@ jobs:
       WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
       UI_LOGWATCH_URL: ${{ secrets.UI_LOGWATCH_URL }}
       VALIDATOR_URL: ${{ secrets.VALIDATOR_URL }}
+      CODEFAIR_APP_DOMAIN: ${{ secrets.CODEFAIR_APP_DOMAIN }}
+      GH_APP_NAME: ${{ secrets.GH_APP_NAME }}
       ZENODO_API_ENDPOINT: ${{ secrets.ZENODO_API_ENDPOINT }}
       ZENODO_ENDPOINT: ${{ secrets.ZENODO_ENDPOINT }}
       ZENODO_CLIENT_ID: ${{ secrets.ZENODO_CLIENT_ID }}
