@@ -26,7 +26,7 @@ const switchStyle = computed(() => ({
       bordered
       aria-label="Toggle dark/light mode"
       :style="switchStyle"
-      class="mt-[.3rem] transition-colors duration-300 ease-in-out"
+      class="transition-colors duration-300 ease-in-out"
     >
       <template #checked-icon>
         <Icon icon="material-symbols:moon-stars-outline" class="icon" />

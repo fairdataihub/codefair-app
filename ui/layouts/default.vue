@@ -74,11 +74,11 @@ const toggleMobileMenu = () => {
 
           <ProfileStatus />
 
-          <n-flex justify="center" gap="4" class="-ml-4">
+          <n-flex justify="center" align="center" gap="4" class="-ml-4">
             <NuxtLink
               to="https://docs.codefair.io/"
               target="_blank"
-              class="text-lg font-bold text-[var(--gray-600-300)] transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              class="leading-[0] text-[var(--gray-600-300)] transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               <n-popover trigger="hover" placement="top" :show-arrow="false">
                 <template #trigger>
@@ -109,7 +109,7 @@ const toggleMobileMenu = () => {
             <NuxtLink
               to="https://github.com/fairdataihub/codefair-app"
               target="_blank"
-              class="text-lg font-bold text-[var(--gray-600-300)] transition duration-100 hover:text-indigo-500 active:text-indigo-700"
+              class="leading-[0] text-[var(--gray-600-300)] transition duration-100 hover:text-indigo-500 active:text-indigo-700"
             >
               <n-popover trigger="hover" placement="top" :show-arrow="false">
                 <template #trigger>
