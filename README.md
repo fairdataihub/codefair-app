@@ -49,7 +49,7 @@ Your coding assistant to make research software reusable without breaking a swea
 
 ## Codefair Live Status
 
-View the live status of Codefair at [status.codefair.io](https://status.codefair.io/). You can check the status of the app, including any incidents or outages that may affect its performance. The status page provides real-time updates on the app's availability and performance, ensuring that you are always informed about its current state.
+View the live status of Codefair at [status.codefair.io](https://status.codefair.io/status/all). You can check the status of the app, including any incidents or outages that may affect its performance. The status page provides real-time updates on the app's availability and performance, ensuring that you are always informed about its current state.
 
 ---
 
