@@ -68,7 +68,7 @@ jobs:
 
       # Setup kamal for the first time
       # Might need to run `sudo usermod -aG docker $USER | newgrp docker | docker ps` to add the user to the docker group if the user is not already in the docker group
-      # - run: kamal setup       
+      # - run: kamal setup
 
       # Login to the registry on the server
       - run: kamal registry login
@@ -142,7 +142,7 @@ jobs:
 
       # Setup kamal for the first time
       # Might need to run `sudo usermod -aG docker $USER | newgrp docker | docker ps` to add the user to the docker group if the user is not already in the docker group
-      # - run: kamal setup       
+      # - run: kamal setup
 
       # Login to the registry on the server
       - run: kamal registry login
@@ -155,7 +155,7 @@ jobs:
       # Deploy the app for all other times
       - run: kamal redeploy
       # - run: kamal redeploy --verbose
-      
+
   deploy-validator:
     runs-on: ubuntu-latest
     environment: prd
@@ -200,7 +200,7 @@ jobs:
 
       # Setup kamal for the first time
       # Might need to run `sudo usermod -aG docker $USER | newgrp docker | docker ps` to add the user to the docker group if the user is not already in the docker group
-      # - run: kamal setup       
+      # - run: kamal setup
 
       # Login to the registry on the server
       - run: kamal registry login
@@ -228,7 +228,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
 
       - run: yarn install
 
