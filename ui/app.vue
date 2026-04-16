@@ -149,9 +149,9 @@ const overrides: GlobalThemeOverrides = {
     primaryColorPressed: "#312e81",
     primaryColorSuppl: "#0ea5e9",
 
-    textColor1: "oklch(96% 0.01 260)",
-    textColor2: "oklch(90% 0.01 260)",
-    textColor3: "oklch(78% 0.01 260)",
+    textColor1: "var(--cf-text-1)",
+    textColor2: "var(--cf-text-2)",
+    textColor3: "var(--cf-text-3)",
   },
   DatePicker: {
     calendarTitleColorHover: "var(--cf-datepicker-item-hover-bg)",
@@ -279,6 +279,7 @@ const overrides: GlobalThemeOverrides = {
         clearColor: "var(--cf-icon)",
         clearColorHover: "var(--cf-field-text)",
         color: "var(--cf-field-bg)",
+        colorActive: "var(--cf-field-bg-focus)",
         placeholderColor: "var(--cf-field-placeholder)",
         textColor: "var(--cf-field-text)",
       },
@@ -290,7 +291,8 @@ const overrides: GlobalThemeOverrides = {
 
         optionCheckColor: "oklch(98% 0.01 260)",
         optionColorActive: "var(--cf-dropdown-option-active-bg)",
-        optionColorActivePending: "oklch(33% 0.02 260)",
+        optionColorActivePending:
+          "color-mix(in oklab, var(--cf-dropdown-option-active-bg) 80%, black)",
 
         optionColorPending: "var(--cf-dropdown-option-hover-bg)",
         optionOpacityDisabled: "var(--cf-dropdown-option-disabled-opacity)",
