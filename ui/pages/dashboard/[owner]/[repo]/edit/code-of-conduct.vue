@@ -5,6 +5,12 @@ import TargetBlankExtension from "@/utils/TargetBlankExtension";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 import cofcJSON from "@/assets/data/codeOfConduct.json";
 
+const colorMode = useColorMode();
+const isDark = computed({
+  get: () => colorMode.value === "dark",
+  set: (v) => (colorMode.preference = v ? "dark" : "light"),
+});
+
 config({
   editorConfig: {
     languageUserDefined: {
@@ -243,6 +249,7 @@ const navigateToPR = () => {
             <MdEditor
               v-model="cofcContent"
               language="en-US"
+              :theme="isDark ? 'dark' : 'light'"
               :toolbars-exclude="[
                 'preview',
                 'fullscreen',

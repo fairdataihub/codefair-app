@@ -5,6 +5,12 @@ import licensesJSON from "@/assets/data/licenses.json";
 import TargetBlankExtension from "@/utils/TargetBlankExtension";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
+const colorMode = useColorMode();
+const isDark = computed({
+  get: () => colorMode.value === "dark",
+  set: (v) => (colorMode.preference = v ? "dark" : "light"),
+});
+
 config({
   editorConfig: {
     languageUserDefined: {
@@ -471,6 +477,7 @@ const navigateToPR = () => {
             <MdEditor
               v-model="licenseContent"
               language="en-US"
+              :theme="isDark ? 'dark' : 'light'"
               :toolbars-exclude="[
                 'preview',
                 'fullscreen',

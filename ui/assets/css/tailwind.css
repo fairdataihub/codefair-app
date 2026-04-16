@@ -257,32 +257,34 @@ body {
 
   .dark {
     .md-editor {
-      --md-color: #eaeaea;
-      --md-hover-color: #bbb;
-      --md-bk-color: #000;
-      --md-bk-color-outstand: #333;
-      --md-bk-hover-color: #1b1a1a;
-      --md-border-color: #2d2d2d;
-      --md-border-hover-color: #636262;
-      --md-border-active-color: #777;
+      --md-color: oklch(92% 0.01 260);
+      --md-hover-color: oklch(98% 0.01 260);
+      --md-bk-color: oklch(22% 0.018 260);
+      --md-bk-color-outstand: oklch(27% 0.018 260);
+      --md-bk-hover-color: oklch(30% 0.02 260);
+      --md-border-color: oklch(34% 0.02 260);
+      --md-border-hover-color: oklch(44% 0.03 260);
+      --md-border-active-color: oklch(55% 0.18 275);
       --md-modal-mask: #00000073;
       --md-modal-shadow: 0px 6px 24px 2px #00000066;
-      --md-scrollbar-bg-color: #0f0f0f;
-      --md-scrollbar-thumb-color: #2d2d2d;
-      --md-scrollbar-thumb-hover-color: #3a3a3a;
-      --md-scrollbar-thumb-active-color: #3a3a3a;
-    }
-
-    .ͼ15 {
-      color: white;
+      --md-scrollbar-bg-color: oklch(18% 0.02 260);
+      --md-scrollbar-thumb-color: oklch(34% 0.02 260);
+      --md-scrollbar-thumb-hover-color: oklch(40% 0.02 260);
+      --md-scrollbar-thumb-active-color: oklch(40% 0.02 260);
     }
 
     .md-editor div.github-theme {
-      color: white;
+      color: oklch(92% 0.01 260);
+      background-color: oklch(22% 0.018 260);
     }
+
+    .md-editor-preview-wrapper {
+      background-color: oklch(22% 0.018 260);
+    }
+
     .md-editor-preview code {
-      background-color: #585d5f;
-      color: white;
+      background-color: oklch(28% 0.02 260);
+      color: oklch(90% 0.01 260);
     }
 
     .n-tag.n-tag--closable {
