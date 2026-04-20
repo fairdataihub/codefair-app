@@ -5,6 +5,7 @@ import type { Prisma } from "@prisma/client";
 import type { RepositoryProvider } from "../providers/interface";
 import prisma from "~/server/utils/prisma";
 import { createId } from "~/server/utils/cuid";
+import { logwatch } from "~/server/utils/logwatch";
 
 const VALIDATOR_URL = process.env.VALIDATOR_URL ?? "";
 
@@ -164,7 +165,15 @@ export async function getCWLFiles(
  */
 export async function validateCWLFile(
   downloadUrl: string,
+  ctx?: {
+    filePath?: string;
+    installationId?: number;
+    owner?: string;
+    repo?: string;
+  },
 ): Promise<[boolean, string]> {
+  const logCtx = { action: "cwl.validate", ...ctx };
+
   try {
     const response = await fetch(`${VALIDATOR_URL}/validate-cwl`, {
       body: JSON.stringify({ file_path: downloadUrl }),
@@ -178,14 +187,38 @@ export async function validateCWLFile(
         output?: string;
       };
       if (response.status === 400) {
-        return [false, errorData.error || errorData.output || "Validation error"];
+        const message =
+          errorData.error || errorData.output || "Validation error";
+        logwatch.warn({
+          ...logCtx,
+          message: "CWL file failed validation",
+          validationMessage: message,
+        });
+        return [false, message];
       }
+      logwatch.warn({
+        ...logCtx,
+        message: "CWL validator returned unexpected error",
+        statusCode: response.status,
+      });
       return [false, "Error validating CWL file"];
     }
 
     const data = (await response.json()) as { error?: string; output?: string };
+    logwatch.success({
+      ...logCtx,
+      data,
+      message: "CWL file validated successfully",
+      validationMessage: data.output,
+    });
     return [true, data.error || data.output || "Valid"];
-  } catch {
+  } catch (err: any) {
+    logwatch.error({
+      ...logCtx,
+      error: err.message,
+      message: "Fetch to CWL validator failed",
+      stack: err.stack,
+    });
     return [false, "Error validating CWL file"];
   }
 }
@@ -248,7 +281,9 @@ export async function updateCWLDatabase(
   const newlyValidated: CWLFileEntry[] = [];
   for (const file of cwlScan.files) {
     const downloadUrl = file.download_url ?? "";
-    const [isValid, rawMessage] = await validateCWLFile(downloadUrl);
+    const [isValid, rawMessage] = await validateCWLFile(downloadUrl, {
+      filePath: file.path,
+    });
 
     let htmlUrl = file.href;
     let validationMessage = rawMessage;

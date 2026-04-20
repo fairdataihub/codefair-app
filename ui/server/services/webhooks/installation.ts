@@ -95,7 +95,7 @@ export async function handleInstallationAdded(payload: any) {
       if (applyActionLimit) {
         logwatch.info({
           ...logCtx,
-          message: "Action limit applied — skipping compliance run",
+          message: "Action limit applied - skipping compliance run",
           repoNumber: repoCount,
         });
         continue;
@@ -109,6 +109,13 @@ export async function handleInstallationAdded(payload: any) {
         repo.id,
         { fullCodefairRun: true },
       );
+
+      logwatch.info({
+        ...logCtx,
+        message: "Compliance checks completed",
+        subjects,
+      });
+
       await createOrUpdateDashboardIssue(
         provider,
         owner,
