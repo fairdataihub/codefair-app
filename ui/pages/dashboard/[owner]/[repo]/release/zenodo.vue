@@ -141,41 +141,88 @@ if (data.value) {
   lastSelectedGithubReleaseTitle.value =
     data.value.lastSelectedGithubReleaseTitle;
 
-  githubTagOptions.value = [];
-  githubReleaseOptions.value = [];
+  // Build grouped release options: available drafts first, then already-released
+  const draftReleases = data.value.githubReleases.filter((r) => r.draft);
+  const publishedReleases = data.value.githubReleases.filter((r) => !r.draft);
 
-  for (const release of data.value.githubReleases) {
-    githubReleaseOptions.value.push({
-      disabled: !release.draft,
-      label: release.name || "Untitled release",
-      prerelease: release.prerelease,
-      value: release.id.toString(),
-    });
-  }
+  githubReleaseOptions.value = [
+    { label: "I want to create a new release", value: "new" },
+    ...(draftReleases.length
+      ? [
+          {
+            children: draftReleases.map((r) => ({
+              label: r.name || "Untitled release",
+              prerelease: r.prerelease,
+              value: r.id.toString(),
+            })),
+            key: "available",
+            label: "Available (Draft)",
+            type: "group" as const,
+          },
+        ]
+      : []),
+    ...(publishedReleases.length
+      ? [
+          {
+            children: publishedReleases.map((r) => ({
+              disabled: true,
+              label: r.name || "Untitled release",
+              prerelease: r.prerelease,
+              value: r.id.toString(),
+            })),
+            key: "released",
+            label: "Released",
+            type: "group" as const,
+          },
+        ]
+      : []),
+  ];
+
+  // Build grouped tag options: deduplicate by name, then split available vs released
+  const seenTagNames = new Set<string>();
+  const unreleasedTags: typeof data.value.githubTags = [];
+  const releasedTags: typeof data.value.githubTags = [];
 
   for (const tag of data.value.githubTags) {
-    githubTagOptions.value.push({
-      disabled: tag.released,
-      label: tag.name || "Untitled tag",
-      value: tag.name,
-    });
+    if (seenTagNames.has(tag.name)) continue;
+    seenTagNames.add(tag.name);
+    if (tag.released) {
+      releasedTags.push(tag);
+    } else {
+      unreleasedTags.push(tag);
+    }
   }
 
-  // Remove duplicates in the githubTagOptions array
-  githubTagOptions.value = githubTagOptions.value.filter(
-    (option, index, self) =>
-      index === self.findIndex((t) => t.value === option.value),
-  );
-
-  // Add 'new' option to the top of the list
-  githubTagOptions.value.unshift({
-    label: "I want to create a new tag",
-    value: "new",
-  });
-  githubReleaseOptions.value.unshift({
-    label: "I want to create a new release",
-    value: "new",
-  });
+  githubTagOptions.value = [
+    { label: "I want to create a new tag", value: "new" },
+    ...(unreleasedTags.length
+      ? [
+          {
+            children: unreleasedTags.map((t) => ({
+              label: t.name || "Untitled tag",
+              value: t.name,
+            })),
+            key: "available",
+            label: "Available",
+            type: "group" as const,
+          },
+        ]
+      : []),
+    ...(releasedTags.length
+      ? [
+          {
+            children: releasedTags.map((t) => ({
+              disabled: true,
+              label: t.name || "Untitled tag",
+              value: t.name,
+            })),
+            key: "released",
+            label: "Released",
+            type: "group" as const,
+          },
+        ]
+      : []),
+  ];
 
   // dev
   // githubFormValue.value.tag = "new";
@@ -228,19 +275,49 @@ const createDraftGithubRelease = () => {
             message: "Your draft GitHub release has been created.",
           });
 
-          // Add the releaseid to the options
-          githubReleaseOptions.value.push({
-            disabled: false,
+          // Add the new release to the Available group (or create the group if absent)
+          const releaseAvailGroup = githubReleaseOptions.value.find(
+            (o) => (o as any).key === "available",
+          ) as SelectGroupOption | undefined;
+          const newReleaseOption = {
             label: githubFormValue.value.releaseTitle,
             value: response.releaseId.toString(),
-          });
+          };
+          if (releaseAvailGroup) {
+            releaseAvailGroup.children = [
+              ...(releaseAvailGroup.children ?? []),
+              newReleaseOption,
+            ];
+          } else {
+            githubReleaseOptions.value.splice(1, 0, {
+              children: [newReleaseOption],
+              key: "available",
+              label: "Available (Draft)",
+              type: "group",
+            });
+          }
 
           if (githubFormValue.value.tag === "new") {
-            githubTagOptions.value.push({
-              disabled: false,
+            const tagAvailGroup = githubTagOptions.value.find(
+              (o) => (o as any).key === "available",
+            ) as SelectGroupOption | undefined;
+            const newTagOption = {
               label: githubFormValue.value.tagTitle,
               value: githubFormValue.value.tagTitle,
-            });
+            };
+            if (tagAvailGroup) {
+              tagAvailGroup.children = [
+                ...(tagAvailGroup.children ?? []),
+                newTagOption,
+              ];
+            } else {
+              githubTagOptions.value.splice(1, 0, {
+                children: [newTagOption],
+                key: "available",
+                label: "Available",
+                type: "group",
+              });
+            }
           }
 
           // Select the new release
@@ -366,45 +443,111 @@ const zenodoPublishSpinner = ref(false);
 const zenodoDraftSpinner = ref(false);
 
 const showZenodoPublishProgressModal = ref(false);
-const zenodoPublishProgressInterval = ref<any>(null);
 const zenodoPublishStatus = ref<string>("");
 const zenodoPublishDOI = ref<string>("");
+const zenodoPublishErrorMessage = ref<string>("");
 const zenodoBadgeShield = ref<string>("");
 const showZenodoBadgeModal = ref(false);
 
-const checkForZenodoPublishProgress = async () => {
-  await $fetch(`/api/${owner}/${repo}/release/zenodo/status`, {
-    headers: useRequestHeaders(["cookie"]),
-    method: "GET",
-  })
-    .then(async (response) => {
-      if (
-        response.zenodoWorkflowStatus === "published" ||
-        response.zenodoWorkflowStatus === "error"
-      ) {
-        // console.error("Zenodo publish progress:", response.zenodoWorkflowStatus);
-        zenodoPublishStatus.value = response.zenodoWorkflowStatus;
-        zenodoPublishDOI.value = response.zenodoDoi;
+interface PublishStep {
+  key: string;
+  label: string;
+  message: string;
+  status: "pending" | "in_progress" | "completed" | "error";
+}
 
-        clearInterval(zenodoPublishProgressInterval.value);
-        if (response.zenodoWorkflowStatus === "published") {
-          await $fetch(`/api/utils`, {
-            body: JSON.stringify({ owner, repo }),
-            headers: useRequestHeaders(["cookie"]),
-            method: "POST",
-          });
-        }
-      }
+const publishSteps = ref<PublishStep[]>([
+  {
+    key: "deposition",
+    label: "Create Zenodo deposition",
+    message: "",
+    status: "pending",
+  },
+  {
+    key: "metadata",
+    label: "Prepare metadata",
+    message: "",
+    status: "pending",
+  },
+  {
+    key: "upload_metadata",
+    label: "Upload metadata to Zenodo",
+    message: "",
+    status: "pending",
+  },
+  {
+    key: "update_repo",
+    label: "Commit DOI files to repository",
+    message: "",
+    status: "pending",
+  },
+  {
+    key: "upload_files",
+    label: "Upload release files to Zenodo",
+    message: "",
+    status: "pending",
+  },
+  {
+    key: "publish",
+    label: "Publish deposition",
+    message: "",
+    status: "pending",
+  },
+]);
 
-      if (response.zenodoWorkflowStatus === "inProgress") {
-        // console.error("Zenodo publish progress:", response.zenodoWorkflowStatus);
-        zenodoPublishStatus.value = response.zenodoWorkflowStatus;
-        zenodoPublishDOI.value = "";
+const resetPublishSteps = () => {
+  for (const step of publishSteps.value) {
+    step.status = "pending";
+    step.message = "";
+  }
+  zenodoPublishErrorMessage.value = "";
+};
+
+const handleSSEEvent = (event: {
+  data?: { doi: string; htmlUrl: string };
+  message: string;
+  status: string;
+  step: string;
+}) => {
+  if (event.step === "complete") {
+    zenodoPublishStatus.value = "published";
+    if (event.data?.doi) {
+      zenodoPublishDOI.value = event.data.doi;
+    }
+    for (const step of publishSteps.value) {
+      if (step.status !== "error") {
+        step.status = "completed";
       }
-    })
-    .catch((error) => {
-      console.error("Error checking Zenodo publish progress:", error);
-    });
+    }
+    return;
+  }
+
+  if (event.step === "error") {
+    zenodoPublishStatus.value = "error";
+    zenodoPublishErrorMessage.value = event.message;
+    const inProgress = publishSteps.value.find(
+      (s) => s.status === "in_progress",
+    );
+    if (inProgress) {
+      inProgress.status = "error";
+      inProgress.message = event.message;
+    }
+    return;
+  }
+
+  const step = publishSteps.value.find((s) => s.key === event.step);
+  if (!step) return;
+
+  step.message = event.message;
+  if (event.status === "in_progress") {
+    step.status = "in_progress";
+  } else if (event.status === "completed") {
+    step.status = "completed";
+  } else if (event.status === "error") {
+    step.status = "error";
+    zenodoPublishStatus.value = "error";
+    zenodoPublishErrorMessage.value = event.message;
+  }
 };
 
 const navigateToDashboard = async () => {
@@ -418,67 +561,106 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     zenodoDraftSpinner.value = true;
   }
 
-  await $fetch(`/api/${owner}/${repo}/release/zenodo`, {
-    body: JSON.stringify({
-      metadata: zenodoFormValue.value,
-      publish: shouldPublish,
-      release: githubFormValue.value.release,
-      tag:
-        githubFormValue.value.tag !== "new"
-          ? githubFormValue.value.tag
-          : githubFormValue.value.tagTitle,
-      useExistingDeposition: selectedExistingDeposition.value === "existing",
-      zenodoDepositionId:
-        selectedExistingDeposition.value === "existing"
-          ? selectedDeposition.value?.toString()
-          : "",
-    }),
-    headers: useRequestHeaders(["cookie"]),
-    method: "POST",
-  })
-    .then((_response) => {
-      if (githubFormValue.value.tag === "new") {
-        githubTagOptions.value.push({
-          disabled: false,
-          label: githubFormValue.value.tagTitle,
-          value: githubFormValue.value.tagTitle,
-        });
+  const body = JSON.stringify({
+    metadata: zenodoFormValue.value,
+    publish: shouldPublish,
+    release: githubFormValue.value.release,
+    tag:
+      githubFormValue.value.tag !== "new"
+        ? githubFormValue.value.tag
+        : githubFormValue.value.tagTitle,
+    useExistingDeposition: selectedExistingDeposition.value === "existing",
+    zenodoDepositionId:
+      selectedExistingDeposition.value === "existing"
+        ? selectedDeposition.value?.toString()
+        : "",
+  });
 
-        githubFormValue.value.tag = githubFormValue.value.tagTitle;
-        githubFormValue.value.tagTitle = "";
-      }
-
-      if (shouldPublish) {
-        push.success({
-          title: "Success",
-          message: "Your Zenodo publish process has been started.",
-        });
-        showZenodoPublishProgressModal.value = true;
-
-        zenodoPublishProgressInterval.value = setInterval(() => {
-          checkForZenodoPublishProgress();
-        }, 500);
-      } else {
-        push.success({
-          title: "Success",
-          message: "Your Zenodo draft has been saved.",
-        });
-      }
-    })
-    .catch((error) => {
-      console.error("Failed to start Zenodo publish process:", error);
-      push.error({
-        title: "Failed to start Zenodo publish process",
-        message: "Please try again later",
-      });
-    })
-    .finally(() => {
-      zenodoPublishSpinner.value = false;
-      zenodoDraftSpinner.value = false;
-
-      // Make API call to get the DOI badge for the user
-      fetchZenodoBadge();
+  try {
+    const response = await fetch(`/api/${owner}/${repo}/release/zenodo`, {
+      body,
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    if (githubFormValue.value.tag === "new") {
+      const tagAvailGroup = githubTagOptions.value.find(
+        (o) => (o as any).key === "available",
+      ) as SelectGroupOption | undefined;
+      const newTagOption = {
+        label: githubFormValue.value.tagTitle,
+        value: githubFormValue.value.tagTitle,
+      };
+      if (tagAvailGroup) {
+        tagAvailGroup.children = [
+          ...(tagAvailGroup.children ?? []),
+          newTagOption,
+        ];
+      } else {
+        githubTagOptions.value.splice(1, 0, {
+          children: [newTagOption],
+          key: "available",
+          label: "Available",
+          type: "group",
+        });
+      }
+      githubFormValue.value.tag = githubFormValue.value.tagTitle;
+      githubFormValue.value.tagTitle = "";
+    }
+
+    if (!shouldPublish) {
+      push.success({
+        title: "Success",
+        message: "Your Zenodo draft has been saved.",
+      });
+      return;
+    }
+
+    // Open the progress modal and reset steps before streaming begins
+    showZenodoPublishProgressModal.value = true;
+    zenodoPublishStatus.value = "inProgress";
+    resetPublishSteps();
+
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          try {
+            const event = JSON.parse(line.slice(6));
+            handleSSEEvent(event);
+          } catch {
+            // ignore malformed lines
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Failed to start Zenodo publish process:", error);
+    push.error({
+      title: "Failed to start Zenodo publish process",
+      message: "Please try again later",
+    });
+    zenodoPublishStatus.value = "error";
+  } finally {
+    zenodoPublishSpinner.value = false;
+    zenodoDraftSpinner.value = false;
+    fetchZenodoBadge();
+  }
 };
 
 const requestZenodoBadge = () => {
@@ -497,6 +679,19 @@ const copyText = (text: string) => {
     })
     .catch((err) => console.error("Failed to copy text: ", err));
 };
+
+function zenodoDoiUrl(doi: string): string {
+  // Sandbox DOIs use the 10.5072 prefix and must be resolved via sandbox.zenodo.org
+  const base = doi.startsWith("10.5072")
+    ? "https://sandbox.zenodo.org/doi"
+    : "https://doi.org";
+  return `${base}/${doi}`;
+}
+
+const zenodoDepositionUrl = computed(() => {
+  if (!zenodoPublishDOI.value) return "";
+  return zenodoDoiUrl(zenodoPublishDOI.value);
+});
 
 const fetchZenodoBadge = () => {
   zenodoBadgeShield.value = "";
@@ -575,13 +770,21 @@ const loginToZenodo = async () => {
       // Extract the existing state from the Zenodo login URL
       const existingStateMatch =
         zenodoLoginUrl.value.match(/[?&]state=([^&]+)/);
-      let originalState = {};
+      let originalState: { owner: string; repo: string; userId: string } = {
+        owner,
+        repo,
+        userId: "",
+      };
 
       if (existingStateMatch) {
         try {
           const decodedState = decodeURIComponent(existingStateMatch[1]);
-          const [userId, owner, repo] = decodedState.split(":");
-          originalState = { owner, repo, userId };
+          const parsed = JSON.parse(decodedState);
+          originalState = {
+            owner: parsed.owner ?? owner,
+            repo: parsed.repo ?? repo,
+            userId: parsed.userId ?? "",
+          };
         } catch (error) {
           console.error("Failed to parse existing state:", error);
           throw new Error("Invalid state format");
@@ -673,7 +876,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearInterval(githubReleaseInterval.value);
-  clearInterval(zenodoPublishProgressInterval.value);
 });
 </script>
 
@@ -744,7 +946,7 @@ onBeforeUnmount(() => {
           <div>
             This repository was last released on Zenodo at
             <NuxtLink
-              :to="`https://doi.org/${data?.lastPublishedZenodoDoi}`"
+              :to="zenodoDoiUrl(data!.lastPublishedZenodoDoi)"
               target="_blank"
               class="text-blue-500 underline transition-all hover:text-blue-700"
               >{{ data?.lastPublishedZenodoDoi }} </NuxtLink
@@ -1447,20 +1649,110 @@ onBeforeUnmount(() => {
       </template>
 
       <!-- BODY CONTENT -->
-      <n-flex v-if="zenodoPublishStatus === 'inProgress'" vertical>
-        <p>
-          The workflow for publishing this repository to Zenodo is currently in
-          progress. You can check the status of this workflow on the dashboard.
+      <n-flex
+        v-if="zenodoPublishStatus === 'inProgress'"
+        vertical
+        class="space-y-3"
+      >
+        <p class="text-gray-700 dark:text-gray-300">
+          Publishing your repository to Zenodo. This may take a few minutes.
+          Please do not close this window while the process is ongoing.
         </p>
 
-        <n-spin size="large" />
+        <ul class="space-y-2">
+          <li
+            v-for="step in publishSteps"
+            :key="step.key"
+            class="flex items-center space-x-3"
+          >
+            <Icon
+              v-if="step.status === 'completed'"
+              name="mdi:check-circle"
+              class="h-5 w-5 shrink-0 text-green-500"
+            />
+
+            <Icon
+              v-else-if="step.status === 'error'"
+              name="mdi:alert-circle"
+              class="h-5 w-5 shrink-0 text-red-500"
+            />
+
+            <Icon
+              v-else-if="step.status === 'in_progress'"
+              name="mdi:loading"
+              class="h-5 w-5 shrink-0 animate-spin text-blue-500"
+            />
+
+            <Icon
+              v-else
+              name="mdi:circle-outline"
+              class="h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600"
+            />
+
+            <span
+              :class="{
+                'font-medium text-gray-900 dark:text-gray-100':
+                  step.status === 'in_progress',
+                'text-gray-400 dark:text-gray-500': step.status === 'pending',
+                'text-gray-700 dark:text-gray-300': step.status === 'completed',
+                'text-red-600 dark:text-red-400': step.status === 'error',
+              }"
+            >
+              {{ step.label }}
+            </span>
+          </li>
+        </ul>
       </n-flex>
 
-      <n-flex v-else-if="zenodoPublishStatus === 'error'" vertical>
-        <p>
+      <n-flex
+        v-else-if="zenodoPublishStatus === 'error'"
+        vertical
+        class="space-y-3"
+      >
+        <p class="text-gray-700 dark:text-gray-300">
           There was an error publishing this repository to Zenodo. Please try
           again later or contact the Codefair team for assistance.
         </p>
+
+        <n-alert v-if="zenodoPublishErrorMessage" type="error" class="w-full">
+          {{ zenodoPublishErrorMessage }}
+        </n-alert>
+
+        <ul class="space-y-2">
+          <li
+            v-for="step in publishSteps"
+            :key="step.key"
+            class="flex items-center space-x-3"
+          >
+            <Icon
+              v-if="step.status === 'completed'"
+              name="mdi:check-circle"
+              class="h-5 w-5 shrink-0 text-green-500"
+            />
+
+            <Icon
+              v-else-if="step.status === 'error'"
+              name="mdi:alert-circle"
+              class="h-5 w-5 shrink-0 text-red-500"
+            />
+
+            <Icon
+              v-else
+              name="mdi:circle-outline"
+              class="h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600"
+            />
+
+            <span
+              :class="{
+                'text-gray-400 dark:text-gray-500': step.status === 'pending',
+                'text-gray-700 dark:text-gray-300': step.status === 'completed',
+                'text-red-600 dark:text-red-400': step.status === 'error',
+              }"
+            >
+              {{ step.label }}
+            </span>
+          </li>
+        </ul>
       </n-flex>
 
       <n-flex v-else-if="zenodoPublishStatus === 'published'" vertical>
@@ -1527,7 +1819,7 @@ onBeforeUnmount(() => {
           <!-- Link to Zenodo Deposition -->
           <NuxtLink
             v-if="zenodoPublishStatus === 'published'"
-            :to="`https://doi.org/${zenodoPublishDOI}`"
+            :to="zenodoDepositionUrl"
             target="_blank"
           >
             <n-button type="primary" size="small">

@@ -1,11 +1,50 @@
+/**
+ * GET /api/[owner]/[repo]/release/zenodo
+ *
+ * Returns all data needed to render the Zenodo release page:
+ *  - Whether the user has a valid Zenodo token (auto-refreshed if so)
+ *  - Zenodo login URL (if not connected)
+ *  - List of existing Zenodo depositions
+ *  - GitHub releases and tags for the repository
+ *  - Last release/deposition state from the database
+ *  - License information
+ *
+ * The `githubTag` and `githubRelease` query params are forwarded into the
+ * OAuth state so the callback can redirect back to the correct page.
+ */
 import type { User } from "lucia";
+import {
+  validateZenodoToken,
+  ZenodoProvider,
+} from "~/server/services/archival/zenodo";
+import { logwatch } from "~/server/utils/logwatch";
+
+interface ZenodoDeposition {
+  id: number;
+  title: string;
+  conceptrecid: string;
+  state: string;
+  submitted: boolean;
+}
+
+interface GitHubRelease {
+  id: number;
+  name: string;
+  assetsUrl: string;
+  draft: boolean;
+  htmlUrl: string;
+  prerelease: boolean;
+  tagName: string;
+  targetCommitish: string;
+  updatedAt: string;
+}
+
+interface ZenodoMetadata {
+  accessRight: string | null;
+  version: string;
+}
 
 export default defineEventHandler(async (event) => {
-  const ZENODO_ENDPOINT = process.env.ZENODO_ENDPOINT || "";
-  const ZENODO_API_ENDPOINT = process.env.ZENODO_API_ENDPOINT || "";
-  const ZENODO_CLIENT_ID = process.env.ZENODO_CLIENT_ID || "";
-  const ZENODO_REDIRECT_URI = process.env.ZENODO_REDIRECT_URI || "";
-
   protectRoute(event);
 
   const user = event.context.user as User | null;
@@ -15,19 +54,21 @@ export default defineEventHandler(async (event) => {
     repo: string;
   };
 
-  // Check if the user has write permissions to the repository
+  const query = getQuery(event);
+  const githubTag = (query.githubTag as string) ?? "";
+  const githubRelease = (query.githubRelease as string) ?? "";
+
+  // Permission checks
   await repoWritePermissions(event, owner, repo);
 
   const isOrg = await ownerIsOrganization(event, owner);
   await isOrganizationMember(event, isOrg, owner);
 
-  // Make GitHub API call to get the user's repo ID number
+  // GitHub repo info
   const repoResponse = await fetch(
     `https://api.github.com/repos/${owner}/${repo}`,
     {
-      headers: {
-        Authorization: `token ${user?.access_token}`,
-      },
+      headers: { Authorization: `token ${user?.access_token}` },
     },
   );
 
@@ -41,18 +82,11 @@ export default defineEventHandler(async (event) => {
   const repoData = await repoResponse.json();
   const repoId = repoData.id;
 
-  // Call both the license and metadata tables to get their identifiers
-  const licenseResponse = await prisma.licenseRequest.findFirst({
-    where: {
-      repository_id: repoId,
-    },
-  });
-
-  const metadataResponse = await prisma.codeMetadata.findFirst({
-    where: {
-      repository_id: repoId,
-    },
-  });
+  // License + metadata prerequisite check
+  const [licenseResponse, metadataResponse] = await Promise.all([
+    prisma.licenseRequest.findFirst({ where: { repository_id: repoId } }),
+    prisma.codeMetadata.findFirst({ where: { repository_id: repoId } }),
+  ]);
 
   if (!licenseResponse || !metadataResponse) {
     throw createError({
@@ -61,198 +95,148 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const userId = user?.id;
-  const githubAccessToken = user?.access_token;
-  const state = `${userId}:${owner}:${repo}`;
+  // Zenodo token + depositions
+  const userId = user?.id ?? "";
 
-  const zenodoLoginUrl = `${ZENODO_ENDPOINT}/oauth/authorize?response_type=code&client_id=${ZENODO_CLIENT_ID}&scope=${encodeURIComponent("deposit:write deposit:actions")}&state=${encodeURIComponent(state)}&redirect_uri=${encodeURIComponent(ZENODO_REDIRECT_URI)}`;
-
-  let haveValidZenodoToken = false;
-
-  const zenodoTokenInfo = await prisma.zenodoToken.findFirst({
-    where: {
-      user_id: userId,
-    },
+  const state = JSON.stringify({
+    githubDetails: { githubRelease, githubTag },
+    owner,
+    repo,
+    userId,
   });
 
-  const existingDepositions: ZenodoDeposition[] = [];
-  const rawData = [];
+  const zenodoProvider = new ZenodoProvider();
+  const zenodoLoginUrl = zenodoProvider.getLoginUrl(state);
 
-  if (!zenodoTokenInfo) {
-    haveValidZenodoToken = false;
-  } else if (zenodoTokenInfo && zenodoTokenInfo.expires_at < new Date()) {
-    haveValidZenodoToken = false;
-  } else {
-    // Check if the token is valid
-    const zenodoTokenInfoResponse = await fetch(
-      `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoTokenInfo.token}`,
-      {
-        method: "GET",
-      },
-    );
-
-    if (!zenodoTokenInfoResponse.ok) {
-      haveValidZenodoToken = false;
-    } else {
-      haveValidZenodoToken = true;
-
-      const response = await zenodoTokenInfoResponse.json();
-
-      for (const item of response) {
-        existingDepositions.push({
-          id: item.id,
-          title: item.title,
-          conceptrecid: item.conceptrecid,
-          state: item.state,
-          submitted: item.submitted,
-        });
-        rawData.push(item);
-      }
-    }
+  let existingDepositions: any[] = [];
+  let haveValidZenodoToken = false;
+  try {
+    const tokenResult = await validateZenodoToken(userId);
+    existingDepositions = tokenResult.existingDepositions;
+    haveValidZenodoToken = tokenResult.valid;
+  } catch (err: any) {
+    logwatch.warn({
+      action: "zenodo.get.validateToken",
+      message: `Token validation error: ${err.message}`,
+      userId,
+    });
+    // Fall through with haveValidZenodoToken=false so the page still loads
+    // and the user can reconnect their Zenodo account
   }
 
+  // DB deposition record
   const zenodoDeposition = await prisma.zenodoDeposition.findFirst({
-    include: {
-      user: true,
-    },
-    where: {
-      repository: {
-        owner,
-        repo,
-      },
-    },
+    include: { user: true },
+    where: { repository: { owner, repo } },
   });
 
   const raw = zenodoDeposition?.zenodo_metadata as unknown as ZenodoMetadata;
-
   const zenodoMetadata: ZenodoMetadata = {
-    accessRight: raw?.accessRight || null,
-    version: raw?.version || "",
+    accessRight: raw?.accessRight ?? null,
+    version: raw?.version ?? "",
   };
 
-  // Get a list of github releases
-  const gr = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/releases`,
-    {
+  // GitHub releases + tags
+  const githubAccessToken = user?.access_token;
+
+  const [grRes, gtRes] = await Promise.all([
+    fetch(`https://api.github.com/repos/${owner}/${repo}/releases`, {
       headers: {
         Authorization: `Bearer ${githubAccessToken}`,
+        "X-GitHub-Api-Version": "2022-11-28",
       },
-      method: "GET",
-    },
-  );
+    }),
+    fetch(`https://api.github.com/repos/${owner}/${repo}/tags`, {
+      headers: {
+        Authorization: `Bearer ${githubAccessToken}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    }),
+  ]);
 
-  if (!gr.ok) {
+  if (!grRes.ok) {
     throw createError({
       statusCode: 500,
       statusMessage: "Failed to fetch GitHub releases",
     });
   }
-
-  // Get a list of github tags
-  const gt = await fetch(`https://api.github.com/repos/${owner}/${repo}/tags`, {
-    headers: {
-      Authorization: `Bearer ${githubAccessToken}`,
-    },
-    method: "GET",
-  });
-
-  if (!gt.ok) {
+  if (!gtRes.ok) {
     throw createError({
       statusCode: 500,
       statusMessage: "Failed to fetch GitHub tags",
     });
   }
 
-  // const githubTags: GitHubTags = [];
+  const githubReleasesJson = await grRes.json();
+  const githubTagsJson = await gtRes.json();
 
-  const githubReleases: GitHubReleases = [];
+  const githubReleases: GitHubRelease[] = [];
+  const tagMap = new Map<string, any>();
 
-  const githubReleasesJson = await gr.json();
-  const githubTagsJson = await gt.json();
-  // Create a map for tags keyed by their name
-  const tagMap = new Map();
-
-  for (const release of githubReleasesJson) {
+  for (const r of githubReleasesJson) {
     githubReleases.push({
-      id: release.id,
-      name: release.name,
-      assetsUrl: release.assets_url,
-      draft: release.draft,
-      htmlUrl: release.html_url,
-      prerelease: release.prerelease,
-      tagName: release.tag_name,
-      targetCommitish: release.target_commitish,
-      updatedAt: release.updated_at,
+      id: r.id,
+      name: r.name,
+      assetsUrl: r.assets_url,
+      draft: r.draft,
+      htmlUrl: r.html_url,
+      prerelease: r.prerelease,
+      tagName: r.tag_name,
+      targetCommitish: r.target_commitish,
+      updatedAt: r.updated_at,
     });
 
-    // Add draft tag to the tag map
-    tagMap.set(release.tag_name, {
-      name: release.tag_name,
-      commit: { sha: release.target_commitish, url: "" },
+    tagMap.set(r.tag_name, {
+      name: r.tag_name,
+      commit: { sha: r.target_commitish, url: "" },
       node_id: "",
-      released: !release.draft,
+      released: !r.draft,
       tarballUrl: "",
       zipballUrl: "",
     });
   }
 
-  // Process GitHub tags JSON, updating or adding each tag
-  // console.log("githubTagsJson", githubTagsJson);
-  for (const tag of githubTagsJson) {
-    const existingTag = tagMap.get(tag.name);
-
-    if (existingTag) {
-      // Only update unreleased tags, leave released ones untouched
-      // console.log("existingTag name", existingTag.name);
-      tagMap.set(tag.name, {
-        name: tag.name,
-        commit: { sha: tag.commit.sha, url: tag.commit.url },
-        node_id: tag.node_id,
-        released: existingTag.released,
-        tarballUrl: tag.tarball_url,
-        zipballUrl: tag.zipball_url,
+  for (const t of githubTagsJson) {
+    const existing = tagMap.get(t.name);
+    if (existing) {
+      tagMap.set(t.name, {
+        ...existing,
+        commit: { sha: t.commit.sha, url: t.commit.url },
+        node_id: t.node_id,
+        tarballUrl: t.tarball_url,
+        zipballUrl: t.zipball_url,
       });
     } else {
-      // Add new tag with proper release status
       const matchingRelease = githubReleasesJson.find(
-        (release: any) => release.tag_name === tag.name,
+        (r: any) => r.tag_name === t.name,
       );
-
-      // A tag is "released" only if there's a matching non-draft release
-      const released = Boolean(matchingRelease && !matchingRelease.draft);
-
-      tagMap.set(tag.name, {
-        name: tag.name,
-        commit: { sha: tag.commit.sha, url: tag.commit.url },
-        node_id: tag.node_id,
-        released,
-        tarballUrl: tag.tarball_url,
-        zipballUrl: tag.zipball_url,
+      tagMap.set(t.name, {
+        name: t.name,
+        commit: { sha: t.commit.sha, url: t.commit.url },
+        node_id: t.node_id,
+        released: Boolean(matchingRelease && !matchingRelease.draft),
+        tarballUrl: t.tarball_url,
+        zipballUrl: t.zipball_url,
       });
     }
   }
 
-  // sort releases by updatedAt (newest first)
+  // Sort releases newest-first
   githubReleases.sort((a, b) => {
     const ta = a.updatedAt ? Date.parse(a.updatedAt) : 0;
     const tb = b.updatedAt ? Date.parse(b.updatedAt) : 0;
     return tb - ta;
   });
 
-  // Convert the map back to an array
-  const githubTags = Array.from(tagMap.values());
-
-  // sort tags: numeric (semantic versions) first (greatest -> least)
+  // Sort tags: semver descending, then alphabetical
   const semverRegex = /^v?(\d+(?:\.\d+)*)(?:[-+].*)?$/i;
-
   const numericTags: { parts: number[]; tag: any }[] = [];
   const alphaTags: any[] = [];
 
-  for (const tag of githubTags) {
+  for (const tag of tagMap.values()) {
     const m = String(tag.name).match(semverRegex);
     if (m) {
-      const parts = m[1].split(".").map((p) => parseInt(p, 10) || 0);
-      numericTags.push({ parts, tag });
+      numericTags.push({ parts: m[1].split(".").map(Number), tag });
     } else {
       alphaTags.push(tag);
     }
@@ -261,45 +245,39 @@ export default defineEventHandler(async (event) => {
   numericTags.sort((a, b) => {
     const la = a.parts;
     const lb = b.parts;
-    const max = Math.max(la.length, lb.length);
-    for (let i = 0; i < max; i++) {
-      const va = la[i] ?? 0;
-      const vb = lb[i] ?? 0;
-      if (va !== vb) {
-        return vb - va;
-      } // descending
+    for (let i = 0; i < Math.max(la.length, lb.length); i++) {
+      const diff = (lb[i] ?? 0) - (la[i] ?? 0);
+      if (diff !== 0) return diff;
     }
     return 0;
   });
-
-  // then alphabetically A-Z
   alphaTags.sort((a, b) => a.name.localeCompare(b.name));
 
   const githubTagsSorted = numericTags.map((n) => n.tag).concat(alphaTags);
 
+  // Response
   return {
     existingZenodoDepositionId:
-      zenodoDeposition?.existing_zenodo_deposition_id || null,
+      zenodoDeposition?.existing_zenodo_deposition_id ?? null,
     githubReleases,
     githubTags: githubTagsSorted,
     haveValidZenodoToken,
-    lastPublishedZenodoDoi: zenodoDeposition?.last_published_zenodo_doi || "",
-    lastSelectedGithubRelease: zenodoDeposition?.github_release_id || null,
+    lastPublishedZenodoDoi: zenodoDeposition?.last_published_zenodo_doi ?? "",
+    lastSelectedGithubRelease: zenodoDeposition?.github_release_id ?? null,
     lastSelectedGithubReleaseTitle:
-      githubReleases.find(
-        (release: any) => release.id === zenodoDeposition?.github_release_id,
-      )?.name || "",
-    lastSelectedGithubTag: zenodoDeposition?.github_tag_name || null,
-    lastSelectedUser: zenodoDeposition?.user.username || null,
+      githubReleases.find((r) => r.id === zenodoDeposition?.github_release_id)
+        ?.name ?? "",
+    lastSelectedGithubTag: zenodoDeposition?.github_tag_name ?? null,
+    lastSelectedUser: zenodoDeposition?.user?.username ?? null,
     license: {
-      id: licenseResponse.license_id || "",
-      customLicenseTitle: licenseResponse.custom_license_title || "",
-      status: licenseResponse.license_status || "",
+      id: licenseResponse.license_id ?? "",
+      customLicenseTitle: licenseResponse.custom_license_title ?? "",
+      status: licenseResponse.license_status ?? "",
     },
-    zenodoDepositionId: zenodoDeposition?.zenodo_id || null,
+    zenodoDepositionId: zenodoDeposition?.zenodo_id ?? null,
     zenodoDepositions: existingDepositions,
-    zenodoLoginUrl: zenodoLoginUrl || "",
+    zenodoLoginUrl,
     zenodoMetadata,
-    zenodoWorkflowStatus: zenodoDeposition?.status || "",
+    zenodoWorkflowStatus: zenodoDeposition?.status ?? "",
   };
 });
