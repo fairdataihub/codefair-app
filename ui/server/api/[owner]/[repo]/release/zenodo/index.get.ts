@@ -140,13 +140,16 @@ export default defineEventHandler(async (event) => {
   const githubAccessToken = user?.access_token;
 
   const [grRes, gtRes] = await Promise.all([
-    fetch(`https://api.github.com/repos/${owner}/${repo}/releases`, {
-      headers: {
-        Authorization: `Bearer ${githubAccessToken}`,
-        "X-GitHub-Api-Version": "2022-11-28",
+    fetch(
+      `https://api.github.com/repos/${owner}/${repo}/releases?per_page=100`,
+      {
+        headers: {
+          Authorization: `Bearer ${githubAccessToken}`,
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
       },
-    }),
-    fetch(`https://api.github.com/repos/${owner}/${repo}/tags`, {
+    ),
+    fetch(`https://api.github.com/repos/${owner}/${repo}/tags?per_page=100`, {
       headers: {
         Authorization: `Bearer ${githubAccessToken}`,
         "X-GitHub-Api-Version": "2022-11-28",
