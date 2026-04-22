@@ -1725,32 +1725,34 @@ onBeforeUnmount(() => {
       </div>
 
       <template #footer>
-        <n-flex justify="space-between" align="center" :wrap="false">
-          <NuxtLink
-            v-if="data?.lastPublishedZenodoDoi"
-            :to="zenodoDoiUrl(data.lastPublishedZenodoDoi)"
-            target="_blank"
-          >
-            <n-button type="primary" size="small">
-              <template #icon>
-                <Icon name="simple-icons:zenodo" size="16" />
-              </template>
-              View Zenodo Deposition
-            </n-button>
-          </NuxtLink>
+        <n-flex justify="center">
+          <n-button-group style="gap: 1rem">
+            <NuxtLink
+              v-if="data?.lastPublishedZenodoDoi"
+              :to="zenodoDoiUrl(data.lastPublishedZenodoDoi)"
+              target="_blank"
+            >
+              <n-button type="primary" size="small">
+                <template #icon>
+                  <Icon name="simple-icons:zenodo" size="16" />
+                </template>
+                View Zenodo Deposition
+              </n-button>
+            </NuxtLink>
 
-          <NuxtLink
-            v-if="lastSelectedGithubTag"
-            :to="`https://github.com/${owner}/${repo}/releases/tag/${lastSelectedGithubTag}`"
-            target="_blank"
-          >
-            <n-button type="primary" size="small">
-              <template #icon>
-                <Icon name="simple-icons:github" size="16" />
-              </template>
-              View GitHub Release
-            </n-button>
-          </NuxtLink>
+            <NuxtLink
+              v-if="lastSelectedGithubTag"
+              :to="`https://github.com/${owner}/${repo}/releases/tag/${lastSelectedGithubTag}`"
+              target="_blank"
+            >
+              <n-button type="primary" size="small">
+                <template #icon>
+                  <Icon name="simple-icons:github" size="16" />
+                </template>
+                View GitHub Release
+              </n-button>
+            </NuxtLink>
+          </n-button-group>
         </n-flex>
       </template>
     </n-modal>
@@ -1913,9 +1915,22 @@ onBeforeUnmount(() => {
         <div class="space-y-4">
           <p class="text-gray-700 dark:text-gray-300">
             Your software was successfully archived on Zenodo. We recommend
-            reviewing the deposition and adding additional metadata to make your
-            software more FAIR. Below is your Zenodo badge. Copy the snippet
-            below and paste it into your README file to display the badge.
+            reviewing the
+            <NuxtLink
+              :to="zenodoDepositionUrl"
+              target="_blank"
+              class="text-blue-500 underline transition-all hover:text-blue-700"
+              >Zenodo deposition</NuxtLink
+            >
+            and adding additional metadata to make your software more FAIR. You
+            can also view the
+            <NuxtLink
+              :to="`https://github.com/${owner}/${repo}/releases/tag/${githubFormValue.tag === 'new' ? githubFormValue.tagTitle : githubFormValue.tag}`"
+              target="_blank"
+              class="text-blue-500 underline transition-all hover:text-blue-700"
+              >GitHub release</NuxtLink
+            >. Copy a snippet of your Zenodo badgeIn and paste it into your
+            README to display the badge.
           </p>
 
           <!-- Subheading -->
@@ -2001,47 +2016,16 @@ onBeforeUnmount(() => {
 
       <!-- FOOTER SLOT: Action buttons -->
       <template #footer>
-        <n-flex justify="space-evenly" align="center" :wrap="false">
-          <!-- Link to Zenodo Deposition -->
-          <NuxtLink
-            v-if="zenodoPublishStatus === 'published'"
-            :to="zenodoDepositionUrl"
-            target="_blank"
-          >
-            <n-button type="primary" size="small">
-              <template #icon>
-                <Icon name="simple-icons:zenodo" size="16" />
-              </template>
-              View Zenodo Deposition
-            </n-button>
-          </NuxtLink>
-
-          <!-- "Return to Dashboard" button – centered between the two view buttons -->
-          <n-button
-            v-if="
-              zenodoPublishStatus === 'published' ||
-              zenodoPublishStatus === 'error'
-            "
-            type="success"
-            size="small"
-            @click="navigateToDashboard"
-          >
+        <n-flex
+          v-if="
+            zenodoPublishStatus === 'published' ||
+            zenodoPublishStatus === 'error'
+          "
+          justify="center"
+        >
+          <n-button type="success" size="small" @click="navigateToDashboard">
             Return to Dashboard
           </n-button>
-
-          <!-- Link to GitHub Release -->
-          <NuxtLink
-            v-if="zenodoPublishStatus === 'published'"
-            :to="`https://github.com/${owner}/${repo}/releases/tag/${githubFormValue.tag === 'new' ? githubFormValue.tagTitle : githubFormValue.tag}`"
-            target="_blank"
-          >
-            <n-button type="primary" size="small">
-              <template #icon>
-                <Icon name="simple-icons:github" size="16" />
-              </template>
-              View GitHub Release
-            </n-button>
-          </NuxtLink>
         </n-flex>
       </template>
     </n-modal>
