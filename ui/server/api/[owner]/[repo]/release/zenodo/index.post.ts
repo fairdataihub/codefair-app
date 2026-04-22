@@ -64,6 +64,24 @@ export default defineEventHandler(async (event) => {
     zenodoDepositionId,
   } = parsed.data;
 
+  // When the caller wants to link an existing deposition, the ID must be a
+  // valid positive integer (empty string or "new" would produce NaN downstream)
+  if (useExistingDeposition) {
+    const parsedDepId = parseInt(zenodoDepositionId);
+    if (
+      !zenodoDepositionId ||
+      zenodoDepositionId === "new" ||
+      isNaN(parsedDepId) ||
+      parsedDepId <= 0
+    ) {
+      throw createError({
+        statusCode: 400,
+        statusMessage:
+          "A valid numeric deposition ID is required when useExistingDeposition is true",
+      });
+    }
+  }
+
   // Auth / permission checks
   await repoWritePermissions(event, owner, repo);
 
