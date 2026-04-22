@@ -617,6 +617,8 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         "GitHub release not found":
           "The selected GitHub release could not be found. Please refresh the page and try again.",
         "tag-already-released": `A published release already exists for tag "${effectiveTag}". Please choose a different tag or delete the existing release first.`,
+        "Zenodo token not found":
+          "Your Zenodo connection has expired or been revoked. Please reconnect your Zenodo account using the button above.",
       };
       zenodoPreflightError.value =
         knownErrors[statusMessage] ??
@@ -834,17 +836,27 @@ const loginToZenodo = async () => {
       };
 
       if (existingStateMatch) {
-        try {
-          const decodedState = decodeURIComponent(existingStateMatch[1]);
-          const parsed = JSON.parse(decodedState);
+        const decodedState = decodeURIComponent(existingStateMatch[1]);
+        if (decodedState.startsWith("{")) {
+          try {
+            const parsed = JSON.parse(decodedState);
+            originalState = {
+              owner: parsed.owner ?? owner,
+              repo: parsed.repo ?? repo,
+              userId: parsed.userId ?? "",
+            };
+          } catch (error) {
+            console.error("Failed to parse existing state:", error);
+            throw new Error("Invalid state format");
+          }
+        } else {
+          // Legacy format: "userId:owner:repo"
+          const parts = decodedState.split(":");
           originalState = {
-            owner: parsed.owner ?? owner,
-            repo: parsed.repo ?? repo,
-            userId: parsed.userId ?? "",
+            owner: parts[1] ?? owner,
+            repo: parts[2] ?? repo,
+            userId: parts[0] ?? "",
           };
-        } catch (error) {
-          console.error("Failed to parse existing state:", error);
-          throw new Error("Invalid state format");
         }
       } else {
         throw new Error("No existing state found in the Zenodo login URL");
@@ -1929,8 +1941,8 @@ onBeforeUnmount(() => {
               target="_blank"
               class="text-blue-500 underline transition-all hover:text-blue-700"
               >GitHub release</NuxtLink
-            >. Copy a snippet of your Zenodo badgeIn and paste it into your
-            README to display the badge.
+            >. Copy a snippet of your Zenodo badge and paste it into your README
+            to display the badge.
           </p>
 
           <!-- Subheading -->
@@ -2017,12 +2029,38 @@ onBeforeUnmount(() => {
       <!-- FOOTER SLOT: Action buttons -->
       <template #footer>
         <n-flex
-          v-if="
-            zenodoPublishStatus === 'published' ||
-            zenodoPublishStatus === 'error'
-          "
-          justify="center"
+          v-if="zenodoPublishStatus === 'published'"
+          vertical
+          class="w-full gap-2"
         >
+          <NuxtLink :to="zenodoDepositionUrl" target="_blank" class="w-full">
+            <n-button type="primary" class="w-full">
+              <template #icon>
+                <Icon name="simple-icons:zenodo" size="16" />
+              </template>
+              View Zenodo Deposition
+            </n-button>
+          </NuxtLink>
+
+          <NuxtLink
+            :to="`https://github.com/${owner}/${repo}/releases/tag/${githubFormValue.tag === 'new' ? githubFormValue.tagTitle : githubFormValue.tag}`"
+            target="_blank"
+            class="w-full"
+          >
+            <n-button type="primary" dashed class="w-full">
+              <template #icon>
+                <Icon name="simple-icons:github" size="16" />
+              </template>
+              View GitHub Release
+            </n-button>
+          </NuxtLink>
+
+          <n-button type="tertiary" class="w-full" @click="navigateToDashboard">
+            Return to Dashboard
+          </n-button>
+        </n-flex>
+
+        <n-flex v-else-if="zenodoPublishStatus === 'error'" justify="center">
           <n-button type="success" size="small" @click="navigateToDashboard">
             Return to Dashboard
           </n-button>
