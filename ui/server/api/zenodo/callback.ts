@@ -109,6 +109,24 @@ export default defineEventHandler(async (event) => {
     }
 
     const tokens = await oauthTokenRes.json();
+
+    if (
+      typeof tokens.access_token !== "string" ||
+      typeof tokens.refresh_token !== "string"
+    ) {
+      logwatch.error({
+        action: "zenodo_callback",
+        message: "Zenodo token response is missing expected token fields",
+        owner,
+        reason: "invalid_token_response",
+        repo,
+      });
+      return sendRedirect(
+        event,
+        "/zenodo-auth-error?reason=invalid_token_response",
+      );
+    }
+
     access_token = tokens.access_token;
     refresh_token = tokens.refresh_token;
   } catch (err) {
