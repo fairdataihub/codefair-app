@@ -895,10 +895,6 @@ const githubReleaseInterval = ref<any>(null);
 
 const snippets = computed(() => [
   {
-    title: "reStructuredText",
-    content: `.. image:: ${codefairDomain}/badge/${owner}/${repo}\n   :target: ${codefairDomain}/badge/${owner}/${repo}`,
-  },
-  {
     title: "Markdown",
     content: `[![FAIR Software Release](${codefairDomain}/badge/${owner}/${repo})](${codefairDomain}/badge/${owner}/${repo})`,
   },
@@ -907,12 +903,17 @@ const snippets = computed(() => [
     content: `<a href="${codefairDomain}/badge/${owner}/${repo}"><img src="${codefairDomain}/badge/${owner}/${repo}" alt="FAIR Software Release"></a>`,
   },
   {
-    title: "Image URL",
-    content: `${codefairDomain}/badge/${owner}/${repo}`,
-  },
-  {
-    title: "Target URL",
-    content: `${codefairDomain}/doi/${owner}/${repo}`,
+    title: "Image & Target URL",
+    items: [
+      {
+        content: `${codefairDomain}/badge/${owner}/${repo}`,
+        label: "Image URL",
+      },
+      {
+        content: `${codefairDomain}/doi/${owner}/${repo}`,
+        label: "Target URL",
+      },
+    ],
   },
 ]);
 
@@ -1644,7 +1645,7 @@ onBeforeUnmount(() => {
       size="huge"
       :mask-closable="true"
       :close-on-esc="true"
-      class="w-[600px] dark:bg-gray-800"
+      class="w-[750px] dark:bg-gray-800"
     >
       <template #header>
         <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">
@@ -1671,6 +1672,7 @@ onBeforeUnmount(() => {
               </h4>
 
               <button
+                v-if="!snippet.items"
                 class="inline-flex items-center text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200"
                 @click="copyText(snippet.content)"
               >
@@ -1680,8 +1682,40 @@ onBeforeUnmount(() => {
               </button>
             </div>
 
-            <!-- Code block -->
-            <div class="bg-gray-50 p-3 dark:bg-gray-700">
+            <!-- Combined URL items -->
+            <template v-if="snippet.items">
+              <div
+                v-for="item in snippet.items"
+                :key="item.label"
+                class="border-b border-gray-100 last:border-b-0 dark:border-gray-600"
+              >
+                <div
+                  class="flex items-center justify-between bg-gray-50 px-3 py-1.5 dark:bg-gray-700"
+                >
+                  <span class="text-xs text-gray-500 dark:text-gray-400">{{
+                    item.label
+                  }}</span>
+
+                  <button
+                    class="inline-flex items-center text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200"
+                    @click="copyText(item.content)"
+                  >
+                    <Icon name="mdi:content-copy" class="mr-1 h-4 w-4" />
+
+                    <span class="text-xs">Copy</span>
+                  </button>
+                </div>
+
+                <div class="bg-gray-50 p-3 dark:bg-gray-700">
+                  <pre
+                    class="overflow-auto font-mono text-sm"
+                  ><code>{{ item.content }}</code></pre>
+                </div>
+              </div>
+            </template>
+
+            <!-- Regular code block -->
+            <div v-else class="bg-gray-50 p-3 dark:bg-gray-700">
               <pre
                 class="overflow-auto font-mono text-sm"
               ><code>{{ snippet.content.trim() }}</code></pre>
@@ -1689,6 +1723,36 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </div>
+
+      <template #footer>
+        <n-flex justify="space-between" align="center" :wrap="false">
+          <NuxtLink
+            v-if="data?.lastPublishedZenodoDoi"
+            :to="zenodoDoiUrl(data.lastPublishedZenodoDoi)"
+            target="_blank"
+          >
+            <n-button type="primary" size="small">
+              <template #icon>
+                <Icon name="simple-icons:zenodo" size="16" />
+              </template>
+              View Zenodo Deposition
+            </n-button>
+          </NuxtLink>
+
+          <NuxtLink
+            v-if="lastSelectedGithubTag"
+            :to="`https://github.com/${owner}/${repo}/releases/tag/${lastSelectedGithubTag}`"
+            target="_blank"
+          >
+            <n-button type="primary" size="small">
+              <template #icon>
+                <Icon name="simple-icons:github" size="16" />
+              </template>
+              View GitHub Release
+            </n-button>
+          </NuxtLink>
+        </n-flex>
+      </template>
     </n-modal>
 
     <n-modal
@@ -1698,7 +1762,7 @@ onBeforeUnmount(() => {
       size="huge"
       :mask-closable="false"
       :close-on-esc="false"
-      class="w-[600px] dark:bg-gray-800"
+      class="w-[750px] dark:bg-gray-800"
     >
       <!-- HEADER SLOT: Show a dynamic title and icon -->
       <template #header>
@@ -1877,6 +1941,7 @@ onBeforeUnmount(() => {
                 </h4>
 
                 <button
+                  v-if="!snippet.items"
                   class="inline-flex items-center text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200"
                   @click="copyText(snippet.content)"
                 >
@@ -1886,8 +1951,40 @@ onBeforeUnmount(() => {
                 </button>
               </div>
 
-              <!-- Code block -->
-              <div class="bg-gray-50 p-3 dark:bg-gray-700">
+              <!-- Combined URL items -->
+              <template v-if="snippet.items">
+                <div
+                  v-for="item in snippet.items"
+                  :key="item.label"
+                  class="border-b border-gray-100 last:border-b-0 dark:border-gray-600"
+                >
+                  <div
+                    class="flex items-center justify-between bg-gray-50 px-3 py-1.5 dark:bg-gray-700"
+                  >
+                    <span class="text-xs text-gray-500 dark:text-gray-400">{{
+                      item.label
+                    }}</span>
+
+                    <button
+                      class="inline-flex items-center text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200"
+                      @click="copyText(item.content)"
+                    >
+                      <Icon name="mdi:content-copy" class="mr-1 h-4 w-4" />
+
+                      <span class="text-xs">Copy</span>
+                    </button>
+                  </div>
+
+                  <div class="bg-gray-50 p-3 dark:bg-gray-700">
+                    <pre
+                      class="overflow-auto font-mono text-sm"
+                    ><code>{{ item.content }}</code></pre>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Regular code block -->
+              <div v-else class="bg-gray-50 p-3 dark:bg-gray-700">
                 <pre
                   class="overflow-auto font-mono text-sm"
                 ><code>{{ snippet.content.trim() }}</code></pre>
@@ -1904,7 +2001,7 @@ onBeforeUnmount(() => {
 
       <!-- FOOTER SLOT: Action buttons -->
       <template #footer>
-        <n-flex justify="space-between" align="center">
+        <n-flex justify="space-evenly" align="center" :wrap="false">
           <!-- Link to Zenodo Deposition -->
           <NuxtLink
             v-if="zenodoPublishStatus === 'published'"
@@ -1919,6 +2016,19 @@ onBeforeUnmount(() => {
             </n-button>
           </NuxtLink>
 
+          <!-- "Return to Dashboard" button – centered between the two view buttons -->
+          <n-button
+            v-if="
+              zenodoPublishStatus === 'published' ||
+              zenodoPublishStatus === 'error'
+            "
+            type="success"
+            size="small"
+            @click="navigateToDashboard"
+          >
+            Return to Dashboard
+          </n-button>
+
           <!-- Link to GitHub Release -->
           <NuxtLink
             v-if="zenodoPublishStatus === 'published'"
@@ -1932,18 +2042,6 @@ onBeforeUnmount(() => {
               View GitHub Release
             </n-button>
           </NuxtLink>
-
-          <!-- "Okay" or "Go to Dashboard" button -->
-          <n-button
-            v-if="
-              zenodoPublishStatus === 'published' ||
-              zenodoPublishStatus === 'error'
-            "
-            type="success"
-            @click="navigateToDashboard"
-          >
-            Return to Dashboard
-          </n-button>
         </n-flex>
       </template>
     </n-modal>
