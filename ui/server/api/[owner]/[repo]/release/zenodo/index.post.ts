@@ -118,6 +118,35 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Check that no published release already claims the tag we're going to use.
+  // Use `tag` from the request body (not ghReleaseJson.tag_name) because the
+  // user may have selected a new tag that differs from the draft's current tag -
+  // the sync step below will update the draft, but we need to validate the
+  // intended tag first.
+  const tagName = tag;
+  const allReleasesRes = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/releases?per_page=100`,
+    {
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${user?.access_token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    },
+  );
+  if (allReleasesRes.ok) {
+    const allReleases: any[] = await allReleasesRes.json();
+    const conflict = allReleases.find(
+      (r) => !r.draft && r.tag_name === tagName,
+    );
+    if (conflict) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: `tag-already-released`,
+      });
+    }
+  }
+
   // Sync tag name if it changed
   if (ghReleaseJson.tag_name !== tag) {
     const patchRes = await fetch(

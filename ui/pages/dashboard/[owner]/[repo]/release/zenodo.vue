@@ -397,6 +397,7 @@ const checkIfGithubReleaseIsDraft = async () => {
 
 const handleGithubReleaseChange = () => {
   zenodoDraftIsReadyForRelease.value = false;
+  zenodoPreflightError.value = null;
   githubFormValue.value.releaseTitle = "";
   checkIfGithubReleaseIsDraft();
 };
@@ -433,8 +434,19 @@ const renderGithubReleaseLabel = (option: SelectOption): any => {
   ];
 };
 
+const tagNameConflict = computed(() => {
+  if (githubFormValue.value.tag !== "new" || !githubFormValue.value.tagTitle)
+    return false;
+  return (
+    data.value?.githubTags?.some(
+      (t: any) => t.name === githubFormValue.value.tagTitle,
+    ) ?? false
+  );
+});
+
 const handleGithubTagChange = () => {
   zenodoDraftIsReadyForRelease.value = false;
+  zenodoPreflightError.value = null;
   githubFormValue.value.tagTitle = "";
   checkIfGithubReleaseIsDraft();
 };
@@ -447,6 +459,7 @@ const zenodoPublishStatus = ref<string>("");
 const zenodoPublishDOI = ref<string>("");
 const zenodoPublishErrorMessage = ref<string>("");
 const zenodoBadgeShield = ref<string>("");
+const zenodoPreflightError = ref<string | null>(null);
 const showZenodoBadgeModal = ref(false);
 
 interface PublishStep {
@@ -576,6 +589,8 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         : "",
   });
 
+  zenodoPreflightError.value = null;
+
   try {
     const response = await fetch(`/api/${owner}/${repo}/release/zenodo`, {
       body,
@@ -585,7 +600,28 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+      let statusMessage = "";
+      try {
+        const errBody = await response.json();
+        statusMessage = errBody.statusMessage ?? "";
+      } catch {
+        // ignore parse errors
+      }
+      const effectiveTag =
+        githubFormValue.value.tag !== "new"
+          ? githubFormValue.value.tag
+          : githubFormValue.value.tagTitle;
+      const knownErrors: Record<string, string> = {
+        "GitHub release is not a draft":
+          "The selected GitHub release is no longer a draft and cannot be used. Please select a different release.",
+        "GitHub release not found":
+          "The selected GitHub release could not be found. Please refresh the page and try again.",
+        "tag-already-released": `A published release already exists for tag "${effectiveTag}". Please choose a different tag or delete the existing release first.`,
+      };
+      zenodoPreflightError.value =
+        knownErrors[statusMessage] ??
+        `Something went wrong (${response.status}). Please try again.`;
+      return;
     }
 
     if (githubFormValue.value.tag === "new") {
@@ -751,6 +787,27 @@ const validateZenodoForm = () => {
       zenodoFormIsValid.value = false;
     }
   });
+};
+
+const signOutOfZenodo = async () => {
+  await $fetch(`/api/user/zenodo`, {
+    headers: useRequestHeaders(["cookie"]),
+    method: "DELETE",
+  })
+    .then(() => {
+      haveValidZenodoToken.value = false;
+      push.success({
+        title: "Signed out",
+        message: "You have been signed out of Zenodo.",
+      });
+    })
+    .catch((error) => {
+      console.error("Failed to sign out of Zenodo:", error);
+      push.error({
+        title: "Failed to sign out of Zenodo",
+        message: "Please try again later",
+      });
+    });
 };
 
 const loginToZenodo = async () => {
@@ -1205,6 +1262,17 @@ onBeforeUnmount(() => {
                   />
                 </n-form-item>
 
+                <n-alert
+                  v-if="tagNameConflict"
+                  type="error"
+                  class="mb-4 w-full"
+                >
+                  A tag named
+                  <code>{{ githubFormValue.tagTitle }}</code> already exists.
+                  Please choose a different tag name or select the existing tag
+                  from the list above.
+                </n-alert>
+
                 <n-form-item label="Github release" path="release">
                   <n-select
                     v-model:value="githubFormValue.release"
@@ -1333,14 +1401,27 @@ onBeforeUnmount(() => {
               login to Zenodo to continue.
             </p>
 
-            <a v-if="!haveValidZenodoToken" @click="loginToZenodo">
-              <n-button type="primary">
+            <n-flex>
+              <a v-if="!haveValidZenodoToken" @click="loginToZenodo">
+                <n-button type="primary">
+                  <template #icon>
+                    <Icon name="simple-icons:zenodo" size="16" />
+                  </template>
+                  Login to Zenodo
+                </n-button>
+              </a>
+
+              <n-button
+                v-if="haveValidZenodoToken"
+                type="primary"
+                @click="signOutOfZenodo"
+              >
                 <template #icon>
-                  <Icon name="simple-icons:zenodo" size="16" />
+                  <Icon name="material-symbols:logout" size="16" />
                 </template>
-                Login to Zenodo
+                Sign out of Zenodo
               </n-button>
-            </a>
+            </n-flex>
           </n-flex>
         </template>
       </CardDashboard>
@@ -1500,6 +1581,14 @@ onBeforeUnmount(() => {
                     You may save the current configuration as a draft and come
                     back to it later.
                   </p>
+
+                  <n-alert
+                    v-if="zenodoPreflightError"
+                    type="error"
+                    class="w-full"
+                  >
+                    {{ zenodoPreflightError }}
+                  </n-alert>
 
                   <n-flex justify="space-between">
                     <n-button

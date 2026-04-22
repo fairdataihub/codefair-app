@@ -886,10 +886,42 @@ async function publishGitHubRelease(
   releaseId: string,
   userToken: string,
 ): Promise<void> {
+  // Fetch the repo's default branch so we can pass it as target_commitish.
+  // Without target_commitish, GitHub returns 422 when the release's tag doesn't
+  // exist as a git ref yet (phantom draft tags). Using the default branch name
+  // (not a SHA) ensures GitHub resolves to the current HEAD - which includes the
+  // metadata commit pushed in step 4.
+  const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${userToken}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+
+  const defaultBranch = repoRes.ok
+    ? ((await repoRes.json()).default_branch as string | undefined)
+    : undefined;
+
+  const patchBody = {
+    draft: false,
+    ...(defaultBranch ? { target_commitish: defaultBranch } : {}),
+  };
+
+  logwatch.info({
+    action: "zenodo.publishGitHubRelease",
+    defaultBranch,
+    message: "Patching GitHub release to published",
+    owner,
+    patchBody,
+    releaseId,
+    repo,
+  });
+
   const res = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/releases/${releaseId}`,
     {
-      body: JSON.stringify({ draft: false }),
+      body: JSON.stringify(patchBody),
       headers: {
         Accept: "application/vnd.github+json",
         Authorization: `Bearer ${userToken}`,
@@ -901,8 +933,15 @@ async function publishGitHubRelease(
   );
 
   if (!res.ok) {
+    let ghErrorBody = "";
+    try {
+      ghErrorBody = await res.text();
+    } catch {
+      // ignore
+    }
     logwatch.error({
       action: "zenodo.publishGitHubRelease",
+      ghErrorBody,
       message: `Failed to publish GitHub release (${res.status})`,
       owner,
       releaseId,

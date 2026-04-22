@@ -75,8 +75,6 @@ export interface PublicationResult {
 
 /**
  * Minimal contract that an archival provider must satisfy.
- * Zenodo is the first implementation; Figshare (or others) would implement
- * this same interface in a sibling file.
  */
 export interface ArchivalProvider {
   /**
