@@ -96,6 +96,7 @@ export default defineEventHandler(async (event) => {
     if (!oauthTokenRes.ok) {
       logwatch.error({
         action: "zenodo_callback",
+        body: await oauthTokenRes.text(),
         message: "Zenodo token exchange returned a non-OK response",
         owner,
         reason: "token_exchange_failed",

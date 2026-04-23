@@ -94,8 +94,15 @@ async function refreshZenodoToken(
   });
 
   if (!res.ok) {
+    let body = "";
+    try {
+      body = await res.text();
+    } catch {
+      // ignore
+    }
     logwatch.warn({
       action: "zenodo.refreshToken",
+      body,
       message: `Token refresh failed (${res.status}) for user ${userId}`,
       userId,
     });
@@ -435,7 +442,6 @@ async function getWorkingDeposition(
 function buildZenodoMetadata(
   codemeta: Record<string, any>,
   depositMeta: { accessRight: string; version: string },
-  repositoryId: number,
   doi: string,
   licenseId: string,
 ): { metadata: Record<string, any> } {
@@ -1198,7 +1204,6 @@ export async function beginZenodoPublication(
     const zenodoMeta = buildZenodoMetadata(
       codemeta,
       metadata,
-      repositoryId,
       doi,
       licenseId,
     );
