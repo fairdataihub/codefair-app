@@ -97,13 +97,13 @@ const overrides: GlobalThemeOverrides = {
     border: "2px dashed var(--cf-button-border)",
     borderDisabled: "1px dashed var(--cf-field-border-disabled)",
     borderFocus: "1px dashed var(--cf-field-border-focus)",
-    borderFocusPrimary: "1px dashed var(--cf-primary)",
+    borderFocusPrimary: "2px solid var(--cf-primary)",
     borderGhost: "1px solid var(--cf-field-border-hover)",
     borderHover: "1px dashed var(--cf-field-border-hover)",
-    borderHoverPrimary: "1px dashed var(--cf-primary-hover)",
+    borderHoverPrimary: "2px solid var(--cf-primary)",
     borderPressed: "1px dashed var(--cf-field-border-hover)",
-    borderPressedPrimary: "1px dashed var(--cf-primary-pressed)",
-    borderPrimary: "1px solid transparent",
+    borderPressedPrimary: "2px solid var(--cf-primary-pressed)",
+    borderPrimary: "2px dashed var(--cf-primary)",
 
     color: "transparent",
     colorDisabled: "transparent",
@@ -118,6 +118,11 @@ const overrides: GlobalThemeOverrides = {
     textColorDisabled: "var(--cf-text-3)",
     textColorFocus: "var(--cf-text-1)",
     textColorGhost: "var(--cf-text-2)",
+    textColorGhostFocusPrimary: "var(--cf-primary)",
+    textColorGhostHoverPrimary: "var(--cf-primary)",
+    textColorGhostPressedPrimary: "var(--cf-primary)",
+
+    textColorGhostPrimary: "var(--cf-primary)",
     textColorHover: "var(--cf-text-1)",
     textColorPressed: "var(--cf-text-1)",
     textColorPrimary: "#fff",
@@ -318,3 +323,132 @@ const overrides: GlobalThemeOverrides = {
   },
 };
 </script>
+
+<style>
+@keyframes cf-march {
+  to {
+    background-position:
+      16px 0,
+      100% 16px,
+      calc(100% - 16px) 100%,
+      0 calc(100% - 16px);
+  }
+}
+
+.n-button--primary-type.n-button--dashed:not(:disabled):hover {
+  background-color: transparent !important;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      var(--cf-primary, #4f46e5) 0,
+      var(--cf-primary, #4f46e5) 8px,
+      transparent 8px,
+      transparent 16px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      var(--cf-primary, #4f46e5) 0,
+      var(--cf-primary, #4f46e5) 8px,
+      transparent 8px,
+      transparent 16px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--cf-primary, #4f46e5) 0,
+      var(--cf-primary, #4f46e5) 8px,
+      transparent 8px,
+      transparent 16px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      var(--cf-primary, #4f46e5) 0,
+      var(--cf-primary, #4f46e5) 8px,
+      transparent 8px,
+      transparent 16px
+    );
+  background-size:
+    16px 2px,
+    2px 16px,
+    16px 2px,
+    2px 16px;
+  background-position:
+    0 0,
+    100% 0,
+    100% 100%,
+    0 100%;
+  background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
+  animation: cf-march 0.5s linear infinite;
+}
+
+/*
+ * Naive UI renders borders on two inner divs: .n-button__border (static) and
+ * .n-button__state-border (hover/focus/press). On hover both become visible,
+ * causing a double-border. Hide the static one so only the state-border shows.
+ */
+.n-button--primary-type.n-button--dashed:not(:disabled):hover .n-button__border,
+.n-button--primary-type.n-button--dashed:not(:disabled):hover
+  .n-button__state-border {
+  border-color: transparent !important;
+}
+
+/*
+ * Tertiary button resting: subtle solid ring as a visible container.
+ */
+.n-button--tertiary-type:not(:disabled) {
+  box-shadow: 0 0 0 1.5px var(--cf-field-border);
+}
+
+/*
+ * Tertiary button hover: clear the ring, then hide the static border div
+ */
+.n-button--tertiary-type:not(:disabled):hover {
+  box-shadow: none !important;
+  background-color: transparent !important;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      var(--cf-field-border-hover) 0,
+      var(--cf-field-border-hover) 8px,
+      transparent 8px,
+      transparent 16px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      var(--cf-field-border-hover) 0,
+      var(--cf-field-border-hover) 8px,
+      transparent 8px,
+      transparent 16px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--cf-field-border-hover) 0,
+      var(--cf-field-border-hover) 8px,
+      transparent 8px,
+      transparent 16px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      var(--cf-field-border-hover) 0,
+      var(--cf-field-border-hover) 8px,
+      transparent 8px,
+      transparent 16px
+    );
+  background-size:
+    16px 2px,
+    2px 16px,
+    16px 2px,
+    2px 16px;
+  background-position:
+    0 0,
+    100% 0,
+    100% 100%,
+    0 100%;
+  background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
+  animation: cf-march 0.5s linear infinite;
+}
+
+.n-button--tertiary-type:not(:disabled):hover .n-button__border,
+.n-button--tertiary-type:not(:disabled):hover .n-button__state-border {
+  border-color: transparent !important;
+}
+</style>
