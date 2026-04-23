@@ -1,50 +1,60 @@
+/**
+ * POST /api/[owner]/[repo]/release/zenodo
+ *
+ * Saves the user's release configuration to the database.
+ * When `publish: true`, immediately streams the full Zenodo publication
+ * workflow back to the client via Server-Sent Events (SSE).
+ *
+ * Replaces the previous approach of injecting a hidden HTML comment into
+ * the dashboard issue to trigger the bot.
+ */
 import { z } from "zod";
-import { App } from "octokit";
 import type { User } from "lucia";
+import {
+  beginZenodoPublication,
+  validateZenodoToken,
+} from "~/server/services/archival/zenodo";
+import type { PublicationProgressEvent } from "~/server/services/archival/interface";
+
+const bodySchema = z
+  .object({
+    metadata: z.object({
+      accessRight: z.string(),
+      version: z.string(),
+    }),
+    /** When true, start the publication immediately via SSE. */
+    publish: z.boolean(),
+    release: z.string(),
+    tag: z.string(),
+    useExistingDeposition: z.boolean(),
+    zenodoDepositionId: z.string(),
+  })
+  .strict();
 
 export default defineEventHandler(async (event) => {
-  const ZENODO_API_ENDPOINT = process.env.ZENODO_API_ENDPOINT || "";
-
   protectRoute(event);
 
   const user = event.context.user as User | null;
-
-  const bodySchema = z
-    .object({
-      metadata: z.object({
-        accessRight: z.string(),
-        version: z.string(),
-      }),
-      publish: z.boolean(),
-      release: z.string(),
-      tag: z.string(),
-      useExistingDeposition: z.boolean(),
-      zenodoDepositionId: z.string(),
-    })
-    .strict();
 
   const { owner, repo } = event.context.params as {
     owner: string;
     repo: string;
   };
 
-  const body = await readBody(event);
-
-  if (!body) {
+  // Validate body
+  const rawBody = await readBody(event);
+  if (!rawBody) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Missing required fields",
+      statusMessage: "Missing request body",
     });
   }
 
-  const parsedBody = bodySchema.safeParse(body);
-
-  if (!parsedBody.success) {
-    console.error(parsedBody.error.issues);
-
+  const parsed = bodySchema.safeParse(rawBody);
+  if (!parsed.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: "The provided parameters are invalid",
+      statusMessage: "Invalid request parameters",
     });
   }
 
@@ -55,17 +65,31 @@ export default defineEventHandler(async (event) => {
     tag,
     useExistingDeposition,
     zenodoDepositionId,
-  } = parsedBody.data;
+  } = parsed.data;
 
-  // Check if the user has write permissions to the repository
+  // When the caller wants to link an existing deposition, the ID must be a
+  // valid positive integer (empty string or "new" would produce NaN downstream)
+  if (useExistingDeposition) {
+    const parsedDepId = parseInt(zenodoDepositionId);
+    if (
+      !zenodoDepositionId ||
+      zenodoDepositionId === "new" ||
+      isNaN(parsedDepId) ||
+      parsedDepId <= 0
+    ) {
+      throw createError({
+        statusCode: 400,
+        statusMessage:
+          "A valid numeric deposition ID is required when useExistingDeposition is true",
+      });
+    }
+  }
+
+  // Auth / permission checks
   await repoWritePermissions(event, owner, repo);
 
-  // Get the installation instance for the app
   const installation = await prisma.installation.findFirst({
-    where: {
-      owner,
-      repo,
-    },
+    where: { owner, repo },
   });
 
   if (!installation) {
@@ -75,117 +99,90 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  if (!process.env.GH_APP_PRIVATE_KEY) {
-    throw new Error("GH_APP_PRIVATE_KEY is not defined.");
-  }
+  // Zenodo token check
+  const { valid: zenodoTokenValid } = await validateZenodoToken(user?.id ?? "");
 
-  const app = new App({
-    appId: process.env.GH_APP_ID!,
-    oauth: {
-      clientId: null as unknown as string,
-      clientSecret: null as unknown as string,
-    },
-    privateKey: process.env.GH_APP_PRIVATE_KEY.replace(/\\n/g, "\n")!,
-  });
-
-  const octokit = await app.getInstallationOctokit(
-    installation.installation_id,
-  );
-
-  // TODO: Check if the license, codemeta and citation files are present and valid
-
-  // Check if the zenodotoken is valid
-  const zenodoTokenInfo = await prisma.zenodoToken.findFirst({
-    where: {
-      user_id: user?.id,
-    },
-  });
-
-  if (!zenodoTokenInfo) {
+  if (!zenodoTokenValid) {
     throw createError({
       statusCode: 400,
       statusMessage: "Zenodo token not found",
     });
   }
 
-  // Get the zenodo deposition
-  const zenodoTokenInfoResponse = await fetch(
-    `${ZENODO_API_ENDPOINT}/deposit/depositions?access_token=${zenodoTokenInfo.token}`,
-    {
-      method: "GET",
-    },
-  );
-
-  if (!zenodoTokenInfoResponse.ok) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Zenodo token might be invalid",
-    });
-  }
-
-  if (zenodoDepositionId) {
-    // Check if the zenodo deposition exists
-    const zenodoDeposition = await fetch(
-      `${ZENODO_API_ENDPOINT}/deposit/depositions/${zenodoDepositionId}?access_token=${zenodoTokenInfo.token}`,
-      {
-        method: "GET",
-      },
-    );
-
-    if (!zenodoDeposition.ok) {
-      throw createError({
-        statusCode: 500,
-        statusMessage: "Zenodo deposition not found",
-      });
-    }
-  }
-
-  // Check if the github release exists and is a draft
-  const githubRelease = await fetch(
+  // Validate GitHub release
+  const ghRelease = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/releases/${release}`,
     {
       headers: {
+        Accept: "application/vnd.github+json",
         Authorization: `Bearer ${user?.access_token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
       },
-      method: "GET",
     },
   );
 
-  if (!githubRelease.ok) {
+  if (!ghRelease.ok) {
     throw createError({
       statusCode: 500,
       statusMessage: "GitHub release not found",
     });
   }
 
-  const githubReleaseJson = await githubRelease.json();
+  const ghReleaseJson = await ghRelease.json();
 
-  if (!githubReleaseJson.draft) {
+  if (!ghReleaseJson.draft) {
     throw createError({
-      statusCode: 500,
+      statusCode: 400,
       statusMessage: "GitHub release is not a draft",
     });
   }
 
-  // Check if the tag_Name is the same as the last selected tag
-  const githubReleaseTagName = githubReleaseJson.tag_name;
+  // Check that no published release already claims the tag we're going to use.
+  // Use `tag` from the request body (not ghReleaseJson.tag_name) because the
+  // user may have selected a new tag that differs from the draft's current tag -
+  // the sync step below will update the draft, but we need to validate the
+  // intended tag first.
+  const tagName = tag;
+  const allReleasesRes = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/releases?per_page=100`,
+    {
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${user?.access_token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    },
+  );
+  if (allReleasesRes.ok) {
+    const allReleases: any[] = await allReleasesRes.json();
+    const conflict = allReleases.find(
+      (r) => !r.draft && r.tag_name === tagName,
+    );
+    if (conflict) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: `tag-already-released`,
+      });
+    }
+  }
 
-  if (githubReleaseTagName !== tag) {
-    // Try and update the tag
-    const updatedGithubRelease = await fetch(
+  // Sync tag name if it changed
+  if (ghReleaseJson.tag_name !== tag) {
+    const patchRes = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/releases/${release}`,
       {
-        body: JSON.stringify({
-          tag_name: tag,
-        }),
+        body: JSON.stringify({ tag_name: tag }),
         headers: {
+          Accept: "application/vnd.github+json",
           Authorization: `Bearer ${user?.access_token}`,
+          "Content-Type": "application/json",
+          "X-GitHub-Api-Version": "2022-11-28",
         },
         method: "PATCH",
       },
     );
 
-    if (!updatedGithubRelease.ok) {
+    if (!patchRes.ok) {
       throw createError({
         statusCode: 500,
         statusMessage: "Failed to update GitHub release tag",
@@ -193,120 +190,113 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // save to the database
-  const zenodoDeposition = await prisma.zenodoDeposition.findFirst({
-    where: {
-      repository: {
-        owner,
-        repo,
-      },
-    },
+  // Persist to DB (draft state)
+  const existingDep = await prisma.zenodoDeposition.findFirst({
+    where: { repository: { owner, repo } },
   });
 
-  if (!zenodoDeposition) {
-    await prisma.zenodoDeposition.create({
-      data: {
-        existing_zenodo_deposition_id: useExistingDeposition,
-        github_release_id: parseInt(release) || null,
-        github_tag_name: tag,
-        repository_id: installation.id,
-        status: "draft",
-        user_id: user?.id || "",
-        zenodo_id: parseInt(zenodoDepositionId) || null,
-        zenodo_metadata: metadata,
-      },
+  const depositionData = {
+    existing_zenodo_deposition_id: useExistingDeposition,
+    github_release_id: parseInt(release) || null,
+    github_tag_name: tag,
+    status: "draft",
+    user_id: user?.id ?? "",
+    zenodo_id: parseInt(zenodoDepositionId) || null,
+    zenodo_metadata: metadata,
+  };
+
+  if (existingDep) {
+    await prisma.zenodoDeposition.update({
+      data: depositionData,
+      where: { repository_id: installation.id },
     });
   } else {
-    await prisma.zenodoDeposition.update({
-      data: {
-        existing_zenodo_deposition_id: useExistingDeposition,
-        github_release_id: parseInt(release) || null,
-        github_tag_name: tag,
-        status: "draft",
-        user_id: user?.id || "",
-        zenodo_id: parseInt(zenodoDepositionId) || null,
-        zenodo_metadata: metadata,
-      },
-      where: {
-        repository_id: installation.id,
-      },
+    await prisma.zenodoDeposition.create({
+      data: { ...depositionData, repository_id: installation.id },
     });
   }
 
-  if (publish) {
-    // Edit the issue body with a hidden request for the release
+  // Save-only path
+  if (!publish) {
+    return { message: "Zenodo details saved" };
+  }
 
-    try {
-      const { data: issue } = await octokit.request(
-        "GET /repos/{owner}/{repo}/issues/{issue_number}",
-        {
-          issue_number: installation.issue_number,
-          owner,
-          repo,
-        },
-      );
+  // SSE publication path
+  setResponseHeaders(event, {
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+    "Content-Type": "text/event-stream",
+  });
 
-      // Check if the issue was opened by the bot
-      if (
-        issue.user?.login !== "codefair-test[bot]" &&
-        issue.user?.login !== "codefair-staging[bot]" &&
-        issue.user?.login !== "codefair-io[bot]"
-      ) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: "Potentially not the dashboard issue",
-        });
-      }
+  const { res } = event.node;
+  let clientConnected = true;
 
-      const updatedIssueBody = `${issue.body}<!-- @codefair-bot publish-zenodo ${zenodoDepositionId || "new"} ${release} ${tag} ${user?.username} -->`;
+  res.on("close", () => {
+    clientConnected = false;
+  });
 
-      await octokit.request(
-        "PATCH /repos/{owner}/{repo}/issues/{issue_number}",
-        {
-          body: updatedIssueBody,
-          issue_number: installation.issue_number,
-          owner,
-          repo,
-        },
-      );
+  /**
+   * Writes a Server-Sent Event frame to the response stream.
+   * @param data - Payload to JSON-serialize and send to the client.
+   */
+  const sendEvent = (data: Record<string, unknown>) => {
+    if (clientConnected && !res.writableEnded) {
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    }
+  };
 
-      await prisma.zenodoDeposition.update({
-        data: {
-          status: "inProgress",
-        },
-        where: {
-          repository_id: installation.id,
-        },
+  /**
+   * Forwards a publication progress event to the SSE stream.
+   * @param progress - Progress event from the Zenodo publication workflow.
+   */
+  const onProgress = (progress: PublicationProgressEvent) => {
+    sendEvent(progress as unknown as Record<string, unknown>);
+  };
+
+  try {
+    const result = await beginZenodoPublication(
+      {
+        depositionId:
+          zenodoDepositionId && zenodoDepositionId !== "new"
+            ? parseInt(zenodoDepositionId)
+            : undefined,
+        installationId: installation.installation_id,
+        metadata,
+        mode: useExistingDeposition ? "existing" : "new",
+        owner,
+        release,
+        repo,
+        repositoryId: installation.id,
+        tag,
+        userAccessToken: user?.access_token ?? "",
+        userId: user?.id ?? "",
+      },
+      onProgress,
+    );
+
+    if (!result.success) {
+      sendEvent({
+        message: result.error ?? "Publication failed",
+        status: "error",
+        step: "error",
       });
-
-      return {
-        message: "Zenodo publish process started",
-      };
-    } catch (error: any) {
-      console.error("Failed to update issue body", error);
-
-      if (error.message === "Not Found") {
-        throw createError({
-          statusCode: 404,
-          statusMessage: "Issue not found",
-        });
-      }
-
-      if (error.message === "Validation failed") {
-        throw createError({
-          statusCode: 400,
-          statusMessage: "Issue validation failed",
-        });
-      }
-
-      throw createError({
-        statusCode: 500,
-        statusMessage: "Failed to update issue body",
+    } else {
+      sendEvent({
+        data: result.data,
+        message: "Successfully published to Zenodo!",
+        status: "completed",
+        step: "complete",
       });
     }
-  } else {
-    return {
-      message: "Zenodo details saved",
-    };
+  } catch (err: any) {
+    sendEvent({
+      message: err?.message ?? "An unexpected error occurred",
+      status: "error",
+      step: "error",
+    });
+  }
+
+  if (!res.writableEnded) {
+    res.end();
   }
 });

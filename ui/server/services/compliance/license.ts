@@ -5,6 +5,7 @@ import prisma from "~/server/utils/prisma";
 import { createId } from "~/server/utils/cuid";
 import type { RepositoryProvider } from "../providers/interface";
 import licensesJson from "~/assets/data/licenses.json";
+import { logwatch } from "~/server/utils/logwatch";
 
 export interface LicenseResult {
   status: boolean;
@@ -108,49 +109,85 @@ export async function checkForLicense(
 export function validateLicense(
   license: LicenseResult,
   existingLicense: ExistingLicense | null,
+  ctx?: { installationId?: number; owner?: string; repo?: string },
 ): {
   licenseId: string | null;
   licenseContent: string;
   licenseContentEmpty: boolean;
 } {
-  let licenseId: string | null = license.spdx_id;
-  let licenseContent = license.content;
-  let licenseContentEmpty = license.content === "";
+  const logCtx = { action: "license.validate", ...ctx };
 
-  if (licenseId === "no-license" || !licenseId) {
-    licenseId = null;
-    licenseContent = "";
-    licenseContentEmpty = true;
-  }
+  try {
+    let licenseId: string | null = license.spdx_id;
+    let licenseContent = license.content;
+    let licenseContentEmpty = license.content === "";
 
-  if (licenseId === "NOASSERTION") {
-    if (licenseContentEmpty) {
+    if (licenseId === "no-license" || !licenseId) {
+      logwatch.warn({
+        ...logCtx,
+        message: "License ID is missing or unrecognized — treating as no license",
+        spdxId: license.spdx_id,
+      });
       licenseId = null;
-    } else {
-      // License content is not empty but no SPDX id provided by GitHub
-      licenseContentEmpty = false;
-      const normalizedExisting = normalizeContent(
-        existingLicense?.license_content,
-      );
-      const normalizedNew = normalizeContent(licenseContent);
-      const contentChanged = normalizedExisting !== normalizedNew;
-      const existingIsValidSpdx = isValidSpdxLicense(
-        existingLicense?.license_id,
-      );
+      licenseContent = "";
+      licenseContentEmpty = true;
+    }
 
-      if (contentChanged) {
-        licenseId = "Custom";
-      } else if (existingIsValidSpdx) {
-        licenseId = existingLicense!.license_id;
-      } else if (existingLicense?.license_id) {
-        licenseId = existingLicense.license_id;
+    if (licenseId === "NOASSERTION") {
+      if (licenseContentEmpty) {
+        logwatch.warn({
+          ...logCtx,
+          message: "NOASSERTION license with empty content — treating as no license",
+        });
+        licenseId = null;
       } else {
-        licenseId = "Custom";
+        // License content is not empty but no SPDX id provided by GitHub
+        licenseContentEmpty = false;
+        const normalizedExisting = normalizeContent(
+          existingLicense?.license_content,
+        );
+        const normalizedNew = normalizeContent(licenseContent);
+        const contentChanged = normalizedExisting !== normalizedNew;
+        const existingIsValidSpdx = isValidSpdxLicense(
+          existingLicense?.license_id,
+        );
+
+        if (contentChanged) {
+          logwatch.warn({
+            ...logCtx,
+            existingLicenseId: existingLicense?.license_id ?? null,
+            message: "NOASSERTION license content changed — resolving as Custom",
+          });
+          licenseId = "Custom";
+        } else if (existingIsValidSpdx) {
+          licenseId = existingLicense!.license_id;
+        } else if (existingLicense?.license_id) {
+          logwatch.warn({
+            ...logCtx,
+            existingLicenseId: existingLicense.license_id,
+            message: "NOASSERTION license with non-SPDX existing ID — reusing existing",
+          });
+          licenseId = existingLicense.license_id;
+        } else {
+          logwatch.warn({
+            ...logCtx,
+            message: "NOASSERTION license with no existing record — resolving as Custom",
+          });
+          licenseId = "Custom";
+        }
       }
     }
-  }
 
-  return { licenseId, licenseContent, licenseContentEmpty };
+    return { licenseId, licenseContent, licenseContentEmpty };
+  } catch (err: any) {
+    logwatch.error({
+      ...logCtx,
+      error: err.message,
+      message: "Unexpected error in validateLicense",
+      stack: err.stack,
+    });
+    throw err;
+  }
 }
 
 /**
@@ -163,6 +200,7 @@ export function validateLicense(
 export async function updateLicenseDatabase(
   repositoryId: number,
   license: LicenseResult,
+  ctx?: { installationId?: number; owner?: string; repo?: string },
 ): Promise<ExistingLicense> {
   let licenseId: string | null = license.spdx_id;
   let licenseContent = license.content;
@@ -177,6 +215,7 @@ export async function updateLicenseDatabase(
       ({ licenseId, licenseContent, licenseContentEmpty } = validateLicense(
         license,
         existingLicense as unknown as ExistingLicense,
+        ctx,
       ));
     } else if (existingLicense.pull_request_url) {
       // Preserve existing data when there's a pending PR
@@ -203,6 +242,7 @@ export async function updateLicenseDatabase(
     ({ licenseId, licenseContent, licenseContentEmpty } = validateLicense(
       license,
       null,
+      ctx,
     ));
   }
 

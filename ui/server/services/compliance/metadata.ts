@@ -5,6 +5,9 @@ import yaml from "js-yaml";
 import type { RepositoryProvider } from "../providers/interface";
 import prisma from "~/server/utils/prisma";
 import { createId } from "~/server/utils/cuid";
+import { logwatch } from "~/server/utils/logwatch";
+
+type LogCtx = { installationId?: number; owner?: string; repo?: string };
 
 const VALIDATOR_URL = process.env.VALIDATOR_URL ?? "";
 
@@ -109,8 +112,17 @@ function makeError(error: Error): ValidationResult {
  * @param info - File content and metadata retrieved from the repository.
  * @returns A {@link ValidationResult} describing whether the file is valid.
  */
-async function validateCodemeta(info: FileInfo): Promise<ValidationResult> {
+async function validateCodemeta(
+  info: FileInfo,
+  ctx?: LogCtx,
+): Promise<ValidationResult> {
+  const logCtx = { action: "metadata.validate.codemeta", ...ctx };
+
   if (!info.content) {
+    logwatch.warn({
+      ...logCtx,
+      message: "codemeta.json content is null or undefined",
+    });
     return makeInvalid("codemeta.json content is null or undefined");
   }
 
@@ -118,11 +130,22 @@ async function validateCodemeta(info: FileInfo): Promise<ValidationResult> {
   try {
     obj = JSON.parse(normalizeText(info.content));
   } catch (err: any) {
+    logwatch.warn({
+      ...logCtx,
+      error: err.message,
+      message: "Failed to parse codemeta.json as JSON",
+      stack: err.stack,
+    });
     return makeInvalid(`Invalid JSON in codemeta.json: ${err.message}`);
   }
 
   const missing = ["name", "author", "description"].filter((f) => !obj[f]);
   if (missing.length) {
+    logwatch.warn({
+      ...logCtx,
+      message: "codemeta.json is missing required fields",
+      missingFields: missing,
+    });
     return makeInvalid(`Required fields missing: ${missing.join(", ")}`);
   }
 
@@ -132,13 +155,17 @@ async function validateCodemeta(info: FileInfo): Promise<ValidationResult> {
       headers: { "Content-Type": "application/json" },
       method: "POST",
     });
-    console.log(resp);
     const result = (await resp.json()) as {
       error?: string;
       message?: string;
       version?: string;
     };
     if (!resp.ok) {
+      logwatch.warn({
+        ...logCtx,
+        message: "Codemeta validator returned non-ok response",
+        statusCode: resp.status,
+      });
       return makeUnknown(`Validator returned error (${resp.status})`, {
         response: result,
         statusCode: resp.status,
@@ -152,6 +179,12 @@ async function validateCodemeta(info: FileInfo): Promise<ValidationResult> {
           version: result.version,
         });
   } catch (err: any) {
+    logwatch.error({
+      ...logCtx,
+      error: err.message,
+      message: "Fetch to codemeta validator failed",
+      stack: err.stack,
+    });
     return makeError(err);
   }
 }
@@ -164,8 +197,17 @@ async function validateCodemeta(info: FileInfo): Promise<ValidationResult> {
  * @param info - File content and metadata retrieved from the repository.
  * @returns A {@link ValidationResult} describing whether the file is valid.
  */
-async function validateCitation(info: FileInfo): Promise<ValidationResult> {
+async function validateCitation(
+  info: FileInfo,
+  ctx?: LogCtx,
+): Promise<ValidationResult> {
+  const logCtx = { action: "metadata.validate.citation", ...ctx };
+
   if (!info.content) {
+    logwatch.warn({
+      ...logCtx,
+      message: "CITATION.cff content is null or undefined",
+    });
     return makeInvalid("CITATION.cff content is null or undefined");
   }
 
@@ -173,10 +215,22 @@ async function validateCitation(info: FileInfo): Promise<ValidationResult> {
   try {
     doc = yaml.load(normalizeText(info.content));
   } catch (err: any) {
+    logwatch.warn({
+      ...logCtx,
+      error: err.message,
+      message: "Failed to parse CITATION.cff as YAML",
+      stack: err.stack,
+    });
     return makeInvalid(`Invalid YAML in CITATION.cff: ${err.message}`);
   }
 
   if (!doc?.title || !Array.isArray(doc.authors) || doc.authors.length === 0) {
+    logwatch.warn({
+      ...logCtx,
+      hasAuthors: Array.isArray(doc?.authors) && doc.authors.length > 0,
+      hasTitle: Boolean(doc?.title),
+      message: "CITATION.cff is missing required fields",
+    });
     return makeInvalid("Required fields (title, authors) missing or empty");
   }
 
@@ -192,6 +246,11 @@ async function validateCitation(info: FileInfo): Promise<ValidationResult> {
       output?: string;
     };
     if (!resp.ok) {
+      logwatch.warn({
+        ...logCtx,
+        message: "Citation validator returned non-ok response",
+        statusCode: resp.status,
+      });
       return makeUnknown(`Validator returned error (${resp.status})`, {
         response: result,
         statusCode: resp.status,
@@ -201,6 +260,12 @@ async function validateCitation(info: FileInfo): Promise<ValidationResult> {
       ? makeValid(result.output ?? "Valid CITATION.cff")
       : makeInvalid(result.error ?? "Validation failed");
   } catch (err: any) {
+    logwatch.error({
+      ...logCtx,
+      error: err.message,
+      message: "Fetch to citation validator failed",
+      stack: err.stack,
+    });
     return makeError(err);
   }
 }
@@ -239,13 +304,20 @@ export async function checkMetadataFilesExists(
 export function validateMetadata(
   info: FileInfo,
   fileType: "codemeta" | "citation",
+  ctx?: LogCtx,
 ): Promise<ValidationResult> {
   switch (fileType) {
     case "codemeta":
-      return validateCodemeta(info);
+      return validateCodemeta(info, ctx);
     case "citation":
-      return validateCitation(info);
+      return validateCitation(info, ctx);
     default:
+      logwatch.warn({
+        action: "metadata.validate",
+        ...ctx,
+        fileType,
+        message: "validateMetadata called with unsupported file type",
+      });
       return Promise.resolve(makeInvalid(`Unsupported file type: ${fileType}`));
   }
 }
@@ -316,16 +388,27 @@ export async function updateMetadataDatabase(
       "unknown",
   };
 
+  const logCtx = { action: "metadata.update", owner, repo };
+
   // 3. Validate codemeta.json if it exists
   if (subjects.codemeta) {
     const file = await provider.getFileContent(owner, repo, "codemeta.json");
     if (file) {
-      codemetaValidation = await validateCodemeta({
-        content: file.content,
-        downloadUrl: file.downloadUrl,
-        sha: file.sha,
+      codemetaValidation = await validateCodemeta(
+        { content: file.content, downloadUrl: file.downloadUrl, sha: file.sha },
+        { owner, repo },
+      );
+      logwatch.info({
+        ...logCtx,
+        message: "codemeta.json validation result",
+        status: codemetaValidation.status,
+        validationMessage: codemetaValidation.message,
       });
     } else {
+      logwatch.warn({
+        ...logCtx,
+        message: "codemeta.json expected but not found in repository",
+      });
       codemetaValidation = makeInvalid("File not found");
     }
   }
@@ -334,12 +417,21 @@ export async function updateMetadataDatabase(
   if (subjects.citation) {
     const file = await provider.getFileContent(owner, repo, "CITATION.cff");
     if (file) {
-      citationValidation = await validateCitation({
-        content: file.content,
-        downloadUrl: file.downloadUrl,
-        sha: file.sha,
+      citationValidation = await validateCitation(
+        { content: file.content, downloadUrl: file.downloadUrl, sha: file.sha },
+        { owner, repo },
+      );
+      logwatch.info({
+        ...logCtx,
+        message: "CITATION.cff validation result",
+        status: citationValidation.status,
+        validationMessage: citationValidation.message,
       });
     } else {
+      logwatch.warn({
+        ...logCtx,
+        message: "CITATION.cff expected but not found in repository",
+      });
       citationValidation = makeInvalid("File not found");
     }
   }
