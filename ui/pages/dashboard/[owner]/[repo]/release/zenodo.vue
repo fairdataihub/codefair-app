@@ -792,9 +792,9 @@ const validateZenodoForm = () => {
 };
 
 const signOutOfZenodo = async () => {
-  await $fetch(`/api/user/zenodo`, {
+  await $fetch(`/api/zenodo/disconnect`, {
     headers: useRequestHeaders(["cookie"]),
-    method: "DELETE",
+    method: "POST",
   })
     .then(() => {
       haveValidZenodoToken.value = false;
@@ -814,9 +814,9 @@ const signOutOfZenodo = async () => {
 
 const loginToZenodo = async () => {
   // Send api request to purge the Zenodo token
-  await $fetch(`/api/user/zenodo`, {
+  await $fetch(`/api/zenodo/disconnect`, {
     headers: useRequestHeaders(["cookie"]),
-    method: "DELETE",
+    method: "POST",
   })
     .then(() => {
       const githubDetails = {

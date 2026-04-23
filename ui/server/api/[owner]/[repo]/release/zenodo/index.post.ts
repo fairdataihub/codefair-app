@@ -10,7 +10,10 @@
  */
 import { z } from "zod";
 import type { User } from "lucia";
-import { beginZenodoPublication } from "~/server/services/archival/zenodo";
+import {
+  beginZenodoPublication,
+  validateZenodoToken,
+} from "~/server/services/archival/zenodo";
 import type { PublicationProgressEvent } from "~/server/services/archival/interface";
 
 const bodySchema = z
@@ -96,12 +99,10 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // ── Zenodo token check ───────────────────────────────────────────
-  const zenodoTokenInfo = await prisma.zenodoToken.findFirst({
-    where: { user_id: user?.id },
-  });
+  // Zenodo token check
+  const { valid: zenodoTokenValid } = await validateZenodoToken(user?.id ?? "");
 
-  if (!zenodoTokenInfo) {
+  if (!zenodoTokenValid) {
     throw createError({
       statusCode: 400,
       statusMessage: "Zenodo token not found",
