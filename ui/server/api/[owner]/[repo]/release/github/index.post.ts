@@ -72,6 +72,7 @@ export default defineEventHandler(async (event) => {
       name: title,
       draft: true,
       generate_release_notes: true,
+      headers: { "X-GitHub-Api-Version": "2022-11-28" },
       owner,
       repo,
       tag_name: tag,
