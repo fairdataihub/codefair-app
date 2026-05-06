@@ -172,9 +172,12 @@ async function validateCodemeta(
       });
     }
     return result.message === "valid"
-      ? makeValid(`Valid (schema v${result.version})`, {
-          version: result.version,
-        })
+      ? makeValid(
+          `Codemeta valid according to schema [v${result.version}](https://github.com/fairdataihub/codefair-app/blob/main/validator/${result.version === "3.0" ? "codemeta-schema.json" : "codemeta-schema2.0.json"})`,
+          {
+            version: result.version,
+          },
+        )
       : makeInvalid(result.error ?? "Validation failed", {
           version: result.version,
         });
@@ -257,7 +260,11 @@ async function validateCitation(
       });
     }
     return result.message === "valid"
-      ? makeValid(result.output ?? "Valid CITATION.cff")
+      ? makeValid(
+          result.output
+            ? "Citation valid according to the schema [v1.2.0](https://github.com/citation-file-format/citation-file-format/blob/main/schema.json)"
+            : "Valid CITATION.cff",
+        )
       : makeInvalid(result.error ?? "Validation failed");
   } catch (err: any) {
     logwatch.error({
