@@ -14,6 +14,12 @@ const devMode = process.env.NODE_ENV === "development";
 const botNotInstalled = ref(false);
 const cwlValidationRerunRequestLoading = ref(false);
 const displayMetadataValidationResults = ref(false);
+const rerunPopup = ref({
+  done: false,
+  doneMessage: "",
+  message: "",
+  show: false,
+});
 const showModal = ref(false);
 const showLicenseModal = ref(false);
 const showMetadataModal = ref(false);
@@ -128,57 +134,64 @@ const rerunCodefairChecks = (rerunType: string) => {
     `/api/${owner}/${repo}/rerun?rerunType=${encodeURIComponent(rerunType)}`,
   );
 
-  // Persist until replaced by the next toast; cleared and recreated on each progress step
-  let runningToast: ReturnType<typeof push.info> | null = null;
-  // Guard against onerror firing after a clean stream close
   let settled = false;
 
-  const setRunningMessage = (message: string) => {
-    runningToast?.clear();
-    runningToast = push.info({ duration: Infinity, message, title: "Running" });
+  const resetPopup = () => {
+    rerunPopup.value = {
+      done: false,
+      doneMessage: "",
+      message: "",
+      show: false,
+    };
   };
 
   const settle = (fn: () => void) => {
     if (settled) return;
     settled = true;
     es.close();
-    runningToast?.clear();
+    resetPopup();
     loading.value = false;
     fn();
   };
 
   es.addEventListener("running", (e: MessageEvent) => {
     const { message } = JSON.parse(e.data);
-    setRunningMessage(message);
+    rerunPopup.value = {
+      done: false,
+      doneMessage: "",
+      message,
+      show: true,
+    };
   });
 
   es.addEventListener("progress", (e: MessageEvent) => {
     const { message } = JSON.parse(e.data);
-    setRunningMessage(message);
+    rerunPopup.value.message = message;
   });
 
   es.addEventListener("complete", async () => {
-    settle(async () => {
-      await refresh();
-      push.success({
-        message: "Compliance checks finished successfully.",
-        title: "Complete",
-      });
-    });
+    if (settled) return;
+    settled = true;
+    es.close();
+    loading.value = false;
+    rerunPopup.value.done = true;
+    rerunPopup.value.doneMessage = "Compliance checks finished successfully.";
+    await refresh();
+    setTimeout(resetPopup, 2500);
   });
 
   es.addEventListener("fail", (e: MessageEvent) => {
     const { message } = JSON.parse(e.data);
     settle(() => {
-      push.error({ message, title: "Error" });
+      push.error({ title: "Error", message });
     });
   });
 
   es.onerror = () => {
     settle(() => {
       push.error({
-        message: "Connection failed. Please try again.",
         title: "Error",
+        message: "Connection failed. Please try again.",
       });
     });
   };
@@ -194,55 +207,64 @@ const rerunCwlValidation = () => {
 
   const es = new EventSource(`/api/${owner}/${repo}/cwl-validation/rerun`);
 
-  let runningToast: ReturnType<typeof push.info> | null = null;
   let settled = false;
 
-  const setRunningMessage = (message: string) => {
-    runningToast?.clear();
-    runningToast = push.info({ duration: Infinity, message, title: "Running" });
+  const resetPopup = () => {
+    rerunPopup.value = {
+      done: false,
+      doneMessage: "",
+      message: "",
+      show: false,
+    };
   };
 
   const settle = (fn: () => void) => {
     if (settled) return;
     settled = true;
     es.close();
-    runningToast?.clear();
+    resetPopup();
     cwlValidationRerunRequestLoading.value = false;
     fn();
   };
 
   es.addEventListener("running", (e: MessageEvent) => {
     const { message } = JSON.parse(e.data);
-    setRunningMessage(message);
+    rerunPopup.value = {
+      done: false,
+      doneMessage: "",
+      message,
+      show: true,
+    };
   });
 
   es.addEventListener("progress", (e: MessageEvent) => {
     const { message } = JSON.parse(e.data);
-    setRunningMessage(message);
+    rerunPopup.value.message = message;
   });
 
   es.addEventListener("complete", () => {
-    settle(() => {
-      refresh();
-      push.success({
-        message: "CWL validation completed successfully.",
-        title: "Complete",
-      });
-    });
+    if (settled) return;
+    settled = true;
+    es.close();
+    cwlValidationRerunRequestLoading.value = false;
+    rerunPopup.value.done = true;
+    rerunPopup.value.doneMessage = "CWL validation completed successfully.";
+    refresh();
+    setTimeout(resetPopup, 2500);
   });
 
   es.addEventListener("fail", (e: MessageEvent) => {
     const { message } = JSON.parse(e.data);
     settle(() => {
-      push.error({ message, title: "Error" });
+      push.error({ title: "Error", message });
     });
   });
 
   es.onerror = () => {
     settle(() => {
       push.error({
-        message: "Connection failed. Please try again.",
         title: "Error",
+        message: "Connection failed. Please try again.",
       });
     });
   };
@@ -1213,5 +1235,84 @@ const handleSettingsSelect = (key: string) => {
         <pre>{{ data }}</pre>
       </n-collapse-item>
     </n-collapse>
+
+    <n-modal v-model:show="rerunPopup.show" :mask-closable="false">
+      <n-card
+        :bordered="false"
+        class="w-[420px] max-w-[90vw] rounded-xl"
+        content-style="padding: 28px;"
+      >
+        <transition name="rerun-fade" mode="out-in">
+          <div
+            v-if="!rerunPopup.done"
+            key="running"
+            class="flex items-center gap-4"
+          >
+            <n-spin size="large" />
+
+            <div class="flex flex-col gap-1">
+              <p class="text-base font-semibold">Running checks...</p>
+
+              <p class="text-sm opacity-70">{{ rerunPopup.message }}</p>
+            </div>
+          </div>
+
+          <div
+            v-else
+            key="done"
+            class="flex flex-col items-center gap-3 py-2 text-center"
+          >
+            <div class="check-pop">
+              <Icon
+                name="ic:round-check-circle"
+                size="56"
+                class="text-green-500"
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <p class="text-base font-semibold">Complete!</p>
+
+              <p class="text-sm opacity-70">{{ rerunPopup.doneMessage }}</p>
+            </div>
+          </div>
+        </transition>
+      </n-card>
+    </n-modal>
   </main>
 </template>
+
+<style scoped>
+.check-pop {
+  animation: check-pop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes check-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+
+  70% {
+    transform: scale(1.15);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.rerun-fade-enter-active,
+.rerun-fade-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.rerun-fade-enter-from,
+.rerun-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.97);
+}
+</style>
