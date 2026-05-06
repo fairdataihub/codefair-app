@@ -1132,6 +1132,20 @@
   dependencies:
     "@iconify/types" "*"
 
+"@iconify-json/fa@^1.2.2":
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/@iconify-json/fa/-/fa-1.2.2.tgz#6222eb0d4a2ac9eb7dff7861736e8d0e87376469"
+  integrity sha512-Rw0L97uO3W0Gy2rq4cM/TH3QjzuPuRca1F2steumZ57zOeheGQdiqo50O6KHjm+WgImmV92IFPUTU6eiaJsrTw==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/fluent@^1.2.46":
+  version "1.2.46"
+  resolved "https://registry.yarnpkg.com/@iconify-json/fluent/-/fluent-1.2.46.tgz#ff3cf5442791c37036ffe94f19d23df6c88e968a"
+  integrity sha512-D/nsKOYT8ttULt2WJGF0lc0FtVHmEYizzdrO0duAasLYnKLAcdp3I/fCIpHh5a2kKdE5pcFyXeP0UsEZ0fG7WA==
+  dependencies:
+    "@iconify/types" "*"
+
 "@iconify-json/gg@^1.2.2":
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/@iconify-json/gg/-/gg-1.2.2.tgz#584617109d32bb8a782e6ebc405d3423510189ba"
@@ -1199,6 +1213,13 @@
   version "1.2.10"
   resolved "https://registry.yarnpkg.com/@iconify-json/ri/-/ri-1.2.10.tgz#eef0a8e808e2fac3ec82f593ce9d6dbed742334c"
   integrity sha512-WWMhoncVVM+Xmu9T5fgu2lhYRrKTEWhKk3Com0KiM111EeEsRLiASjpsFKnC/SrB6covhUp95r2mH8tGxhgd5Q==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/solar@^1.2.5":
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/@iconify-json/solar/-/solar-1.2.5.tgz#de96d6d2c97bf2baec28e21ac66dc5b39997ca37"
+  integrity sha512-WMAiNwchU8zhfrySww6KQBRIBbsQ6SvgIu2yA+CHGyMima/0KQwT5MXogrZPJGoQF+1Ye3Qj6K+1CiyNn3YkoA==
   dependencies:
     "@iconify/types" "*"
 
