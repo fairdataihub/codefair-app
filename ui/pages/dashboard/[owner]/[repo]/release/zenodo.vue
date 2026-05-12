@@ -49,6 +49,12 @@ const license = ref({
 const selectedExistingDeposition = ref<string | null>(null);
 const selectedDeposition = ref<string | null>(null);
 const selectableDepositions = ref<Array<SelectOption | SelectGroupOption>>([]);
+const zenodoEndpoint = ref("");
+
+const selectedDepositionRecordUrl = computed(() => {
+  if (!selectedDeposition.value || !zenodoEndpoint.value) return null;
+  return `${zenodoEndpoint.value}/records/${selectedDeposition.value}`;
+});
 
 const zenodoFormIsValid = ref(false);
 const zenodoFormRef = ref<FormInst | null>(null);
@@ -128,6 +134,7 @@ if (data.value) {
     data.value?.license?.customLicenseTitle || "";
 
   selectableDepositions.value = [];
+  zenodoEndpoint.value = data.value.zenodoEndpoint || "";
   for (const deposition of data.value.zenodoDepositions) {
     selectableDepositions.value.push({
       label: deposition.title,
@@ -350,7 +357,13 @@ const githubReleaseIsDraft = ref(false);
 const showGithubReleaseIsDraftStausBadge = ref(false);
 
 // Set the initial values of the form if the query params are present
-if (githubTag && githubRelease) {
+// Use explicit null/undefined checks — empty strings from the callback URL are valid falsy values
+if (
+  githubTag != null &&
+  githubTag !== "" &&
+  githubRelease != null &&
+  githubRelease !== ""
+) {
   githubFormValue.value.tag = githubTag.toString();
   githubFormValue.value.release = githubRelease.toString();
   zenodoDraftIsReadyForRelease.value = true;
@@ -1484,6 +1497,25 @@ onBeforeUnmount(() => {
                   clearable
                   :options="selectableDepositions"
                 />
+
+                <div
+                  v-if="selectedDepositionRecordUrl"
+                  class="mt-3 flex items-center gap-2 text-sm"
+                >
+                  <Icon name="simple-icons:zenodo" size="16" class="shrink-0" />
+
+                  <span class="text-gray-600 dark:text-gray-400"
+                    >View on Zenodo:</span
+                  >
+
+                  <NuxtLink
+                    :to="selectedDepositionRecordUrl"
+                    target="_blank"
+                    class="text-blue-500 underline transition-all hover:text-blue-700"
+                  >
+                    {{ selectedDepositionRecordUrl }}
+                  </NuxtLink>
+                </div>
               </div>
             </div>
           </template>
