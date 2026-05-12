@@ -74,7 +74,11 @@ const reasonMessage = reason
           Back to Zenodo Authorization
         </n-button>
 
-        <n-button secondary size="large" @click="router.push('/dashboard')">
+        <n-button
+          type="tertiary"
+          size="large"
+          @click="router.push('/dashboard')"
+        >
           Go to Dashboard
         </n-button>
       </n-flex>
