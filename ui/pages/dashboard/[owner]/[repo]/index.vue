@@ -1237,12 +1237,8 @@ const handleSettingsSelect = (key: string) => {
     </n-collapse>
 
     <n-modal v-model:show="rerunPopup.show" :mask-closable="false">
-      <n-card
-        :bordered="false"
-        class="w-[420px] max-w-[90vw] rounded-xl"
-        content-style="padding: 28px;"
-      >
-        <transition name="rerun-fade" mode="out-in">
+      <div class="cf-modal-card">
+        <transition name="cf-modal-fade" mode="out-in">
           <div
             v-if="!rerunPopup.done"
             key="running"
@@ -1251,9 +1247,9 @@ const handleSettingsSelect = (key: string) => {
             <n-spin size="large" />
 
             <div class="flex flex-col gap-1">
-              <p class="text-base font-semibold">Running checks...</p>
+              <p class="cf-modal-title">Running checks...</p>
 
-              <p class="text-sm opacity-70">{{ rerunPopup.message }}</p>
+              <p class="cf-modal-sub">{{ rerunPopup.message }}</p>
             </div>
           </div>
 
@@ -1262,7 +1258,7 @@ const handleSettingsSelect = (key: string) => {
             key="done"
             class="flex flex-col items-center gap-3 py-2 text-center"
           >
-            <div class="check-pop">
+            <div class="cf-check-pop">
               <Icon
                 name="ic:round-check-circle"
                 size="56"
@@ -1271,48 +1267,13 @@ const handleSettingsSelect = (key: string) => {
             </div>
 
             <div class="flex flex-col gap-1">
-              <p class="text-base font-semibold">Complete!</p>
+              <p class="cf-modal-title">Complete!</p>
 
-              <p class="text-sm opacity-70">{{ rerunPopup.doneMessage }}</p>
+              <p class="cf-modal-sub">{{ rerunPopup.doneMessage }}</p>
             </div>
           </div>
         </transition>
-      </n-card>
+      </div>
     </n-modal>
   </main>
 </template>
-
-<style scoped>
-.check-pop {
-  animation: check-pop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-}
-
-@keyframes check-pop {
-  0% {
-    opacity: 0;
-    transform: scale(0.4);
-  }
-
-  70% {
-    transform: scale(1.15);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.rerun-fade-enter-active,
-.rerun-fade-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-}
-
-.rerun-fade-enter-from,
-.rerun-fade-leave-to {
-  opacity: 0;
-  transform: scale(0.97);
-}
-</style>
