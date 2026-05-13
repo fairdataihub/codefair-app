@@ -529,6 +529,21 @@ const resetPublishSteps = () => {
   zenodoPublishErrorMessage.value = "";
 };
 
+const resetForm = () => {
+  githubFormValue.value = {
+    release: null,
+    releaseTitle: "",
+    tag: null,
+    tagTitle: "",
+  };
+  zenodoFormValue.value = { accessRight: null, version: "" };
+  zenodoDraftIsReadyForRelease.value = false;
+  githubReleaseIsDraft.value = false;
+  showGithubReleaseIsDraftStausBadge.value = false;
+  zenodoPreflightError.value = null;
+  useRouter().replace({ query: {} });
+};
+
 const handleSSEEvent = (event: {
   data?: { doi: string; htmlUrl: string };
   message: string;
@@ -545,6 +560,7 @@ const handleSSEEvent = (event: {
         step.status = "completed";
       }
     }
+    resetForm();
     return;
   }
 
