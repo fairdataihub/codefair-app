@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import type { PropType } from "vue";
+
 const props = defineProps({
   title: {
-    default: "Card Title",
+    default: "Untitled",
     type: String,
   },
   bordered: {
@@ -9,15 +11,28 @@ const props = defineProps({
     type: Boolean,
   },
   collapse: {
-    type: Boolean,
-  },
-  horizontal: {
     default: false,
     type: Boolean,
   },
-  subheader: {
+  icon: {
     default: "",
     type: String,
+  },
+  required: {
+    default: false,
+    type: Boolean,
+  },
+  status: {
+    default: null,
+    type: String as PropType<"complete" | "incomplete" | "error" | null>,
+  },
+  subtitle: {
+    default: "",
+    type: String,
+  },
+  variant: {
+    default: "default",
+    type: String as PropType<"default" | "inset">,
   },
 });
 
@@ -25,88 +40,107 @@ const slots = useSlots();
 
 const contentCollapsed = ref(false);
 
-const hasHeaderExtra = computed(() => {
-  return !!slots["header-extra"];
-});
-
-const hasAction = computed(() => {
-  return !!slots.action;
-});
-
-const isCollapsed = computed(() => {
-  return contentCollapsed.value;
-});
+const hasAction = computed(() => !!slots.action);
+const isCollapsed = computed(() => contentCollapsed.value);
 
 onBeforeMount(() => {
-  contentCollapsed.value = props.collapse || false;
+  contentCollapsed.value = props.collapse ?? false;
 });
 
 const toggleCollapse = () => {
   contentCollapsed.value = !contentCollapsed.value;
 };
+
+defineExpose({
+  open() {
+    contentCollapsed.value = false;
+  },
+});
 </script>
 
 <template>
   <div
-    class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-500 dark:bg-[oklch(23%_0.02_260)]"
+    class="overflow-hidden rounded-lg border transition-colors"
+    :class="{
+      'border-[var(--cf-card-border)] bg-[var(--cf-card-bg)]':
+        variant === 'default',
+      'border-l-[5px] border-[var(--cf-divider)] border-l-indigo-400 dark:border-l-indigo-500':
+        variant === 'inset',
+    }"
   >
+    <!-- Header -->
     <div
-      class="flex items-center justify-between rounded-lg px-6 py-4 transition-all"
-      :class="{
-        'bg-white dark:bg-[oklch(27%_0.02_260)]': contentCollapsed,
-        'rounded-none border-b border-gray-200 bg-slate-50/50 dark:border-gray-500 dark:bg-[oklch(23%_0.02_260)]':
-          !contentCollapsed,
-      }"
+      class="flex cursor-pointer select-none items-center gap-3 px-4 py-3 transition-colors hover:bg-[oklch(97%_0.01_260)] dark:hover:bg-[oklch(26%_0.02_260)]"
+      @click="toggleCollapse"
     >
-      <div>
-        <div class="text-xl font-bold dark:text-[oklch(96%_0.01_260)]">
-          {{ title }}
-        </div>
-
-        <div class="text-sm text-slate-500 dark:text-[oklch(78%_0.01_260)]">
-          {{ subheader }}
-        </div>
+      <!-- Section icon pill (only on default variant when icon provided) -->
+      <div
+        v-if="icon && variant === 'default'"
+        class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-[oklch(30%_0.05_265)] dark:text-[oklch(78%_0.08_265)]"
+      >
+        <Icon :name="icon" size="16" />
       </div>
 
-      <div class="flex items-center">
-        <slot name="header-extra"></slot>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-2">
+          <span
+            class="truncate text-base font-semibold text-[var(--cf-text-1)]"
+          >
+            {{ title }}
+          </span>
 
-        <n-divider v-if="hasHeaderExtra" vertical class="!mx-3" />
+          <n-tag
+            v-if="required && status !== 'complete'"
+            type="warning"
+            size="small"
+            :bordered="false"
+            class="shrink-0"
+          >
+            Required
+          </n-tag>
+        </div>
 
-        <n-button
-          text
-          class="rounded-full p-2 text-3xl transition-all hover:!bg-indigo-100 dark:hover:!bg-[oklch(36%_0.05_265)]"
-          type="info"
-          @click="toggleCollapse"
+        <div
+          v-if="subtitle"
+          class="mt-0.5 truncate text-xs text-[var(--cf-text-3)]"
         >
-          <Icon
-            name="icon-park-outline:down"
-            size="25"
-            class="transition-all"
-            :class="{
-              'rotate-180 text-gray-600 dark:text-[oklch(90%_0.01_260)]':
-                !isCollapsed,
-              'rotate-0 text-gray-400 dark:text-[oklch(78%_0.01_260)]':
-                isCollapsed,
-            }"
-          />
-        </n-button>
+          {{ subtitle }}
+        </div>
       </div>
+
+      <div class="flex items-center gap-2" @click.stop>
+        <slot name="header-extra" />
+      </div>
+
+      <!-- Status dot -->
+      <span
+        v-if="status && required"
+        class="size-2.5 shrink-0 rounded-full"
+        :class="{
+          'bg-green-500': status === 'complete',
+          'bg-orange-400': status === 'incomplete',
+          'bg-red-500': status === 'error',
+        }"
+      />
+
+      <Icon
+        name="tabler:chevron-down"
+        size="16"
+        class="shrink-0 text-[var(--cf-text-3)] transition-transform duration-200"
+        :class="{ 'rotate-180': !isCollapsed }"
+      />
     </div>
 
-    <n-collapse-transition :show="!contentCollapsed">
-      <n-divider class="!m-0" />
-
-      <div class="px-6 py-4 dark:text-[oklch(90%_0.01_260)]">
-        <slot></slot>
+    <!-- Body -->
+    <n-collapse-transition :show="!isCollapsed">
+      <div class="border-t border-[var(--cf-divider)] px-4 py-4">
+        <slot />
       </div>
     </n-collapse-transition>
 
-    <div
-      v-if="hasAction"
-      class="flex flex-row items-center justify-start rounded-lg bg-slate-50 px-6 py-4 dark:bg-[oklch(23%_0.02_260)]"
-    >
-      <slot name="action"></slot>
+    <!-- Action footer -->
+    <div v-if="hasAction" class="border-t border-[var(--cf-divider)] px-4 py-3">
+      <slot name="action" />
     </div>
   </div>
 </template>

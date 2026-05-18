@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { push } from "notivue";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 import { Icon } from "#components";
 
@@ -13,6 +14,12 @@ const devMode = process.env.NODE_ENV === "development";
 const botNotInstalled = ref(false);
 const cwlValidationRerunRequestLoading = ref(false);
 const displayMetadataValidationResults = ref(false);
+const rerunPopup = ref({
+  done: false,
+  doneMessage: "",
+  message: "",
+  show: false,
+});
 const showModal = ref(false);
 const showLicenseModal = ref(false);
 const showMetadataModal = ref(false);
@@ -86,9 +93,12 @@ const metadataSettingsOptions = [
   },
 ];
 
-const { data, error } = await useFetch(`/api/${owner}/${repo}/dashboard`, {
-  headers: useRequestHeaders(["cookie"]),
-});
+const { data, error, refresh } = await useFetch(
+  `/api/${owner}/${repo}/dashboard`,
+  {
+    headers: useRequestHeaders(["cookie"]),
+  },
+);
 
 if (error.value) {
   if (error.value.statusMessage === "installation-not-found") {
@@ -116,56 +126,148 @@ if (
 
 const hideConfirmation = () => (showModal.value = false);
 
-const rerunCodefairChecks = async (rerunType: string) => {
+const rerunCodefairChecks = (rerunType: string) => {
   hideConfirmation();
-  push.info({ title: "Submitting request", message: "Please wait..." });
-  try {
-    await $fetch(`/api/${owner}/${repo}/rerun`, {
-      body: { rerunType },
-      headers: useRequestHeaders(["cookie"]),
-      method: "POST",
-    });
-    push.success({
-      title: "Success",
-      message: "Request submitted successfully.",
-    });
-  } catch (err: any) {
-    push.error({
-      title: "Error",
-      message:
-        err.statusMessage === "Validation already requested"
-          ? "Request already submitted. Please wait."
-          : "Failed to submit request. Try again later.",
-    });
-  }
-};
-
-const handlePositiveClick = async (reRunType: string) => {
   loading.value = true;
-  await rerunCodefairChecks(reRunType);
-  loading.value = false;
-  showLicenseModal.value = false;
+
+  const es = new EventSource(
+    `/api/${owner}/${repo}/rerun?rerunType=${encodeURIComponent(rerunType)}`,
+  );
+
+  let settled = false;
+
+  const resetPopup = () => {
+    rerunPopup.value = {
+      done: false,
+      doneMessage: "",
+      message: "",
+      show: false,
+    };
+  };
+
+  const settle = (fn: () => void) => {
+    if (settled) return;
+    settled = true;
+    es.close();
+    resetPopup();
+    loading.value = false;
+    fn();
+  };
+
+  es.addEventListener("running", (e: MessageEvent) => {
+    const { message } = JSON.parse(e.data);
+    rerunPopup.value = {
+      done: false,
+      doneMessage: "",
+      message,
+      show: true,
+    };
+  });
+
+  es.addEventListener("progress", (e: MessageEvent) => {
+    const { message } = JSON.parse(e.data);
+    rerunPopup.value.message = message;
+  });
+
+  es.addEventListener("complete", async () => {
+    if (settled) return;
+    settled = true;
+    es.close();
+    loading.value = false;
+    rerunPopup.value.done = true;
+    rerunPopup.value.doneMessage = "Compliance checks finished successfully.";
+    await refresh();
+    setTimeout(resetPopup, 2500);
+  });
+
+  es.addEventListener("fail", (e: MessageEvent) => {
+    const { message } = JSON.parse(e.data);
+    settle(() => {
+      push.error({ title: "Error", message });
+    });
+  });
+
+  es.onerror = () => {
+    settle(() => {
+      push.error({
+        title: "Error",
+        message: "Connection failed. Please try again.",
+      });
+    });
+  };
 };
 
-const rerunCwlValidation = async () => {
+const handlePositiveClick = (reRunType: string) => {
+  showLicenseModal.value = false;
+  rerunCodefairChecks(reRunType);
+};
+
+const rerunCwlValidation = () => {
   cwlValidationRerunRequestLoading.value = true;
-  try {
-    await $fetch(`/api/${owner}/${repo}/cwl-validation/rerun`, {
-      headers: useRequestHeaders(["cookie"]),
-      method: "POST",
-    });
-    push.success({ title: "Success", message: "CWL revalidation requested." });
-  } catch (err: any) {
-    push.error({
-      title: "Error",
-      message:
-        err.statusMessage === "Validation already requested"
-          ? "Already requested. Please wait."
-          : "Failed to submit CWL revalidation. Try again later.",
-    });
-  } finally {
+
+  const es = new EventSource(`/api/${owner}/${repo}/cwl-validation/rerun`);
+
+  let settled = false;
+
+  const resetPopup = () => {
+    rerunPopup.value = {
+      done: false,
+      doneMessage: "",
+      message: "",
+      show: false,
+    };
+  };
+
+  const settle = (fn: () => void) => {
+    if (settled) return;
+    settled = true;
+    es.close();
+    resetPopup();
     cwlValidationRerunRequestLoading.value = false;
-  }
+    fn();
+  };
+
+  es.addEventListener("running", (e: MessageEvent) => {
+    const { message } = JSON.parse(e.data);
+    rerunPopup.value = {
+      done: false,
+      doneMessage: "",
+      message,
+      show: true,
+    };
+  });
+
+  es.addEventListener("progress", (e: MessageEvent) => {
+    const { message } = JSON.parse(e.data);
+    rerunPopup.value.message = message;
+  });
+
+  es.addEventListener("complete", () => {
+    if (settled) return;
+    settled = true;
+    es.close();
+    cwlValidationRerunRequestLoading.value = false;
+    rerunPopup.value.done = true;
+    rerunPopup.value.doneMessage = "CWL validation completed successfully.";
+    refresh();
+    setTimeout(resetPopup, 2500);
+  });
+
+  es.addEventListener("fail", (e: MessageEvent) => {
+    const { message } = JSON.parse(e.data);
+    settle(() => {
+      push.error({ title: "Error", message });
+    });
+  });
+
+  es.onerror = () => {
+    settle(() => {
+      push.error({
+        title: "Error",
+        message: "Connection failed. Please try again.",
+      });
+    });
+  };
 };
 
 const handleSettingsSelect = (key: string) => {
@@ -1133,5 +1235,45 @@ const handleSettingsSelect = (key: string) => {
         <pre>{{ data }}</pre>
       </n-collapse-item>
     </n-collapse>
+
+    <n-modal v-model:show="rerunPopup.show" :mask-closable="false">
+      <div class="cf-modal-card">
+        <transition name="cf-modal-fade" mode="out-in">
+          <div
+            v-if="!rerunPopup.done"
+            key="running"
+            class="flex items-center gap-4"
+          >
+            <n-spin size="large" />
+
+            <div class="flex flex-col gap-1">
+              <p class="cf-modal-title">Running checks...</p>
+
+              <p class="cf-modal-sub">{{ rerunPopup.message }}</p>
+            </div>
+          </div>
+
+          <div
+            v-else
+            key="done"
+            class="flex flex-col items-center gap-3 py-2 text-center"
+          >
+            <div class="cf-check-pop">
+              <Icon
+                name="ic:round-check-circle"
+                size="56"
+                class="text-green-500"
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <p class="cf-modal-title">Complete!</p>
+
+              <p class="cf-modal-sub">{{ rerunPopup.doneMessage }}</p>
+            </div>
+          </div>
+        </transition>
+      </div>
+    </n-modal>
   </main>
 </template>

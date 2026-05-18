@@ -92,6 +92,7 @@ export default defineEventHandler(async (event) => {
     const { data: issue } = await octokit.request(
       "GET /repos/{owner}/{repo}/issues/{issue_number}",
       {
+        headers: { "X-GitHub-Api-Version": "2022-11-28" },
         issue_number: installation.issue_number,
         owner,
         repo,
@@ -113,6 +114,7 @@ export default defineEventHandler(async (event) => {
     const updatedIssueBody = `${issue.body}<!-- @codefair-bot re-render-dashboard -->`;
 
     await octokit.request("PATCH /repos/{owner}/{repo}/issues/{issue_number}", {
+      headers: { "X-GitHub-Api-Version": "2022-11-28" },
       body: updatedIssueBody,
       issue_number: installation.issue_number,
       owner,

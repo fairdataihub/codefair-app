@@ -40,6 +40,8 @@ registry:
 # Configure builder setup.
 builder:
   arch: amd64
+  cache:
+    type: gha
 
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 #
@@ -51,11 +53,16 @@ env:
     - GH_OAUTH_APP_ID
     - GH_OAUTH_CLIENT_ID
     - GH_OAUTH_CLIENT_SECRET
+    - WEBHOOK_SECRET
     - ZENODO_API_ENDPOINT
     - ZENODO_ENDPOINT
     - ZENODO_CLIENT_ID
     - ZENODO_CLIENT_SECRET
     - ZENODO_REDIRECT_URI
+    - UI_LOGWATCH_URL
+    - VALIDATOR_URL
+    - CODEFAIR_APP_DOMAIN
+    - GH_APP_NAME
   clear:
     NODE_ENV: production
 

@@ -63,9 +63,11 @@ export function registerPullRequestHandlers(app, db) {
       }
     }
 
-    // Re-render dashboard from database (no compliance checks needed - code hasn't merged yet)
-    logwatch.info("PR opened, re-rendering dashboard to show PR badge");
-    await reRenderDashboard(context, owner, repository, "");
+    // skip for central-API repos
+    if (!installation.use_central_api) {
+      logwatch.info("PR opened, re-rendering dashboard to show PR badge");
+      await reRenderDashboard(context, owner, repository, "");
+    }
   });
 
   // When a pull request is closed
@@ -78,6 +80,10 @@ export function registerPullRequestHandlers(app, db) {
     const owner = context.payload.repository.owner.login;
     const { repository } = context.payload;
     const prTitle = context.payload.pull_request.title;
+
+    const installation = await db.installation.findUnique({
+      where: { id: repository.id },
+    });
 
     // Clear PR URL from database based on PR type
     if (prTitle === PR_TITLES.license) {
@@ -105,11 +111,11 @@ export function registerPullRequestHandlers(app, db) {
       }
     }
 
-    // Re-render dashboard from database (no compliance checks needed)
-    // If PR was merged, the push event will trigger full compliance checks
-    // If PR was closed without merge, we just need to remove the PR badge
-    logwatch.info("PR closed, re-rendering dashboard to remove PR badge");
-    await reRenderDashboard(context, owner, repository, "");
+    // skip for central-API repos
+    if (!installation.use_central_api) {
+      logwatch.info("PR closed, re-rendering dashboard to remove PR badge");
+      await reRenderDashboard(context, owner, repository, "");
+    }
 
     // Delete the branch
     const branchName = context.payload.pull_request.head.ref;

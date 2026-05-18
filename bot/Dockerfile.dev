@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-slim AS builder
+FROM node:22-slim AS builder
 
 # Combine RUN commands to reduce layers and cleanup in the same layer
 RUN apt-get update -y \
@@ -19,7 +19,7 @@ RUN yarn install --frozen-lockfile --production \
     && yarn cache clean
 
 # App stage
-FROM node:20-slim
+FROM node:22-slim
 
 LABEL maintainer="FAIR Data Innovations Hub <contact@fairdataihub.org>"
 LABEL description="Your coding assistant to make research software reusable without breaking a sweat!"

@@ -1111,6 +1111,139 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-2.0.3.tgz#4a2868d75d6d6963e423bcf90b7fd1be343409d3"
   integrity sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==
 
+"@iconify-json/akar-icons@^1.2.7":
+  version "1.2.7"
+  resolved "https://registry.yarnpkg.com/@iconify-json/akar-icons/-/akar-icons-1.2.7.tgz#aba9f3b3f734a89b8121d779530d04fde05a27fc"
+  integrity sha512-cw44dCnZgGhm6Tywxm0WALAnDB9AyGkDk7kiLMo2B/Ayt7duZu/uyrsqb55weWUN8Ge2sQAOl8MRtT6bFcLzPg==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/carbon@^1.2.20":
+  version "1.2.20"
+  resolved "https://registry.yarnpkg.com/@iconify-json/carbon/-/carbon-1.2.20.tgz#27b77f52b8691a079f5da5850ebea66da7915a0a"
+  integrity sha512-wqyxKEbIRdzGdfCAwQqn8iSfO6jx0m1toZAAQdx1NFjxd6iFl1YY4eKI1woWt7XOxs7s7phMW530kDD867JZGw==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/cib@^1.2.3":
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/@iconify-json/cib/-/cib-1.2.3.tgz#4660408c93023526ed544bbbd3484e75529b804d"
+  integrity sha512-MMvRXVTHt82z3bYN19JDAjv/X8OBNC/1B3I334SV/1nyhdPeeyvJZVoI1cGuNqYznBjMnWxKPtIhhiVgGQ1CzQ==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/fa@^1.2.2":
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/@iconify-json/fa/-/fa-1.2.2.tgz#6222eb0d4a2ac9eb7dff7861736e8d0e87376469"
+  integrity sha512-Rw0L97uO3W0Gy2rq4cM/TH3QjzuPuRca1F2steumZ57zOeheGQdiqo50O6KHjm+WgImmV92IFPUTU6eiaJsrTw==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/fluent@^1.2.46":
+  version "1.2.46"
+  resolved "https://registry.yarnpkg.com/@iconify-json/fluent/-/fluent-1.2.46.tgz#ff3cf5442791c37036ffe94f19d23df6c88e968a"
+  integrity sha512-D/nsKOYT8ttULt2WJGF0lc0FtVHmEYizzdrO0duAasLYnKLAcdp3I/fCIpHh5a2kKdE5pcFyXeP0UsEZ0fG7WA==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/gg@^1.2.2":
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/@iconify-json/gg/-/gg-1.2.2.tgz#584617109d32bb8a782e6ebc405d3423510189ba"
+  integrity sha512-8iQh8+Tdb/0jakNYy0+t2GVubjhbaJbuYoPsRhFw8IAs00IQV2BjE9GoB2kGF/UObaJCqvCelB3qRaUdizkrmg==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/humbleicons@^1.2.20":
+  version "1.2.20"
+  resolved "https://registry.yarnpkg.com/@iconify-json/humbleicons/-/humbleicons-1.2.20.tgz#9e60ac14dfd44fe68767f88388d799907baac8f3"
+  integrity sha512-7OPG7mKu1GtEiMr68d8dWqADCavmFawZ0Wv1Dbi2g8UE2m1e/AtA0ryx2IAEf5YUFGwJ9Bx8qs8719mXdAzCkw==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/ic@^1.2.4":
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/@iconify-json/ic/-/ic-1.2.4.tgz#bf7bfe6accbbf2bee6e1ba50ae2645efa41a7208"
+  integrity sha512-pzPMmrZrBQuwT7nmtrYdkttun8KalRGgZPIL1Ny9KpF2zjRGIUPN+npTfuD3lrgO/OnSwAoJWuekQwBpt/Cqrw==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/icon-park-solid@^1.2.4":
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/@iconify-json/icon-park-solid/-/icon-park-solid-1.2.4.tgz#45ce38d11f8ef8f5140304286c519c50df1523d2"
+  integrity sha512-030MChSP6lCY7N+U5J5R7YguHTGcm7qQEI/ivBjk77El/i8yJatoj568cwwXGM8c6HEU/kIxEE4m3O/6w0WBGg==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/material-symbols@^1.2.63":
+  version "1.2.63"
+  resolved "https://registry.yarnpkg.com/@iconify-json/material-symbols/-/material-symbols-1.2.63.tgz#bbd81ca991b3134c99ccedb16069093013904aee"
+  integrity sha512-R4PS/l8K6j+dk2P2MoYFLJgfbZ4YDo6XjCOpX6b1tvX+BhiSpSOjc1b6cnb/mvWe+JWBKlt4pcvPNiAijFLPnA==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/mdi@^1.2.3":
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/@iconify-json/mdi/-/mdi-1.2.3.tgz#5e4ee9d8c8aaad04381c8cc6c6edbe3327f031b5"
+  integrity sha512-O3cLwbDOK7NNDf2ihaQOH5F9JglnulNDFV7WprU2dSoZu3h3cWH//h74uQAB87brHmvFVxIOkuBX2sZSzYhScg==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/mingcute@^1.2.7":
+  version "1.2.7"
+  resolved "https://registry.yarnpkg.com/@iconify-json/mingcute/-/mingcute-1.2.7.tgz#d3a83c75bf0e04f5e2d71a7020cd05a7da6d6232"
+  integrity sha512-bp4z6F53KAQp99aSL7qPCHL7HWUNGMNKIhfo/dx9pwVHiad/WusUbTOFXEZfpA44syJPzSOxa3O6Pwiq7qZz1g==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/mynaui@^1.2.17":
+  version "1.2.17"
+  resolved "https://registry.yarnpkg.com/@iconify-json/mynaui/-/mynaui-1.2.17.tgz#75c9dc0e9f610ec0907f830765b6293a416653b8"
+  integrity sha512-2FU5KinDgppL8SmOimyxTWxKgC6MujmrOXW90z+331mE1UYkGBhdh+dlgKD6b45dHrN6ERzm5hIh4AadNzF4bw==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/octicon@^1.2.22":
+  version "1.2.22"
+  resolved "https://registry.yarnpkg.com/@iconify-json/octicon/-/octicon-1.2.22.tgz#b8a9c064e0e24b55e492f43ad3905b6c6f0affb6"
+  integrity sha512-6m0IXGRR3ooNDXoQetk4JR8rijoXQGqSKPFsOYBFx7xMJeLgIo1dTRCY8P/4FJbIHUvWj/DfRzkFrPLAW8gHCQ==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/ri@^1.2.10":
+  version "1.2.10"
+  resolved "https://registry.yarnpkg.com/@iconify-json/ri/-/ri-1.2.10.tgz#eef0a8e808e2fac3ec82f593ce9d6dbed742334c"
+  integrity sha512-WWMhoncVVM+Xmu9T5fgu2lhYRrKTEWhKk3Com0KiM111EeEsRLiASjpsFKnC/SrB6covhUp95r2mH8tGxhgd5Q==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/solar@^1.2.5":
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/@iconify-json/solar/-/solar-1.2.5.tgz#de96d6d2c97bf2baec28e21ac66dc5b39997ca37"
+  integrity sha512-WMAiNwchU8zhfrySww6KQBRIBbsQ6SvgIu2yA+CHGyMima/0KQwT5MXogrZPJGoQF+1Ye3Qj6K+1CiyNn3YkoA==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/tabler@^1.2.32":
+  version "1.2.32"
+  resolved "https://registry.yarnpkg.com/@iconify-json/tabler/-/tabler-1.2.32.tgz#7fb89d1cc755304cd40486d9350163a1a388fab5"
+  integrity sha512-0UlpROc9X0VrqJLeE87o3JLsQauHMhj82GnH9TkPaymhBeS9wPB3NOqxQyzw+MHgPL08uVSggwfkTaoRfhQ+RQ==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/uil@^1.2.3":
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/@iconify-json/uil/-/uil-1.2.3.tgz#d455746fe32491fa46a884b6d47e4b7a3cc9c76f"
+  integrity sha512-if91+UBhDQc6glPsIaXecGIcXnbQZfEO4Gdv89TV2xQ+V5e9GWbY5rNl2fsKZd8COsRQ5lRQAKimVQVL0CZZVg==
+  dependencies:
+    "@iconify/types" "*"
+
+"@iconify-json/vscode-icons@^1.2.45":
+  version "1.2.45"
+  resolved "https://registry.yarnpkg.com/@iconify-json/vscode-icons/-/vscode-icons-1.2.45.tgz#94d2ee47bcca643dcce834d6b2c292058daed4a4"
+  integrity sha512-ow+ueibMIq79ueM1kv6cOWgHx8jfh1XJQi2RrqMHb4HLbvIBlxpy5PCMvOJXlA68R6fBAHpWQeh6uWx7VKEVsA==
+  dependencies:
+    "@iconify/types" "*"
+
 "@iconify/collections@^1.0.628":
   version "1.0.629"
   resolved "https://registry.yarnpkg.com/@iconify/collections/-/collections-1.0.629.tgz#a8512073b83f71725b4c0ed95057853019d603ab"
@@ -3200,6 +3333,11 @@
   dependencies:
     "@types/istanbul-lib-report" "*"
 
+"@types/js-yaml@^4.0.9":
+  version "4.0.9"
+  resolved "https://registry.yarnpkg.com/@types/js-yaml/-/js-yaml-4.0.9.tgz#cd82382c4f902fed9691a2ed79ec68c5898af4c2"
+  integrity sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==
+
 "@types/json-schema@^7.0.12":
   version "7.0.15"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.15.tgz#596a1747233694d50f6ad8a7869fcb6f56cf5841"
@@ -5143,10 +5281,32 @@ dot-prop@^10.1.0:
   dependencies:
     type-fest "^5.0.0"
 
-dotenv@^16.4.7:
+dotenv-cli@^11.0.0:
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/dotenv-cli/-/dotenv-cli-11.0.0.tgz#7115b54e62ef36c3b2d2eb228f8bf4de4c2276bf"
+  integrity sha512-r5pA8idbk7GFWuHEU7trSTflWcdBpQEK+Aw17UrSHjS6CReuhrrPcyC3zcQBPQvhArRHnBo/h6eLH1fkCvNlww==
+  dependencies:
+    cross-spawn "^7.0.6"
+    dotenv "^17.1.0"
+    dotenv-expand "^12.0.0"
+    minimist "^1.2.6"
+
+dotenv-expand@^12.0.0:
+  version "12.0.3"
+  resolved "https://registry.yarnpkg.com/dotenv-expand/-/dotenv-expand-12.0.3.tgz#6323ceca51ca0c1b1f0055e2aba39c79781739a6"
+  integrity sha512-uc47g4b+4k/M/SeaW1y4OApx+mtLWl92l5LMPP0GNXctZqELk+YGgOPIIC5elYmUH4OuoK3JLhuRUYegeySiFA==
+  dependencies:
+    dotenv "^16.4.5"
+
+dotenv@^16.4.5, dotenv@^16.4.7:
   version "16.6.1"
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.6.1.tgz#773f0e69527a8315c7285d5ee73c4459d20a8020"
   integrity sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==
+
+dotenv@^17.1.0:
+  version "17.3.1"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-17.3.1.tgz#2706f5b0165e45a1503348187b8468f87fe6aae2"
+  integrity sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==
 
 dotenv@^17.2.3:
   version "17.2.3"
@@ -5758,6 +5918,18 @@ events@^3.3.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/events/-/events-3.3.0.tgz#31a95ad0a924e2d2c419a813aeb2c4e878ea7400"
   integrity sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==
+
+eventsource-parser@^3.0.1:
+  version "3.0.6"
+  resolved "https://registry.yarnpkg.com/eventsource-parser/-/eventsource-parser-3.0.6.tgz#292e165e34cacbc936c3c92719ef326d4aeb4e90"
+  integrity sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==
+
+eventsource@^4.0.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/eventsource/-/eventsource-4.1.0.tgz#19e552341e4375289121fe7e1c9d401e5b1f7e8b"
+  integrity sha512-2GuF51iuHX6A9xdTccMTsNb7VO0lHZihApxhvQzJB5A03DvHDd2FQepodbMaztPBmBcE/ox7o2gqaxGhYB9LhQ==
+  dependencies:
+    eventsource-parser "^3.0.1"
 
 evtd@^0.2.2, evtd@^0.2.4:
   version "0.2.4"
@@ -9852,6 +10024,14 @@ slash@^5.1.0:
   resolved "https://registry.yarnpkg.com/slash/-/slash-5.1.0.tgz#be3adddcdf09ac38eebe8dcdc7b1a57a75b095ce"
   integrity sha512-ZA6oR3T/pEyuqwMgAKT0/hAv8oAXckzbkmR0UkUosQ+Mc4RxGoJkRmwHgHufaenlyAgE1Mxgpdcrf75y6XcnDg==
 
+smee-client@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/smee-client/-/smee-client-5.0.0.tgz#2689efaff19bec9f94d348e54373f4a76955877f"
+  integrity sha512-OYL8xPr1Tc0iqGohTGqHO/qEvUrPktK0a2Qcb0Uuj+j4KLnH5bsOhOlmpnmdh4zgzL3OwTfodcmkg5fVgiMUHw==
+  dependencies:
+    eventsource "^4.0.0"
+    undici "^7.0.0"
+
 smob@^1.0.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/smob/-/smob-1.5.0.tgz#85d79a1403abf128d24d3ebc1cdc5e1a9548d3ab"
@@ -10604,6 +10784,11 @@ undici-types@~7.16.0:
   version "7.16.0"
   resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-7.16.0.tgz#ffccdff36aea4884cbfce9a750a0580224f58a46"
   integrity sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==
+
+undici@^7.0.0:
+  version "7.22.0"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-7.22.0.tgz#7a82590a5908e504a47d85c60b0f89ca14240e60"
+  integrity sha512-RqslV2Us5BrllB+JeiZnK4peryVTndy9Dnqq62S3yYRRTj0tFQCwEniUy2167skdGOy3vqRzEvl1Dm4sV2ReDg==
 
 unenv@^2.0.0-rc.23, unenv@^2.0.0-rc.24:
   version "2.0.0-rc.24"

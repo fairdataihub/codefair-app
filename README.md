@@ -73,7 +73,7 @@ See our [dedicated webpage](https://docs.codefair.io/docs/installation.html) for
 
 ---
 
-## For Contributors
+Codefair is developed using [Octokit](https://github.com/octokit) and [Nuxt](https://nuxt.com/), and is deployed on a virtual machine hosted on Azure. The GitHub app is configured to receive webhooks for important actions such as pushing code, opening or closing issues, opening or merging pull requests, and commenting on discussions. These events drive Codefair's automated workflows, enabling seamless integration with GitHub's features and functionality.
 
 ### Contributing
 

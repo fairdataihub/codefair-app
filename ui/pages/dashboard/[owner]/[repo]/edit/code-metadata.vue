@@ -147,18 +147,14 @@ const rules = ref<FormRules>({
       if (!value || value.length === 0) {
         return new Error("Please input at least one keyword");
       }
-      // Check for uniqueness
       const uniqueCount = new Set(value).size;
       if (uniqueCount !== value.length) {
         return new Error("Please ensure all keywords are unique");
       }
-
-      // Check if empty strings are present in the array
       const emptyStrings = value.filter((item: string) => item === "");
       if (emptyStrings.length > 0) {
         return new Error("Please remove empty strings from the keywords list");
       }
-
       return true;
     },
   },
@@ -171,8 +167,6 @@ const rules = ref<FormRules>({
       if (value.length === 0) {
         return new Error("Please select at least one programming language");
       }
-
-      // Check if empty strings are present in the array
       const emptyStrings = value.filter((item: string) => item === "");
       if (emptyStrings.length > 0) {
         return new Error(
@@ -189,13 +183,10 @@ const rules = ref<FormRules>({
       if (value.length === 0) {
         return true;
       }
-
-      // Check if strings are valid urls
       const invalidURLs = value.filter((item: string) => !isURL(item));
       if (invalidURLs.length > 0) {
         return new Error("Please add valid URLs to the related links list");
       }
-
       return true;
     },
   },
@@ -211,8 +202,167 @@ const rules = ref<FormRules>({
   },
 });
 
-const submitLoading = ref(false);
+// ── Section navigation ────────────────────────────────────────────────────────
 
+const sections = [
+  {
+    id: "basic",
+    icon: "tabler:info-circle",
+    label: "Basic Info",
+    required: true,
+  },
+  {
+    id: "people",
+    icon: "tabler:users",
+    label: "People",
+    required: true,
+  },
+  {
+    id: "discoverability",
+    icon: "tabler:search",
+    label: "Discoverability",
+    required: true,
+  },
+  {
+    id: "community",
+    icon: "tabler:git-branch",
+    label: "Dev Community",
+    required: false,
+  },
+  {
+    id: "requirements",
+    icon: "tabler:cpu",
+    label: "Requirements",
+    required: true,
+  },
+  {
+    id: "version",
+    icon: "tabler:tag",
+    label: "Current Version",
+    required: false,
+  },
+  {
+    id: "additional",
+    icon: "tabler:adjustments",
+    label: "Additional Info",
+    required: false,
+  },
+] as const;
+
+type TabId = (typeof sections)[number]["id"];
+
+const activeSection = ref<TabId>("basic");
+
+const sectionCardRefs: Record<string, { open(): void } | null> = {
+  additional: null,
+  basic: null,
+  community: null,
+  discoverability: null,
+  people: null,
+  requirements: null,
+  version: null,
+};
+
+const scrollToSection = (id: TabId) => {
+  sectionCardRefs[id]?.open();
+  document
+    .getElementById(`section-${id}`)
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+const updateActiveSection = () => {
+  const nearBottom =
+    window.scrollY + window.innerHeight >=
+    document.documentElement.scrollHeight - 16;
+
+  if (nearBottom) {
+    activeSection.value = sections[sections.length - 1].id as TabId;
+    return;
+  }
+
+  const threshold = window.innerHeight * 0.35;
+  let current: TabId = sections[0].id as TabId;
+
+  for (const section of sections) {
+    const el = document.getElementById(`section-${section.id}`);
+    if (!el) continue;
+    if (el.getBoundingClientRect().top <= threshold) {
+      current = section.id as TabId;
+    }
+  }
+
+  activeSection.value = current;
+};
+
+onMounted(() => {
+  window.addEventListener("scroll", updateActiveSection, { passive: true });
+});
+
+onUnmounted(() => {
+  window.removeEventListener("scroll", updateActiveSection);
+});
+
+const sectionComplete = computed<Record<TabId, boolean>>(() => ({
+  additional: true,
+  basic: !!formValue.value.name && !!formValue.value.description,
+  community: true,
+  discoverability: formValue.value.keywords.length > 0,
+  people:
+    formValue.value.authors.length > 0 &&
+    formValue.value.authors.every((a) => !!a.givenName),
+  requirements: formValue.value.programmingLanguages.length > 0,
+  version: true,
+}));
+
+const requiredTabIds = sections
+  .filter((t) => t.required)
+  .map((t) => t.id) as TabId[];
+
+const completedRequiredCount = computed(
+  () => requiredTabIds.filter((id) => sectionComplete.value[id]).length,
+);
+
+const tabsWithErrors = ref(new Set<string>());
+
+const tabFieldMap: Record<string, string[]> = {
+  additional: ["developmentStatus", "isPartOf"],
+  basic: ["name", "description"],
+  community: [
+    "codeRepository",
+    "continuousIntegration",
+    "issueTracker",
+    "relatedLinks",
+  ],
+  discoverability: ["keywords", "uniqueIdentifier"],
+  people: ["authors", "contributors"],
+  requirements: ["programmingLanguages", "operatingSystem", "runtimePlatform"],
+  version: ["currentVersion", "currentVersionDownloadURL"],
+};
+
+function markErrorTabs(errors: Array<Array<{ field?: string }>>) {
+  const errorPaths = errors.flat().map((e) => e.field ?? "");
+  tabsWithErrors.value = new Set(
+    Object.entries(tabFieldMap)
+      .filter(([, fields]) =>
+        errorPaths.some((p) => fields.some((f) => p.startsWith(f))),
+      )
+      .map(([tabId]) => tabId),
+  );
+  const firstErrorSection = sections.find((t) =>
+    tabsWithErrors.value.has(t.id),
+  );
+  if (firstErrorSection) scrollToSection(firstErrorSection.id);
+}
+
+const sectionStatus = (id: TabId): "complete" | "incomplete" | "error" => {
+  if (tabsWithErrors.value.has(id)) return "error";
+  if (sectionComplete.value[id]) return "complete";
+  return "incomplete";
+};
+
+// ── Submission ────────────────────────────────────────────────────────────────
+
+const submitLoading = ref(false);
 const showSuccessModal = ref(false);
 const pullRequestURL = ref<string>("");
 
@@ -269,63 +419,43 @@ const isURL = (value: string) => {
   }
 };
 
-const saveCodeMetadataDraft = (e: MouseEvent) => {
+const saveCodeMetadataDraft = async (e: MouseEvent) => {
   e.preventDefault();
-  formRef.value?.validate(async (errors) => {
-    if (!errors) {
-      const body = {
-        metadata: {
-          ...formValue.value,
-        },
-      };
+  submitLoading.value = true;
 
-      submitLoading.value = true;
-
-      await $fetch(`/api/${owner}/${repo}/code-metadata`, {
-        body: JSON.stringify(body),
-        headers: useRequestHeaders(["cookie"]),
-        method: "PUT",
-      })
-        .then((_response) => {
-          push.success({
-            title: "Code metadata draft saved",
-            message: "You can continue editing",
-          });
-        })
-        .catch((error) => {
-          console.error("Failed to save code metadata draft:", error);
-          push.error({
-            title: "Failed to save code metadata draft",
-            message: "Please try again later",
-          });
-        })
-        .finally(() => {
-          submitLoading.value = false;
-        });
-    } else {
-      console.error(errors);
-      push.error({
-        title: "Invalid",
-        message:
-          "There are errors in the input fields. Please correct them and try again.",
+  await $fetch(`/api/${owner}/${repo}/code-metadata`, {
+    body: JSON.stringify({ metadata: { ...formValue.value } }),
+    headers: useRequestHeaders(["cookie"]),
+    method: "PUT",
+  })
+    .then((_response) => {
+      push.success({
+        title: "Code metadata draft saved",
+        message: "You can continue editing",
       });
-    }
-  });
+    })
+    .catch((error) => {
+      console.error("Failed to save code metadata draft:", error);
+      push.error({
+        title: "Failed to save code metadata draft",
+        message: "Please try again later",
+      });
+    })
+    .finally(() => {
+      submitLoading.value = false;
+    });
 };
 
 const pushToRepository = (e: MouseEvent) => {
   e.preventDefault();
   formRef.value?.validate(async (errors) => {
     if (!errors) {
+      tabsWithErrors.value = new Set();
       const body = {
-        metadata: {
-          ...formValue.value,
-        },
+        metadata: { ...formValue.value },
       };
 
       submitLoading.value = true;
-
-      // Save the code metadata via PUT request and push to the repository via POST request
 
       await $fetch(`/api/${owner}/${repo}/code-metadata`, {
         body: JSON.stringify(body),
@@ -386,6 +516,7 @@ const pushToRepository = (e: MouseEvent) => {
         });
     } else {
       console.error(errors);
+      markErrorTabs(errors as Array<Array<{ field?: string }>>);
       push.error({
         title: "Invalid",
         message: "Form is invalid",
@@ -394,7 +525,6 @@ const pushToRepository = (e: MouseEvent) => {
   });
 };
 
-// Event handlers for single option select picker
 const handleApplicationCategoryChange = (value: string) => {
   formValue.value.applicationCategory = value;
 };
@@ -419,11 +549,10 @@ const navigateToPR = () => {
       );
     "
   >
-    <div
-      class="mx-auto mb-4 max-w-screen-xl rounded border-[1px] border-gray-200 bg-white p-8 shadow-md dark:bg-gray-600"
-    >
-      <n-flex vertical size="large" class="pb-5">
-        <div class="flex flex-row justify-between">
+    <div class="mx-auto max-w-screen-xl px-6 pb-10 pt-2">
+      <!-- Compact page header -->
+      <div class="flex items-start justify-between gap-4">
+        <div>
           <h1 class="text-2xl font-bold dark:text-slate-200">
             Edit metadata for
             <NuxtLink
@@ -435,46 +564,96 @@ const navigateToPR = () => {
             </NuxtLink>
           </h1>
 
-          <NuxtLink
-            to="https://docs.codefair.io/docs/metadata.html#metadata-editor"
-            target="_blank"
-            class="font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)] dark:text-indigo-300 dark:hover:text-indigo-400"
-            >Need help?</NuxtLink
-          >
-        </div>
+          <p class="mt-1 text-sm text-[var(--cf-text-3)]">
+            Fill in the fields below to generate <code>codemeta.json</code> and
 
-        <div class="border-b border-dashed py-2">
-          <p class="text-base dark:text-stone-100">
-            To make your software FAIR, a CITATION.cff and codemeta.json file
-            are expected at the root level of your repository. They help people
-            discover your software and provide information about your software
-            to them. Provide metadata about your software below and codefair
-            will submit a pull request with a CITATION.cff and codemeta.json
-            file for you.
+            <code>CITATION.cff</code> files for your repository.
           </p>
         </div>
-      </n-flex>
 
-      <n-form
-        ref="formRef"
-        :label-width="80"
-        :model="formValue"
-        :rules="rules"
-        size="large"
-      >
-        <LayoutLargeForm>
-          <template #info>
-            <n-space vertical size="large" class="pr-6">
-              <h2 class="dark:text-gray-100">Basic Information</h2>
+        <NuxtLink
+          to="https://docs.codefair.io/docs/metadata.html#metadata-editor"
+          target="_blank"
+          class="shrink-0 font-semibold text-[var(--link-color)] underline transition-all hover:text-[var(--link-hover)] dark:text-indigo-300 dark:hover:text-indigo-400"
+        >
+          Need help?
+        </NuxtLink>
+      </div>
 
-              <p class="dark:text-gray-200">
-                General information of the repository.
-              </p>
-            </n-space>
-          </template>
+      <!-- Two-column layout: TOC sidebar + form -->
+      <div class="mt-6 flex gap-8">
+        <!-- Sticky TOC sidebar -->
+        <aside
+          class="hidden w-52 shrink-0 self-start lg:sticky lg:top-6 lg:block"
+        >
+          <div
+            class="rounded-lg border border-[var(--cf-divider)] bg-[var(--cf-card-bg)] p-3"
+          >
+            <p
+              class="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--cf-text-3)]"
+            >
+              Sections
+            </p>
 
-          <template #form>
-            <n-card class="rounded-lg">
+            <nav class="space-y-0.5">
+              <button
+                v-for="section in sections"
+                :key="section.id"
+                class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors"
+                :class="
+                  activeSection === section.id
+                    ? 'bg-indigo-50 font-medium text-[var(--cf-primary)] dark:bg-[oklch(30%_0.05_265)] dark:text-[oklch(78%_0.08_265)]'
+                    : 'text-[var(--cf-text-2)] hover:bg-[oklch(97%_0.01_260)] dark:hover:bg-[oklch(26%_0.02_260)]'
+                "
+                @click="scrollToSection(section.id)"
+              >
+                <Icon :name="section.icon" size="14" class="shrink-0" />
+
+                <span class="flex-1 truncate text-left">
+                  {{ section.label }}
+                </span>
+
+                <span
+                  v-if="section.required"
+                  class="size-2 shrink-0 rounded-full"
+                  :class="{
+                    'bg-green-500': sectionStatus(section.id) === 'complete',
+                    'bg-orange-400': sectionStatus(section.id) === 'incomplete',
+                    'bg-red-500': sectionStatus(section.id) === 'error',
+                  }"
+                />
+              </button>
+            </nav>
+
+            <div
+              class="mt-3 border-t border-[var(--cf-divider)] pt-3 text-xs text-[var(--cf-text-3)]"
+            >
+              {{ completedRequiredCount }} /
+              {{ requiredTabIds.length }} required complete
+            </div>
+          </div>
+        </aside>
+
+        <!-- Form content -->
+        <div class="min-w-0 flex-1">
+          <n-form
+            ref="formRef"
+            :label-width="80"
+            :model="formValue"
+            :rules="rules"
+            size="large"
+            class="space-y-4"
+          >
+            <!-- ── Basic Info ──────────────────────────────────────────────── -->
+            <CardCollapsible
+              id="section-basic"
+              :ref="(el: any) => (sectionCardRefs['basic'] = el)"
+              title="Basic Information"
+              subtitle="The name, description, and key dates that identify your software"
+              icon="tabler:info-circle"
+              :status="sectionStatus('basic')"
+              :required="true"
+            >
               <n-form-item label="Software Name" path="name">
                 <n-input
                   v-model:value="formValue.name"
@@ -504,26 +683,39 @@ const navigateToPR = () => {
                   type="date"
                 />
               </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
+            </CardCollapsible>
 
-        <LayoutLargeForm>
-          <template #info>
-            <n-space vertical size="large" class="pr-6 dark:text-gray-200">
-              <h2 class="dark:text-gray-100">Authors and Contributors</h2>
+            <!-- ── People ──────────────────────────────────────────────────── -->
+            <CardCollapsible
+              id="section-people"
+              :ref="(el: any) => (sectionCardRefs['people'] = el)"
+              title="Authors & Contributors"
+              subtitle="Credit the people who created and contributed to this software"
+              icon="tabler:users"
+              :status="sectionStatus('people')"
+              :required="true"
+            >
+              <!-- Authors -->
+              <div class="relative mb-4">
+                <div class="absolute inset-0 flex items-center">
+                  <div
+                    class="w-full border-t-2 border-indigo-200 dark:border-[oklch(30%_0.05_265)]"
+                  />
+                </div>
 
-              <p class="dark:text-gray-200">
-                Information about the authors and contributors of the software.
-              </p>
-            </n-space>
-          </template>
+                <div class="relative flex justify-center">
+                  <span
+                    class="bg-[var(--cf-card-bg)] px-3 text-sm font-semibold uppercase tracking-wide text-indigo-400 dark:text-[oklch(60%_0.08_265)]"
+                  >
+                    Authors
+                  </span>
+                </div>
+              </div>
 
-          <template #form>
-            <n-card class="rounded-lg">
               <n-form-item
-                label="Authors"
+                v-if="formValue.authors.length > 0"
                 path="authors"
+                :show-label="false"
                 :rule="{
                   message: 'Please enter at least one author',
                   required: true,
@@ -538,24 +730,26 @@ const navigateToPR = () => {
                     :key="index"
                     :title="
                       author.givenName
-                        ? `${author.givenName} ${author.familyName || ''}`
+                        ? `${author.givenName} ${author.familyName || ''}`.trim()
                         : `Author ${index + 1}`
                     "
-                    bordered
+                    :subtitle="author.email || author.affiliation || ''"
+                    :collapse="index < formValue.authors.length - 1"
                   >
                     <template #header-extra>
                       <n-popconfirm @positive-click="removeAuthor(index)">
                         <template #trigger>
-                          <n-button type="error" secondary>
-                            <template #icon>
-                              <Icon name="ep:delete" />
-                            </template>
-
-                            Remove Author
+                          <n-button
+                            text
+                            type="error"
+                            size="small"
+                            class="p-1.5"
+                          >
+                            <Icon name="tabler:trash" size="15" />
                           </n-button>
                         </template>
 
-                        Are you sure you want to remove this author?
+                        Remove this author?
                       </n-popconfirm>
                     </template>
 
@@ -634,19 +828,26 @@ const navigateToPR = () => {
                       />
                     </n-form-item>
 
-                    <n-flex vertical size="large">
+                    <!-- Roles -->
+                    <n-flex
+                      v-if="author.roles?.length"
+                      vertical
+                      size="medium"
+                      class="mb-3"
+                    >
                       <CardCollapsible
                         v-for="(role, roleIndex) in author.roles"
                         :key="roleIndex"
                         :title="role.role || `Role ${roleIndex + 1}`"
-                        bordered
-                        class="mb-4"
+                        variant="inset"
+                        :collapse="roleIndex < author.roles.length - 1"
                       >
                         <template #header-extra>
                           <n-button
+                            text
                             type="error"
                             size="small"
-                            secondary
+                            class="p-1"
                             @click="
                               formValue.authors[index].roles.splice(
                                 roleIndex,
@@ -654,11 +855,7 @@ const navigateToPR = () => {
                               )
                             "
                           >
-                            <template #icon>
-                              <Icon name="ep:delete" />
-                            </template>
-
-                            Remove Role
+                            <Icon name="tabler:trash" size="14" />
                           </n-button>
                         </template>
 
@@ -703,45 +900,63 @@ const navigateToPR = () => {
                     </n-flex>
 
                     <n-button
-                      class="w-full"
-                      strong
-                      type="primary"
-                      dashed
+                      class="w-full py-4"
+                      type="tertiary"
+                      size="small"
                       @click="formValue.authors[index].roles.push({ role: '' })"
                     >
                       <template #icon>
-                        <Icon name="gridicons:user-add" />
+                        <Icon name="tabler:plus" size="16" />
                       </template>
 
-                      Add Role
+                      <span>Add Role</span>
                     </n-button>
                   </CardCollapsible>
-
-                  <n-button
-                    type="primary"
-                    @click="
-                      formValue.authors.push({
-                        roles: [],
-                        givenName: '',
-                      })
-                    "
-                  >
-                    <template #icon>
-                      <Icon name="gridicons:user-add" />
-                    </template>
-
-                    Add Author
-                  </n-button>
                 </n-flex>
               </n-form-item>
-            </n-card>
 
-            <n-divider />
+              <n-button
+                class="mt-2 w-full"
+                type="primary"
+                @click="
+                  formValue.authors.push({
+                    roles: [],
+                    givenName: '',
+                    familyName: '',
+                    email: '',
+                    affiliation: '',
+                    uri: '',
+                  })
+                "
+              >
+                <template #icon>
+                  <Icon name="tabler:plus" size="16" />
+                </template>
 
-            <n-card class="rounded-lg">
+                Add Author
+              </n-button>
+
+              <!-- Authors / Contributors divider -->
+              <div class="relative my-8">
+                <div class="absolute inset-0 flex items-center">
+                  <div
+                    class="w-full border-t-2 border-indigo-200 dark:border-[oklch(30%_0.05_265)]"
+                  />
+                </div>
+
+                <div class="relative flex justify-center">
+                  <span
+                    class="bg-[var(--cf-card-bg)] px-3 text-sm font-semibold uppercase tracking-wide text-indigo-400 dark:text-[oklch(60%_0.08_265)]"
+                  >
+                    Contributors
+                  </span>
+                </div>
+              </div>
+
               <n-form-item
-                label="Contributors"
+                v-if="formValue.contributors.length > 0"
                 path="contributors"
+                :show-label="false"
                 class="w-full"
               >
                 <n-flex vertical size="large" class="w-full">
@@ -750,24 +965,28 @@ const navigateToPR = () => {
                     :key="index"
                     :title="
                       contributor.givenName
-                        ? `${contributor.givenName} ${contributor.familyName || ''}`
+                        ? `${contributor.givenName} ${contributor.familyName || ''}`.trim()
                         : `Contributor ${index + 1}`
                     "
-                    bordered
+                    :subtitle="
+                      contributor.email || contributor.affiliation || ''
+                    "
+                    :collapse="index < formValue.contributors.length - 1"
                   >
                     <template #header-extra>
                       <n-popconfirm @positive-click="removeContributor(index)">
                         <template #trigger>
-                          <n-button type="error" secondary>
-                            <template #icon>
-                              <Icon name="ep:delete" />
-                            </template>
-
-                            Remove Contributor
+                          <n-button
+                            text
+                            type="error"
+                            size="small"
+                            class="p-1.5"
+                          >
+                            <Icon name="tabler:trash" size="15" />
                           </n-button>
                         </template>
 
-                        Are you sure you want to remove this contributor?
+                        Remove this contributor?
                       </n-popconfirm>
                     </template>
 
@@ -846,18 +1065,26 @@ const navigateToPR = () => {
                       />
                     </n-form-item>
 
-                    <n-flex vertical size="large">
+                    <!-- Roles -->
+                    <n-flex
+                      v-if="contributor.roles?.length"
+                      vertical
+                      size="medium"
+                      class="mb-3"
+                    >
                       <CardCollapsible
                         v-for="(role, roleIndex) in contributor.roles"
                         :key="roleIndex"
                         :title="role.role || `Role ${roleIndex + 1}`"
-                        bordered
+                        variant="inset"
+                        :collapse="roleIndex < contributor.roles.length - 1"
                       >
                         <template #header-extra>
                           <n-button
+                            text
                             type="error"
-                            secondary
                             size="small"
+                            class="p-1"
                             @click="
                               formValue.contributors[index].roles.splice(
                                 roleIndex,
@@ -865,11 +1092,7 @@ const navigateToPR = () => {
                               )
                             "
                           >
-                            <template #icon>
-                              <Icon name="ep:delete" />
-                            </template>
-
-                            Remove Role
+                            <Icon name="tabler:trash" size="14" />
                           </n-button>
                         </template>
 
@@ -914,57 +1137,55 @@ const navigateToPR = () => {
                     </n-flex>
 
                     <n-button
-                      class="w-full"
-                      strong
-                      type="primary"
-                      ghost
+                      class="w-full py-4"
+                      type="tertiary"
+                      size="small"
                       @click="
                         formValue.contributors[index].roles.push({ role: '' })
                       "
                     >
                       <template #icon>
-                        <Icon name="gridicons:user-add" />
+                        <Icon name="tabler:plus" size="16" />
                       </template>
 
                       Add Role
                     </n-button>
                   </CardCollapsible>
-
-                  <n-button
-                    type="primary"
-                    @click="
-                      formValue.contributors.push({
-                        roles: [],
-                        givenName: '',
-                      })
-                    "
-                  >
-                    <template #icon>
-                      <Icon name="gridicons:user-add" />
-                    </template>
-
-                    Add Contributor
-                  </n-button>
                 </n-flex>
               </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
 
-        <LayoutLargeForm>
-          <template #info>
-            <n-space vertical size="large" class="pr-6">
-              <h2 class="dark:text-gray-100">Discoverability</h2>
+              <n-button
+                class="mt-2 w-full"
+                type="primary"
+                @click="
+                  formValue.contributors.push({
+                    roles: [],
+                    givenName: '',
+                    familyName: '',
+                    email: '',
+                    affiliation: '',
+                    uri: '',
+                  })
+                "
+              >
+                <template #icon>
+                  <Icon name="tabler:plus" size="16" />
+                </template>
 
-              <p class="dark:text-gray-200">
-                Information to help users discover the software in the
-                repository.
-              </p>
-            </n-space>
-          </template>
+                Add Contributor
+              </n-button>
+            </CardCollapsible>
 
-          <template #form>
-            <n-card class="rounded-lg">
+            <!-- ── Discoverability ─────────────────────────────────────────── -->
+            <CardCollapsible
+              id="section-discoverability"
+              :ref="(el: any) => (sectionCardRefs['discoverability'] = el)"
+              title="Discoverability"
+              subtitle="Keywords, identifiers, and categories that help others find your software"
+              icon="tabler:search"
+              :status="sectionStatus('discoverability')"
+              :required="true"
+            >
               <n-form-item
                 label="Unique Identifier (DOI)"
                 path="uniqueIdentifier"
@@ -990,7 +1211,7 @@ const navigateToPR = () => {
               <n-form-item label="Keywords" path="keywords">
                 <n-dynamic-input
                   v-model:value="formValue.keywords"
-                  placeholder="Input Related Link"
+                  placeholder="Input Keyword"
                 />
               </n-form-item>
 
@@ -1010,23 +1231,17 @@ const navigateToPR = () => {
                   placeholder="Input Funding Organization"
                 />
               </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
+            </CardCollapsible>
 
-        <LayoutLargeForm>
-          <template #info>
-            <n-space vertical size="large" class="pr-6">
-              <h2 class="dark:text-gray-100">Development Community</h2>
-
-              <p class="dark:text-gray-200">
-                Information about the development community of the software.
-              </p>
-            </n-space>
-          </template>
-
-          <template #form>
-            <n-card class="rounded-lg">
+            <!-- ── Development Community ──────────────────────────────────── -->
+            <CardCollapsible
+              id="section-community"
+              :ref="(el: any) => (sectionCardRefs['community'] = el)"
+              title="Development Community"
+              subtitle="Repository, issue tracker, and links to help users engage with your project"
+              icon="tabler:git-branch"
+              :status="sectionStatus('community')"
+            >
               <n-form-item label="Code Repository" path="codeRepository">
                 <n-input
                   v-model:value="formValue.codeRepository"
@@ -1057,31 +1272,25 @@ const navigateToPR = () => {
                   placeholder="Input Related Link"
                 />
               </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
+            </CardCollapsible>
 
-        <LayoutLargeForm>
-          <template #info>
-            <n-space vertical size="large" class="pr-6">
-              <h2 class="dark:text-gray-100">Software Requirements</h2>
-
-              <p class="dark:text-gray-200">
-                Information about the run-time environment required to run the
-                software.
-              </p>
-            </n-space>
-          </template>
-
-          <template #form>
-            <n-card class="rounded-lg">
+            <!-- ── Software Requirements ──────────────────────────────────── -->
+            <CardCollapsible
+              id="section-requirements"
+              :ref="(el: any) => (sectionCardRefs['requirements'] = el)"
+              title="Software Requirements"
+              subtitle="Programming languages, operating systems, and runtime platforms needed to run this software"
+              icon="tabler:cpu"
+              :status="sectionStatus('requirements')"
+              :required="true"
+            >
               <n-form-item
                 label="Programming Languages"
                 path="programmingLanguages"
               >
                 <n-select
                   v-model:value="formValue.programmingLanguages"
-                  placeholder="Select Category"
+                  placeholder="Select Languages"
                   filterable
                   multiple
                   tag
@@ -1093,7 +1302,7 @@ const navigateToPR = () => {
               <n-form-item label="Runtime Platform" path="runtimePlatform">
                 <n-select
                   v-model:value="formValue.runtimePlatform"
-                  placeholder="Select Category"
+                  placeholder="Select Platforms"
                   filterable
                   multiple
                   tag
@@ -1105,7 +1314,7 @@ const navigateToPR = () => {
               <n-form-item label="Operating System" path="operatingSystem">
                 <n-select
                   v-model:value="formValue.operatingSystem"
-                  placeholder="Select Category"
+                  placeholder="Select Operating Systems"
                   filterable
                   multiple
                   tag
@@ -1120,25 +1329,20 @@ const navigateToPR = () => {
               >
                 <n-dynamic-input
                   v-model:value="formValue.otherSoftwareRequirements"
-                  placeholder="Input Related Link"
+                  placeholder="Input Requirement"
                 />
               </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
+            </CardCollapsible>
 
-        <LayoutLargeForm>
-          <template #info>
-            <h2 class="dark:text-gray-100">Current version of the software</h2>
-
-            <p class="dark:text-gray-200">
-              Information about the current version of the software and its
-              release notes.
-            </p>
-          </template>
-
-          <template #form>
-            <n-card class="rounded-lg">
+            <!-- ── Current Version ────────────────────────────────────────── -->
+            <CardCollapsible
+              id="section-version"
+              :ref="(el: any) => (sectionCardRefs['version'] = el)"
+              title="Current Version"
+              subtitle="Version number, release date, download URL, and notes for the latest release"
+              icon="tabler:tag"
+              :status="sectionStatus('version')"
+            >
               <n-form-item label="Version Number" path="currentVersion">
                 <n-input
                   v-model:value="formValue.currentVersion"
@@ -1167,7 +1371,7 @@ const navigateToPR = () => {
               </n-form-item>
 
               <n-form-item
-                label="Current Version Release Notes"
+                label="Release Notes"
                 path="currentVersionReleaseNotes"
               >
                 <n-input
@@ -1177,27 +1381,21 @@ const navigateToPR = () => {
                   :rows="4"
                 />
               </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
+            </CardCollapsible>
 
-        <LayoutLargeForm :bottom-line="false">
-          <template #info>
-            <n-space vertical size="large" class="pr-6">
-              <h2 class="dark:text-gray-100">Additional Information</h2>
-
-              <p class="dark:text-gray-200">
-                Additional information about the software.
-              </p>
-            </n-space>
-          </template>
-
-          <template #form>
-            <n-card class="rounded-lg">
+            <!-- ── Additional Information ─────────────────────────────────── -->
+            <CardCollapsible
+              id="section-additional"
+              :ref="(el: any) => (sectionCardRefs['additional'] = el)"
+              title="Additional Information"
+              subtitle="Development status and relationships to other software or larger systems"
+              icon="tabler:adjustments"
+              :status="sectionStatus('additional')"
+            >
               <n-form-item label="Development Status" path="developmentStatus">
                 <n-select
                   v-model:value="formValue.developmentStatus"
-                  placeholder="Select Category"
+                  placeholder="Select Status"
                   :options="codeMetadataJSON.developmentStatusOptions"
                   @update:value="handleDevelopmentStatusChange"
                 />
@@ -1216,113 +1414,74 @@ const navigateToPR = () => {
                   placeholder="Bigger Suite"
                 />
               </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm>
+            </CardCollapsible>
+          </n-form>
 
-        <!-- <LayoutLargeForm :bottom-line="false">
-          <template #info>
-            <n-space vertical size="large" class="pr-6">
-              <h2>Editorial Review</h2>
-
-              <p>
-                Information about the review of the software by the editorial
-                board.
-              </p>
-            </n-space>
-          </template>
-
-          <template #form>
-            <n-card class="rounded-lg bg-[#f9fafb]">
-              <n-form-item
-                label="Reference Publication"
-                path="referencePublication"
-              >
-                <n-input
-                  v-model:value="formValue.referencePublication"
-                  placeholder="Doe, J. (2023). Example Project. Journal of Examples."
-                />
-              </n-form-item>
-
-              <n-form-item label="Review Aspect" path="reviewAspect">
-                <n-input
-                  v-model:value="formValue.reviewAspect"
-                  placeholder="Code Quality"
-                />
-              </n-form-item>
-
-              <n-form-item label="Review Body" path="reviewBody">
-                <n-input
-                  v-model:value="formValue.reviewBody"
-                  placeholder="This project has been thoroughly reviewed for code quality."
-                  type="textarea"
-                  :rows="4"
-                />
-              </n-form-item>
-            </n-card>
-          </template>
-        </LayoutLargeForm> -->
-
-        <n-divider />
-
-        <n-flex class="my-4 w-full" justify="space-between">
-          <n-button
-            size="large"
-            color="black"
-            :loading="submitLoading"
-            @click="saveCodeMetadataDraft"
+          <!-- Bottom action buttons -->
+          <div
+            class="mt-6 flex justify-end gap-3 border-t border-[var(--cf-divider)] pt-4"
           >
-            <template #icon>
-              <Icon name="material-symbols:save" />
-            </template>
-
-            Save draft
-          </n-button>
-
-          <n-button
-            size="large"
-            color="black"
-            :loading="submitLoading"
-            @click="pushToRepository"
-          >
-            <template #icon>
-              <Icon name="ion:push" />
-            </template>
-            Save and push to repository
-          </n-button>
-        </n-flex>
-      </n-form>
-    </div>
-
-    <n-collapse v-if="devMode" class="mt-8" :default-expanded-names="[]">
-      <n-collapse-item title="data" name="data">
-        <pre>{{ data }}</pre>
-      </n-collapse-item>
-    </n-collapse>
-
-    <n-modal v-model:show="showSuccessModal" transform-origin="center">
-      <n-card
-        style="width: 600px"
-        title="One more thing!"
-        :bordered="false"
-        size="huge"
-        role="dialog"
-        aria-modal="true"
-        class="dark:bg-gray-600"
-      >
-        A pull request to update the code metadata files has been submitted.
-        Please approve the pull request to make the changes live.
-        <template #footer>
-          <n-flex justify="end">
-            <n-button type="success" @click="navigateToPR">
+            <n-button
+              type="tertiary"
+              :loading="submitLoading"
+              @click="saveCodeMetadataDraft"
+            >
               <template #icon>
-                <Icon name="icon-park-outline:success" />
+                <Icon name="material-symbols:save" />
               </template>
-              View Pull Request
+
+              Save draft
             </n-button>
-          </n-flex>
-        </template>
-      </n-card>
-    </n-modal>
+
+            <n-button
+              type="primary"
+              :loading="submitLoading"
+              @click="pushToRepository"
+            >
+              <template #icon>
+                <Icon name="ion:push" />
+              </template>
+
+              Save and push to repository
+            </n-button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dev mode data debug -->
+      <n-collapse v-if="devMode" class="mt-8" :default-expanded-names="[]">
+        <n-collapse-item title="data" name="data">
+          <pre>{{ data }}</pre>
+        </n-collapse-item>
+      </n-collapse>
+
+      <!-- Success modal -->
+      <n-modal v-model:show="showSuccessModal" transform-origin="center">
+        <n-card
+          style="width: 600px"
+          title="One more thing!"
+          :bordered="false"
+          size="huge"
+          role="dialog"
+          aria-modal="true"
+          class="dark:bg-gray-600"
+        >
+          A pull request to update the code metadata files has been submitted.
+          Please approve the pull request to make the changes live.
+
+          <template #footer>
+            <n-flex justify="end">
+              <n-button type="success" @click="navigateToPR">
+                <template #icon>
+                  <Icon name="icon-park-outline:success" />
+                </template>
+
+                View Pull Request
+              </n-button>
+            </n-flex>
+          </template>
+        </n-card>
+      </n-modal>
+    </div>
   </main>
 </template>

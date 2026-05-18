@@ -41,7 +41,7 @@ jobs:
       VALIDATOR_URL: ${{ secrets.VALIDATOR_URL }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -50,7 +50,7 @@ jobs:
 
       - run: gem install kamal
 
-      - uses: webfactory/ssh-agent@v0.9.0
+      - uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
@@ -62,13 +62,13 @@ jobs:
           password: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
 
       - name: Set up Docker Buildx for cache
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - run: kamal version
 
       # Setup kamal for the first time
       # Might need to run `sudo usermod -aG docker $USER | newgrp docker | docker ps` to add the user to the docker group if the user is not already in the docker group
-      # - run: kamal setup       
+      # - run: kamal setup
 
       # Login to the registry on the server
       - run: kamal registry login
@@ -103,7 +103,11 @@ jobs:
       GH_OAUTH_APP_ID: ${{ secrets.GH_OAUTH_APP_ID }}
       GH_OAUTH_CLIENT_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
       GH_OAUTH_CLIENT_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
+      WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
       UI_LOGWATCH_URL: ${{ secrets.UI_LOGWATCH_URL }}
+      VALIDATOR_URL: ${{ secrets.VALIDATOR_URL }}
+      CODEFAIR_APP_DOMAIN: ${{ secrets.CODEFAIR_APP_DOMAIN }}
+      GH_APP_NAME: ${{ secrets.GH_APP_NAME }}
       ZENODO_API_ENDPOINT: ${{ secrets.ZENODO_API_ENDPOINT }}
       ZENODO_ENDPOINT: ${{ secrets.ZENODO_ENDPOINT }}
       ZENODO_CLIENT_ID: ${{ secrets.ZENODO_CLIENT_ID }}
@@ -111,7 +115,7 @@ jobs:
       ZENODO_REDIRECT_URI: ${{ secrets.ZENODO_REDIRECT_URI }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -120,7 +124,7 @@ jobs:
 
       - run: gem install kamal
 
-      - uses: webfactory/ssh-agent@v0.9.0
+      - uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
@@ -132,13 +136,13 @@ jobs:
           password: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
 
       - name: Set up Docker Buildx for cache
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - run: kamal version
 
       # Setup kamal for the first time
       # Might need to run `sudo usermod -aG docker $USER | newgrp docker | docker ps` to add the user to the docker group if the user is not already in the docker group
-      # - run: kamal setup       
+      # - run: kamal setup
 
       # Login to the registry on the server
       - run: kamal registry login
@@ -151,7 +155,7 @@ jobs:
       # Deploy the app for all other times
       - run: kamal redeploy
       # - run: kamal redeploy --verbose
-      
+
   deploy-validator:
     runs-on: ubuntu-latest
     environment: prd
@@ -169,7 +173,7 @@ jobs:
       KAMAL_APP_NAME_VALIDATOR: ${{ secrets.KAMAL_APP_NAME_VALIDATOR }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -178,7 +182,7 @@ jobs:
 
       - run: gem install kamal
 
-      - uses: webfactory/ssh-agent@v0.9.0
+      - uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
@@ -190,13 +194,13 @@ jobs:
           password: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
 
       - name: Set up Docker Buildx for cache
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - run: kamal version
 
       # Setup kamal for the first time
       # Might need to run `sudo usermod -aG docker $USER | newgrp docker | docker ps` to add the user to the docker group if the user is not already in the docker group
-      # - run: kamal setup       
+      # - run: kamal setup
 
       # Login to the registry on the server
       - run: kamal registry login
@@ -220,11 +224,11 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
 
       - run: yarn install
 

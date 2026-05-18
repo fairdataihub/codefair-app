@@ -3,15 +3,18 @@ import type { User, Session } from "lucia";
 
 export default defineEventHandler(async (event) => {
   if (event.node.req.method !== "GET") {
-    const originHeader = getHeader(event, "Origin") ?? null;
-    const hostHeader = getHeader(event, "Host") ?? null;
+    // Webhook endpoint uses its own HMAC signature verification — skip CSRF check
+    if (!event.path.startsWith("/api/webhooks/")) {
+      const originHeader = getHeader(event, "Origin") ?? null;
+      const hostHeader = getHeader(event, "Host") ?? null;
 
-    if (
-      !originHeader ||
-      !hostHeader ||
-      !verifyRequestOrigin(originHeader, [hostHeader])
-    ) {
-      return event.node.res.writeHead(403).end();
+      if (
+        !originHeader ||
+        !hostHeader ||
+        !verifyRequestOrigin(originHeader, [hostHeader])
+      ) {
+        return event.node.res.writeHead(403).end();
+      }
     }
   }
 

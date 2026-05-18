@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Use alpine-based image and install only necessary dependencies
 RUN apk add --no-cache openssl
@@ -22,7 +22,7 @@ COPY . .
 RUN yarn run build
 
 # Production stage
-FROM node:20-alpine
+FROM node:24-alpine
 
 LABEL maintainer="FAIR Data Innovations Hub <contact@fairdataihub.org>" \
   description="Your coding assistant to make research software reusable without breaking a sweat!"
