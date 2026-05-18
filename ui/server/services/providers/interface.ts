@@ -9,11 +9,21 @@ export interface CommitDetails {
 
 export interface RepoInfo {
   name: string;
+  createdAt: number | null;
   defaultBranch: string;
   description: string | null;
   htmlUrl: string;
+  license: string | null;
   owner: string;
   private: boolean;
+  topics: string[];
+}
+
+export interface ReleaseInfo {
+  body: string;
+  htmlUrl: string;
+  publishedAt: number | null;
+  tagName: string;
 }
 
 /** File content with the raw bytes already decoded to a UTF-8 string. */
@@ -135,6 +145,8 @@ export interface RepositoryProvider {
   listContributors(owner: string, repo: string): Promise<ContributorInfo[]>;
 
   listLanguages(owner: string, repo: string): Promise<string[]>;
+
+  listReleases(owner: string, repo: string): Promise<ReleaseInfo[]>;
 
   detectLicense(owner: string, repo: string): Promise<DetectedLicense>;
 

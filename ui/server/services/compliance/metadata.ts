@@ -7,6 +7,50 @@ import prisma from "~/server/utils/prisma";
 import { createId } from "~/server/utils/cuid";
 import { logwatch } from "~/server/utils/logwatch";
 
+// == Metadata shape stored in CodeMetadata.metadata ==========================
+
+export interface AuthorRecord {
+  affiliation: string;
+  email: string;
+  familyName: string;
+  givenName: string;
+  roles: { endDate: number | null; role: string; startDate: number | null }[];
+  uri?: string;
+}
+
+export interface MetadataRecord {
+  name: string;
+  applicationCategory: string | null;
+  authors: AuthorRecord[];
+  codeRepository: string;
+  continuousIntegration: string;
+  contributors: AuthorRecord[];
+  creationDate: number | null;
+  currentVersion: string;
+  currentVersionDownloadURL: string;
+  currentVersionReleaseDate: number | null;
+  currentVersionReleaseNotes: string;
+  description: string;
+  developmentStatus: string | null;
+  firstReleaseDate: number | null;
+  fundingCode: string;
+  fundingOrganization: string;
+  isPartOf: string;
+  isSourceCodeOf: string;
+  issueTracker: string;
+  keywords: string[];
+  license: string | null;
+  operatingSystem: string[];
+  otherSoftwareRequirements: string[];
+  programmingLanguages: string[];
+  referencePublication: string;
+  relatedLinks: string[];
+  reviewAspect: string;
+  reviewBody: string;
+  runtimePlatform: string[];
+  uniqueIdentifier: string;
+}
+
 type LogCtx = { installationId?: number; owner?: string; repo?: string };
 
 const VALIDATOR_URL = process.env.VALIDATOR_URL ?? "";
@@ -329,6 +373,486 @@ export function validateMetadata(
   }
 }
 
+// == Metadata conversion helpers (ported from bot/compliance-checks/metadata/index.js) ==
+
+function convertDateToUnix(dateStr: string | null | undefined): number | null {
+  if (!dateStr) return null;
+  const ts = Date.parse(dateStr);
+  return Number.isNaN(ts) ? null : ts;
+}
+
+/**
+ * Converts a raw codemeta.json object to the normalised DB metadata shape.
+ * Handles author/contributor role splitting and SPDX license URL extraction.
+ */
+export function convertCodemetaForDB(
+  obj: Record<string, any>,
+): Partial<MetadataRecord> {
+  const sortedAuthors: AuthorRecord[] = [];
+  const sortedContributors: AuthorRecord[] = [];
+
+  if (Array.isArray(obj?.author)) {
+    obj.author.forEach((a: any) => {
+      if (a.type === "Person" || a.type === "Organization") {
+        sortedAuthors.push({
+          affiliation: a.affiliation?.name ?? a.affiliation ?? "",
+          email: a.email ?? "",
+          familyName: a.familyName ?? "",
+          givenName: a.givenName ?? "",
+          roles: [],
+          uri: a["@id"] ?? a.id ?? "",
+        });
+      }
+    });
+    obj.author.forEach((a: any) => {
+      if (a.type === "Role") {
+        const targetUri = a["schema:author"] ?? a.author ?? "";
+        const match = sortedAuthors.find((au) => au.uri === targetUri);
+        if (match) {
+          match.roles.push({
+            endDate: convertDateToUnix(a.endDate),
+            role: a.roleName ?? "",
+            startDate: convertDateToUnix(a.startDate),
+          });
+        }
+      }
+    });
+  }
+
+  if (Array.isArray(obj?.contributor)) {
+    obj.contributor.forEach((c: any) => {
+      if (c.type === "Person" || c.type === "Organization") {
+        sortedContributors.push({
+          affiliation: c.affiliation?.name ?? c.affiliation ?? "",
+          email: c.email ?? "",
+          familyName: c.familyName ?? "",
+          givenName: c.givenName ?? "",
+          roles: [],
+          uri: c["@id"] ?? c.id ?? "",
+        });
+      }
+    });
+    obj.contributor.forEach((c: any) => {
+      if (c.type === "Role") {
+        const targetUri = c["schema:contributor"] ?? c.contributor ?? "";
+        const match = sortedContributors.find((co) => co.uri === targetUri);
+        if (match) {
+          match.roles.push({
+            endDate: convertDateToUnix(c.endDate),
+            role: c.roleName ?? "",
+            startDate: convertDateToUnix(c.startDate),
+          });
+        }
+      }
+    });
+  }
+
+  // Strip blank-node URIs
+  for (const a of sortedAuthors) {
+    if (a.uri?.startsWith("_:")) delete a.uri;
+  }
+  for (const c of sortedContributors) {
+    if (c.uri?.startsWith("_:")) delete c.uri;
+  }
+
+  // Extract SPDX ID from license URL
+  let licenseId: string | null = null;
+  if (obj?.license) {
+    const m = String(obj.license).match(/https:\/\/spdx\.org\/licenses\/(.*)/);
+    if (m) licenseId = m[1];
+  }
+
+  return {
+    name: obj?.name ?? null,
+    applicationCategory: obj?.applicationCategory ?? null,
+    authors: sortedAuthors,
+    codeRepository: obj?.codeRepository ?? "",
+    continuousIntegration: obj?.["codemeta:continuousIntegration"]?.id ?? "",
+    contributors: sortedContributors,
+    creationDate: convertDateToUnix(obj?.dateCreated),
+    currentVersion: obj?.version ?? "",
+    currentVersionDownloadURL: obj?.downloadUrl ?? "",
+    currentVersionReleaseDate: convertDateToUnix(obj?.dateModified),
+    currentVersionReleaseNotes: obj?.["schema:releaseNotes"] ?? "",
+    description: obj?.description ?? "",
+    developmentStatus: obj?.developmentStatus ?? null,
+    firstReleaseDate: convertDateToUnix(obj?.datePublished),
+    fundingCode: obj?.funding ?? "",
+    fundingOrganization: obj?.funder?.name ?? "",
+    isPartOf: obj?.isPartOf ?? "",
+    isSourceCodeOf: obj?.["codemeta:isSourceCodeOf"]?.id ?? "",
+    issueTracker: obj?.issueTracker ?? "",
+    keywords: obj?.keywords ?? [],
+    license: licenseId,
+    operatingSystem: obj?.operatingSystem ?? [],
+    otherSoftwareRequirements: obj?.softwareRequirements ?? [],
+    programmingLanguages: obj?.programmingLanguage ?? [],
+    referencePublication: obj?.referencePublication ?? "",
+    relatedLinks: obj?.relatedLink ?? [],
+    reviewAspect: obj?.reviewAspect ?? "",
+    reviewBody: obj?.reviewBody ?? "",
+    runtimePlatform: obj?.runtimePlatform ?? [],
+    uniqueIdentifier: obj?.identifier ?? "",
+  };
+}
+
+/**
+ * Converts a raw CITATION.cff YAML object to a partial DB metadata shape.
+ */
+export function convertCitationForDB(
+  doc: Record<string, any>,
+): Partial<MetadataRecord> {
+  const authors: AuthorRecord[] = [];
+  if (Array.isArray(doc?.authors)) {
+    for (const a of doc.authors) {
+      authors.push({
+        affiliation: a.affiliation ?? "",
+        email: a.email ?? "",
+        familyName: a["family-names"] ?? "",
+        givenName: a["given-names"] ?? "",
+        roles: [],
+      });
+    }
+  }
+  return {
+    authors,
+    codeRepository: doc?.["repository-code"] ?? "",
+    currentVersion: doc?.version ? String(doc.version) : "",
+    currentVersionReleaseDate: doc?.["date-released"]
+      ? convertDateToUnix(String(doc["date-released"]))
+      : null,
+    description: doc?.abstract ?? "",
+    keywords: doc?.keywords ?? [],
+    license: doc?.license ?? null,
+    uniqueIdentifier: doc?.doi ?? "",
+  };
+}
+
+/**
+ * Gathers base metadata from the GitHub API via the provider.
+ * Equivalent to the bot's `gatherMetadata()`.
+ */
+export async function gatherBaseMetadata(
+  provider: RepositoryProvider,
+  owner: string,
+  repo: string,
+): Promise<MetadataRecord> {
+  const [repoInfo, languages, contributors, releases] = await Promise.all([
+    provider.getRepoInfo(owner, repo),
+    provider.listLanguages(owner, repo),
+    provider.listContributors(owner, repo),
+    provider.listReleases(owner, repo),
+  ]);
+
+  // Try to find a DOI in the README
+  let doi = "";
+  try {
+    const readme = await provider.getFileContent(owner, repo, "README.md");
+    if (readme?.content) {
+      const m = readme.content.match(/10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i);
+      if (m) doi = m[0];
+    }
+  } catch {
+    // Non-critical — swallow
+  }
+
+  const latestRelease = releases[0];
+  const mappedAuthors: AuthorRecord[] = contributors
+    .filter((c) => c.type !== "Bot")
+    .map((c) => ({
+      affiliation: c.company ?? "",
+      email: c.email ?? "",
+      familyName: "",
+      givenName: c.name ?? c.login,
+      roles: [],
+    }));
+
+  return {
+    name: repoInfo.name,
+    applicationCategory: null,
+    authors: mappedAuthors,
+    codeRepository: repoInfo.htmlUrl,
+    continuousIntegration: "",
+    contributors: [],
+    creationDate: repoInfo.createdAt ?? null,
+    currentVersion: latestRelease?.tagName ?? "",
+    currentVersionDownloadURL: latestRelease?.htmlUrl ?? "",
+    currentVersionReleaseDate: latestRelease?.publishedAt ?? null,
+    currentVersionReleaseNotes: latestRelease?.body ?? "",
+    description: repoInfo.description ?? "",
+    developmentStatus: null,
+    firstReleaseDate: latestRelease?.publishedAt ?? null,
+    fundingCode: "",
+    fundingOrganization: "",
+    isPartOf: "",
+    isSourceCodeOf: "",
+    issueTracker: `https://github.com/${owner}/${repo}/issues`,
+    keywords: repoInfo.topics,
+    license: repoInfo.license,
+    operatingSystem: [],
+    otherSoftwareRequirements: [],
+    programmingLanguages: languages,
+    referencePublication: doi,
+    relatedLinks: [],
+    reviewAspect: "",
+    reviewBody: "",
+    runtimePlatform: [],
+    uniqueIdentifier: "",
+  };
+}
+
+/**
+ * Overlays existing DB metadata on top of freshly gathered data,
+ * preserving user edits. Equivalent to the bot's `applyDbMetadata()`.
+ */
+export function applyDbMetadata(
+  existingMetadata: Record<string, any>,
+  metadata: MetadataRecord,
+): MetadataRecord {
+  const e = existingMetadata;
+  metadata.name = e.name || metadata.name || "";
+  metadata.authors = e.authors || metadata.authors || [];
+  metadata.contributors = e.contributors || metadata.contributors || [];
+  metadata.applicationCategory =
+    e.applicationCategory ?? metadata.applicationCategory ?? null;
+  metadata.codeRepository = e.codeRepository || metadata.codeRepository || "";
+  metadata.continuousIntegration =
+    e.continuousIntegration || metadata.continuousIntegration || "";
+  metadata.creationDate = e.creationDate ?? metadata.creationDate ?? null;
+  metadata.currentVersion = e.currentVersion || metadata.currentVersion || "";
+  metadata.currentVersionDownloadURL =
+    e.currentVersionDownloadURL || metadata.currentVersionDownloadURL || "";
+  metadata.currentVersionReleaseDate =
+    e.currentVersionReleaseDate ?? metadata.currentVersionReleaseDate ?? null;
+  metadata.currentVersionReleaseNotes =
+    e.currentVersionReleaseNotes || metadata.currentVersionReleaseNotes || "";
+  metadata.description = e.description || metadata.description || "";
+  metadata.developmentStatus =
+    e.developmentStatus ?? metadata.developmentStatus ?? null;
+  metadata.firstReleaseDate =
+    e.firstReleaseDate ?? metadata.firstReleaseDate ?? null;
+  metadata.fundingCode = e.fundingCode || metadata.fundingCode || "";
+  metadata.fundingOrganization =
+    e.fundingOrganization || metadata.fundingOrganization || "";
+  metadata.isPartOf = e.isPartOf || metadata.isPartOf || "";
+  metadata.isSourceCodeOf = e.isSourceCodeOf || metadata.isSourceCodeOf || "";
+  metadata.issueTracker = e.issueTracker || metadata.issueTracker || "";
+  metadata.keywords = e.keywords || metadata.keywords || [];
+  metadata.license = e.license ?? metadata.license ?? null;
+  metadata.operatingSystem =
+    e.operatingSystem || metadata.operatingSystem || [];
+  metadata.otherSoftwareRequirements =
+    e.otherSoftwareRequirements || metadata.otherSoftwareRequirements || [];
+  metadata.programmingLanguages =
+    e.programmingLanguages || metadata.programmingLanguages || [];
+  metadata.referencePublication =
+    e.referencePublication || metadata.referencePublication || "";
+  metadata.relatedLinks = e.relatedLinks || metadata.relatedLinks || [];
+  metadata.reviewAspect = e.reviewAspect || metadata.reviewAspect || "";
+  metadata.reviewBody = e.reviewBody || metadata.reviewBody || "";
+  metadata.runtimePlatform =
+    e.runtimePlatform || metadata.runtimePlatform || [];
+  metadata.uniqueIdentifier =
+    e.uniqueIdentifier || metadata.uniqueIdentifier || "";
+
+  metadata.authors = metadata.authors.map((a) => ({
+    ...a,
+    roles: a.roles ?? [],
+  }));
+  return metadata;
+}
+
+/**
+ * Parses codemeta.json content and merges it into the metadata object.
+ * codemeta takes precedence over existing DB and GitHub API values.
+ */
+export function applyCodemetaMetadata(
+  content: string,
+  metadata: MetadataRecord,
+): MetadataRecord {
+  let obj: Record<string, any>;
+  try {
+    obj = JSON.parse(normalizeText(content));
+  } catch {
+    return metadata;
+  }
+  const cm = convertCodemetaForDB(obj);
+
+  metadata.name = cm.name || metadata.name || "";
+  metadata.applicationCategory =
+    cm.applicationCategory ?? metadata.applicationCategory ?? null;
+  metadata.codeRepository = cm.codeRepository || metadata.codeRepository || "";
+  metadata.continuousIntegration =
+    cm.continuousIntegration || metadata.continuousIntegration || "";
+  metadata.creationDate = cm.creationDate ?? metadata.creationDate ?? null;
+  metadata.currentVersion = cm.currentVersion || metadata.currentVersion || "";
+  metadata.currentVersionDownloadURL =
+    cm.currentVersionDownloadURL || metadata.currentVersionDownloadURL || "";
+  metadata.currentVersionReleaseDate =
+    cm.currentVersionReleaseDate ?? metadata.currentVersionReleaseDate ?? null;
+  metadata.currentVersionReleaseNotes =
+    cm.currentVersionReleaseNotes || metadata.currentVersionReleaseNotes || "";
+  metadata.description = cm.description || metadata.description || "";
+  metadata.developmentStatus =
+    cm.developmentStatus ?? metadata.developmentStatus ?? null;
+  metadata.firstReleaseDate =
+    cm.firstReleaseDate ?? metadata.firstReleaseDate ?? null;
+  metadata.fundingCode = cm.fundingCode || metadata.fundingCode || "";
+  metadata.fundingOrganization =
+    cm.fundingOrganization || metadata.fundingOrganization || "";
+  metadata.isPartOf = cm.isPartOf || metadata.isPartOf || "";
+  metadata.isSourceCodeOf = cm.isSourceCodeOf || metadata.isSourceCodeOf || "";
+  metadata.issueTracker = cm.issueTracker || metadata.issueTracker || "";
+  metadata.keywords = cm.keywords?.length ? cm.keywords : metadata.keywords;
+  metadata.license = cm.license ?? metadata.license ?? null;
+  metadata.operatingSystem = cm.operatingSystem?.length
+    ? cm.operatingSystem
+    : metadata.operatingSystem;
+  metadata.otherSoftwareRequirements = cm.otherSoftwareRequirements?.length
+    ? cm.otherSoftwareRequirements
+    : metadata.otherSoftwareRequirements;
+  metadata.programmingLanguages = cm.programmingLanguages?.length
+    ? cm.programmingLanguages
+    : metadata.programmingLanguages;
+  metadata.referencePublication =
+    cm.referencePublication || metadata.referencePublication || "";
+  metadata.relatedLinks = cm.relatedLinks?.length
+    ? cm.relatedLinks
+    : metadata.relatedLinks;
+  metadata.reviewAspect = cm.reviewAspect || metadata.reviewAspect || "";
+  metadata.reviewBody = cm.reviewBody || metadata.reviewBody || "";
+  metadata.runtimePlatform = cm.runtimePlatform?.length
+    ? cm.runtimePlatform
+    : metadata.runtimePlatform;
+  metadata.uniqueIdentifier =
+    cm.uniqueIdentifier || metadata.uniqueIdentifier || "";
+
+  // Merge authors (match by familyName+givenName, merge roles)
+  if (cm.authors && cm.authors.length > 0) {
+    const updated = cm.authors.map((incoming) => {
+      const existing = metadata.authors.find(
+        (a) =>
+          a.familyName === incoming.familyName &&
+          a.givenName === incoming.givenName,
+      );
+      if (!existing) return incoming;
+      const mergedRoles = [
+        ...(existing.roles ?? []),
+        ...(incoming.roles ?? []).filter(
+          (nr) =>
+            !(existing.roles ?? []).some(
+              (er) => er.role === nr.role && er.startDate === nr.startDate,
+            ),
+        ),
+      ];
+      return {
+        ...existing,
+        ...incoming,
+        affiliation: incoming.affiliation || existing.affiliation || "",
+        email: incoming.email || existing.email || "",
+        roles: mergedRoles,
+        uri: incoming.uri || existing.uri || "",
+      };
+    });
+    const untouched = metadata.authors.filter(
+      (a) =>
+        !cm.authors!.some(
+          (c) => c.familyName === a.familyName && c.givenName === a.givenName,
+        ),
+    );
+    metadata.authors = [...untouched, ...updated];
+  }
+
+  // Merge contributors
+  if (cm.contributors && cm.contributors.length > 0) {
+    const updated = cm.contributors.map((incoming) => {
+      const existing = metadata.contributors.find(
+        (c) =>
+          c.familyName === incoming.familyName &&
+          c.givenName === incoming.givenName,
+      );
+      if (!existing) return incoming;
+      const mergedRoles = [
+        ...(existing.roles ?? []),
+        ...(incoming.roles ?? []).filter(
+          (nr) =>
+            !(existing.roles ?? []).some(
+              (er) => er.role === nr.role && er.startDate === nr.startDate,
+            ),
+        ),
+      ];
+      return {
+        ...existing,
+        ...incoming,
+        affiliation: incoming.affiliation || existing.affiliation || "",
+        email: incoming.email || existing.email || "",
+        roles: mergedRoles,
+        uri: incoming.uri || existing.uri || "",
+      };
+    });
+    const untouched = metadata.contributors.filter(
+      (c) =>
+        !cm.contributors!.some(
+          (i) => i.familyName === c.familyName && i.givenName === c.givenName,
+        ),
+    );
+    metadata.contributors = [...untouched, ...updated];
+  }
+
+  return metadata;
+}
+
+/**
+ * Parses CITATION.cff content and merges it into the metadata object.
+ * Citation fields take the highest precedence.
+ */
+export function applyCitationMetadata(
+  content: string,
+  metadata: MetadataRecord,
+): MetadataRecord {
+  let doc: Record<string, any>;
+  try {
+    doc = yaml.load(normalizeText(content)) as Record<string, any>;
+  } catch {
+    return metadata;
+  }
+  const cit = convertCitationForDB(doc);
+
+  metadata.license = cit.license ?? metadata.license ?? null;
+  metadata.codeRepository = cit.codeRepository || metadata.codeRepository || "";
+  metadata.currentVersion = cit.currentVersion || metadata.currentVersion || "";
+  metadata.currentVersionReleaseDate =
+    cit.currentVersionReleaseDate ?? metadata.currentVersionReleaseDate ?? null;
+  metadata.keywords = cit.keywords?.length ? cit.keywords : metadata.keywords;
+  metadata.uniqueIdentifier =
+    cit.uniqueIdentifier || metadata.uniqueIdentifier || "";
+  metadata.description = cit.description || metadata.description || "";
+
+  if (cit.authors && cit.authors.length > 0) {
+    if (metadata.authors.length > 0) {
+      const updated = cit.authors.map((incoming) => {
+        const existing = metadata.authors.find(
+          (a) =>
+            a.familyName === incoming.familyName &&
+            a.givenName === incoming.givenName,
+        );
+        if (!existing) return incoming;
+        return {
+          ...existing,
+          ...incoming,
+          affiliation: incoming.affiliation || existing.affiliation || "",
+          email: incoming.email || existing.email || "",
+        };
+      });
+      metadata.authors = updated;
+    } else {
+      metadata.authors = [...cit.authors];
+    }
+  }
+
+  return metadata;
+}
+
 /**
  * Ensures the CodeMetadata record exists for a repository.
  * Creates a skeleton record if missing.
@@ -359,9 +883,12 @@ async function ensureMetadataRecord(
 }
 
 /**
- * Validates `codemeta.json` and `CITATION.cff` (when present) and persists
- * the results to the database. Creates the `CodeMetadata` record if it does
- * not yet exist.
+ * Runs the full metadata pipeline: gathers from GitHub API, merges codemeta.json
+ * and CITATION.cff, validates both files, and persists everything to the database.
+ * Creates the `CodeMetadata` record if it does not yet exist.
+ *
+ * Priority (highest → lowest): CITATION.cff > codemeta.json > existing DB edits > GitHub API
+ *
  * @param provider - Repository provider used to fetch file contents.
  * @param owner - GitHub owner (user or organisation) of the repository.
  * @param repo - Repository name.
@@ -376,10 +903,25 @@ export async function updateMetadataDatabase(
   repositoryId: number,
   subjects: MetadataExistsResult,
 ): Promise<{ validCitation: boolean; validCodemeta: boolean }> {
+  const logCtx = { action: "metadata.update", owner, repo };
+
   // 1. Ensure DB record exists
   const existing = await ensureMetadataRecord(repositoryId, subjects);
 
-  // 2. Initialize validation from existing record (fallback if not re-running)
+  // 2. Gather base metadata from GitHub API
+  let metadata = await gatherBaseMetadata(provider, owner, repo);
+  logwatch.info({
+    ...logCtx,
+    message: "Base metadata gathered from GitHub API",
+  });
+
+  // 3. Overlay existing DB metadata to preserve user edits
+  metadata = applyDbMetadata(
+    existing.metadata as Record<string, any>,
+    metadata,
+  );
+
+  // 4. Process codemeta.json: merge content + validate (single fetch)
   let codemetaValidation: ValidationResult = {
     isValid: existing.codemeta_status === "valid",
     message: existing.codemeta_validation_message || "Not yet validated",
@@ -387,27 +929,18 @@ export async function updateMetadataDatabase(
       (existing.codemeta_status as "valid" | "invalid" | "unknown") ||
       "unknown",
   };
-  let citationValidation: ValidationResult = {
-    isValid: existing.citation_status === "valid",
-    message: existing.citation_validation_message || "Not yet validated",
-    status:
-      (existing.citation_status as "valid" | "invalid" | "unknown") ||
-      "unknown",
-  };
 
-  const logCtx = { action: "metadata.update", owner, repo };
-
-  // 3. Validate codemeta.json if it exists
   if (subjects.codemeta) {
     const file = await provider.getFileContent(owner, repo, "codemeta.json");
     if (file) {
+      metadata = applyCodemetaMetadata(file.content, metadata);
       codemetaValidation = await validateCodemeta(
         { content: file.content, downloadUrl: file.downloadUrl, sha: file.sha },
         { owner, repo },
       );
       logwatch.info({
         ...logCtx,
-        message: "codemeta.json validation result",
+        message: "codemeta.json applied and validated",
         status: codemetaValidation.status,
         validationMessage: codemetaValidation.message,
       });
@@ -420,17 +953,26 @@ export async function updateMetadataDatabase(
     }
   }
 
-  // 4. Validate CITATION.cff if it exists
+  // 5. Process CITATION.cff: merge content + validate (single fetch)
+  let citationValidation: ValidationResult = {
+    isValid: existing.citation_status === "valid",
+    message: existing.citation_validation_message || "Not yet validated",
+    status:
+      (existing.citation_status as "valid" | "invalid" | "unknown") ||
+      "unknown",
+  };
+
   if (subjects.citation) {
     const file = await provider.getFileContent(owner, repo, "CITATION.cff");
     if (file) {
+      metadata = applyCitationMetadata(file.content, metadata);
       citationValidation = await validateCitation(
         { content: file.content, downloadUrl: file.downloadUrl, sha: file.sha },
         { owner, repo },
       );
       logwatch.info({
         ...logCtx,
-        message: "CITATION.cff validation result",
+        message: "CITATION.cff applied and validated",
         status: citationValidation.status,
         validationMessage: citationValidation.message,
       });
@@ -443,7 +985,7 @@ export async function updateMetadataDatabase(
     }
   }
 
-  // 5. Update DB record
+  // 6. Persist merged metadata + validation results to DB
   await prisma.codeMetadata.update({
     data: {
       citation_status: citationValidation.status,
@@ -453,9 +995,12 @@ export async function updateMetadataDatabase(
       contains_citation: subjects.citation,
       contains_codemeta: subjects.codemeta,
       contains_metadata: subjects.citation && subjects.codemeta,
+      metadata: metadata as any,
     },
     where: { repository_id: repositoryId },
   });
+
+  logwatch.info({ ...logCtx, message: "CodeMetadata record updated" });
 
   return {
     validCitation: citationValidation.isValid,

@@ -10,6 +10,7 @@ import type {
   IssueRef,
   ListIssuesOptions,
   PullRequestRef,
+  ReleaseInfo,
   RepoInfo,
   RepositoryProvider,
 } from "./interface";
@@ -59,14 +60,35 @@ export class GitHubRepositoryProvider implements RepositoryProvider {
       owner,
       repo,
     });
+    const spdxId = data.license?.spdx_id ?? null;
     return {
       name: data.name,
+      createdAt: data.created_at ? Date.parse(data.created_at) : null,
       defaultBranch: data.default_branch,
       description: data.description ?? null,
       htmlUrl: data.html_url,
+      license: spdxId === "NOASSERTION" ? null : spdxId,
       owner: data.owner.login,
       private: data.private,
+      topics: data.topics ?? [],
     };
+  }
+
+  async listReleases(owner: string, repo: string): Promise<ReleaseInfo[]> {
+    try {
+      const { data } = await this.octokit.request(
+        "GET /repos/{owner}/{repo}/releases",
+        { headers, owner, repo },
+      );
+      return data.map((r) => ({
+        body: r.body ?? "",
+        htmlUrl: r.html_url ?? "",
+        publishedAt: r.published_at ? Date.parse(r.published_at) : null,
+        tagName: r.tag_name ?? "",
+      }));
+    } catch {
+      return [];
+    }
   }
 
   /**

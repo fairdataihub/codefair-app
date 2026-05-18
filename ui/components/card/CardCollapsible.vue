@@ -14,6 +14,18 @@ const props = defineProps({
     default: false,
     type: Boolean,
   },
+  icon: {
+    default: "",
+    type: String,
+  },
+  required: {
+    default: false,
+    type: Boolean,
+  },
+  status: {
+    default: null,
+    type: String as PropType<"complete" | "incomplete" | "error" | null>,
+  },
   subtitle: {
     default: "",
     type: String,
@@ -38,6 +50,12 @@ onBeforeMount(() => {
 const toggleCollapse = () => {
   contentCollapsed.value = !contentCollapsed.value;
 };
+
+defineExpose({
+  open() {
+    contentCollapsed.value = false;
+  },
+});
 </script>
 
 <template>
@@ -46,7 +64,8 @@ const toggleCollapse = () => {
     :class="{
       'border-[var(--cf-card-border)] bg-[var(--cf-card-bg)]':
         variant === 'default',
-      'border-[var(--cf-divider)] bg-[var(--cf-field-bg)]': variant === 'inset',
+      'border-l-[5px] border-[var(--cf-divider)] border-l-indigo-400 dark:border-l-indigo-500':
+        variant === 'inset',
     }"
   >
     <!-- Header -->
@@ -54,9 +73,31 @@ const toggleCollapse = () => {
       class="flex cursor-pointer select-none items-center gap-3 px-4 py-3 transition-colors hover:bg-[oklch(97%_0.01_260)] dark:hover:bg-[oklch(26%_0.02_260)]"
       @click="toggleCollapse"
     >
+      <!-- Section icon pill (only on default variant when icon provided) -->
+      <div
+        v-if="icon && variant === 'default'"
+        class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-[oklch(30%_0.05_265)] dark:text-[oklch(78%_0.08_265)]"
+      >
+        <Icon :name="icon" size="16" />
+      </div>
+
       <div class="min-w-0 flex-1">
-        <div class="truncate text-sm font-semibold text-[var(--cf-text-1)]">
-          {{ title }}
+        <div class="flex items-center gap-2">
+          <span
+            class="truncate text-base font-semibold text-[var(--cf-text-1)]"
+          >
+            {{ title }}
+          </span>
+
+          <n-tag
+            v-if="required && status !== 'complete'"
+            type="warning"
+            size="small"
+            :bordered="false"
+            class="shrink-0"
+          >
+            Required
+          </n-tag>
         </div>
 
         <div
@@ -70,6 +111,17 @@ const toggleCollapse = () => {
       <div class="flex items-center gap-2" @click.stop>
         <slot name="header-extra" />
       </div>
+
+      <!-- Status dot -->
+      <span
+        v-if="status && required"
+        class="size-2.5 shrink-0 rounded-full"
+        :class="{
+          'bg-green-500': status === 'complete',
+          'bg-orange-400': status === 'incomplete',
+          'bg-red-500': status === 'error',
+        }"
+      />
 
       <Icon
         name="tabler:chevron-down"

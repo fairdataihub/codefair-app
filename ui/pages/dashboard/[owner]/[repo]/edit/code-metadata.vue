@@ -202,11 +202,9 @@ const rules = ref<FormRules>({
   },
 });
 
-// ── Tab navigation ────────────────────────────────────────────────────────────
+// ── Section navigation ────────────────────────────────────────────────────────
 
-const activeTab = ref("basic");
-
-const tabs = [
+const sections = [
   {
     id: "basic",
     icon: "tabler:info-circle",
@@ -251,7 +249,58 @@ const tabs = [
   },
 ] as const;
 
-type TabId = (typeof tabs)[number]["id"];
+type TabId = (typeof sections)[number]["id"];
+
+const activeSection = ref<TabId>("basic");
+
+const sectionCardRefs: Record<string, { open(): void } | null> = {
+  additional: null,
+  basic: null,
+  community: null,
+  discoverability: null,
+  people: null,
+  requirements: null,
+  version: null,
+};
+
+const scrollToSection = (id: TabId) => {
+  sectionCardRefs[id]?.open();
+  document
+    .getElementById(`section-${id}`)
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+const updateActiveSection = () => {
+  const nearBottom =
+    window.scrollY + window.innerHeight >=
+    document.documentElement.scrollHeight - 16;
+
+  if (nearBottom) {
+    activeSection.value = sections[sections.length - 1].id as TabId;
+    return;
+  }
+
+  const threshold = window.innerHeight * 0.35;
+  let current: TabId = sections[0].id as TabId;
+
+  for (const section of sections) {
+    const el = document.getElementById(`section-${section.id}`);
+    if (!el) continue;
+    if (el.getBoundingClientRect().top <= threshold) {
+      current = section.id as TabId;
+    }
+  }
+
+  activeSection.value = current;
+};
+
+onMounted(() => {
+  window.addEventListener("scroll", updateActiveSection, { passive: true });
+});
+
+onUnmounted(() => {
+  window.removeEventListener("scroll", updateActiveSection);
+});
 
 const sectionComplete = computed<Record<TabId, boolean>>(() => ({
   additional: true,
@@ -265,7 +314,7 @@ const sectionComplete = computed<Record<TabId, boolean>>(() => ({
   version: true,
 }));
 
-const requiredTabIds = tabs
+const requiredTabIds = sections
   .filter((t) => t.required)
   .map((t) => t.id) as TabId[];
 
@@ -299,9 +348,17 @@ function markErrorTabs(errors: Array<Array<{ field?: string }>>) {
       )
       .map(([tabId]) => tabId),
   );
-  const firstErrorTab = tabs.find((t) => tabsWithErrors.value.has(t.id));
-  if (firstErrorTab) activeTab.value = firstErrorTab.id;
+  const firstErrorSection = sections.find((t) =>
+    tabsWithErrors.value.has(t.id),
+  );
+  if (firstErrorSection) scrollToSection(firstErrorSection.id);
 }
+
+const sectionStatus = (id: TabId): "complete" | "incomplete" | "error" => {
+  if (tabsWithErrors.value.has(id)) return "error";
+  if (sectionComplete.value[id]) return "complete";
+  return "incomplete";
+};
 
 // ── Submission ────────────────────────────────────────────────────────────────
 
@@ -492,7 +549,7 @@ const navigateToPR = () => {
       );
     "
   >
-    <div class="mx-auto max-w-screen-xl px-6 pb-10 pt-6">
+    <div class="mx-auto max-w-screen-xl px-6 pb-10 pt-2">
       <!-- Compact page header -->
       <div class="flex items-start justify-between gap-4">
         <div>
@@ -523,958 +580,873 @@ const navigateToPR = () => {
         </NuxtLink>
       </div>
 
-      <!-- Action bar -->
-      <div
-        class="mt-3 flex items-center justify-between gap-4 border-b border-[var(--cf-divider)] pb-3"
-      >
-        <span class="text-sm text-[var(--cf-text-3)]">
-          {{ completedRequiredCount }} of {{ requiredTabIds.length }} required
-          sections complete
-        </span>
-
-        <div class="flex gap-3">
-          <n-button
-            type="tertiary"
-            :loading="submitLoading"
-            @click="saveCodeMetadataDraft"
+      <!-- Two-column layout: TOC sidebar + form -->
+      <div class="mt-6 flex gap-8">
+        <!-- Sticky TOC sidebar -->
+        <aside
+          class="hidden w-52 shrink-0 self-start lg:sticky lg:top-6 lg:block"
+        >
+          <div
+            class="rounded-lg border border-[var(--cf-divider)] bg-[var(--cf-card-bg)] p-3"
           >
-            <template #icon>
-              <Icon name="material-symbols:save" />
-            </template>
-
-            Save draft
-          </n-button>
-
-          <n-button
-            type="primary"
-            :loading="submitLoading"
-            @click="pushToRepository"
-          >
-            <template #icon>
-              <Icon name="ion:push" />
-            </template>
-
-            Save and push to repository
-          </n-button>
-        </div>
-      </div>
-
-      <!-- Sticky tab navigation bar -->
-      <div
-        class="sticky top-0 z-20 -mx-6 border-b border-[var(--cf-divider)] bg-transparent px-6 pb-0 pt-2 backdrop-blur-sm"
-      >
-        <div class="flex gap-0.5 overflow-x-auto">
-          <button
-            v-for="tab in tabs"
-            :key="tab.id"
-            class="flex shrink-0 items-center gap-1.5 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors"
-            :class="
-              activeTab === tab.id
-                ? 'border-[var(--cf-primary)] text-[var(--cf-primary)] dark:border-[var(--indigo-400)] dark:text-[var(--indigo-400)]'
-                : 'border-transparent text-[var(--cf-text-3)] hover:text-[var(--cf-text-2)]'
-            "
-            @click="activeTab = tab.id"
-          >
-            <Icon :name="tab.icon" size="15" />
-
-            {{ tab.label }}
-
-            <!-- Required indicator with status popover -->
-            <n-popover
-              v-if="tab.required"
-              trigger="hover"
-              placement="bottom"
-              :keep-alive-on-hover="false"
+            <p
+              class="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--cf-text-3)]"
             >
-              <template #trigger>
-                <span class="flex items-center gap-1" @click.stop>
-                  <span class="text-xs leading-none text-[var(--cf-asterisk)]"
-                    >*</span
-                  >
+              Sections
+            </p>
 
-                  <span
-                    class="inline-block size-2 rounded-full"
-                    :class="{
-                      'bg-red-500': tabsWithErrors.has(tab.id),
-                      'bg-green-500':
-                        !tabsWithErrors.has(tab.id) && sectionComplete[tab.id],
-                      'bg-orange-400':
-                        !tabsWithErrors.has(tab.id) && !sectionComplete[tab.id],
-                    }"
-                  />
+            <nav class="space-y-0.5">
+              <button
+                v-for="section in sections"
+                :key="section.id"
+                class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors"
+                :class="
+                  activeSection === section.id
+                    ? 'bg-indigo-50 font-medium text-[var(--cf-primary)] dark:bg-[oklch(30%_0.05_265)] dark:text-[oklch(78%_0.08_265)]'
+                    : 'text-[var(--cf-text-2)] hover:bg-[oklch(97%_0.01_260)] dark:hover:bg-[oklch(26%_0.02_260)]'
+                "
+                @click="scrollToSection(section.id)"
+              >
+                <Icon :name="section.icon" size="14" class="shrink-0" />
+
+                <span class="flex-1 truncate text-left">
+                  {{ section.label }}
                 </span>
+
+                <span
+                  v-if="section.required"
+                  class="size-2 shrink-0 rounded-full"
+                  :class="{
+                    'bg-green-500': sectionStatus(section.id) === 'complete',
+                    'bg-orange-400': sectionStatus(section.id) === 'incomplete',
+                    'bg-red-500': sectionStatus(section.id) === 'error',
+                  }"
+                />
+              </button>
+            </nav>
+
+            <div
+              class="mt-3 border-t border-[var(--cf-divider)] pt-3 text-xs text-[var(--cf-text-3)]"
+            >
+              {{ completedRequiredCount }} /
+              {{ requiredTabIds.length }} required complete
+            </div>
+          </div>
+        </aside>
+
+        <!-- Form content -->
+        <div class="min-w-0 flex-1">
+          <n-form
+            ref="formRef"
+            :label-width="80"
+            :model="formValue"
+            :rules="rules"
+            size="large"
+            class="space-y-4"
+          >
+            <!-- ── Basic Info ──────────────────────────────────────────────── -->
+            <CardCollapsible
+              id="section-basic"
+              :ref="(el: any) => (sectionCardRefs['basic'] = el)"
+              title="Basic Information"
+              subtitle="The name, description, and key dates that identify your software"
+              icon="tabler:info-circle"
+              :status="sectionStatus('basic')"
+              :required="true"
+            >
+              <n-form-item label="Software Name" path="name">
+                <n-input
+                  v-model:value="formValue.name"
+                  placeholder="Input Name"
+                />
+              </n-form-item>
+
+              <n-form-item label="Description" path="description">
+                <n-input
+                  v-model:value="formValue.description"
+                  placeholder="Input Description"
+                  type="textarea"
+                  :rows="4"
+                />
+              </n-form-item>
+
+              <n-form-item label="Creation Date" path="creationDate">
+                <n-date-picker
+                  v-model:value="formValue.creationDate"
+                  type="date"
+                />
+              </n-form-item>
+
+              <n-form-item label="First Release Date" path="firstReleaseDate">
+                <n-date-picker
+                  v-model:value="formValue.firstReleaseDate"
+                  type="date"
+                />
+              </n-form-item>
+            </CardCollapsible>
+
+            <!-- ── People ──────────────────────────────────────────────────── -->
+            <CardCollapsible
+              id="section-people"
+              :ref="(el: any) => (sectionCardRefs['people'] = el)"
+              title="Authors & Contributors"
+              subtitle="Credit the people who created and contributed to this software"
+              icon="tabler:users"
+              :status="sectionStatus('people')"
+              :required="true"
+            >
+              <!-- Authors -->
+              <div class="relative mb-4">
+                <div class="absolute inset-0 flex items-center">
+                  <div
+                    class="w-full border-t-2 border-indigo-200 dark:border-[oklch(30%_0.05_265)]"
+                  />
+                </div>
+
+                <div class="relative flex justify-center">
+                  <span
+                    class="bg-[var(--cf-card-bg)] px-3 text-sm font-semibold uppercase tracking-wide text-indigo-400 dark:text-[oklch(60%_0.08_265)]"
+                  >
+                    Authors
+                  </span>
+                </div>
+              </div>
+
+              <n-form-item
+                v-if="formValue.authors.length > 0"
+                path="authors"
+                :show-label="false"
+                :rule="{
+                  message: 'Please enter at least one author',
+                  required: true,
+                  type: 'array',
+                  trigger: ['blur', 'input'],
+                }"
+                class="w-full"
+              >
+                <n-flex vertical size="large" class="w-full">
+                  <CardCollapsible
+                    v-for="(author, index) in formValue.authors"
+                    :key="index"
+                    :title="
+                      author.givenName
+                        ? `${author.givenName} ${author.familyName || ''}`.trim()
+                        : `Author ${index + 1}`
+                    "
+                    :subtitle="author.email || author.affiliation || ''"
+                    :collapse="index < formValue.authors.length - 1"
+                  >
+                    <template #header-extra>
+                      <n-popconfirm @positive-click="removeAuthor(index)">
+                        <template #trigger>
+                          <n-button
+                            text
+                            type="error"
+                            size="small"
+                            class="p-1.5"
+                          >
+                            <Icon name="tabler:trash" size="15" />
+                          </n-button>
+                        </template>
+
+                        Remove this author?
+                      </n-popconfirm>
+                    </template>
+
+                    <n-form-item
+                      label="Given Name"
+                      :path="`authors[${index}].givenName`"
+                      :rule="{
+                        message: 'Please enter a name',
+                        required: true,
+                        trigger: ['blur', 'input'],
+                      }"
+                    >
+                      <n-input
+                        v-model:value="author.givenName"
+                        placeholder="Bertolt"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="Family Name"
+                      :path="`authors[${index}].familyName`"
+                    >
+                      <n-input
+                        v-model:value="author.familyName"
+                        placeholder="Brecht"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="Email"
+                      :path="`authors[${index}].email`"
+                      :rule="{
+                        message: 'Please enter a valid email address',
+                        trigger: ['blur', 'input'],
+                        type: 'email',
+                      }"
+                    >
+                      <n-input
+                        v-model:value="author.email"
+                        placeholder="hello@codefair.io"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="Affiliation"
+                      :path="`authors[${index}].affiliation`"
+                    >
+                      <n-input
+                        v-model:value="author.affiliation"
+                        placeholder="University of Example"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="URI"
+                      :path="`authors[${index}].uri`"
+                      :rule="{
+                        message: 'Please enter a valid URL',
+                        trigger: ['blur', 'input'],
+                        validator: (_rule: FormItemRule, value: string) => {
+                          if (value && !isURL(value)) {
+                            return false;
+                          }
+                          return true;
+                        },
+                      }"
+                    >
+                      <n-input
+                        v-model:value="author.uri"
+                        placeholder="https://example.com/bertoltbrecht or https://orcid.org/0000-0002-4306-4464"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <!-- Roles -->
+                    <n-flex
+                      v-if="author.roles?.length"
+                      vertical
+                      size="medium"
+                      class="mb-3"
+                    >
+                      <CardCollapsible
+                        v-for="(role, roleIndex) in author.roles"
+                        :key="roleIndex"
+                        :title="role.role || `Role ${roleIndex + 1}`"
+                        variant="inset"
+                        :collapse="roleIndex < author.roles.length - 1"
+                      >
+                        <template #header-extra>
+                          <n-button
+                            text
+                            type="error"
+                            size="small"
+                            class="p-1"
+                            @click="
+                              formValue.authors[index].roles.splice(
+                                roleIndex,
+                                1,
+                              )
+                            "
+                          >
+                            <Icon name="tabler:trash" size="14" />
+                          </n-button>
+                        </template>
+
+                        <n-form-item
+                          label="Role"
+                          :path="`authors[${index}].roles[${roleIndex}].role`"
+                          :rule="{
+                            message: 'Please enter a role',
+                            required: true,
+                            trigger: ['blur', 'input'],
+                          }"
+                        >
+                          <n-input
+                            v-model:value="role.role"
+                            placeholder="Developer"
+                            clearable
+                          />
+                        </n-form-item>
+
+                        <n-form-item
+                          label="Start Date"
+                          :path="`authors[${index}].roles[${roleIndex}].startDate`"
+                        >
+                          <n-date-picker
+                            v-model:value="role.startDate"
+                            type="date"
+                            clearable
+                          />
+                        </n-form-item>
+
+                        <n-form-item
+                          label="End Date"
+                          :path="`authors[${index}].roles[${roleIndex}].endDate`"
+                        >
+                          <n-date-picker
+                            v-model:value="role.endDate"
+                            type="date"
+                            clearable
+                          />
+                        </n-form-item>
+                      </CardCollapsible>
+                    </n-flex>
+
+                    <n-button
+                      class="w-full py-4"
+                      type="tertiary"
+                      size="small"
+                      @click="formValue.authors[index].roles.push({ role: '' })"
+                    >
+                      <template #icon>
+                        <Icon name="tabler:plus" size="16" />
+                      </template>
+
+                      <span>Add Role</span>
+                    </n-button>
+                  </CardCollapsible>
+                </n-flex>
+              </n-form-item>
+
+              <n-button
+                class="mt-2 w-full"
+                type="primary"
+                @click="
+                  formValue.authors.push({
+                    roles: [],
+                    givenName: '',
+                    familyName: '',
+                    email: '',
+                    affiliation: '',
+                    uri: '',
+                  })
+                "
+              >
+                <template #icon>
+                  <Icon name="tabler:plus" size="16" />
+                </template>
+
+                Add Author
+              </n-button>
+
+              <!-- Authors / Contributors divider -->
+              <div class="relative my-8">
+                <div class="absolute inset-0 flex items-center">
+                  <div
+                    class="w-full border-t-2 border-indigo-200 dark:border-[oklch(30%_0.05_265)]"
+                  />
+                </div>
+
+                <div class="relative flex justify-center">
+                  <span
+                    class="bg-[var(--cf-card-bg)] px-3 text-sm font-semibold uppercase tracking-wide text-indigo-400 dark:text-[oklch(60%_0.08_265)]"
+                  >
+                    Contributors
+                  </span>
+                </div>
+              </div>
+
+              <n-form-item
+                v-if="formValue.contributors.length > 0"
+                path="contributors"
+                :show-label="false"
+                class="w-full"
+              >
+                <n-flex vertical size="large" class="w-full">
+                  <CardCollapsible
+                    v-for="(contributor, index) in formValue.contributors"
+                    :key="index"
+                    :title="
+                      contributor.givenName
+                        ? `${contributor.givenName} ${contributor.familyName || ''}`.trim()
+                        : `Contributor ${index + 1}`
+                    "
+                    :subtitle="
+                      contributor.email || contributor.affiliation || ''
+                    "
+                    :collapse="index < formValue.contributors.length - 1"
+                  >
+                    <template #header-extra>
+                      <n-popconfirm @positive-click="removeContributor(index)">
+                        <template #trigger>
+                          <n-button
+                            text
+                            type="error"
+                            size="small"
+                            class="p-1.5"
+                          >
+                            <Icon name="tabler:trash" size="15" />
+                          </n-button>
+                        </template>
+
+                        Remove this contributor?
+                      </n-popconfirm>
+                    </template>
+
+                    <n-form-item
+                      label="Given Name"
+                      :path="`contributors[${index}].givenName`"
+                      :rule="{
+                        message: 'Please enter a name',
+                        required: true,
+                        trigger: ['blur', 'input'],
+                      }"
+                    >
+                      <n-input
+                        v-model:value="contributor.givenName"
+                        placeholder="Bertolt"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="Family Name"
+                      :path="`contributors[${index}].familyName`"
+                    >
+                      <n-input
+                        v-model:value="contributor.familyName"
+                        placeholder="Brecht"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="Email"
+                      :path="`contributors[${index}].email`"
+                      :rule="{
+                        message: 'Please enter a valid email address',
+                        trigger: ['blur', 'input'],
+                        type: 'email',
+                      }"
+                    >
+                      <n-input
+                        v-model:value="contributor.email"
+                        placeholder="hello@codefair.io"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="Affiliation"
+                      :path="`contributors[${index}].affiliation`"
+                    >
+                      <n-input
+                        v-model:value="contributor.affiliation"
+                        placeholder="University of Example"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <n-form-item
+                      label="URI"
+                      :path="`contributors[${index}].uri`"
+                      :rule="{
+                        message: 'Please enter a valid URL',
+                        trigger: ['blur', 'input'],
+                        validator: (_rule: FormItemRule, value: string) => {
+                          if (value && !isURL(value)) {
+                            return false;
+                          }
+                          return true;
+                        },
+                      }"
+                    >
+                      <n-input
+                        v-model:value="contributor.uri"
+                        placeholder="https://example.com/bertoltbrecht or https://orcid.org/0000-0002-4306-4464"
+                        clearable
+                      />
+                    </n-form-item>
+
+                    <!-- Roles -->
+                    <n-flex
+                      v-if="contributor.roles?.length"
+                      vertical
+                      size="medium"
+                      class="mb-3"
+                    >
+                      <CardCollapsible
+                        v-for="(role, roleIndex) in contributor.roles"
+                        :key="roleIndex"
+                        :title="role.role || `Role ${roleIndex + 1}`"
+                        variant="inset"
+                        :collapse="roleIndex < contributor.roles.length - 1"
+                      >
+                        <template #header-extra>
+                          <n-button
+                            text
+                            type="error"
+                            size="small"
+                            class="p-1"
+                            @click="
+                              formValue.contributors[index].roles.splice(
+                                roleIndex,
+                                1,
+                              )
+                            "
+                          >
+                            <Icon name="tabler:trash" size="14" />
+                          </n-button>
+                        </template>
+
+                        <n-form-item
+                          label="Role"
+                          :path="`contributors[${index}].roles[${roleIndex}].role`"
+                          :rule="{
+                            message: 'Please enter a role',
+                            required: true,
+                            trigger: ['blur', 'input'],
+                          }"
+                        >
+                          <n-input
+                            v-model:value="role.role"
+                            placeholder="Developer"
+                            clearable
+                          />
+                        </n-form-item>
+
+                        <n-form-item
+                          label="Start Date"
+                          :path="`contributors[${index}].roles[${roleIndex}].startDate`"
+                        >
+                          <n-date-picker
+                            v-model:value="role.startDate"
+                            type="date"
+                            clearable
+                          />
+                        </n-form-item>
+
+                        <n-form-item
+                          label="End Date"
+                          :path="`contributors[${index}].roles[${roleIndex}].endDate`"
+                        >
+                          <n-date-picker
+                            v-model:value="role.endDate"
+                            type="date"
+                            clearable
+                          />
+                        </n-form-item>
+                      </CardCollapsible>
+                    </n-flex>
+
+                    <n-button
+                      class="w-full py-4"
+                      type="tertiary"
+                      size="small"
+                      @click="
+                        formValue.contributors[index].roles.push({ role: '' })
+                      "
+                    >
+                      <template #icon>
+                        <Icon name="tabler:plus" size="16" />
+                      </template>
+
+                      Add Role
+                    </n-button>
+                  </CardCollapsible>
+                </n-flex>
+              </n-form-item>
+
+              <n-button
+                class="mt-2 w-full"
+                type="primary"
+                @click="
+                  formValue.contributors.push({
+                    roles: [],
+                    givenName: '',
+                    familyName: '',
+                    email: '',
+                    affiliation: '',
+                    uri: '',
+                  })
+                "
+              >
+                <template #icon>
+                  <Icon name="tabler:plus" size="16" />
+                </template>
+
+                Add Contributor
+              </n-button>
+            </CardCollapsible>
+
+            <!-- ── Discoverability ─────────────────────────────────────────── -->
+            <CardCollapsible
+              id="section-discoverability"
+              :ref="(el: any) => (sectionCardRefs['discoverability'] = el)"
+              title="Discoverability"
+              subtitle="Keywords, identifiers, and categories that help others find your software"
+              icon="tabler:search"
+              :status="sectionStatus('discoverability')"
+              :required="true"
+            >
+              <n-form-item
+                label="Unique Identifier (DOI)"
+                path="uniqueIdentifier"
+              >
+                <n-input
+                  v-model:value="formValue.uniqueIdentifier"
+                  placeholder="10.60775/fairhub.1"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Application Category"
+                path="applicationCategory"
+              >
+                <n-select
+                  v-model:value="formValue.applicationCategory"
+                  placeholder="Select Category"
+                  :options="applicationCategoryOptions"
+                  @update:value="handleApplicationCategoryChange"
+                />
+              </n-form-item>
+
+              <n-form-item label="Keywords" path="keywords">
+                <n-dynamic-input
+                  v-model:value="formValue.keywords"
+                  placeholder="Input Keyword"
+                />
+              </n-form-item>
+
+              <n-form-item label="Funding Code" path="fundingCode">
+                <n-input
+                  v-model:value="formValue.fundingCode"
+                  placeholder="Input Funding Code"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Funding Organization"
+                path="fundingOrganization"
+              >
+                <n-input
+                  v-model:value="formValue.fundingOrganization"
+                  placeholder="Input Funding Organization"
+                />
+              </n-form-item>
+            </CardCollapsible>
+
+            <!-- ── Development Community ──────────────────────────────────── -->
+            <CardCollapsible
+              id="section-community"
+              :ref="(el: any) => (sectionCardRefs['community'] = el)"
+              title="Development Community"
+              subtitle="Repository, issue tracker, and links to help users engage with your project"
+              icon="tabler:git-branch"
+              :status="sectionStatus('community')"
+            >
+              <n-form-item label="Code Repository" path="codeRepository">
+                <n-input
+                  v-model:value="formValue.codeRepository"
+                  placeholder="https://github.com/fairdataihub/codefair-app"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Continuous Integration"
+                path="continuousIntegration"
+              >
+                <n-input
+                  v-model:value="formValue.continuousIntegration"
+                  placeholder="https://ci.example.com"
+                />
+              </n-form-item>
+
+              <n-form-item label="Issue Tracker" path="issueTracker">
+                <n-input
+                  v-model:value="formValue.issueTracker"
+                  placeholder="https://issues.example.com"
+                />
+              </n-form-item>
+
+              <n-form-item label="Related Links" path="relatedLinks">
+                <n-dynamic-input
+                  v-model:value="formValue.relatedLinks"
+                  placeholder="Input Related Link"
+                />
+              </n-form-item>
+            </CardCollapsible>
+
+            <!-- ── Software Requirements ──────────────────────────────────── -->
+            <CardCollapsible
+              id="section-requirements"
+              :ref="(el: any) => (sectionCardRefs['requirements'] = el)"
+              title="Software Requirements"
+              subtitle="Programming languages, operating systems, and runtime platforms needed to run this software"
+              icon="tabler:cpu"
+              :status="sectionStatus('requirements')"
+              :required="true"
+            >
+              <n-form-item
+                label="Programming Languages"
+                path="programmingLanguages"
+              >
+                <n-select
+                  v-model:value="formValue.programmingLanguages"
+                  placeholder="Select Languages"
+                  filterable
+                  multiple
+                  tag
+                  clearable
+                  :options="codeMetadataJSON.programmingLanguageOptions"
+                />
+              </n-form-item>
+
+              <n-form-item label="Runtime Platform" path="runtimePlatform">
+                <n-select
+                  v-model:value="formValue.runtimePlatform"
+                  placeholder="Select Platforms"
+                  filterable
+                  multiple
+                  tag
+                  clearable
+                  :options="codeMetadataJSON.runtimePlatformOptions"
+                />
+              </n-form-item>
+
+              <n-form-item label="Operating System" path="operatingSystem">
+                <n-select
+                  v-model:value="formValue.operatingSystem"
+                  placeholder="Select Operating Systems"
+                  filterable
+                  multiple
+                  tag
+                  clearable
+                  :options="codeMetadataJSON.operatingSystemOptions"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Other Software Requirements"
+                path="otherSoftwareRequirements"
+              >
+                <n-dynamic-input
+                  v-model:value="formValue.otherSoftwareRequirements"
+                  placeholder="Input Requirement"
+                />
+              </n-form-item>
+            </CardCollapsible>
+
+            <!-- ── Current Version ────────────────────────────────────────── -->
+            <CardCollapsible
+              id="section-version"
+              :ref="(el: any) => (sectionCardRefs['version'] = el)"
+              title="Current Version"
+              subtitle="Version number, release date, download URL, and notes for the latest release"
+              icon="tabler:tag"
+              :status="sectionStatus('version')"
+            >
+              <n-form-item label="Version Number" path="currentVersion">
+                <n-input
+                  v-model:value="formValue.currentVersion"
+                  placeholder="1.2.5"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Release Date"
+                path="currentVersionReleaseDate"
+              >
+                <n-date-picker
+                  v-model:value="formValue.currentVersionReleaseDate as number"
+                  type="date"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Download URL"
+                path="currentVersionDownloadURL"
+              >
+                <n-input
+                  v-model:value="formValue.currentVersionDownloadURL"
+                  placeholder="https://example.com/download/1.0.0"
+                />
+              </n-form-item>
+
+              <n-form-item
+                label="Release Notes"
+                path="currentVersionReleaseNotes"
+              >
+                <n-input
+                  v-model:value="formValue.currentVersionReleaseNotes"
+                  placeholder="Initial stable release."
+                  type="textarea"
+                  :rows="4"
+                />
+              </n-form-item>
+            </CardCollapsible>
+
+            <!-- ── Additional Information ─────────────────────────────────── -->
+            <CardCollapsible
+              id="section-additional"
+              :ref="(el: any) => (sectionCardRefs['additional'] = el)"
+              title="Additional Information"
+              subtitle="Development status and relationships to other software or larger systems"
+              icon="tabler:adjustments"
+              :status="sectionStatus('additional')"
+            >
+              <n-form-item label="Development Status" path="developmentStatus">
+                <n-select
+                  v-model:value="formValue.developmentStatus"
+                  placeholder="Select Status"
+                  :options="codeMetadataJSON.developmentStatusOptions"
+                  @update:value="handleDevelopmentStatusChange"
+                />
+              </n-form-item>
+
+              <n-form-item label="Is Source Code Of" path="isSourceCodeOf">
+                <n-input
+                  v-model:value="formValue.isSourceCodeOf"
+                  placeholder="Bigger Application"
+                />
+              </n-form-item>
+
+              <n-form-item label="Is Part Of" path="isPartOf">
+                <n-input
+                  v-model:value="formValue.isPartOf"
+                  placeholder="Bigger Suite"
+                />
+              </n-form-item>
+            </CardCollapsible>
+          </n-form>
+
+          <!-- Bottom action buttons -->
+          <div
+            class="mt-6 flex justify-end gap-3 border-t border-[var(--cf-divider)] pt-4"
+          >
+            <n-button
+              type="tertiary"
+              :loading="submitLoading"
+              @click="saveCodeMetadataDraft"
+            >
+              <template #icon>
+                <Icon name="material-symbols:save" />
               </template>
 
-              <div class="max-w-52 text-xs">
-                <template v-if="tabsWithErrors.has(tab.id)">
-                  This section has validation errors. Fix them before saving.
-                </template>
+              Save draft
+            </n-button>
 
-                <template
-                  v-else-if="
-                    !tabsWithErrors.has(tab.id) && sectionComplete[tab.id]
-                  "
-                >
-                  All required fields in this section are complete.
-                </template>
+            <n-button
+              type="primary"
+              :loading="submitLoading"
+              @click="pushToRepository"
+            >
+              <template #icon>
+                <Icon name="ion:push" />
+              </template>
 
-                <template v-else>
-                  This section has required fields that need to be filled.
-                </template>
-              </div>
-            </n-popover>
-          </button>
+              Save and push to repository
+            </n-button>
+          </div>
         </div>
       </div>
-
-      <!-- Form -->
-      <n-form
-        ref="formRef"
-        :label-width="80"
-        :model="formValue"
-        :rules="rules"
-        size="large"
-      >
-        <!-- ── Basic Info ──────────────────────────────────────────────── -->
-        <div v-show="activeTab === 'basic'" class="mt-6">
-          <div class="mb-5 flex items-start gap-3">
-            <div
-              class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-[oklch(30%_0.05_265)] dark:text-[oklch(78%_0.08_265)]"
-            >
-              <Icon name="tabler:info-circle" size="20" />
-            </div>
-
-            <div class="flex-1">
-              <div class="flex items-center gap-2">
-                <h2 class="text-lg font-semibold dark:text-gray-100">
-                  Basic Information
-                </h2>
-
-                <n-tag type="warning" size="small" :bordered="false">
-                  Required
-                </n-tag>
-              </div>
-
-              <p class="mt-0.5 text-sm text-[var(--cf-text-3)]">
-                General information about the software.
-              </p>
-            </div>
-          </div>
-
-          <n-card class="rounded-lg">
-            <n-form-item label="Software Name" path="name">
-              <n-input
-                v-model:value="formValue.name"
-                placeholder="Input Name"
-              />
-            </n-form-item>
-
-            <n-form-item label="Description" path="description">
-              <n-input
-                v-model:value="formValue.description"
-                placeholder="Input Description"
-                type="textarea"
-                :rows="4"
-              />
-            </n-form-item>
-
-            <n-form-item label="Creation Date" path="creationDate">
-              <n-date-picker
-                v-model:value="formValue.creationDate"
-                type="date"
-              />
-            </n-form-item>
-
-            <n-form-item label="First Release Date" path="firstReleaseDate">
-              <n-date-picker
-                v-model:value="formValue.firstReleaseDate"
-                type="date"
-              />
-            </n-form-item>
-          </n-card>
-        </div>
-
-        <!-- ── People ──────────────────────────────────────────────────── -->
-        <div v-show="activeTab === 'people'" class="mt-6">
-          <div class="mb-5 flex items-start gap-3">
-            <div
-              class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-[oklch(30%_0.05_265)] dark:text-[oklch(78%_0.08_265)]"
-            >
-              <Icon name="tabler:users" size="20" />
-            </div>
-
-            <div class="flex-1">
-              <div class="flex items-center gap-2">
-                <h2 class="text-lg font-semibold dark:text-gray-100">
-                  Authors &amp; Contributors
-                </h2>
-
-                <n-tag type="warning" size="small" :bordered="false">
-                  Required
-                </n-tag>
-              </div>
-
-              <p class="mt-0.5 text-sm text-[var(--cf-text-3)]">
-                People who created or contributed to the software.
-              </p>
-            </div>
-          </div>
-
-          <!-- Authors -->
-          <div class="mb-3 flex items-center justify-between">
-            <h3
-              class="text-sm font-semibold uppercase tracking-wide text-[var(--cf-text-3)]"
-            >
-              Authors
-            </h3>
-
-            <n-button
-              type="primary"
-              size="small"
-              @click="
-                formValue.authors.push({
-                  roles: [],
-                  givenName: '',
-                  familyName: '',
-                  email: '',
-                  affiliation: '',
-                  uri: '',
-                })
-              "
-            >
-              <template #icon>
-                <Icon name="tabler:plus" size="14" />
-              </template>
-
-              Add Author
-            </n-button>
-          </div>
-
-          <n-form-item
-            path="authors"
-            :show-label="false"
-            :rule="{
-              message: 'Please enter at least one author',
-              required: true,
-              type: 'array',
-              trigger: ['blur', 'input'],
-            }"
-            class="w-full"
-          >
-            <n-flex vertical size="large" class="w-full">
-              <CardCollapsible
-                v-for="(author, index) in formValue.authors"
-                :key="index"
-                :title="
-                  author.givenName
-                    ? `${author.givenName} ${author.familyName || ''}`.trim()
-                    : `Author ${index + 1}`
-                "
-                :subtitle="author.email || author.affiliation || ''"
-                :collapse="index > 0"
-              >
-                <template #header-extra>
-                  <n-popconfirm @positive-click="removeAuthor(index)">
-                    <template #trigger>
-                      <n-button text type="error" size="small" class="p-1.5">
-                        <Icon name="tabler:trash" size="15" />
-                      </n-button>
-                    </template>
-
-                    Remove this author?
-                  </n-popconfirm>
-                </template>
-
-                <n-form-item
-                  label="Given Name"
-                  :path="`authors[${index}].givenName`"
-                  :rule="{
-                    message: 'Please enter a name',
-                    required: true,
-                    trigger: ['blur', 'input'],
-                  }"
-                >
-                  <n-input
-                    v-model:value="author.givenName"
-                    placeholder="Bertolt"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item
-                  label="Family Name"
-                  :path="`authors[${index}].familyName`"
-                >
-                  <n-input
-                    v-model:value="author.familyName"
-                    placeholder="Brecht"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item
-                  label="Email"
-                  :path="`authors[${index}].email`"
-                  :rule="{
-                    message: 'Please enter a valid email address',
-                    trigger: ['blur', 'input'],
-                    type: 'email',
-                  }"
-                >
-                  <n-input
-                    v-model:value="author.email"
-                    placeholder="hello@codefair.io"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item
-                  label="Affiliation"
-                  :path="`authors[${index}].affiliation`"
-                >
-                  <n-input
-                    v-model:value="author.affiliation"
-                    placeholder="University of Example"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item
-                  label="URI"
-                  :path="`authors[${index}].uri`"
-                  :rule="{
-                    message: 'Please enter a valid URL',
-                    trigger: ['blur', 'input'],
-                    validator: (_rule: FormItemRule, value: string) => {
-                      if (value && !isURL(value)) {
-                        return false;
-                      }
-                      return true;
-                    },
-                  }"
-                >
-                  <n-input
-                    v-model:value="author.uri"
-                    placeholder="https://example.com/bertoltbrecht or https://orcid.org/0000-0002-4306-4464"
-                    clearable
-                  />
-                </n-form-item>
-
-                <!-- Roles -->
-                <n-flex
-                  v-if="author.roles?.length"
-                  vertical
-                  size="medium"
-                  class="mb-3"
-                >
-                  <CardCollapsible
-                    v-for="(role, roleIndex) in author.roles"
-                    :key="roleIndex"
-                    :title="role.role || `Role ${roleIndex + 1}`"
-                    variant="inset"
-                    :collapse="true"
-                  >
-                    <template #header-extra>
-                      <n-button
-                        text
-                        type="error"
-                        size="small"
-                        class="p-1"
-                        @click="
-                          formValue.authors[index].roles.splice(roleIndex, 1)
-                        "
-                      >
-                        <Icon name="tabler:trash" size="14" />
-                      </n-button>
-                    </template>
-
-                    <n-form-item
-                      label="Role"
-                      :path="`authors[${index}].roles[${roleIndex}].role`"
-                      :rule="{
-                        message: 'Please enter a role',
-                        required: true,
-                        trigger: ['blur', 'input'],
-                      }"
-                    >
-                      <n-input
-                        v-model:value="role.role"
-                        placeholder="Developer"
-                        clearable
-                      />
-                    </n-form-item>
-
-                    <n-form-item
-                      label="Start Date"
-                      :path="`authors[${index}].roles[${roleIndex}].startDate`"
-                    >
-                      <n-date-picker
-                        v-model:value="role.startDate"
-                        type="date"
-                        clearable
-                      />
-                    </n-form-item>
-
-                    <n-form-item
-                      label="End Date"
-                      :path="`authors[${index}].roles[${roleIndex}].endDate`"
-                    >
-                      <n-date-picker
-                        v-model:value="role.endDate"
-                        type="date"
-                        clearable
-                      />
-                    </n-form-item>
-                  </CardCollapsible>
-                </n-flex>
-
-                <n-button
-                  class="w-full py-4"
-                  type="tertiary"
-                  size="small"
-                  @click="formValue.authors[index].roles.push({ role: '' })"
-                >
-                  <template #icon>
-                    <Icon name="tabler:plus" size="16" />
-                  </template>
-
-                  <span>Add Role</span>
-                </n-button>
-              </CardCollapsible>
-            </n-flex>
-          </n-form-item>
-
-          <SectionDivider class="my-7" />
-
-          <!-- Contributors -->
-          <div class="mb-3 flex items-center justify-between">
-            <h3
-              class="text-sm font-semibold uppercase tracking-wide text-[var(--cf-text-3)]"
-            >
-              Contributors
-            </h3>
-
-            <n-button
-              type="primary"
-              size="small"
-              @click="
-                formValue.contributors.push({
-                  roles: [],
-                  givenName: '',
-                  familyName: '',
-                  email: '',
-                  affiliation: '',
-                  uri: '',
-                })
-              "
-            >
-              <template #icon>
-                <Icon name="tabler:plus" size="14" />
-              </template>
-
-              Add Contributor
-            </n-button>
-          </div>
-
-          <n-form-item path="contributors" :show-label="false" class="w-full">
-            <n-flex vertical size="large" class="w-full">
-              <CardCollapsible
-                v-for="(contributor, index) in formValue.contributors"
-                :key="index"
-                :title="
-                  contributor.givenName
-                    ? `${contributor.givenName} ${contributor.familyName || ''}`.trim()
-                    : `Contributor ${index + 1}`
-                "
-                :subtitle="contributor.email || contributor.affiliation || ''"
-                :collapse="index > 0"
-              >
-                <template #header-extra>
-                  <n-popconfirm @positive-click="removeContributor(index)">
-                    <template #trigger>
-                      <n-button text type="error" size="small" class="p-1.5">
-                        <Icon name="tabler:trash" size="15" />
-                      </n-button>
-                    </template>
-
-                    Remove this contributor?
-                  </n-popconfirm>
-                </template>
-
-                <n-form-item
-                  label="Given Name"
-                  :path="`contributors[${index}].givenName`"
-                  :rule="{
-                    message: 'Please enter a name',
-                    required: true,
-                    trigger: ['blur', 'input'],
-                  }"
-                >
-                  <n-input
-                    v-model:value="contributor.givenName"
-                    placeholder="Bertolt"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item
-                  label="Family Name"
-                  :path="`contributors[${index}].familyName`"
-                >
-                  <n-input
-                    v-model:value="contributor.familyName"
-                    placeholder="Brecht"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item
-                  label="Email"
-                  :path="`contributors[${index}].email`"
-                  :rule="{
-                    message: 'Please enter a valid email address',
-                    trigger: ['blur', 'input'],
-                    type: 'email',
-                  }"
-                >
-                  <n-input
-                    v-model:value="contributor.email"
-                    placeholder="hello@codefair.io"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item
-                  label="Affiliation"
-                  :path="`contributors[${index}].affiliation`"
-                >
-                  <n-input
-                    v-model:value="contributor.affiliation"
-                    placeholder="University of Example"
-                    clearable
-                  />
-                </n-form-item>
-
-                <n-form-item
-                  label="URI"
-                  :path="`contributors[${index}].uri`"
-                  :rule="{
-                    message: 'Please enter a valid URL',
-                    trigger: ['blur', 'input'],
-                    validator: (_rule: FormItemRule, value: string) => {
-                      if (value && !isURL(value)) {
-                        return false;
-                      }
-                      return true;
-                    },
-                  }"
-                >
-                  <n-input
-                    v-model:value="contributor.uri"
-                    placeholder="https://example.com/bertoltbrecht or https://orcid.org/0000-0002-4306-4464"
-                    clearable
-                  />
-                </n-form-item>
-
-                <!-- Roles -->
-                <n-flex
-                  v-if="contributor.roles?.length"
-                  vertical
-                  size="medium"
-                  class="mb-3"
-                >
-                  <CardCollapsible
-                    v-for="(role, roleIndex) in contributor.roles"
-                    :key="roleIndex"
-                    :title="role.role || `Role ${roleIndex + 1}`"
-                    variant="inset"
-                    :collapse="true"
-                  >
-                    <template #header-extra>
-                      <n-button
-                        text
-                        type="error"
-                        size="small"
-                        class="p-1"
-                        @click="
-                          formValue.contributors[index].roles.splice(
-                            roleIndex,
-                            1,
-                          )
-                        "
-                      >
-                        <Icon name="tabler:trash" size="14" />
-                      </n-button>
-                    </template>
-
-                    <n-form-item
-                      label="Role"
-                      :path="`contributors[${index}].roles[${roleIndex}].role`"
-                      :rule="{
-                        message: 'Please enter a role',
-                        required: true,
-                        trigger: ['blur', 'input'],
-                      }"
-                    >
-                      <n-input
-                        v-model:value="role.role"
-                        placeholder="Developer"
-                        clearable
-                      />
-                    </n-form-item>
-
-                    <n-form-item
-                      label="Start Date"
-                      :path="`contributors[${index}].roles[${roleIndex}].startDate`"
-                    >
-                      <n-date-picker
-                        v-model:value="role.startDate"
-                        type="date"
-                        clearable
-                      />
-                    </n-form-item>
-
-                    <n-form-item
-                      label="End Date"
-                      :path="`contributors[${index}].roles[${roleIndex}].endDate`"
-                    >
-                      <n-date-picker
-                        v-model:value="role.endDate"
-                        type="date"
-                        clearable
-                      />
-                    </n-form-item>
-                  </CardCollapsible>
-                </n-flex>
-
-                <n-button
-                  class="w-full py-4"
-                  type="tertiary"
-                  size="small"
-                  @click="
-                    formValue.contributors[index].roles.push({ role: '' })
-                  "
-                >
-                  <template #icon>
-                    <Icon name="tabler:plus" size="16" />
-                  </template>
-
-                  Add Role
-                </n-button>
-              </CardCollapsible>
-            </n-flex>
-          </n-form-item>
-        </div>
-
-        <!-- ── Discoverability ─────────────────────────────────────────── -->
-        <div v-show="activeTab === 'discoverability'" class="mt-6">
-          <div class="mb-5 flex items-start gap-3">
-            <div
-              class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-[oklch(30%_0.05_265)] dark:text-[oklch(78%_0.08_265)]"
-            >
-              <Icon name="tabler:search" size="20" />
-            </div>
-
-            <div class="flex-1">
-              <div class="flex items-center gap-2">
-                <h2 class="text-lg font-semibold dark:text-gray-100">
-                  Discoverability
-                </h2>
-
-                <n-tag type="warning" size="small" :bordered="false">
-                  Required
-                </n-tag>
-              </div>
-
-              <p class="mt-0.5 text-sm text-[var(--cf-text-3)]">
-                Information to help users discover the software.
-              </p>
-            </div>
-          </div>
-
-          <n-card class="rounded-lg">
-            <n-form-item
-              label="Unique Identifier (DOI)"
-              path="uniqueIdentifier"
-            >
-              <n-input
-                v-model:value="formValue.uniqueIdentifier"
-                placeholder="10.60775/fairhub.1"
-              />
-            </n-form-item>
-
-            <n-form-item
-              label="Application Category"
-              path="applicationCategory"
-            >
-              <n-select
-                v-model:value="formValue.applicationCategory"
-                placeholder="Select Category"
-                :options="applicationCategoryOptions"
-                @update:value="handleApplicationCategoryChange"
-              />
-            </n-form-item>
-
-            <n-form-item label="Keywords" path="keywords">
-              <n-dynamic-input
-                v-model:value="formValue.keywords"
-                placeholder="Input Keyword"
-              />
-            </n-form-item>
-
-            <n-form-item label="Funding Code" path="fundingCode">
-              <n-input
-                v-model:value="formValue.fundingCode"
-                placeholder="Input Funding Code"
-              />
-            </n-form-item>
-
-            <n-form-item
-              label="Funding Organization"
-              path="fundingOrganization"
-            >
-              <n-input
-                v-model:value="formValue.fundingOrganization"
-                placeholder="Input Funding Organization"
-              />
-            </n-form-item>
-          </n-card>
-        </div>
-
-        <!-- ── Development Community ──────────────────────────────────── -->
-        <div v-show="activeTab === 'community'" class="mt-6">
-          <div class="mb-5 flex items-start gap-3">
-            <div
-              class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-[oklch(30%_0.05_265)] dark:text-[oklch(78%_0.08_265)]"
-            >
-              <Icon name="tabler:git-branch" size="20" />
-            </div>
-
-            <div class="flex-1">
-              <h2 class="text-lg font-semibold dark:text-gray-100">
-                Development Community
-              </h2>
-
-              <p class="mt-0.5 text-sm text-[var(--cf-text-3)]">
-                Information about the development community of the software.
-              </p>
-            </div>
-          </div>
-
-          <n-card class="rounded-lg">
-            <n-form-item label="Code Repository" path="codeRepository">
-              <n-input
-                v-model:value="formValue.codeRepository"
-                placeholder="https://github.com/fairdataihub/codefair-app"
-              />
-            </n-form-item>
-
-            <n-form-item
-              label="Continuous Integration"
-              path="continuousIntegration"
-            >
-              <n-input
-                v-model:value="formValue.continuousIntegration"
-                placeholder="https://ci.example.com"
-              />
-            </n-form-item>
-
-            <n-form-item label="Issue Tracker" path="issueTracker">
-              <n-input
-                v-model:value="formValue.issueTracker"
-                placeholder="https://issues.example.com"
-              />
-            </n-form-item>
-
-            <n-form-item label="Related Links" path="relatedLinks">
-              <n-dynamic-input
-                v-model:value="formValue.relatedLinks"
-                placeholder="Input Related Link"
-              />
-            </n-form-item>
-          </n-card>
-        </div>
-
-        <!-- ── Software Requirements ──────────────────────────────────── -->
-        <div v-show="activeTab === 'requirements'" class="mt-6">
-          <div class="mb-5 flex items-start gap-3">
-            <div
-              class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-[oklch(30%_0.05_265)] dark:text-[oklch(78%_0.08_265)]"
-            >
-              <Icon name="tabler:cpu" size="20" />
-            </div>
-
-            <div class="flex-1">
-              <div class="flex items-center gap-2">
-                <h2 class="text-lg font-semibold dark:text-gray-100">
-                  Software Requirements
-                </h2>
-
-                <n-tag type="warning" size="small" :bordered="false">
-                  Required
-                </n-tag>
-              </div>
-
-              <p class="mt-0.5 text-sm text-[var(--cf-text-3)]">
-                Run-time environment required to run the software.
-              </p>
-            </div>
-          </div>
-
-          <n-card class="rounded-lg">
-            <n-form-item
-              label="Programming Languages"
-              path="programmingLanguages"
-            >
-              <n-select
-                v-model:value="formValue.programmingLanguages"
-                placeholder="Select Languages"
-                filterable
-                multiple
-                tag
-                clearable
-                :options="codeMetadataJSON.programmingLanguageOptions"
-              />
-            </n-form-item>
-
-            <n-form-item label="Runtime Platform" path="runtimePlatform">
-              <n-select
-                v-model:value="formValue.runtimePlatform"
-                placeholder="Select Platforms"
-                filterable
-                multiple
-                tag
-                clearable
-                :options="codeMetadataJSON.runtimePlatformOptions"
-              />
-            </n-form-item>
-
-            <n-form-item label="Operating System" path="operatingSystem">
-              <n-select
-                v-model:value="formValue.operatingSystem"
-                placeholder="Select Operating Systems"
-                filterable
-                multiple
-                tag
-                clearable
-                :options="codeMetadataJSON.operatingSystemOptions"
-              />
-            </n-form-item>
-
-            <n-form-item
-              label="Other Software Requirements"
-              path="otherSoftwareRequirements"
-            >
-              <n-dynamic-input
-                v-model:value="formValue.otherSoftwareRequirements"
-                placeholder="Input Requirement"
-              />
-            </n-form-item>
-          </n-card>
-        </div>
-
-        <!-- ── Current Version ────────────────────────────────────────── -->
-        <div v-show="activeTab === 'version'" class="mt-6">
-          <div class="mb-5 flex items-start gap-3">
-            <div
-              class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-[oklch(30%_0.05_265)] dark:text-[oklch(78%_0.08_265)]"
-            >
-              <Icon name="tabler:tag" size="20" />
-            </div>
-
-            <div class="flex-1">
-              <h2 class="text-lg font-semibold dark:text-gray-100">
-                Current Version
-              </h2>
-
-              <p class="mt-0.5 text-sm text-[var(--cf-text-3)]">
-                Details about the current version and its release.
-              </p>
-            </div>
-          </div>
-
-          <n-card class="rounded-lg">
-            <n-form-item label="Version Number" path="currentVersion">
-              <n-input
-                v-model:value="formValue.currentVersion"
-                placeholder="1.2.5"
-              />
-            </n-form-item>
-
-            <n-form-item label="Release Date" path="currentVersionReleaseDate">
-              <n-date-picker
-                v-model:value="formValue.currentVersionReleaseDate as number"
-                type="date"
-              />
-            </n-form-item>
-
-            <n-form-item label="Download URL" path="currentVersionDownloadURL">
-              <n-input
-                v-model:value="formValue.currentVersionDownloadURL"
-                placeholder="https://example.com/download/1.0.0"
-              />
-            </n-form-item>
-
-            <n-form-item
-              label="Release Notes"
-              path="currentVersionReleaseNotes"
-            >
-              <n-input
-                v-model:value="formValue.currentVersionReleaseNotes"
-                placeholder="Initial stable release."
-                type="textarea"
-                :rows="4"
-              />
-            </n-form-item>
-          </n-card>
-        </div>
-
-        <!-- ── Additional Information ─────────────────────────────────── -->
-        <div v-show="activeTab === 'additional'" class="mt-6">
-          <div class="mb-5 flex items-start gap-3">
-            <div
-              class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-[oklch(30%_0.05_265)] dark:text-[oklch(78%_0.08_265)]"
-            >
-              <Icon name="tabler:adjustments" size="20" />
-            </div>
-
-            <div class="flex-1">
-              <h2 class="text-lg font-semibold dark:text-gray-100">
-                Additional Information
-              </h2>
-
-              <p class="mt-0.5 text-sm text-[var(--cf-text-3)]">
-                Additional information about the software.
-              </p>
-            </div>
-          </div>
-
-          <n-card class="rounded-lg">
-            <n-form-item label="Development Status" path="developmentStatus">
-              <n-select
-                v-model:value="formValue.developmentStatus"
-                placeholder="Select Status"
-                :options="codeMetadataJSON.developmentStatusOptions"
-                @update:value="handleDevelopmentStatusChange"
-              />
-            </n-form-item>
-
-            <n-form-item label="Is Source Code Of" path="isSourceCodeOf">
-              <n-input
-                v-model:value="formValue.isSourceCodeOf"
-                placeholder="Bigger Application"
-              />
-            </n-form-item>
-
-            <n-form-item label="Is Part Of" path="isPartOf">
-              <n-input
-                v-model:value="formValue.isPartOf"
-                placeholder="Bigger Suite"
-              />
-            </n-form-item>
-          </n-card>
-        </div>
-      </n-form>
 
       <!-- Dev mode data debug -->
       <n-collapse v-if="devMode" class="mt-8" :default-expanded-names="[]">
