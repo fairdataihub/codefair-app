@@ -17,6 +17,7 @@ export interface LicenseResult {
 interface ExistingLicense {
   id: string;
   license_id: string | null;
+  license_path: string;
   license_content: string;
   license_status: string;
   contains_license: boolean;
@@ -59,7 +60,13 @@ function normalizeContent(content: string | null | undefined): string {
 
 // == Public API ===============================================================
 
-const LICENSE_PATHS = ["LICENSE", "LICENSE.md", "LICENSE.txt"];
+const LICENSE_PATHS = [
+  "LICENSE",
+  "LICENSE.md",
+  "LICENSE.txt",
+  "COPYING",
+  "COPYING.LESSER",
+];
 
 /**
  * Checks whether a LICENSE file exists in the repository and detects its SPDX ID.
@@ -205,6 +212,7 @@ export async function updateLicenseDatabase(
   let licenseId: string | null = license.spdx_id;
   let licenseContent = license.content;
   let licenseContentEmpty = license.content === "";
+  let licensePath = license.status ? license.path : "";
 
   const existingLicense = await prisma.licenseRequest.findUnique({
     where: { repository_id: repositoryId },
@@ -222,6 +230,7 @@ export async function updateLicenseDatabase(
       licenseId = existingLicense.license_id;
       licenseContent = existingLicense.license_content;
       licenseContentEmpty = !licenseContent;
+      licensePath = existingLicense.license_path;
     }
 
     return prisma.licenseRequest.update({
@@ -229,6 +238,7 @@ export async function updateLicenseDatabase(
         contains_license: license.status,
         license_status: licenseContentEmpty ? "invalid" : "valid",
         license_id: licenseId,
+        license_path: licensePath,
         license_content: licenseContent,
         custom_license_title:
           licenseId === "Custom" ? existingLicense.custom_license_title : "",
@@ -252,6 +262,7 @@ export async function updateLicenseDatabase(
       contains_license: license.status,
       license_status: licenseContentEmpty ? "invalid" : "valid",
       license_id: licenseId,
+      license_path: licensePath,
       license_content: licenseContent,
       custom_license_title: "",
       repository: { connect: { id: repositoryId } },

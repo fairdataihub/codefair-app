@@ -59,6 +59,7 @@ model LicenseRequest {
   contains_license     Boolean      @default(false)
   license_status       String       @default("")
   license_id           String?
+  license_path         String       @default("")
   license_content      String       @default("")
   pull_request_url     String       @default("")
   created_at           DateTime     @default(now())
