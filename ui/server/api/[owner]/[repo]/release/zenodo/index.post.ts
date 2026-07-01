@@ -245,6 +245,15 @@ export default defineEventHandler(async (event) => {
     }
   };
 
+  // Keep the connection alive during long steps. Without traffic, an idle reverse proxy / load
+  // balancer / browser can silently drop the stream, making a successful
+  // release look failed to the client.
+  const heartbeat = setInterval(() => {
+    if (clientConnected && !res.writableEnded) {
+      res.write(": ping\n\n");
+    }
+  }, 15000);
+
   /**
    * Forwards a publication progress event to the SSE stream.
    * @param progress - Progress event from the Zenodo publication workflow.
@@ -294,6 +303,8 @@ export default defineEventHandler(async (event) => {
       status: "error",
       step: "error",
     });
+  } finally {
+    clearInterval(heartbeat);
   }
 
   if (!res.writableEnded) {

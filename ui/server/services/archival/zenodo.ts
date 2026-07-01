@@ -19,6 +19,7 @@ import type {
   ArchivalTokenValidation,
   ExistingDeposition,
   ProgressCallback,
+  ProgressStep,
   PublicationResult,
 } from "./interface";
 import { GitHubRepositoryProvider } from "~/server/services/providers/github";
@@ -44,6 +45,12 @@ function zenodoApiEndpoint(): string {
 function zenodoEndpoint(): string {
   return process.env.ZENODO_ENDPOINT ?? "";
 }
+
+// Request timeouts so a stalled network call can never hang the publication
+// workflow indefinitely. Metadata/API calls are quick; file up/downloads and
+// the repo zipball can be large, so they get a much longer budget.
+const ZENODO_API_TIMEOUT_MS = 60_000; // metadata / publish / deposition / API calls
+const ZENODO_UPLOAD_TIMEOUT_MS = 300_000; // file up/downloads & repo zipball
 
 // ===== Error helper ==================================================
 
@@ -91,6 +98,7 @@ async function refreshZenodoToken(
     body: body.toString(),
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     method: "POST",
+    signal: AbortSignal.timeout(ZENODO_API_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -153,6 +161,7 @@ export async function validateZenodoToken(
 
   const res = await fetch(`${zenodoApiEndpoint()}/deposit/depositions`, {
     headers: { Authorization: `Bearer ${tokenRecord.token}` },
+    signal: AbortSignal.timeout(ZENODO_API_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -213,6 +222,7 @@ async function createNewZenodoDeposition(token: string): Promise<any> {
       "Content-Type": "application/json",
     },
     method: "POST",
+    signal: AbortSignal.timeout(ZENODO_API_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -244,7 +254,10 @@ async function fetchExistingZenodoDeposition(
 ): Promise<any> {
   const latestRes = await fetch(
     `${zenodoApiEndpoint()}/records/${depositionId}/versions/latest`,
-    { headers: { Authorization: `Bearer ${token}` } },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(ZENODO_API_TIMEOUT_MS),
+    },
   );
 
   if (latestRes.status === 404) {
@@ -256,7 +269,10 @@ async function fetchExistingZenodoDeposition(
     });
     const draftRes = await fetch(
       `${zenodoApiEndpoint()}/deposit/depositions/${depositionId}`,
-      { headers: { Authorization: `Bearer ${token}` } },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(ZENODO_API_TIMEOUT_MS),
+      },
     );
 
     if (!draftRes.ok) {
@@ -307,6 +323,7 @@ async function createNewVersionOfDeposition(
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
     method: "POST",
+    signal: AbortSignal.timeout(ZENODO_API_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -347,7 +364,10 @@ async function deleteFileFromZenodo(
 ): Promise<void> {
   const res = await fetch(
     `${zenodoApiEndpoint()}/records/${depositionId}/draft/files/${encodeURIComponent(fileName)}?access_token=${token}`,
-    { method: "DELETE" },
+    {
+      method: "DELETE",
+      signal: AbortSignal.timeout(ZENODO_API_TIMEOUT_MS),
+    },
   );
 
   if (!res.ok) {
@@ -498,6 +518,7 @@ async function updateDepositionMetadata(
       "Content-Type": "application/json",
     },
     method: "PUT",
+    signal: AbortSignal.timeout(ZENODO_API_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -555,6 +576,7 @@ async function uploadFileToZenodoBucket(
       "Content-Type": "application/octet-stream",
     },
     method: "PUT",
+    signal: AbortSignal.timeout(ZENODO_UPLOAD_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -595,6 +617,7 @@ async function publishZenodoDeposition(
       "Content-Type": "application/json",
     },
     method: "POST",
+    signal: AbortSignal.timeout(ZENODO_API_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -758,6 +781,7 @@ async function downloadRepositoryZip(
         "X-GitHub-Api-Version": "2022-11-28",
       },
       redirect: "follow",
+      signal: AbortSignal.timeout(ZENODO_UPLOAD_TIMEOUT_MS),
     },
   );
 
@@ -808,6 +832,7 @@ async function fetchReleaseAssets(
         Authorization: `Bearer ${userToken}`,
         "X-GitHub-Api-Version": "2022-11-28",
       },
+      signal: AbortSignal.timeout(ZENODO_API_TIMEOUT_MS),
     },
   );
 
@@ -859,6 +884,7 @@ async function downloadReleaseAsset(
       "X-GitHub-Api-Version": "2022-11-28",
     },
     redirect: "follow",
+    signal: AbortSignal.timeout(ZENODO_UPLOAD_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -903,6 +929,7 @@ async function publishGitHubRelease(
       Authorization: `Bearer ${userToken}`,
       "X-GitHub-Api-Version": "2022-11-28",
     },
+    signal: AbortSignal.timeout(ZENODO_API_TIMEOUT_MS),
   });
 
   const defaultBranch = repoRes.ok
@@ -935,6 +962,7 @@ async function publishGitHubRelease(
         "X-GitHub-Api-Version": "2022-11-28",
       },
       method: "PATCH",
+      signal: AbortSignal.timeout(ZENODO_API_TIMEOUT_MS),
     },
   );
 
@@ -1032,6 +1060,52 @@ export async function beginZenodoPublication(
 
   const token = tokenRecord.token;
 
+  // Mark the deposition as actively publishing. This lets a dropped SSE stream
+  // be reconciled against the DB: "publishing" means the workflow is still
+  // running, distinct from a "draft" (saved but not started) or a terminal
+  // "published"/"error" state. The row was already upserted by the POST handler.
+  await prisma.zenodoDeposition
+    .update({
+      data: { status: "publishing" },
+      where: { repository_id: repositoryId },
+    })
+    .catch(() => undefined);
+
+  /**
+   * Records a workflow step failure: logs it, marks the deposition row as
+   * errored (so a dropped SSE stream reconciles to a real failure instead of a
+   * false "still running"), emits an SSE error event, and returns the failed
+   * result. Used by every step's catch so failures are persisted uniformly.
+   * @param step - The workflow step that failed.
+   * @param err - The thrown error.
+   * @returns A failed PublicationResult carrying the error message.
+   */
+  const failPublication = async (
+    step: ProgressStep,
+    err: any,
+  ): Promise<PublicationResult> => {
+    logwatch.error({
+      action: `zenodo.publish.${step}`,
+      error: err.stack ?? err.message,
+      message: err.message,
+      owner,
+      repo,
+      userId,
+    });
+    await prisma.zenodoDeposition
+      .update({
+        data: { status: "error" },
+        where: { repository_id: repositoryId },
+      })
+      .catch(() => undefined);
+    await onProgress?.({
+      message: err.message,
+      status: "error",
+      step,
+    });
+    return { error: err.message, success: false };
+  };
+
   // == Step 1: deposition ===================================
   await onProgress?.({
     message: "Preparing Zenodo deposition…",
@@ -1043,27 +1117,15 @@ export async function beginZenodoPublication(
   try {
     deposition = await getWorkingDeposition(mode, depositionId, token);
   } catch (err: any) {
-    logwatch.error({
-      action: "zenodo.publish.deposition",
-      error: err.stack ?? err.message,
-      message: err.message,
-      owner,
-      repo,
-      userId,
-    });
-    await onProgress?.({
-      message: err.message,
-      status: "error",
-      step: "deposition",
-    });
-    return { error: err.message, success: false };
+    return await failPublication("deposition", err);
   }
 
   const newDepositionId: number = deposition.record_id;
   const bucketUrl: string = deposition.links.bucket;
   const doi: string = deposition.metadata.prereserve_doi.doi;
 
-  // Upsert DB record (status: draft)
+  // Upsert DB record. Keep status "publishing" (set above) so the workflow
+  // stays reconcilable as in-progress through the long upload steps below.
   const existingDep = await prisma.zenodoDeposition.findFirst({
     where: { repository_id: repositoryId },
   });
@@ -1073,7 +1135,7 @@ export async function beginZenodoPublication(
       data: {
         github_release_id: parseInt(release) || null,
         github_tag_name: tag,
-        status: "draft",
+        status: "publishing",
         user_id: userId,
         zenodo_id: newDepositionId,
         zenodo_metadata: metadata,
@@ -1087,7 +1149,7 @@ export async function beginZenodoPublication(
         github_release_id: parseInt(release) || null,
         github_tag_name: tag,
         repository_id: repositoryId,
-        status: "draft",
+        status: "publishing",
         user_id: userId,
         zenodo_id: newDepositionId,
         zenodo_metadata: metadata,
@@ -1171,20 +1233,7 @@ export async function beginZenodoPublication(
       );
     }
   } catch (err: any) {
-    logwatch.error({
-      action: "zenodo.publish.metadata",
-      error: err.stack ?? err.message,
-      message: err.message,
-      owner,
-      repo,
-      userId,
-    });
-    await onProgress?.({
-      message: err.message,
-      status: "error",
-      step: "metadata",
-    });
-    return { error: err.message, success: false };
+    return await failPublication("metadata", err);
   }
 
   await onProgress?.({
@@ -1201,28 +1250,10 @@ export async function beginZenodoPublication(
   });
 
   try {
-    const zenodoMeta = buildZenodoMetadata(
-      codemeta,
-      metadata,
-      doi,
-      licenseId,
-    );
+    const zenodoMeta = buildZenodoMetadata(codemeta, metadata, doi, licenseId);
     await updateDepositionMetadata(newDepositionId, token, zenodoMeta);
   } catch (err: any) {
-    logwatch.error({
-      action: "zenodo.publish.upload_metadata",
-      error: err.stack ?? err.message,
-      message: err.message,
-      owner,
-      repo,
-      userId,
-    });
-    await onProgress?.({
-      message: err.message,
-      status: "error",
-      step: "upload_metadata",
-    });
-    return { error: err.message, success: false };
+    return await failPublication("upload_metadata", err);
   }
 
   await onProgress?.({
@@ -1249,20 +1280,7 @@ export async function beginZenodoPublication(
       licenseId,
     );
   } catch (err: any) {
-    logwatch.error({
-      action: "zenodo.publish.update_repo",
-      error: err.stack ?? err.message,
-      message: err.message,
-      owner,
-      repo,
-      userId,
-    });
-    await onProgress?.({
-      message: err.message,
-      status: "error",
-      step: "update_repo",
-    });
-    return { error: err.message, success: false };
+    return await failPublication("update_repo", err);
   }
 
   await onProgress?.({
@@ -1297,20 +1315,7 @@ export async function beginZenodoPublication(
     const zipFilename = `${repo}-${tag}.zip`;
     await uploadFileToZenodoBucket(bucketUrl, token, zipFilename, zipBytes);
   } catch (err: any) {
-    logwatch.error({
-      action: "zenodo.publish.upload_files",
-      error: err.stack ?? err.message,
-      message: err.message,
-      owner,
-      repo,
-      userId,
-    });
-    await onProgress?.({
-      message: err.message,
-      status: "error",
-      step: "upload_files",
-    });
-    return { error: err.message, success: false };
+    return await failPublication("upload_files", err);
   }
 
   await onProgress?.({
@@ -1362,29 +1367,7 @@ export async function beginZenodoPublication(
       });
     }
   } catch (err: any) {
-    logwatch.error({
-      action: "zenodo.publish.publish",
-      error: err.stack ?? err.message,
-      message: err.message,
-      owner,
-      repo,
-      userId,
-    });
-
-    // Mark DB as error
-    await prisma.zenodoDeposition
-      .update({
-        data: { status: "error" },
-        where: { repository_id: repositoryId },
-      })
-      .catch(() => undefined);
-
-    await onProgress?.({
-      message: err.message,
-      status: "error",
-      step: "publish",
-    });
-    return { error: err.message, success: false };
+    return await failPublication("publish", err);
   }
 
   await onProgress?.({

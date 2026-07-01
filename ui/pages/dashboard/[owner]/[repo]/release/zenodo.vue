@@ -596,6 +596,62 @@ const navigateToDashboard = async () => {
   await navigateTo(`/dashboard/${owner}/${repo}/`);
 };
 
+const reconcilePublishStatus = async () => {
+  // The SSE stream ended without a terminal event - the proxy/browser likely
+  // dropped the long-lived connection. The backend may still be finishing, so
+  // poll the authoritative DB status a few times before deciding the outcome.
+  const maxAttempts = 5;
+  const delayMs = 3000;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const status = await $fetch<{
+        zenodoDoi: string;
+        zenodoWorkflowStatus: string;
+      }>(`/api/${owner}/${repo}/release/zenodo/status`, {
+        credentials: "include",
+      });
+
+      if (status.zenodoWorkflowStatus === "published") {
+        // Release actually succeeded
+        zenodoPublishStatus.value = "published";
+        if (status.zenodoDoi) {
+          zenodoPublishDOI.value = status.zenodoDoi;
+        }
+        for (const step of publishSteps.value) {
+          if (step.status !== "error") {
+            step.status = "completed";
+          }
+        }
+        resetForm();
+        return;
+      }
+
+      if (status.zenodoWorkflowStatus === "error") {
+        zenodoPublishStatus.value = "error";
+        zenodoPublishErrorMessage.value =
+          "The release failed on the server. Please review your settings and try again.";
+        const inProgress = publishSteps.value.find(
+          (s) => s.status === "in_progress",
+        );
+        if (inProgress) {
+          inProgress.status = "error";
+        }
+        return;
+      }
+    } catch {
+      // retry on the next attempt
+    }
+
+    if (attempt < maxAttempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  zenodoPublishStatus.value = "pending";
+  zenodoPublishErrorMessage.value = "";
+};
+
 const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
   if (shouldPublish) {
     zenodoPublishSpinner.value = true;
@@ -619,6 +675,10 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
   });
 
   zenodoPreflightError.value = null;
+
+  // Track whether the SSE stream delivered a terminal (complete/error) event.
+  let streamingStarted = false;
+  let receivedTerminal = false;
 
   try {
     const response = await fetch(`/api/${owner}/${repo}/release/zenodo`, {
@@ -692,6 +752,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     showZenodoPublishProgressModal.value = true;
     zenodoPublishStatus.value = "inProgress";
     resetPublishSteps();
+    streamingStarted = true;
 
     const reader = response.body!.getReader();
     const decoder = new TextDecoder();
@@ -710,6 +771,9 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
           try {
             const event = JSON.parse(line.slice(6));
             handleSSEEvent(event);
+            if (event.step === "complete" || event.step === "error") {
+              receivedTerminal = true;
+            }
           } catch {
             // ignore malformed lines
           }
@@ -718,14 +782,19 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     }
   } catch (error) {
     console.error("Failed to start Zenodo publish process:", error);
-    push.error({
-      title: "Failed to start Zenodo publish process",
-      message: "Please try again later",
-    });
-    zenodoPublishStatus.value = "error";
+    if (!streamingStarted) {
+      push.error({
+        title: "Failed to start Zenodo publish process",
+        message: "Please try again later",
+      });
+      zenodoPublishStatus.value = "error";
+    }
   } finally {
     zenodoPublishSpinner.value = false;
     zenodoDraftSpinner.value = false;
+    if (shouldPublish && streamingStarted && !receivedTerminal) {
+      await reconcilePublishStatus();
+    }
     fetchZenodoBadge();
   }
 };
@@ -1848,6 +1917,12 @@ onBeforeUnmount(() => {
             class="h-6 w-6 text-blue-600"
           />
 
+          <Icon
+            v-else-if="zenodoPublishStatus === 'pending'"
+            name="mdi:clock-alert-outline"
+            class="h-6 w-6 text-amber-500"
+          />
+
           <!-- Dynamic title -->
           <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">
             {{
@@ -1857,7 +1932,9 @@ onBeforeUnmount(() => {
                   ? "Zenodo publish error"
                   : zenodoPublishStatus === "published"
                     ? "Zenodo publish success"
-                    : "Loading..."
+                    : zenodoPublishStatus === "pending"
+                      ? "Zenodo publish still processing"
+                      : "Loading..."
             }}
           </h2>
         </div>
@@ -2069,6 +2146,20 @@ onBeforeUnmount(() => {
         </div>
       </n-flex>
 
+      <!-- Pending: reconciliation timed out while the server is still working -->
+      <n-flex
+        v-else-if="zenodoPublishStatus === 'pending'"
+        vertical
+        class="space-y-3"
+      >
+        <p class="text-gray-700 dark:text-gray-300">
+          Your release is still finishing on the server. Large releases can take
+          a few minutes to upload and archive. You can safely leave this page —
+          check your repository dashboard shortly; the release may still
+          complete successfully.
+        </p>
+      </n-flex>
+
       <!-- Loading state -->
       <n-flex v-else>
         <p>Please wait while we get the status of your workflow.</p>
@@ -2110,6 +2201,12 @@ onBeforeUnmount(() => {
 
         <n-flex v-else-if="zenodoPublishStatus === 'error'" justify="center">
           <n-button type="success" size="small" @click="navigateToDashboard">
+            Return to Dashboard
+          </n-button>
+        </n-flex>
+
+        <n-flex v-else-if="zenodoPublishStatus === 'pending'" justify="center">
+          <n-button type="primary" size="small" @click="navigateToDashboard">
             Return to Dashboard
           </n-button>
         </n-flex>
