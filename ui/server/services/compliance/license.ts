@@ -60,6 +60,8 @@ function normalizeContent(content: string | null | undefined): string {
 
 // == Public API ===============================================================
 
+// Fallback file names, only scanned when the provider's own license
+// detection (GitHub's licensee engine) can't classify a file.
 const LICENSE_PATHS = [
   "LICENSE",
   "LICENSE.md",
@@ -71,6 +73,11 @@ const LICENSE_PATHS = [
 /**
  * Checks whether a LICENSE file exists in the repository and detects its SPDX ID.
  *
+ * Delegated to GitHub's `licensee` engine, which
+ * locates the license file by name regardless of convention and returns its
+ * path, content, and SPDX id in one call. The hardcoded {@link LICENSE_PATHS}
+ * list is only consulted as a fallback when the provider finds nothing.
+ *
  * @param provider - The repository provider used to fetch file contents and detect licenses.
  * @param owner - The repository owner (user or organization name).
  * @param repo - The repository name.
@@ -81,23 +88,38 @@ export async function checkForLicense(
   owner: string,
   repo: string,
 ): Promise<LicenseResult> {
+  // Primary path: let the provider detect the license file automatically.
+  const detected = await provider.detectLicense(owner, repo).catch(() => ({
+    name: null,
+    content: null,
+    path: null,
+    spdxId: null,
+  }));
+
+  if (detected.path) {
+    return {
+      status: true,
+      path: detected.path,
+      content: detected.content ?? "",
+      spdx_id: detected.spdxId,
+    };
+  }
+
+  // Fallback: the provider didn't classify a license, but a license-shaped
+  // file may still exist under a conventional name. Flag it so it can be
+  // resolved as a custom license downstream.
   for (const filePath of LICENSE_PATHS) {
     const file = await provider.getFileContent(owner, repo, filePath);
     if (file) {
-      // Try to get SPDX ID from GitHub's license detection
-      const detected = await provider.detectLicense(owner, repo).catch(() => ({
-        spdxId: null,
-        name: null,
-      }));
-
       return {
         status: true,
         path: filePath,
         content: file.content,
-        spdx_id: detected.spdxId,
+        spdx_id: null,
       };
     }
   }
+
   return {
     status: false,
     path: "No LICENSE file found",
@@ -132,7 +154,8 @@ export function validateLicense(
     if (licenseId === "no-license" || !licenseId) {
       logwatch.warn({
         ...logCtx,
-        message: "License ID is missing or unrecognized — treating as no license",
+        message:
+          "License ID is missing or unrecognized — treating as no license",
         spdxId: license.spdx_id,
       });
       licenseId = null;
@@ -144,7 +167,8 @@ export function validateLicense(
       if (licenseContentEmpty) {
         logwatch.warn({
           ...logCtx,
-          message: "NOASSERTION license with empty content — treating as no license",
+          message:
+            "NOASSERTION license with empty content. Treating as no license",
         });
         licenseId = null;
       } else {
@@ -163,7 +187,7 @@ export function validateLicense(
           logwatch.warn({
             ...logCtx,
             existingLicenseId: existingLicense?.license_id ?? null,
-            message: "NOASSERTION license content changed — resolving as Custom",
+            message: "NOASSERTION license content changed. Resolving as Custom",
           });
           licenseId = "Custom";
         } else if (existingIsValidSpdx) {
@@ -172,13 +196,15 @@ export function validateLicense(
           logwatch.warn({
             ...logCtx,
             existingLicenseId: existingLicense.license_id,
-            message: "NOASSERTION license with non-SPDX existing ID — reusing existing",
+            message:
+              "NOASSERTION license with non-SPDX existing ID. Reusing existing",
           });
           licenseId = existingLicense.license_id;
         } else {
           logwatch.warn({
             ...logCtx,
-            message: "NOASSERTION license with no existing record — resolving as Custom",
+            message:
+              "NOASSERTION license with no existing record. Resolving as Custom",
           });
           licenseId = "Custom";
         }
