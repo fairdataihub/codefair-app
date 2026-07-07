@@ -543,7 +543,7 @@ function renderLicense(
 
   let section = "";
   if (license.status && licenseId && licenseId !== "Custom") {
-    section = `## LICENSE ✔️\n\nA \`${license.path}\` file is found at the root level of the repository.\n\n**Detected license:** \`${licenseId}\` (SPDX identifier)\n\n${badge}\n\n`;
+    section = `## LICENSE ✔️\n\nA \`${license.path}\` file is found at the root level of the repository.\n\n**Detected license:** \`${licenseId}\`\n\n${badge}\n\n`;
   } else if (license.status && licenseId === "Custom" && !customLicenseTitle) {
     section =
       `## LICENSE ❗\n\nYour \`${license.path}\` file needs verification. This can happen when:\n` +
