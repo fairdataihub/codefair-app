@@ -498,7 +498,7 @@ async function _subjectsFromDb(repositoryId: number): Promise<{
     cwl: null,
     license: {
       content: licenseDb?.license_content ?? "",
-      path: "",
+      path: licenseDb?.license_path ?? "",
       spdx_id: licenseDb?.license_id ?? null,
       status: licenseDb?.contains_license ?? false,
     },

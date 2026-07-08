@@ -541,19 +541,23 @@ function renderLicense(
   const badgeURL = `${DOMAIN}/dashboard/${owner}/${repo}/edit/license`;
   const badge = `[![License](https://img.shields.io/badge/${license.status ? "Edit_License-0ea5e9" : "Add_License-dc2626"}.svg)](${badgeURL})`;
 
+  // Fall back to a generic filename when the stored path is empty (e.g. an
+  // existing LicenseRequest row that predates path tracking / backfill).
+  const licenseFile = license.path.trim() || "LICENSE";
+
   let section = "";
   if (license.status && licenseId && licenseId !== "Custom") {
-    section = `## LICENSE ✔️\n\nA \`LICENSE\` file is found at the root level of the repository.\n\n${badge}\n\n`;
+    section = `## LICENSE ✔️\n\nA \`${licenseFile}\` file is found in the repository.\n\n**Detected license:** \`${licenseId}\`\n\n${badge}\n\n`;
   } else if (license.status && licenseId === "Custom" && !customLicenseTitle) {
     section =
-      `## LICENSE ❗\n\nYour \`LICENSE\` file needs verification. This can happen when:\n` +
+      `## LICENSE ❗\n\nYour \`${licenseFile}\` file needs verification. This can happen when:\n` +
       `- Your license content was modified and we need you to confirm the license type\n` +
       `- You're using a license that GitHub doesn't recognize but may still be a valid SPDX license\n` +
       `- You're using a truly custom license\n\n` +
       `> [!NOTE]\n> If you plan to archive on Zenodo, you'll need to select a license from the SPDX license list. Custom licenses are not currently supported by Zenodo's API.\n\n` +
       `Click the "Edit license" button below to **confirm your license type** (select from the dropdown and choose "Keep existing content") or provide a custom license title.\n\n${badge}\n\n`;
   } else if (license.status && licenseId === "Custom" && customLicenseTitle) {
-    section = `## LICENSE ✔️\n\nA custom \`LICENSE\` file titled as **${customLicenseTitle}**, has been found at the root level of this repository. If you would like to update the title or change license, click the "Edit license" button below.\n\n${badge}\n\n`;
+    section = `## LICENSE ✔️\n\nA custom \`${licenseFile}\` file titled as **${customLicenseTitle}**, has been found in this repository. If you would like to update the title or change license, click the "Edit license" button below.\n\n${badge}\n\n`;
   } else {
     section =
       `## LICENSE ❌\n\nTo make your software reusable, a \`LICENSE\` file is expected at the root level of your repository.\n` +

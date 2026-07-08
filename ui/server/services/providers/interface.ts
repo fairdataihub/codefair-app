@@ -56,6 +56,10 @@ export interface ContributorInfo {
 export interface DetectedLicense {
   /** SPDX identifier but null when GitHub cannot detect a common one. */
   name: string | null;
+  /** Decoded UTF-8 content of the detected license file, or null when none found. */
+  content: string | null;
+  /** Path of the detected license file (e.g. "COPYING.LESSER"), or null when none found. */
+  path: string | null;
   spdxId: string | null;
 }
 

@@ -205,7 +205,8 @@ export class GitHubRepositoryProvider implements RepositoryProvider {
    * Detects the license of a repository using the GitHub license API.
    * @param owner - The repository owner.
    * @param repo - The repository name.
-   * @returns The detected license name and SPDX identifier, with `null` fields if none is found.
+   * @returns The detected license name, SPDX identifier, and the matched license
+   *   file's path and decoded content, with `null` fields if none is found.
    */
   async detectLicense(owner: string, repo: string): Promise<DetectedLicense> {
     try {
@@ -215,10 +216,16 @@ export class GitHubRepositoryProvider implements RepositoryProvider {
       );
       return {
         name: data.license?.name ?? null,
+        content: data.content
+          ? Buffer.from(data.content, "base64").toString("utf-8")
+          : null,
+        path: data.path ?? null,
         spdxId: data.license?.spdx_id ?? null,
       };
     } catch (err: any) {
-      if (err.status === 404) return { name: null, spdxId: null };
+      if (err.status === 404) {
+        return { name: null, content: null, path: null, spdxId: null };
+      }
       throw err;
     }
   }
