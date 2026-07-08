@@ -89,12 +89,7 @@ export async function checkForLicense(
   repo: string,
 ): Promise<LicenseResult> {
   // Primary path: let the provider detect the license file automatically.
-  const detected = await provider.detectLicense(owner, repo).catch(() => ({
-    name: null,
-    content: null,
-    path: null,
-    spdxId: null,
-  }));
+  const detected = await provider.detectLicense(owner, repo);
 
   if (detected.path) {
     return {
