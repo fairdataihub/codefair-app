@@ -937,17 +937,17 @@ const githubReleaseInterval = ref<any>(null);
 const snippets = computed(() => [
   {
     title: "Markdown",
-    content: `[![FAIR Software Release](${codefairDomain}/badge/${owner}/${repo})](${codefairDomain}/badge/${owner}/${repo})`,
+    content: `[![FAIR Software Release](${codefairDomain}/api/badge/${owner}/${repo})](${codefairDomain}/doi/${owner}/${repo})`,
   },
   {
     title: "HTML",
-    content: `<a href="${codefairDomain}/badge/${owner}/${repo}"><img src="${codefairDomain}/badge/${owner}/${repo}" alt="FAIR Software Release"></a>`,
+    content: `<a href="${codefairDomain}/doi/${owner}/${repo}"><img src="${codefairDomain}/api/badge/${owner}/${repo}" alt="FAIR Software Release"></a>`,
   },
   {
     title: "Image & Target URL",
     items: [
       {
-        content: `${codefairDomain}/badge/${owner}/${repo}`,
+        content: `${codefairDomain}/api/badge/${owner}/${repo}`,
         label: "Image URL",
       },
       {
