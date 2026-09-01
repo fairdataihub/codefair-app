@@ -484,14 +484,14 @@ interface PublishStep {
 
 const publishSteps = ref<PublishStep[]>([
   {
-    key: "deposition",
-    label: "Create Zenodo deposition",
+    key: "metadata",
+    label: "Prepare metadata",
     message: "",
     status: "pending",
   },
   {
-    key: "metadata",
-    label: "Prepare metadata",
+    key: "deposition",
+    label: "Prepare Zenodo record draft",
     message: "",
     status: "pending",
   },
@@ -515,7 +515,7 @@ const publishSteps = ref<PublishStep[]>([
   },
   {
     key: "publish",
-    label: "Publish deposition",
+    label: "Publish Zenodo record",
     message: "",
     status: "pending",
   },
