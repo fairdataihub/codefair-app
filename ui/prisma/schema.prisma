@@ -41,7 +41,7 @@ model Installation {
   action_count          Int      @default(0)
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
-  use_central_api       Boolean  @default(false)
+  use_central_api       Boolean  @default(true)
 
   CodeMetadata            CodeMetadata?
   CwlValidation           CwlValidation?
