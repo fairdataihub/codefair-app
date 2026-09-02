@@ -21,6 +21,12 @@ import type {
   ProgressCallback,
   PublicationResult,
 } from "./interface";
+import {
+  extractRecordDoi,
+  type RdmRecord,
+  type WorkingDraft,
+  ZenodoRdmClient,
+} from "./zenodo-rdm";
 import { GitHubRepositoryProvider } from "~/server/services/providers/github";
 import { refreshDashboardFromDb } from "~/server/services/dashboard/manager";
 import { logwatch } from "~/server/utils/logwatch";
@@ -43,28 +49,6 @@ function zenodoApiEndpoint(): string {
  */
 function zenodoEndpoint(): string {
   return process.env.ZENODO_ENDPOINT ?? "";
-}
-
-// ===== Error helper ==================================================
-
-/**
- * Extracts a useful error string from a failed Zenodo API response,
- * including the response body for validation details.
- * @param operation - Human-readable label for the operation that failed.
- * @param response - The failed fetch Response object.
- * @returns A formatted error string including the HTTP status and response body.
- */
-async function getZenodoErrorMessage(
-  operation: string,
-  response: Response,
-): Promise<string> {
-  let body = "";
-  try {
-    body = await response.text();
-  } catch {
-    // ignore body read errors
-  }
-  return `${operation}: ${response.status} ${response.statusText}${body ? ` — ${body}` : ""}`;
 }
 
 // ===== Token management =============================================
@@ -109,13 +93,18 @@ async function refreshZenodoToken(
     return;
   }
 
-  const { access_token, expires_in, refresh_token } = await res.json();
+  const tokenBody = await res.json();
+  const {
+    access_token: accessToken,
+    expires_in: expiresIn,
+    refresh_token: rotatedRefreshToken,
+  } = tokenBody;
 
   await prisma.zenodoToken.update({
     data: {
-      expires_at: new Date(Date.now() + expires_in * 1000),
-      refresh_token,
-      token: access_token,
+      expires_at: new Date(Date.now() + expiresIn * 1000),
+      refresh_token: rotatedRefreshToken,
+      token: accessToken,
     },
     where: { user_id: userId },
   });
@@ -151,38 +140,49 @@ export async function validateZenodoToken(
     };
   }
 
-  const res = await fetch(`${zenodoApiEndpoint()}/deposit/depositions`, {
-    headers: { Authorization: `Bearer ${tokenRecord.token}` },
-  });
+  let records;
+  try {
+    records = await new ZenodoRdmClient(
+      zenodoApiEndpoint(),
+      tokenRecord.token,
+    ).listUserRecords();
+  } catch (error: any) {
+    const status = Number(error?.message?.match(/:\s+(401|403)\b/)?.[1]);
+    if (status === 401 || status === 403) {
+      await prisma.zenodoToken.delete({ where: { user_id: userId } });
+      logwatch.warn({
+        action: "zenodo.validateToken",
+        message: `Zenodo rejected the token (${status}); token deleted`,
+        userId,
+      });
+      return {
+        existingDepositions: [],
+        message: "Zenodo token is invalid or expired",
+        valid: false,
+      };
+    }
 
-  if (!res.ok) {
-    // Token invalid or expired - remove it so the user is prompted to reconnect
-    await prisma.zenodoToken.delete({ where: { user_id: userId } });
     logwatch.warn({
       action: "zenodo.validateToken",
-      message: `Zenodo token invalid or expired (${res.status}), token deleted`,
+      message: `Zenodo token check failed without invalidating the token: ${error.message}`,
       userId,
     });
     return {
       existingDepositions: [],
-      message: "Zenodo token is invalid or expired",
+      message: "Could not reach Zenodo, please try again shortly",
       valid: false,
     };
   }
 
-  // Token is valid - extend the session
   await refreshZenodoToken(userId, tokenRecord.refresh_token);
 
-  const data = await res.json();
-  const existingDepositions: ExistingDeposition[] = (data ?? []).map(
-    (d: any) => ({
-      id: d.id,
-      title: d.metadata?.title ?? "",
-      conceptrecid: d.conceptrecid,
-      state: d.state,
-      submitted: d.submitted,
-    }),
-  );
+  const existingDepositions: ExistingDeposition[] = records.map((record) => ({
+    id: record.id,
+    title: record.title,
+    conceptrecid: record.conceptDoi ?? "",
+    state: record.isPublished ? "done" : "unsubmitted",
+    submitted: record.isPublished,
+  }));
 
   logwatch.info({
     action: "zenodo.validateToken",
@@ -198,424 +198,122 @@ export async function validateZenodoToken(
   };
 }
 
-// ===== Deposition management =========================================
+// ===== InvenioRDM metadata helpers ==================================
 
-/**
- * Creates a new empty Zenodo deposition and returns the deposition object.
- * @param token - Zenodo OAuth access token.
- * @returns The newly created deposition object from the Zenodo API.
- */
-async function createNewZenodoDeposition(token: string): Promise<any> {
-  const res = await fetch(`${zenodoApiEndpoint()}/deposit/depositions`, {
-    body: JSON.stringify({}),
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    method: "POST",
-  });
+type RdmCreator = {
+  affiliations?: Array<{ name: string }>;
+  person_or_org: {
+    name: string;
+    family_name?: string;
+    given_name?: string;
+    identifiers?: Array<{ identifier: string; scheme: "orcid" }>;
+    type: "organizational" | "personal";
+  };
+};
 
-  if (!res.ok) {
-    const msg = await getZenodoErrorMessage("createNewZenodoDeposition", res);
-    throw new Error(msg);
-  }
-
-  const deposition = await res.json();
-  logwatch.info({
-    action: "zenodo.createDeposition",
-    depositionId: deposition.record_id,
-    message: "New Zenodo deposition created",
-  });
-  return deposition;
-}
-
-/**
- * Fetches an existing deposition.
- * First attempts to resolve the latest published version via
- * `/records/{id}/versions/latest`; falls back to the draft endpoint
- * `/deposit/depositions/{id}` when the record is not yet published (404).
- * @param token - Zenodo OAuth access token.
- * @param depositionId - Numeric Zenodo deposition record ID.
- * @returns The deposition object from the Zenodo API.
- */
-async function fetchExistingZenodoDeposition(
-  token: string,
-  depositionId: number,
-): Promise<any> {
-  const latestRes = await fetch(
-    `${zenodoApiEndpoint()}/records/${depositionId}/versions/latest`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-
-  if (latestRes.status === 404) {
-    // Not yet published - try the draft endpoint
-    logwatch.warn({
-      action: "zenodo.fetchDeposition",
-      depositionId,
-      message: "Latest version not found (404), falling back to draft endpoint",
-    });
-    const draftRes = await fetch(
-      `${zenodoApiEndpoint()}/deposit/depositions/${depositionId}`,
-      { headers: { Authorization: `Bearer ${token}` } },
+function extractOrcid(author: Record<string, any>): string | undefined {
+  const candidates = [author.orcid, author.id, author["@id"]];
+  for (const candidate of candidates) {
+    if (typeof candidate !== "string") continue;
+    const match = candidate.match(
+      /(?:https?:\/\/orcid\.org\/)?(\d{4}-\d{4}-\d{4}-[\dX]{4})/i,
     );
-
-    if (!draftRes.ok) {
-      const msg = await getZenodoErrorMessage(
-        "fetchExistingZenodoDeposition (draft)",
-        draftRes,
-      );
-      throw new Error(msg);
-    }
-
-    const draft = await draftRes.json();
-    logwatch.info({
-      action: "zenodo.fetchDeposition",
-      depositionId,
-      message: "Fetched existing deposition as draft",
-    });
-    return draft;
+    if (match?.[1]) return match[1];
   }
-
-  if (!latestRes.ok) {
-    const msg = await getZenodoErrorMessage(
-      "fetchExistingZenodoDeposition (latest)",
-      latestRes,
-    );
-    throw new Error(msg);
-  }
-
-  const latest = await latestRes.json();
-  logwatch.info({
-    action: "zenodo.fetchDeposition",
-    depositionId,
-    message: "Fetched latest published version of deposition",
-  });
-  return latest;
+  return undefined;
 }
 
-/**
- * Creates a new draft version of an already-published deposition.
- * @param token - Zenodo OAuth access token.
- * @param depositionId - Numeric ID of the published deposition to version.
- * @returns The new draft deposition object.
- */
-async function createNewVersionOfDeposition(
-  token: string,
-  depositionId: number,
-): Promise<any> {
-  const url = `${zenodoApiEndpoint()}/deposit/depositions/${depositionId}/actions/newversion`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-    method: "POST",
-  });
-
-  if (!res.ok) {
-    const msg = await getZenodoErrorMessage(
-      "createNewVersionOfDeposition",
-      res,
-    );
-    logwatch.error({
-      action: "zenodo.createNewVersion",
-      depositionId,
-      message: `Failed to create new version of deposition (${res.status})`,
-      stack: new Error(msg).stack,
+function buildRdmCreators(codemeta: Record<string, any>): RdmCreator[] {
+  const rawAuthors = Array.isArray(codemeta.author)
+    ? codemeta.author
+    : codemeta.author
+      ? [codemeta.author]
+      : [];
+  const creators = rawAuthors
+    .filter((author: any) => author?.type !== "Role")
+    .map((author: any): RdmCreator => {
+      const organization = author.type === "Organization";
+      const givenName = String(author.givenName ?? "").trim();
+      const familyName = String(author.familyName ?? "").trim();
+      const name = organization
+        ? String(author.name ?? givenName ?? "Unknown").trim()
+        : familyName
+          ? `${familyName}, ${givenName}`.replace(/,\s*$/, "")
+          : String(author.name ?? givenName ?? "Unknown").trim();
+      const orcid = extractOrcid(author);
+      const affiliationName =
+        typeof author.affiliation === "string"
+          ? author.affiliation
+          : author.affiliation?.name;
+      return {
+        person_or_org: {
+          name: name || "Unknown",
+          type: organization ? "organizational" : "personal",
+          ...(!organization && givenName && { given_name: givenName }),
+          ...(!organization && familyName && { family_name: familyName }),
+          ...(orcid && {
+            identifiers: [{ identifier: orcid, scheme: "orcid" as const }],
+          }),
+        },
+        ...(affiliationName && {
+          affiliations: [{ name: String(affiliationName) }],
+        }),
+      };
     });
-    throw new Error(msg);
-  }
 
-  const newVersion = await res.json();
-  logwatch.info({
-    action: "zenodo.createNewVersion",
-    message: "New draft version created for existing deposition",
-    newDepositionId: newVersion.record_id,
-    previousDepositionId: depositionId,
-  });
-  return newVersion;
+  return creators.length
+    ? creators
+    : [{ person_or_org: { name: "Unknown", type: "personal" } }];
 }
 
-/**
- * Deletes a single file from a Zenodo draft deposition.
- * @param depositionId - Numeric ID of the draft deposition.
- * @param token - Zenodo OAuth access token.
- * @param fileName - Name of the file to delete.
- * @returns Resolves when the file has been deleted.
- */
-async function deleteFileFromZenodo(
-  depositionId: number,
-  token: string,
-  fileName: string,
-): Promise<void> {
-  const res = await fetch(
-    `${zenodoApiEndpoint()}/records/${depositionId}/draft/files/${encodeURIComponent(fileName)}?access_token=${token}`,
-    { method: "DELETE" },
-  );
-
-  if (!res.ok) {
-    const msg = await getZenodoErrorMessage(
-      `deleteFileFromZenodo (${fileName})`,
-      res,
-    );
-    logwatch.error({
-      action: "zenodo.deleteFile",
-      depositionId,
-      fileName,
-      message: `Failed to delete file from Zenodo deposition (${res.status})`,
-      stack: new Error(msg).stack,
-    });
-    throw new Error(msg);
-  }
-}
-
-/**
- * Returns the working draft deposition to upload files into.
- *
- * - `"new"` - creates a fresh deposition.
- * - `"existing"` - resolves the latest version; if already published creates a
- *   new draft version; if still a draft deletes all existing files.
- *
- * In both existing deposition cases any pre-existing files in the draft are
- * removed so we start with a clean slate.
- * @param mode - Whether to create a new deposition or reuse an existing one.
- * @param depositionId - Required when mode is "existing"; the target deposition ID.
- * @param token - Zenodo OAuth access token.
- * @returns The working draft deposition object ready to receive file uploads.
- */
-async function getWorkingDeposition(
-  mode: "new" | "existing",
-  depositionId: number | undefined,
-  token: string,
-): Promise<any> {
-  if (mode === "new") {
-    logwatch.info({
-      action: "zenodo.getWorkingDeposition",
-      message: "Creating new deposition",
-    });
-    return createNewZenodoDeposition(token);
-  }
-
-  // mode === "existing"
-  const existing = await fetchExistingZenodoDeposition(token, depositionId!);
-
-  if (existing.submitted === false) {
-    // It's an unsubmitted draft — purge its files then reuse it
-    logwatch.info({
-      action: "zenodo.getWorkingDeposition",
-      depositionId,
-      message: "Reusing existing unsubmitted draft, purging files",
-    });
-    for (const file of existing.files ?? []) {
-      await deleteFileFromZenodo(depositionId!, token, file.filename);
-    }
-    return existing;
-  }
-
-  // Submitted (published) - create a new version draft
-  logwatch.info({
-    action: "zenodo.getWorkingDeposition",
-    depositionId,
-    message: "Deposition already published, creating new version draft",
-  });
-  const newVersion = await createNewVersionOfDeposition(
-    token,
-    existing.id ?? depositionId!,
-  );
-
-  for (const file of newVersion.files ?? []) {
-    await deleteFileFromZenodo(newVersion.record_id, token, file.filename);
-  }
-
-  return newVersion;
-}
-
-// ===== Metadata helpers =============================================
-
-/**
- * Builds the Zenodo metadata payload from a parsed `codemeta.json` object,
- * the pre-reserved DOI, and optional user-supplied overrides.
- * @param codemeta - Parsed codemeta.json object from the repository.
- * @param depositMeta - User-supplied access right and version overrides.
- * @param repositoryId - Prisma repository ID.
- * @param doi - Pre-reserved DOI string from the deposition.
- * @param licenseId - SPDX license identifier.
- * @returns Zenodo metadata payload object ready for a PUT request.
- */
-function buildZenodoMetadata(
-  codemeta: Record<string, any>,
-  depositMeta: { accessRight: string; version: string },
-  doi: string,
-  licenseId: string,
-): { metadata: Record<string, any> } {
-  const today = new Date().toISOString().split("T")[0];
-
-  const creators = (codemeta.author ?? [])
-    .filter((a: any) => a?.type !== "Role")
-    .map((a: any) => {
-      const entry: Record<string, string> = {};
-      entry.name = a.familyName
-        ? `${a.familyName}, ${a.givenName ?? ""}`
-        : (a.givenName ?? a.name ?? "Unknown");
-      if (a.affiliation?.name) entry.affiliation = a.affiliation.name;
-      if (a.orcid) entry.orcid = a.orcid;
-      return entry;
-    });
-
+function buildRdmDraftSeed(codemeta: Record<string, any>) {
   return {
+    access: { files: "public", record: "public" },
+    files: { enabled: true },
     metadata: {
-      title: codemeta.name ?? "",
-      access_right: depositMeta.accessRight || "open",
-      creators,
-      description: codemeta.description ?? "",
-      keywords: codemeta.keywords ?? [],
-      license: licenseId,
-      prereserve_doi: { doi },
-      publication_date: today,
-      upload_type: "software",
-      version: depositMeta.version || codemeta.version || "",
+      title: codemeta.name ?? "Untitled software",
+      creators: buildRdmCreators(codemeta),
+      publication_date: new Date().toISOString().slice(0, 10),
+      publisher: "Zenodo",
+      resource_type: { id: "software" },
     },
   };
 }
 
-// ===== Zenodo API write helpers =====================================
-
-/**
- * Updates the metadata on an existing Zenodo draft deposition.
- * Automatically re-applies `upload_type: "software"` if Zenodo strips it.
- * @param depositionId - Numeric ID of the draft deposition to update.
- * @param token - Zenodo OAuth access token.
- * @param metadata - Zenodo metadata payload as returned by buildZenodoMetadata.
- * @returns The updated deposition object from the Zenodo API.
- */
-async function updateDepositionMetadata(
-  depositionId: number,
-  token: string,
-  metadata: Record<string, any>,
-): Promise<any> {
-  const url = `${zenodoApiEndpoint()}/deposit/depositions/${depositionId}`;
-  const res = await fetch(url, {
-    body: JSON.stringify(metadata),
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+function buildRdmMetadata(
+  codemeta: Record<string, any>,
+  depositMeta: { accessRight: string; version: string },
+  licenseId: string,
+  draft: RdmRecord,
+) {
+  const keywords = Array.isArray(codemeta.keywords)
+    ? codemeta.keywords.filter((keyword: unknown) =>
+        Boolean(String(keyword ?? "").trim()),
+      )
+    : [];
+  return {
+    access: {
+      files: depositMeta.accessRight === "open" ? "public" : "restricted",
+      record: depositMeta.accessRight === "open" ? "public" : "restricted",
     },
-    method: "PUT",
-  });
-
-  if (!res.ok) {
-    const msg = await getZenodoErrorMessage("updateDepositionMetadata", res);
-    logwatch.error({
-      action: "zenodo.updateMetadata",
-      depositionId,
-      message: `Failed to update deposition metadata (${res.status})`,
-      stack: new Error(msg).stack,
-    });
-    throw new Error(msg);
-  }
-
-  const updated = await res.json();
-
-  // Zenodo can strip upload_type - re-apply if missing
-  if (!updated?.metadata?.upload_type) {
-    logwatch.info({
-      action: "zenodo.updateMetadata",
-      depositionId,
-      message: "Zenodo stripped upload_type, re-applying 'software'",
-    });
-    const fixed = { ...updated.metadata, upload_type: "software" };
-    return updateDepositionMetadata(depositionId, token, { metadata: fixed });
-  }
-
-  logwatch.info({
-    action: "zenodo.updateMetadata",
-    depositionId,
-    message: "Deposition metadata updated",
-  });
-  return updated;
-}
-
-/**
- * Uploads a single file to a Zenodo deposition bucket.
- * @param bucketUrl - Zenodo S3 bucket URL from deposition.links.bucket.
- * @param token - Zenodo OAuth access token.
- * @param filename - Name to give the file in the deposition.
- * @param content - Raw file bytes.
- * @returns Resolves when the upload is complete.
- */
-async function uploadFileToZenodoBucket(
-  bucketUrl: string,
-  token: string,
-  filename: string,
-  content: Blob | Buffer | ArrayBuffer,
-): Promise<void> {
-  const url = `${bucketUrl}/${encodeURIComponent(filename)}`;
-  const res = await fetch(url, {
-    body: content as BodyInit,
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/octet-stream",
+    files: { enabled: true },
+    metadata: {
+      title: codemeta.name ?? "Untitled software",
+      creators: buildRdmCreators(codemeta),
+      description: codemeta.description ?? "",
+      publication_date: new Date().toISOString().slice(0, 10),
+      publisher: "Zenodo",
+      resource_type: { id: "software" },
+      rights: [{ id: licenseId.toLowerCase() }],
+      version: depositMeta.version || codemeta.version || "",
+      ...(keywords.length && {
+        subjects: keywords.map((subject: unknown) => ({
+          subject: String(subject),
+        })),
+      }),
     },
-    method: "PUT",
-  });
-
-  if (!res.ok) {
-    const msg = await getZenodoErrorMessage(
-      `uploadFileToZenodoBucket (${filename})`,
-      res,
-    );
-    logwatch.error({
-      action: "zenodo.uploadFile",
-      filename,
-      message: `Failed to upload file to Zenodo bucket (${res.status})`,
-      stack: new Error(msg).stack,
-    });
-    throw new Error(msg);
-  }
-
-  logwatch.info({
-    action: "zenodo.uploadFile",
-    filename,
-    message: "File uploaded to Zenodo bucket",
-  });
-}
-
-/**
- * Publishes a Zenodo draft deposition.
- * @param token - Zenodo OAuth access token.
- * @param depositionId - Numeric ID of the draft deposition to publish.
- * @returns The published deposition object from the Zenodo API.
- */
-async function publishZenodoDeposition(
-  token: string,
-  depositionId: number,
-): Promise<any> {
-  const url = `${zenodoApiEndpoint()}/deposit/depositions/${depositionId}/actions/publish`;
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    method: "POST",
-  });
-
-  if (!res.ok) {
-    const msg = await getZenodoErrorMessage("publishZenodoDeposition", res);
-    logwatch.error({
-      action: "zenodo.publishDeposition",
-      depositionId,
-      message: `Failed to publish Zenodo deposition (${res.status})`,
-      stack: new Error(msg).stack,
-    });
-    throw new Error(msg);
-  }
-
-  const published = await res.json();
-  logwatch.info({
-    action: "zenodo.publishDeposition",
-    depositionId,
-    doi: published.doi,
-    message: "Zenodo deposition published",
-  });
-  return published;
+    ...(draft.pids && { pids: draft.pids }),
+  };
 }
 
 // ===== Repo file helpers =============================================
@@ -973,19 +671,52 @@ async function publishGitHubRelease(
 // ===== Main orchestrator =============================================
 
 /**
- * Runs the full Zenodo publication workflow, reporting progress via `onProgress`.
+ * Loads and validates the repository metadata needed to seed an RDM draft.
  *
- * Steps:
- *  1. deposition - create or resolve the working Zenodo draft
- *  2. metadata - fetch repo codemeta.json + resolve license
- *  3. upload_metadata - push metadata to Zenodo
- *  4. update_repo - commit DOI-updated metadata files to the default branch
- *  5. upload_files - upload release assets + repo zip to Zenodo bucket
- *  6. publish - publish Zenodo deposition + GitHub release + DB update
- * @param opts - Publication options including repo details, user token, and metadata.
- * @param onProgress - Optional callback to receive incremental progress events.
- * @returns Publication result with DOI and HTML URL on success, or an error message.
+ * @returns Parsed codemeta and a validated SPDX license identifier.
  */
+async function loadPublicationMetadata(
+  installationId: number,
+  owner: string,
+  repo: string,
+  repositoryId: number,
+) {
+  const provider = await GitHubRepositoryProvider.create(installationId);
+  const codemetaFile = await provider.getFileContent(
+    owner,
+    repo,
+    "codemeta.json",
+  );
+  if (!codemetaFile?.content)
+    throw new Error("codemeta.json not found in repository");
+
+  const codemeta = JSON.parse(codemetaFile.content) as Record<string, any>;
+  const licenseDb = await prisma.licenseRequest.findFirst({
+    where: { repository_id: repositoryId },
+  });
+  const rawLicenseUrl: string =
+    codemeta.license ??
+    (licenseDb?.license_id
+      ? `https://spdx.org/licenses/${licenseDb.license_id}`
+      : "");
+  const matchedLicense = (licensesJson as any[]).find(
+    (license) => license.detailsUrl === `${rawLicenseUrl}.json`,
+  );
+  const licenseId = matchedLicense?.licenseId ?? licenseDb?.license_id ?? "";
+  if (!licenseId) {
+    throw new Error(
+      "Could not resolve a valid SPDX license ID for this repository",
+    );
+  }
+  if (licenseId === "Custom") {
+    throw new Error(
+      "Custom licenses are not supported by Zenodo's API. Please select a valid SPDX license.",
+    );
+  }
+  return { codemeta, licenseId };
+}
+
+/** Runs the active Zenodo publication workflow through the InvenioRDM API. */
 export async function beginZenodoPublication(
   opts: ArchivalPublicationOptions,
   onProgress?: ProgressCallback,
@@ -993,7 +724,6 @@ export async function beginZenodoPublication(
   const {
     installationId,
     metadata,
-    mode,
     owner,
     release,
     repo,
@@ -1003,241 +733,260 @@ export async function beginZenodoPublication(
     userId,
   } = opts;
 
-  const depositionId = opts.depositionId;
-
-  logwatch.info({
-    action: "zenodo.publish.start",
-    message: "Zenodo publication workflow started",
-    mode,
-    owner,
-    repo,
-    userId,
-  });
-
-  // Retrieve token
   const tokenRecord = await prisma.zenodoToken.findFirst({
     where: { user_id: userId },
   });
-
-  if (!tokenRecord) {
-    logwatch.error({
-      action: "zenodo.publish.start",
-      message: "Zenodo token not found for user, aborting publication",
-      owner,
-      repo,
-      userId,
-    });
+  if (!tokenRecord)
     return { error: "Zenodo token not found for user", success: false };
-  }
 
-  const token = tokenRecord.token;
-
-  // == Step 1: deposition ===================================
-  await onProgress?.({
-    message: "Preparing Zenodo deposition…",
-    status: "in_progress",
-    step: "deposition",
-  });
-
-  let deposition: any;
-  try {
-    deposition = await getWorkingDeposition(mode, depositionId, token);
-  } catch (err: any) {
-    logwatch.error({
-      action: "zenodo.publish.deposition",
-      error: err.stack ?? err.message,
-      message: err.message,
-      owner,
-      repo,
-      userId,
-    });
-    await onProgress?.({
-      message: err.message,
-      status: "error",
-      step: "deposition",
-    });
-    return { error: err.message, success: false };
-  }
-
-  const newDepositionId: number = deposition.record_id;
-  const bucketUrl: string = deposition.links.bucket;
-  const doi: string = deposition.metadata.prereserve_doi.doi;
-
-  // Upsert DB record (status: draft)
-  const existingDep = await prisma.zenodoDeposition.findFirst({
+  const client = new ZenodoRdmClient(zenodoApiEndpoint(), tokenRecord.token);
+  let checkpoint = await prisma.zenodoDeposition.findFirst({
     where: { repository_id: repositoryId },
   });
 
-  if (existingDep) {
-    await prisma.zenodoDeposition.update({
-      data: {
-        github_release_id: parseInt(release) || null,
-        github_tag_name: tag,
-        status: "draft",
-        user_id: userId,
-        zenodo_id: newDepositionId,
-        zenodo_metadata: metadata,
-      },
-      where: { repository_id: repositoryId },
+  const refreshDashboard = async () => {
+    try {
+      const provider = await GitHubRepositoryProvider.create(installationId);
+      await refreshDashboardFromDb(provider, owner, repo, repositoryId);
+    } catch (error: any) {
+      logwatch.warn({
+        action: "zenodo.publish",
+        error: error?.message,
+        message: "Failed to re-render dashboard after publication",
+        owner,
+        repo,
+      });
+    }
+  };
+
+  // Zenodo may already be published while GitHub is still a draft. Resume the
+  // local half of the transaction instead of minting another Zenodo version.
+  if (
+    checkpoint?.status === "zenodo-published" &&
+    checkpoint.github_release_id === (parseInt(release) || null) &&
+    checkpoint.github_tag_name === tag &&
+    checkpoint.zenodo_id &&
+    checkpoint.last_published_zenodo_doi
+  ) {
+    await onProgress?.({
+      message: "Finishing the GitHub release for the published Zenodo record…",
+      status: "in_progress",
+      step: "publish",
     });
-  } else {
-    await prisma.zenodoDeposition.create({
-      data: {
-        existing_zenodo_deposition_id: mode === "existing",
-        github_release_id: parseInt(release) || null,
-        github_tag_name: tag,
-        repository_id: repositoryId,
-        status: "draft",
-        user_id: userId,
-        zenodo_id: newDepositionId,
-        zenodo_metadata: metadata,
-      },
-    });
+    try {
+      await publishGitHubRelease(owner, repo, release, userAccessToken);
+      await prisma.zenodoDeposition.update({
+        data: { status: "published" },
+        where: { repository_id: repositoryId },
+      });
+      await refreshDashboard();
+      const data = {
+        doi: checkpoint.last_published_zenodo_doi,
+        htmlUrl: `${zenodoEndpoint()}/records/${checkpoint.zenodo_id}`,
+      };
+      await onProgress?.({
+        data,
+        message: "Successfully published to Zenodo!",
+        status: "completed",
+        step: "publish",
+      });
+      return { data, success: true };
+    } catch (error: any) {
+      await onProgress?.({
+        message: error.message,
+        status: "error",
+        step: "publish",
+      });
+      return { error: error.message, success: false };
+    }
   }
 
-  await onProgress?.({
-    message: "Deposition ready",
-    status: "completed",
-    step: "deposition",
-  });
-
-  // == Step 2: metadata ===================================
   await onProgress?.({
     message: "Loading repository metadata…",
     status: "in_progress",
     step: "metadata",
   });
-
   let codemeta: Record<string, any>;
   let licenseId: string;
-
   try {
-    const provider = await GitHubRepositoryProvider.create(installationId);
-    const codemetaFile = await provider.getFileContent(
+    ({ codemeta, licenseId } = await loadPublicationMetadata(
+      installationId,
       owner,
       repo,
-      "codemeta.json",
-    );
-
-    if (!codemetaFile?.content) {
-      throw new Error("codemeta.json not found in repository");
-    }
-
-    codemeta = JSON.parse(codemetaFile.content);
-
-    // Resolve license: prefer codemeta, fall back to DB
-    const licenseDb = await prisma.licenseRequest.findFirst({
-      where: { repository_id: repositoryId },
-    });
-
-    const rawLicenseUrl: string =
-      codemeta.license ??
-      (licenseDb?.license_id
-        ? `https://spdx.org/licenses/${licenseDb.license_id}`
-        : "");
-
-    const matchedLicense = (licensesJson as any[]).find(
-      (l) => l.detailsUrl === `${rawLicenseUrl}.json`,
-    );
-
-    licenseId = matchedLicense?.licenseId ?? licenseDb?.license_id ?? "";
-
-    if (!licenseId) {
-      logwatch.warn({
-        action: "zenodo.publish.metadata",
-        licenseDb,
-        message:
-          "Could not resolve a valid SPDX license ID for this repository",
-        owner,
-        repo,
-        userId,
-      });
-      throw new Error(
-        `Could not resolve a valid SPDX license ID for this repository`,
-      );
-    }
-
-    if (licenseId === "Custom") {
-      logwatch.warn({
-        action: "zenodo.publish.metadata",
-        licenseDb,
-        message: "Custom license detected, which is not supported by Zenodo",
-        owner,
-        repo,
-        userId,
-      });
-      throw new Error(
-        "Custom licenses are not supported by Zenodo's API. Please select a valid SPDX license.",
-      );
-    }
-  } catch (err: any) {
-    logwatch.error({
-      action: "zenodo.publish.metadata",
-      error: err.stack ?? err.message,
-      message: err.message,
-      owner,
-      repo,
-      userId,
-    });
+      repositoryId,
+    ));
+  } catch (error: any) {
     await onProgress?.({
-      message: err.message,
+      message: error.message,
       status: "error",
       step: "metadata",
     });
-    return { error: err.message, success: false };
+    return { error: error.message, success: false };
   }
-
   await onProgress?.({
     message: "Metadata loaded",
     status: "completed",
     step: "metadata",
   });
 
-  // == Step 3: upload_metadata =================================
   await onProgress?.({
-    message: "Updating metadata on Zenodo…",
+    message: "Preparing Zenodo record draft…",
+    status: "in_progress",
+    step: "deposition",
+  });
+
+  const sameReleaseCheckpoint =
+    checkpoint?.github_release_id === (parseInt(release) || null) &&
+    checkpoint.github_tag_name === tag &&
+    checkpoint.zenodo_id &&
+    ["draft", "draft-new", "draft-version", "error"].includes(
+      checkpoint.status,
+    );
+  const workingMode = sameReleaseCheckpoint ? "existing" : opts.mode;
+  const workingId = sameReleaseCheckpoint
+    ? (checkpoint!.zenodo_id ?? undefined)
+    : opts.depositionId;
+
+  let workingDraft!: WorkingDraft;
+  let workingRecordId = 0;
+  let draftCheckpointSaved = false;
+  let repositoryMutationStarted = false;
+  try {
+    workingDraft = await client.acquireWorkingDraft(
+      workingMode,
+      workingId,
+      buildRdmDraftSeed(codemeta),
+    );
+    workingRecordId = Number(workingDraft.record.id);
+    if (!Number.isFinite(workingRecordId) || workingRecordId <= 0) {
+      throw new Error("Zenodo returned a draft without a usable record ID");
+    }
+
+    const draftStatus =
+      workingDraft.origin === "new_deposition"
+        ? "draft-new"
+        : workingDraft.origin === "new_version"
+          ? "draft-version"
+          : "draft";
+    const checkpointData = {
+      existing_zenodo_deposition_id: workingDraft.origin !== "new_deposition",
+      github_release_id: parseInt(release) || null,
+      github_tag_name: tag,
+      status: draftStatus,
+      user_id: userId,
+      zenodo_id: workingRecordId,
+      zenodo_metadata: metadata,
+    };
+    if (checkpoint) {
+      await prisma.zenodoDeposition.update({
+        data: checkpointData,
+        where: { repository_id: repositoryId },
+      });
+    } else {
+      await prisma.zenodoDeposition.create({
+        data: { ...checkpointData, repository_id: repositoryId },
+      });
+    }
+    draftCheckpointSaved = true;
+    checkpoint = await prisma.zenodoDeposition.findFirst({
+      where: { repository_id: repositoryId },
+    });
+    await client.purgeDraftFiles(workingRecordId);
+  } catch (error: any) {
+    if (
+      workingRecordId &&
+      !draftCheckpointSaved &&
+      ["new_deposition", "new_version"].includes(workingDraft?.origin)
+    ) {
+      await client.discardDraft(workingRecordId).catch((cleanupError: any) => {
+        logwatch.warn({
+          action: "zenodo.cleanupUncheckpointedDraft",
+          error: cleanupError.message,
+          message: `Could not discard uncheckpointed draft ${workingRecordId}`,
+        });
+      });
+    }
+    await onProgress?.({
+      message: error.message,
+      status: "error",
+      step: "deposition",
+    });
+    return { error: error.message, success: false };
+  }
+
+  await onProgress?.({
+    message: "Zenodo record draft ready",
+    status: "completed",
+    step: "deposition",
+  });
+
+  const failDraft = async (
+    error: any,
+    step: "upload_metadata" | "update_repo" | "upload_files" | "publish",
+  ) => {
+    const message = error?.message ?? String(error);
+    if (
+      workingDraft.origin === "new_deposition" &&
+      !repositoryMutationStarted
+    ) {
+      try {
+        await client.discardDraft(workingRecordId);
+        await prisma.zenodoDeposition.update({
+          data: { status: "error", zenodo_id: null },
+          where: { repository_id: repositoryId },
+        });
+      } catch (cleanupError: any) {
+        await prisma.zenodoDeposition.update({
+          data: { status: "error" },
+          where: { repository_id: repositoryId },
+        });
+        logwatch.warn({
+          action: "zenodo.cleanupDraft",
+          error: cleanupError.message,
+          message: `Draft ${workingRecordId} was retained for a safe retry`,
+        });
+      }
+    } else {
+      await prisma.zenodoDeposition
+        .update({
+          data: { status: "error" },
+          where: { repository_id: repositoryId },
+        })
+        .catch(() => undefined);
+    }
+    await onProgress?.({ message, status: "error", step });
+    return { error: message, success: false } as PublicationResult;
+  };
+
+  await onProgress?.({
+    message: "Reserving a DOI and updating Zenodo metadata…",
     status: "in_progress",
     step: "upload_metadata",
   });
-
+  let doi: string;
   try {
-    const zenodoMeta = buildZenodoMetadata(
-      codemeta,
-      metadata,
-      doi,
-      licenseId,
+    // A draft PUT replaces the complete record. Update metadata first, then
+    // reserve the DOI so the reservation cannot be erased by a later PUT.
+    const updatedDraft = await client.updateMetadata(
+      workingRecordId,
+      buildRdmMetadata(codemeta, metadata, licenseId, workingDraft.record),
     );
-    await updateDepositionMetadata(newDepositionId, token, zenodoMeta);
-  } catch (err: any) {
-    logwatch.error({
-      action: "zenodo.publish.upload_metadata",
-      error: err.stack ?? err.message,
-      message: err.message,
-      owner,
-      repo,
-      userId,
-    });
-    await onProgress?.({
-      message: err.message,
-      status: "error",
-      step: "upload_metadata",
-    });
-    return { error: err.message, success: false };
+    doi = await client.reserveDoi(workingRecordId, updatedDraft);
+  } catch (error: any) {
+    return failDraft(error, "upload_metadata");
   }
-
   await onProgress?.({
     message: "Zenodo metadata updated",
     status: "completed",
     step: "upload_metadata",
   });
 
-  // == Step 4: update_repo ========================
   await onProgress?.({
     message: "Committing DOI to repository metadata files…",
     status: "in_progress",
     step: "update_repo",
   });
-
+  repositoryMutationStarted = true;
   try {
     const provider = await GitHubRepositoryProvider.create(installationId);
     codemeta = await updateRepoMetadataWithDoi(
@@ -1248,162 +997,121 @@ export async function beginZenodoPublication(
       metadata.version,
       licenseId,
     );
-  } catch (err: any) {
-    logwatch.error({
-      action: "zenodo.publish.update_repo",
-      error: err.stack ?? err.message,
-      message: err.message,
-      owner,
-      repo,
-      userId,
-    });
-    await onProgress?.({
-      message: err.message,
-      status: "error",
-      step: "update_repo",
-    });
-    return { error: err.message, success: false };
+  } catch (error: any) {
+    return failDraft(error, "update_repo");
   }
-
   await onProgress?.({
     message: "Repository metadata files updated",
     status: "completed",
     step: "update_repo",
   });
 
-  // == Step 5: upload_files ========================
   await onProgress?.({
     message: "Uploading files to Zenodo…",
     status: "in_progress",
     step: "upload_files",
   });
-
   try {
-    // Upload release assets
     const assets = await fetchReleaseAssets(
       owner,
       repo,
       release,
       userAccessToken,
     );
-
     for (const asset of assets) {
-      const bytes = await downloadReleaseAsset(asset.url, userAccessToken);
-      await uploadFileToZenodoBucket(bucketUrl, token, asset.name, bytes);
+      await client.uploadFile(
+        workingRecordId,
+        asset.name,
+        await downloadReleaseAsset(asset.url, userAccessToken),
+      );
     }
-
-    // Upload repository zip archive
-    const zipBytes = await downloadRepositoryZip(owner, repo, userAccessToken);
-    const zipFilename = `${repo}-${tag}.zip`;
-    await uploadFileToZenodoBucket(bucketUrl, token, zipFilename, zipBytes);
-  } catch (err: any) {
-    logwatch.error({
-      action: "zenodo.publish.upload_files",
-      error: err.stack ?? err.message,
-      message: err.message,
-      owner,
-      repo,
-      userId,
-    });
-    await onProgress?.({
-      message: err.message,
-      status: "error",
-      step: "upload_files",
-    });
-    return { error: err.message, success: false };
+    await client.uploadFile(
+      workingRecordId,
+      `${repo}-${tag}.zip`,
+      await downloadRepositoryZip(owner, repo, userAccessToken),
+    );
+  } catch (error: any) {
+    return failDraft(error, "upload_files");
   }
-
   await onProgress?.({
     message: "Files uploaded to Zenodo",
     status: "completed",
     step: "upload_files",
   });
 
-  // == Step 6: publish ============================================
   await onProgress?.({
     message: "Publishing to Zenodo and releasing on GitHub…",
     status: "in_progress",
     step: "publish",
   });
-
-  let publishedDoi: string;
-  let htmlUrl: string;
-
+  let publishedDoi = doi;
+  let htmlUrl = `${zenodoEndpoint()}/records/${workingRecordId}`;
   try {
-    const published = await publishZenodoDeposition(token, newDepositionId);
-    publishedDoi = published.doi ?? doi;
-    htmlUrl = published.links?.latest_html ?? "";
+    try {
+      const published = await client.publish(workingRecordId);
+      publishedDoi = published.doi ?? doi;
+      htmlUrl = published.recordUrl || htmlUrl;
+    } catch (publishError: any) {
+      // The connection can fail after Zenodo commits the publication. Resolve
+      // the remote state before deciding that publication failed.
+      const state = await client.resolveState(workingRecordId);
+      if (state.kind !== "published") throw publishError;
+      publishedDoi = extractRecordDoi(state.record) ?? doi;
+      htmlUrl =
+        state.record.links?.self_html ??
+        state.record.links?.record_html ??
+        state.record.links?.latest_html ??
+        htmlUrl;
+    }
 
-    // Publish the GitHub draft release
-    await publishGitHubRelease(owner, repo, release, userAccessToken);
-
-    // Update DB
     await prisma.zenodoDeposition.update({
       data: {
         existing_zenodo_deposition_id: true,
         last_published_zenodo_doi: publishedDoi,
-        status: "published",
-        zenodo_id: newDepositionId,
+        status: "zenodo-published",
+        zenodo_id: workingRecordId,
       },
       where: { repository_id: repositoryId },
     });
 
-    // Re-render the dashboard issue from current DB state
-    try {
-      const provider = await GitHubRepositoryProvider.create(installationId);
-      await refreshDashboardFromDb(provider, owner, repo, repositoryId);
-    } catch (renderErr: any) {
-      logwatch.warn({
-        action: "zenodo.publish",
-        error: renderErr?.message,
-        message: "Failed to re-render dashboard after publication",
-        owner,
-        repo,
+    await publishGitHubRelease(owner, repo, release, userAccessToken);
+    await prisma.zenodoDeposition.update({
+      data: { status: "published" },
+      where: { repository_id: repositoryId },
+    });
+    await refreshDashboard();
+  } catch (error: any) {
+    // Keep zenodo-published checkpoints intact so a retry finishes GitHub only.
+    const latest = await prisma.zenodoDeposition.findFirst({
+      where: { repository_id: repositoryId },
+    });
+    if (latest?.status === "zenodo-published") {
+      await onProgress?.({
+        message: error.message,
+        status: "error",
+        step: "publish",
       });
+      return { error: error.message, success: false };
     }
-  } catch (err: any) {
-    logwatch.error({
-      action: "zenodo.publish.publish",
-      error: err.stack ?? err.message,
-      message: err.message,
-      owner,
-      repo,
-      userId,
-    });
-
-    // Mark DB as error
-    await prisma.zenodoDeposition
-      .update({
-        data: { status: "error" },
-        where: { repository_id: repositoryId },
-      })
-      .catch(() => undefined);
-
-    await onProgress?.({
-      message: err.message,
-      status: "error",
-      step: "publish",
-    });
-    return { error: err.message, success: false };
+    return failDraft(error, "publish");
   }
 
+  const data = { doi: publishedDoi, htmlUrl };
   await onProgress?.({
-    data: { doi: publishedDoi, htmlUrl },
+    data,
     message: "Successfully published to Zenodo!",
     status: "completed",
     step: "publish",
   });
-
   logwatch.info({
     action: "zenodo.publish.complete",
     doi: publishedDoi,
-    message: "Zenodo publication workflow completed successfully",
+    message: "InvenioRDM publication workflow completed successfully",
     owner,
     repo,
     userId,
   });
-
-  return { data: { doi: publishedDoi, htmlUrl }, success: true };
+  return { data, success: true };
 }
 
 // ===== ArchivalProvider implementation ==============================

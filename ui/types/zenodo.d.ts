@@ -3,7 +3,7 @@ interface ZenodoDeposition {
   title: string;
   conceptrecid: string;
   state: string;
-  submitted: string;
+  submitted: boolean;
 }
 
 interface ZenodoMetadata {

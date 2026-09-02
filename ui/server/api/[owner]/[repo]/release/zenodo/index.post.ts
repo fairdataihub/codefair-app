@@ -99,6 +99,10 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const existingDep = await prisma.zenodoDeposition.findFirst({
+    where: { repository: { owner, repo } },
+  });
+
   // Zenodo token check
   const { valid: zenodoTokenValid } = await validateZenodoToken(user?.id ?? "");
 
@@ -130,7 +134,12 @@ export default defineEventHandler(async (event) => {
 
   const ghReleaseJson = await ghRelease.json();
 
-  if (!ghReleaseJson.draft) {
+  const isPublicationReconciliation =
+    existingDep?.status === "zenodo-published" &&
+    existingDep.github_release_id === (parseInt(release) || null) &&
+    existingDep.github_tag_name === tag;
+
+  if (!ghReleaseJson.draft && !isPublicationReconciliation) {
     throw createError({
       statusCode: 400,
       statusMessage: "GitHub release is not a draft",
@@ -153,7 +162,7 @@ export default defineEventHandler(async (event) => {
       },
     },
   );
-  if (allReleasesRes.ok) {
+  if (allReleasesRes.ok && !isPublicationReconciliation) {
     const allReleases: any[] = await allReleasesRes.json();
     const conflict = allReleases.find(
       (r) => !r.draft && r.tag_name === tagName,
@@ -167,7 +176,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Sync tag name if it changed
-  if (ghReleaseJson.tag_name !== tag) {
+  if (ghReleaseJson.draft && ghReleaseJson.tag_name !== tag) {
     const patchRes = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/releases/${release}`,
       {
@@ -191,17 +200,30 @@ export default defineEventHandler(async (event) => {
   }
 
   // Persist to DB (draft state)
-  const existingDep = await prisma.zenodoDeposition.findFirst({
-    where: { repository: { owner, repo } },
-  });
+  const matchingCheckpoint =
+    publish &&
+    existingDep?.github_release_id === (parseInt(release) || null) &&
+    existingDep.github_tag_name === tag &&
+    existingDep.zenodo_id &&
+    [
+      "draft",
+      "draft-new",
+      "draft-version",
+      "error",
+      "zenodo-published",
+    ].includes(existingDep.status);
 
   const depositionData = {
-    existing_zenodo_deposition_id: useExistingDeposition,
+    existing_zenodo_deposition_id: matchingCheckpoint
+      ? existingDep.existing_zenodo_deposition_id
+      : useExistingDeposition,
     github_release_id: parseInt(release) || null,
     github_tag_name: tag,
-    status: "draft",
+    status: matchingCheckpoint ? existingDep.status : "draft",
     user_id: user?.id ?? "",
-    zenodo_id: parseInt(zenodoDepositionId) || null,
+    zenodo_id: matchingCheckpoint
+      ? existingDep.zenodo_id
+      : parseInt(zenodoDepositionId) || null,
     zenodo_metadata: metadata,
   };
 
