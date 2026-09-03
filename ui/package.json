@@ -6,10 +6,11 @@
   "scripts": {
     "tunnel": "lt --port 3000 --subdomain codefair",
     "smee": "node scripts/smee.mjs",
-    "dev:webhook": "npm-run-all --parallel dev smee",
+    "db:activate-central-api": "tsx scripts/activate-central-api.ts",
     "build-full": "yarn prisma:migrate:deploy && nuxt build && yarn prisma:generate",
     "build": "nuxt build",
-    "dev": "nuxt dev -p 3000",
+    "dev": "npm-run-all --parallel dev:nuxt smee",
+    "dev:nuxt": "nuxt dev -p 3000",
     "start": "node .output/server/index.mjs",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
