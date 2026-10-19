@@ -57,6 +57,16 @@ export default defineNuxtConfig({
 
   devtools: { enabled: true },
 
+  hooks: {
+    "vite:extendConfig"(config, { isServer }) {
+      // Nuxt's SSR Vite server never uses HMR but still opens a WebSocket on
+      // Vite's default port 24678, which clashes with other local Nuxt apps
+      if (isServer && config.server) {
+        config.server.ws = false;
+      }
+    },
+  },
+
   modules: [
     "motion-v/nuxt",
     "notivue/nuxt",
@@ -118,10 +128,5 @@ export default defineNuxtConfig({
         resolvers: [NaiveUiResolver()],
       }),
     ],
-    server: {
-      hmr: {
-        clientPort: 3000,
-      },
-    },
   },
 });

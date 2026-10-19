@@ -24,6 +24,7 @@ export interface PublicationProgressEvent {
   message: string;
   status: ProgressStatus;
   step: ProgressStep;
+  upload?: ZenodoUploadUpdate; // Per-file progress for the `upload_files` step
 }
 
 export type ProgressCallback = (

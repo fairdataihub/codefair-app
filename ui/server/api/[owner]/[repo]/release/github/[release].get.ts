@@ -31,13 +31,8 @@ export default defineEventHandler(async (event) => {
 
   const githubReleaseJson = await githubRelease.json();
 
-  if (!githubReleaseJson.draft) {
-    return {
-      draft: false,
-    };
-  } else {
-    return {
-      draft: true,
-    };
-  }
+  return {
+    draft: Boolean(githubReleaseJson.draft),
+    htmlUrl: githubReleaseJson.html_url as string,
+  };
 });
