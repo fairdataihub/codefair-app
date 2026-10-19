@@ -470,6 +470,8 @@ const zenodoDraftSpinner = ref(false);
 const showZenodoPublishProgressModal = ref(false);
 const zenodoPublishStatus = ref<string>("");
 const zenodoPublishDOI = ref<string>("");
+// Captured at publish time because resetForm() clears the form on success
+const zenodoPublishTag = ref<string>("");
 const zenodoPublishErrorMessage = ref<string>("");
 const zenodoBadgeShield = ref<string>("");
 const zenodoPreflightError = ref<string | null>(null);
@@ -480,6 +482,7 @@ interface PublishStep {
   label: string;
   message: string;
   status: "pending" | "in_progress" | "completed" | "error";
+  upload?: ZenodoUploadProgress;
 }
 
 const publishSteps = ref<PublishStep[]>([
@@ -525,8 +528,25 @@ const resetPublishSteps = () => {
   for (const step of publishSteps.value) {
     step.status = "pending";
     step.message = "";
+    step.upload = undefined;
   }
   zenodoPublishErrorMessage.value = "";
+};
+
+// Flags the file that was in flight when its step failed.
+const failActiveUpload = (step: PublishStep) => {
+  const active = step.upload?.files.find(
+    (file) => file.status !== "pending" && file.status !== "completed",
+  );
+  if (active) active.status = "error";
+};
+
+const applyUploadUpdate = (step: PublishStep, update: ZenodoUploadUpdate) => {
+  if (update.type === "list") {
+    step.upload = { files: update.files, maxAttempts: update.maxAttempts };
+  } else if (step.upload) {
+    step.upload.files[update.index] = update.file;
+  }
 };
 
 const resetForm = () => {
@@ -549,6 +569,7 @@ const handleSSEEvent = (event: {
   message: string;
   status: string;
   step: string;
+  upload?: ZenodoUploadUpdate;
 }) => {
   if (event.step === "complete") {
     zenodoPublishStatus.value = "published";
@@ -573,6 +594,7 @@ const handleSSEEvent = (event: {
     if (inProgress) {
       inProgress.status = "error";
       inProgress.message = event.message;
+      failActiveUpload(inProgress);
     }
     return;
   }
@@ -581,12 +603,14 @@ const handleSSEEvent = (event: {
   if (!step) return;
 
   step.message = event.message;
+  if (event.upload) applyUploadUpdate(step, event.upload);
   if (event.status === "in_progress") {
     step.status = "in_progress";
   } else if (event.status === "completed") {
     step.status = "completed";
   } else if (event.status === "error") {
     step.status = "error";
+    failActiveUpload(step);
     zenodoPublishStatus.value = "error";
     zenodoPublishErrorMessage.value = event.message;
   }
@@ -603,14 +627,16 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     zenodoDraftSpinner.value = true;
   }
 
+  const effectiveTag =
+    githubFormValue.value.tag !== "new"
+      ? githubFormValue.value.tag
+      : githubFormValue.value.tagTitle;
+
   const body = JSON.stringify({
     metadata: zenodoFormValue.value,
     publish: shouldPublish,
     release: githubFormValue.value.release,
-    tag:
-      githubFormValue.value.tag !== "new"
-        ? githubFormValue.value.tag
-        : githubFormValue.value.tagTitle,
+    tag: effectiveTag,
     useExistingDeposition: selectedExistingDeposition.value === "existing",
     zenodoDepositionId:
       selectedExistingDeposition.value === "existing"
@@ -636,10 +662,6 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
       } catch {
         // ignore parse errors
       }
-      const effectiveTag =
-        githubFormValue.value.tag !== "new"
-          ? githubFormValue.value.tag
-          : githubFormValue.value.tagTitle;
       const knownErrors: Record<string, string> = {
         "GitHub release is not a draft":
           "The selected GitHub release is no longer a draft and cannot be used. Please select a different release.",
@@ -691,6 +713,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     // Open the progress modal and reset steps before streaming begins
     showZenodoPublishProgressModal.value = true;
     zenodoPublishStatus.value = "inProgress";
+    zenodoPublishTag.value = effectiveTag ?? "";
     resetPublishSteps();
 
     const reader = response.body!.getReader();
@@ -759,6 +782,11 @@ const zenodoDepositionUrl = computed(() => {
   if (!zenodoPublishDOI.value) return "";
   return zenodoDoiUrl(zenodoPublishDOI.value);
 });
+
+const githubReleaseUrl = computed(
+  () =>
+    `https://github.com/${owner}/${repo}/releases/tag/${zenodoPublishTag.value}`,
+);
 
 const fetchZenodoBadge = () => {
   zenodoBadgeShield.value = "";
@@ -1874,47 +1902,52 @@ onBeforeUnmount(() => {
           Please do not close this window while the process is ongoing.
         </p>
 
-        <ul class="space-y-2">
-          <li
-            v-for="step in publishSteps"
-            :key="step.key"
-            class="flex items-center space-x-3"
-          >
-            <Icon
-              v-if="step.status === 'completed'"
-              name="mdi:check-circle"
-              class="h-5 w-5 shrink-0 text-green-500"
-            />
+        <ul class="list-none space-y-2">
+          <li v-for="step in publishSteps" :key="step.key">
+            <div class="flex items-center space-x-3">
+              <Icon
+                v-if="step.status === 'completed'"
+                name="mdi:check-circle"
+                class="h-5 w-5 shrink-0 text-green-500"
+              />
 
-            <Icon
-              v-else-if="step.status === 'error'"
-              name="mdi:alert-circle"
-              class="h-5 w-5 shrink-0 text-red-500"
-            />
+              <Icon
+                v-else-if="step.status === 'error'"
+                name="mdi:alert-circle"
+                class="h-5 w-5 shrink-0 text-red-500"
+              />
 
-            <Icon
-              v-else-if="step.status === 'in_progress'"
-              name="mdi:loading"
-              class="h-5 w-5 shrink-0 animate-spin text-blue-500"
-            />
+              <Icon
+                v-else-if="step.status === 'in_progress'"
+                name="mdi:loading"
+                class="h-5 w-5 shrink-0 animate-spin text-blue-500"
+              />
 
-            <Icon
-              v-else
-              name="mdi:circle-outline"
-              class="h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600"
-            />
+              <Icon
+                v-else
+                name="mdi:circle-outline"
+                class="h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600"
+              />
 
-            <span
-              :class="{
-                'font-medium text-gray-900 dark:text-gray-100':
-                  step.status === 'in_progress',
-                'text-gray-400 dark:text-gray-500': step.status === 'pending',
-                'text-gray-700 dark:text-gray-300': step.status === 'completed',
-                'text-red-600 dark:text-red-400': step.status === 'error',
-              }"
-            >
-              {{ step.label }}
-            </span>
+              <span
+                :class="{
+                  'font-medium text-gray-900 dark:text-gray-100':
+                    step.status === 'in_progress',
+                  'text-gray-400 dark:text-gray-500': step.status === 'pending',
+                  'text-gray-700 dark:text-gray-300':
+                    step.status === 'completed',
+                  'text-red-600 dark:text-red-400': step.status === 'error',
+                }"
+              >
+                {{ step.label }}
+              </span>
+            </div>
+
+            <ZenodoUploadProgress
+              v-if="step.upload"
+              :upload="step.upload"
+              class="ml-8 mt-2"
+            />
           </li>
         </ul>
       </n-flex>
@@ -1933,39 +1966,44 @@ onBeforeUnmount(() => {
           {{ zenodoPublishErrorMessage }}
         </n-alert>
 
-        <ul class="space-y-2">
-          <li
-            v-for="step in publishSteps"
-            :key="step.key"
-            class="flex items-center space-x-3"
-          >
-            <Icon
-              v-if="step.status === 'completed'"
-              name="mdi:check-circle"
-              class="h-5 w-5 shrink-0 text-green-500"
-            />
+        <ul class="list-none space-y-2">
+          <li v-for="step in publishSteps" :key="step.key">
+            <div class="flex items-center space-x-3">
+              <Icon
+                v-if="step.status === 'completed'"
+                name="mdi:check-circle"
+                class="h-5 w-5 shrink-0 text-green-500"
+              />
 
-            <Icon
-              v-else-if="step.status === 'error'"
-              name="mdi:alert-circle"
-              class="h-5 w-5 shrink-0 text-red-500"
-            />
+              <Icon
+                v-else-if="step.status === 'error'"
+                name="mdi:alert-circle"
+                class="h-5 w-5 shrink-0 text-red-500"
+              />
 
-            <Icon
-              v-else
-              name="mdi:circle-outline"
-              class="h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600"
-            />
+              <Icon
+                v-else
+                name="mdi:circle-outline"
+                class="h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600"
+              />
 
-            <span
-              :class="{
-                'text-gray-400 dark:text-gray-500': step.status === 'pending',
-                'text-gray-700 dark:text-gray-300': step.status === 'completed',
-                'text-red-600 dark:text-red-400': step.status === 'error',
-              }"
-            >
-              {{ step.label }}
-            </span>
+              <span
+                :class="{
+                  'text-gray-400 dark:text-gray-500': step.status === 'pending',
+                  'text-gray-700 dark:text-gray-300':
+                    step.status === 'completed',
+                  'text-red-600 dark:text-red-400': step.status === 'error',
+                }"
+              >
+                {{ step.label }}
+              </span>
+            </div>
+
+            <ZenodoUploadProgress
+              v-if="step.upload"
+              :upload="step.upload"
+              class="ml-8 mt-2"
+            />
           </li>
         </ul>
       </n-flex>
@@ -1985,7 +2023,7 @@ onBeforeUnmount(() => {
             and adding additional metadata to make your software more FAIR. You
             can also view the
             <NuxtLink
-              :to="`https://github.com/${owner}/${repo}/releases/tag/${githubFormValue.tag === 'new' ? githubFormValue.tagTitle : githubFormValue.tag}`"
+              :to="githubReleaseUrl"
               target="_blank"
               class="text-blue-500 underline transition-all hover:text-blue-700"
               >GitHub release</NuxtLink
@@ -2090,11 +2128,7 @@ onBeforeUnmount(() => {
             </n-button>
           </NuxtLink>
 
-          <NuxtLink
-            :to="`https://github.com/${owner}/${repo}/releases/tag/${githubFormValue.tag === 'new' ? githubFormValue.tagTitle : githubFormValue.tag}`"
-            target="_blank"
-            class="w-full"
-          >
+          <NuxtLink :to="githubReleaseUrl" target="_blank" class="w-full">
             <n-button type="primary" dashed class="w-full">
               <template #icon>
                 <Icon name="simple-icons:github" size="16" />

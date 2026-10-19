@@ -275,6 +275,12 @@ export default defineEventHandler(async (event) => {
     sendEvent(progress as unknown as Record<string, unknown>);
   };
 
+  // SSE comment frames keep idle proxies and browsers from dropping the stream
+  // while Zenodo works without reporting progress (e.g. publishing).
+  const heartbeat = setInterval(() => {
+    if (clientConnected && !res.writableEnded) res.write(": keep-alive\n\n");
+  }, 15_000);
+
   try {
     const result = await beginZenodoPublication(
       {
@@ -316,6 +322,8 @@ export default defineEventHandler(async (event) => {
       status: "error",
       step: "error",
     });
+  } finally {
+    clearInterval(heartbeat);
   }
 
   if (!res.writableEnded) {

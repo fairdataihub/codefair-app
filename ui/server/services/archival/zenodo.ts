@@ -12,6 +12,13 @@
  *  - Deposition creation, versioning and file cleanup are consolidated in one place
  */
 
+import { createReadStream, createWriteStream } from "node:fs";
+import { mkdtemp, rm, stat } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import { load as yamlLoad, dump as yamlDump } from "js-yaml";
 import type {
   ArchivalProvider,
@@ -24,9 +31,12 @@ import type {
 import {
   extractRecordDoi,
   type RdmRecord,
+  UPLOAD_MAX_ATTEMPTS,
+  type UploadSource,
   type WorkingDraft,
   ZenodoRdmClient,
 } from "./zenodo-rdm";
+import { runConcurrently } from "./run-concurrently";
 import { GitHubRepositoryProvider } from "~/server/services/providers/github";
 import { refreshDashboardFromDb } from "~/server/services/dashboard/manager";
 import { logwatch } from "~/server/utils/logwatch";
@@ -50,6 +60,23 @@ function zenodoApiEndpoint(): string {
 function zenodoEndpoint(): string {
   return process.env.ZENODO_ENDPOINT ?? "";
 }
+
+/**
+ * Returns how many release files are transferred to Zenodo at once.
+ * Transfers are streamed, so this trades speed against load on Zenodo rather
+ * than server memory.
+ * @returns ZENODO_UPLOAD_CONCURRENCY when it is a positive integer, else 3.
+ */
+function zenodoUploadConcurrency(): number {
+  const value = Number.parseInt(
+    process.env.ZENODO_UPLOAD_CONCURRENCY ?? "",
+    10,
+  );
+  return Number.isInteger(value) && value > 0 ? value : 3;
+}
+
+/** Minimum gap between byte-progress events for a single file. */
+const UPLOAD_PROGRESS_INTERVAL_MS = 1000;
 
 // ===== Token management =============================================
 
@@ -436,17 +463,23 @@ async function updateRepoMetadataWithDoi(
 // ===== GitHub release helpers ========================================
 
 /**
- * Downloads the zip archive of the repository's default branch.
+ * Downloads the zip archive of the repository's default branch to disk.
+ * GitHub generates the archive on the fly without a Content-Length, so it is
+ * saved first to learn its size before streaming it to Zenodo.
  * @param owner - Repository owner login.
  * @param repo - Repository name.
  * @param token - GitHub user OAuth token.
- * @returns Raw zip archive bytes as an ArrayBuffer.
+ * @param destination - File path to write the archive to.
+ * @param signal - Aborts the download.
+ * @returns Size of the downloaded archive in bytes.
  */
 async function downloadRepositoryZip(
   owner: string,
   repo: string,
   token: string,
-): Promise<ArrayBuffer> {
+  destination: string,
+  signal?: AbortSignal,
+): Promise<number> {
   const res = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/zipball`,
     {
@@ -456,10 +489,11 @@ async function downloadRepositoryZip(
         "X-GitHub-Api-Version": "2022-11-28",
       },
       redirect: "follow",
+      signal,
     },
   );
 
-  if (!res.ok) {
+  if (!res.ok || !res.body) {
     logwatch.error({
       action: "zenodo.downloadRepoZip",
       message: `Failed to download repository zip (${res.status})`,
@@ -474,14 +508,20 @@ async function downloadRepositoryZip(
     );
   }
 
-  const bytes = await res.arrayBuffer();
+  await pipeline(
+    Readable.fromWeb(res.body as NodeReadableStream<Uint8Array>),
+    createWriteStream(destination),
+    { signal },
+  );
+  const { size } = await stat(destination);
   logwatch.info({
     action: "zenodo.downloadRepoZip",
+    bytes: size,
     message: "Repository zip downloaded",
     owner,
     repo,
   });
-  return bytes;
+  return size;
 }
 
 /**
@@ -490,14 +530,14 @@ async function downloadRepositoryZip(
  * @param repo - Repository name.
  * @param releaseId - Numeric GitHub release ID as a string.
  * @param userToken - GitHub user OAuth token.
- * @returns Array of release asset descriptors with id, name, and url.
+ * @returns Array of release asset descriptors with id, name, size, and url.
  */
 async function fetchReleaseAssets(
   owner: string,
   repo: string,
   releaseId: string,
   userToken: string,
-): Promise<Array<{ id: number; name: string; url: string }>> {
+): Promise<Array<{ id: number; name: string; size: number; url: string }>> {
   const res = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/releases/${releaseId}/assets`,
     {
@@ -529,6 +569,7 @@ async function fetchReleaseAssets(
   const assets = (data ?? []).map((a: any) => ({
     id: a.id,
     name: a.name,
+    size: a.size,
     url: a.url,
   }));
   logwatch.info({
@@ -541,15 +582,17 @@ async function fetchReleaseAssets(
 }
 
 /**
- * Downloads a single GitHub release asset by its URL and returns the raw bytes.
+ * Opens a download stream for a single GitHub release asset.
  * @param assetUrl - GitHub asset download URL.
  * @param userToken - GitHub user OAuth token.
- * @returns Raw asset bytes as an ArrayBuffer.
+ * @param signal - Aborts the download.
+ * @returns The asset's bytes as a stream.
  */
-async function downloadReleaseAsset(
+async function openReleaseAsset(
   assetUrl: string,
   userToken: string,
-): Promise<ArrayBuffer> {
+  signal?: AbortSignal,
+): Promise<ReadableStream<Uint8Array>> {
   const res = await fetch(assetUrl, {
     headers: {
       Accept: "application/octet-stream",
@@ -557,9 +600,10 @@ async function downloadReleaseAsset(
       "X-GitHub-Api-Version": "2022-11-28",
     },
     redirect: "follow",
+    signal,
   });
 
-  if (!res.ok) {
+  if (!res.ok || !res.body) {
     logwatch.error({
       action: "zenodo.downloadReleaseAsset",
       assetUrl,
@@ -573,7 +617,7 @@ async function downloadReleaseAsset(
     );
   }
 
-  return res.arrayBuffer();
+  return res.body;
 }
 
 /**
@@ -1007,31 +1051,169 @@ export async function beginZenodoPublication(
   });
 
   await onProgress?.({
-    message: "Uploading files to Zenodo…",
+    message: "Fetching release assets from GitHub…",
     status: "in_progress",
     step: "upload_files",
   });
+  let workDir: string | undefined;
   try {
+    workDir = await mkdtemp(join(tmpdir(), "codefair-zenodo-"));
+    const zipPath = join(workDir, "source.zip");
     const assets = await fetchReleaseAssets(
       owner,
       repo,
       release,
       userAccessToken,
     );
-    for (const asset of assets) {
-      await client.uploadFile(
-        workingRecordId,
-        asset.name,
-        await downloadReleaseAsset(asset.url, userAccessToken),
-      );
-    }
-    await client.uploadFile(
-      workingRecordId,
-      `${repo}-${tag}.zip`,
-      await downloadRepositoryZip(owner, repo, userAccessToken),
+
+    // Release assets stream straight from GitHub to Zenodo. The source archive
+    // goes first: GitHub only reveals its size once it has been downloaded,
+    // so starting it early completes the byte totals sooner.
+    const sources: Array<{
+      name: string;
+      prepare: (signal: AbortSignal) => Promise<UploadSource>;
+      size?: number;
+    }> = [
+      {
+        name: `${repo}-${tag}.zip`,
+        prepare: async (signal) => ({
+          open: () =>
+            Promise.resolve(
+              Readable.toWeb(
+                createReadStream(zipPath),
+              ) as ReadableStream<Uint8Array>,
+            ),
+          size: await downloadRepositoryZip(
+            owner,
+            repo,
+            userAccessToken,
+            zipPath,
+            signal,
+          ),
+        }),
+      },
+      ...assets.map((asset) => ({
+        name: asset.name,
+        prepare: () =>
+          Promise.resolve({
+            open: (signal?: AbortSignal) =>
+              openReleaseAsset(asset.url, userAccessToken, signal),
+            size: asset.size,
+          }),
+        size: asset.size,
+      })),
+    ];
+
+    const files: ZenodoUploadFileProgress[] = sources.map(({ name, size }) => ({
+      name,
+      size,
+      status: "pending",
+    }));
+    await onProgress?.({
+      message: `Uploading ${files.length} file${files.length === 1 ? "" : "s"} to Zenodo…`,
+      status: "in_progress",
+      step: "upload_files",
+      upload: {
+        files: structuredClone(files),
+        maxAttempts: UPLOAD_MAX_ATTEMPTS,
+        type: "list",
+      },
+    });
+
+    await runConcurrently(
+      sources.length,
+      zenodoUploadConcurrency(),
+      async (index, signal) => {
+        const file = files[index]!;
+        const position = `${index + 1} of ${files.length}`;
+        const reportUpload = (message: string) =>
+          onProgress?.({
+            message,
+            status: "in_progress",
+            step: "upload_files",
+            upload: { file: { ...file }, index, type: "file" },
+          });
+
+        try {
+          if (file.size === undefined) {
+            file.status = "downloading";
+            await reportUpload(
+              `Downloading ${file.name} from GitHub (${position})…`,
+            );
+          }
+          const source = await sources[index]!.prepare(signal);
+          file.size = source.size;
+
+          const startedAt = Date.now();
+          let lastBytesReport = 0;
+          await client.uploadFile(workingRecordId, file.name, source, {
+            onBytes: (sent) => {
+              file.uploadedBytes = sent;
+              if (Date.now() - lastBytesReport < UPLOAD_PROGRESS_INTERVAL_MS) {
+                return;
+              }
+              lastBytesReport = Date.now();
+              reportUpload(`Uploading ${file.name} to Zenodo (${position})…`);
+            },
+            onPhase: async (event) => {
+              file.attempt = event.attempt;
+              file.status = event.phase;
+              if (event.phase !== "committing") file.uploadedBytes = 0;
+              if (event.phase === "retrying") {
+                logwatch.warn({
+                  action: "zenodo.uploadFile",
+                  attempt: event.attempt,
+                  error: event.error,
+                  file: file.name,
+                  message: `Retrying upload of ${file.name} (attempt ${event.attempt} of ${UPLOAD_MAX_ATTEMPTS})`,
+                  owner,
+                  repo,
+                });
+              }
+              await reportUpload(
+                event.phase === "uploading"
+                  ? `Uploading ${file.name} to Zenodo (${position})…`
+                  : event.phase === "committing"
+                    ? `Finalizing ${file.name} on Zenodo (${position})…`
+                    : `Retrying ${file.name} (attempt ${event.attempt} of ${UPLOAD_MAX_ATTEMPTS})…`,
+              );
+            },
+            signal,
+          });
+
+          file.status = "completed";
+          logwatch.info({
+            action: "zenodo.uploadFile",
+            bytes: source.size,
+            durationMs: Date.now() - startedAt,
+            file: file.name,
+            message: `Uploaded ${file.name} to Zenodo (${position})`,
+            owner,
+            repo,
+          });
+          await reportUpload(`Uploaded ${file.name} (${position})`);
+        } catch (error) {
+          // Before the abort, this file is the one that failed; after it, the
+          // transfer was only cancelled because another file failed.
+          file.status = signal.aborted ? "pending" : "error";
+          file.uploadedBytes = 0;
+          await reportUpload(
+            signal.aborted
+              ? `Cancelled ${file.name} (${position})`
+              : `Failed to upload ${file.name} (${position})`,
+          );
+          throw error;
+        }
+      },
     );
   } catch (error: any) {
     return failDraft(error, "upload_files");
+  } finally {
+    if (workDir) {
+      await rm(workDir, { force: true, recursive: true }).catch(
+        () => undefined,
+      );
+    }
   }
   await onProgress?.({
     message: "Files uploaded to Zenodo",

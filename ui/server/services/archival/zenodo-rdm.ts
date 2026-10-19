@@ -56,6 +56,25 @@ export interface RdmPublishResult {
   recordUrl: string;
 }
 
+export const UPLOAD_MAX_ATTEMPTS = 3;
+
+export type UploadPhaseEvent =
+  | { attempt: number; phase: "uploading" | "committing" }
+  | { attempt: number; error: string; phase: "retrying" };
+
+export interface UploadSource {
+  /** Opens a fresh stream of the file; called again for each retry. */
+  open: (signal?: AbortSignal) => Promise<ReadableStream<Uint8Array>>;
+  size: number;
+}
+
+export interface UploadOptions {
+  /** Bytes streamed to Zenodo so far in the current attempt. */
+  onBytes?: (sent: number) => void;
+  onPhase?: (event: UploadPhaseEvent) => void | Promise<void>;
+  signal?: AbortSignal;
+}
+
 type FetchLike = typeof fetch;
 
 function recordId(record: RdmRecord): number | undefined {
@@ -94,6 +113,16 @@ export function sanitizeZenodoFileKey(name: string): string {
 async function responseError(operation: string, response: Response) {
   const body = await response.text().catch(() => "");
   return `${operation}: ${response.status} ${response.statusText}${body ? ` - ${body}` : ""}`;
+}
+
+// Node's fetch reports network failures as a bare "fetch failed" and keeps
+// the useful part (ECONNRESET, a timeout, ...) on `cause`.
+function describeError(error: unknown) {
+  const { cause, message } = error as Error & {
+    cause?: { code?: string; message?: string };
+  };
+  const detail = cause?.code ?? cause?.message;
+  return detail ? `${message} (${detail})` : message;
 }
 
 function shouldRetry(message: string) {
@@ -342,13 +371,16 @@ export class ZenodoRdmClient {
   async uploadFile(
     id: number,
     rawFilename: string,
-    content: ArrayBuffer,
+    source: UploadSource,
+    { onBytes, onPhase, signal }: UploadOptions = {},
   ): Promise<void> {
     const filename = sanitizeZenodoFileKey(rawFilename);
     let lastError = "";
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    for (let attempt = 1; attempt <= UPLOAD_MAX_ATTEMPTS; attempt++) {
+      signal?.throwIfAborted();
       try {
         if (attempt > 1) await this.deleteDraftFile(id, filename);
+        await onPhase?.({ attempt, phase: "uploading" });
         const initialize = await this.fetchImpl(
           `${this.baseUrl}/records/${id}/draft/files`,
           {
@@ -375,14 +407,27 @@ export class ZenodoRdmClient {
           if (!entry?.links?.content || !entry.links.commit) {
             lastError = `Zenodo did not return content and commit links for ${filename}`;
           } else {
+            // Streamed rather than buffered so large files don't sit in memory.
+            let sent = 0;
+            const body = (await source.open(signal)).pipeThrough(
+              new TransformStream<Uint8Array, Uint8Array>({
+                transform(chunk, controller) {
+                  sent += chunk.byteLength;
+                  onBytes?.(sent);
+                  controller.enqueue(chunk);
+                },
+              }),
+            );
             const uploaded = await this.fetchImpl(entry.links.content, {
-              body: content,
+              body,
+              duplex: "half",
               headers: this.headers({
-                "Content-Length": String(content.byteLength),
+                "Content-Length": String(source.size),
                 "Content-Type": "application/octet-stream",
               }),
               method: "PUT",
-            });
+              signal,
+            } as RequestInit);
             if (!uploaded.ok) {
               lastError = await responseError(
                 `upload draft file ${filename}`,
@@ -394,6 +439,7 @@ export class ZenodoRdmClient {
                 .catch(() => null)) as {
                 links?: { commit?: string };
               } | null;
+              await onPhase?.({ attempt, phase: "committing" });
               const committed = await this.fetchImpl(
                 uploadedBody?.links?.commit ?? entry.links.commit,
                 { headers: this.headers(), method: "POST" },
@@ -407,11 +453,17 @@ export class ZenodoRdmClient {
           }
         }
       } catch (error) {
-        lastError = `File upload transfer failed for ${filename}: ${
-          (error as Error).message
-        }`;
+        if (signal?.aborted) throw error;
+        lastError = `File upload transfer failed for ${filename}: ${describeError(
+          error,
+        )}`;
       }
-      if (attempt === 3 || !shouldRetry(lastError)) break;
+      if (attempt === UPLOAD_MAX_ATTEMPTS || !shouldRetry(lastError)) break;
+      await onPhase?.({
+        attempt: attempt + 1,
+        error: lastError,
+        phase: "retrying",
+      });
       await this.wait(attempt * 1000);
     }
     throw new Error(lastError || `Failed to upload ${filename}`);
