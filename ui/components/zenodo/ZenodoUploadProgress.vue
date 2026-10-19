@@ -16,6 +16,23 @@ const statusLabels: Record<ZenodoUploadFileStatus, string> = {
   uploading: "Uploading to Zenodo",
 };
 
+// Static per-state icons; the step row above already carries the spinner.
+const statusIcons: Record<
+  ZenodoUploadFileStatus,
+  { name: string; class: string }
+> = {
+  committing: { name: "mdi:dots-horizontal-circle", class: "text-violet-500" },
+  completed: { name: "mdi:check-circle", class: "text-green-500" },
+  downloading: { name: "mdi:arrow-down-circle", class: "text-cyan-500" },
+  error: { name: "mdi:alert-circle", class: "text-red-500" },
+  pending: {
+    name: "mdi:circle-outline",
+    class: "text-gray-300 dark:text-gray-600",
+  },
+  retrying: { name: "mdi:refresh-circle", class: "text-amber-500" },
+  uploading: { name: "mdi:arrow-up-circle", class: "text-blue-500" },
+};
+
 const activeStatuses: ZenodoUploadFileStatus[] = [
   "downloading",
   "uploading",
@@ -148,33 +165,9 @@ watch([firstActiveIndex, expanded], async () => {
         class="flex items-center gap-2 text-sm"
       >
         <Icon
-          v-if="file.status === 'completed'"
-          name="mdi:check-circle"
-          class="h-4 w-4 shrink-0 text-green-500"
-        />
-
-        <Icon
-          v-else-if="file.status === 'error'"
-          name="mdi:alert-circle"
-          class="h-4 w-4 shrink-0 text-red-500"
-        />
-
-        <Icon
-          v-else-if="file.status === 'retrying'"
-          name="mdi:refresh"
-          class="h-4 w-4 shrink-0 text-amber-500"
-        />
-
-        <Icon
-          v-else-if="activeStatuses.includes(file.status)"
-          name="mdi:loading"
-          class="h-4 w-4 shrink-0 animate-spin text-blue-500"
-        />
-
-        <Icon
-          v-else
-          name="mdi:circle-outline"
-          class="h-4 w-4 shrink-0 text-gray-300 dark:text-gray-600"
+          :name="statusIcons[file.status].name"
+          class="h-4 w-4 shrink-0"
+          :class="statusIcons[file.status].class"
         />
 
         <span
