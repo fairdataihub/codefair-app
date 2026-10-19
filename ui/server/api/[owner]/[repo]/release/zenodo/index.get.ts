@@ -71,6 +71,7 @@ export default defineEventHandler(async (event) => {
     id: number;
     name: string;
     draft: boolean;
+    html_url: string;
     prerelease: boolean;
     tag_name: string;
   }> = releasesRes.ok ? await releasesRes.json() : [];
@@ -111,6 +112,7 @@ export default defineEventHandler(async (event) => {
       id: r.id,
       name: r.name,
       draft: r.draft,
+      htmlUrl: r.html_url,
       prerelease: r.prerelease,
     })),
     githubTags,

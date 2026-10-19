@@ -103,6 +103,7 @@ const githubFormRules = ref({
 
 const githubTagOptions = ref<Array<SelectOption | SelectGroupOption>>([]);
 const githubReleaseOptions = ref<Array<SelectOption | SelectGroupOption>>([]);
+const selectedGithubReleaseUrl = ref<string | null>(null);
 
 const lastSelectedUser = ref<string | null>(null);
 const lastSelectedGithubTag = ref<string | null>(null);
@@ -158,6 +159,7 @@ if (data.value) {
       ? [
           {
             children: draftReleases.map((r) => ({
+              htmlUrl: r.htmlUrl,
               label: r.name || "Untitled release",
               prerelease: r.prerelease,
               value: r.id.toString(),
@@ -287,6 +289,7 @@ const createDraftGithubRelease = () => {
             (o) => (o as any).key === "available",
           ) as SelectGroupOption | undefined;
           const newReleaseOption = {
+            htmlUrl: response.htmlUrl,
             label: githubFormValue.value.releaseTitle,
             value: response.releaseId.toString(),
           };
@@ -329,6 +332,7 @@ const createDraftGithubRelease = () => {
 
           // Select the new release
           githubFormValue.value.release = response.releaseId.toString();
+          selectedGithubReleaseUrl.value = response.htmlUrl;
 
           const htmlUrl = response.htmlUrl;
           const editUrl = htmlUrl.replace("/tag/", "/edit/");
@@ -368,17 +372,23 @@ if (
   githubFormValue.value.release = githubRelease.toString();
   zenodoDraftIsReadyForRelease.value = true;
   githubReleaseIsDraft.value = true;
+  selectedGithubReleaseUrl.value =
+    data.value?.githubReleases.find(
+      (r) => r.id.toString() === githubRelease.toString(),
+    )?.htmlUrl ?? null;
 }
 
 const checkIfGithubReleaseIsDraft = async () => {
   const releaseId = githubFormValue.value.release;
 
   if (!releaseId) {
+    selectedGithubReleaseUrl.value = null;
     showGithubReleaseIsDraftStausBadge.value = false;
     return null;
   }
 
   if (releaseId === "new") {
+    selectedGithubReleaseUrl.value = null;
     showGithubReleaseIsDraftStausBadge.value = false;
     return null;
   }
@@ -390,13 +400,20 @@ const checkIfGithubReleaseIsDraft = async () => {
     method: "GET",
   })
     .then((response) => {
+      // Ignore responses for a release that is no longer selected
+      if (githubFormValue.value.release !== releaseId) return;
+
       if (response.draft) {
         githubReleaseIsDraft.value = true;
       } else {
         githubReleaseIsDraft.value = false;
       }
+      selectedGithubReleaseUrl.value =
+        response.htmlUrl ?? selectedGithubReleaseUrl.value;
     })
     .catch((error) => {
+      if (githubFormValue.value.release !== releaseId) return;
+
       githubReleaseIsDraft.value = false;
       showGithubReleaseIsDraftStausBadge.value = false;
 
@@ -408,10 +425,14 @@ const checkIfGithubReleaseIsDraft = async () => {
     });
 };
 
-const handleGithubReleaseChange = () => {
+const handleGithubReleaseChange = (
+  _value: string | null,
+  option: SelectOption | null,
+) => {
   zenodoDraftIsReadyForRelease.value = false;
   zenodoPreflightError.value = null;
   githubFormValue.value.releaseTitle = "";
+  selectedGithubReleaseUrl.value = (option?.htmlUrl as string) ?? null;
   checkIfGithubReleaseIsDraft();
 };
 
@@ -559,6 +580,7 @@ const resetForm = () => {
   zenodoFormValue.value = { accessRight: null, version: "" };
   zenodoDraftIsReadyForRelease.value = false;
   githubReleaseIsDraft.value = false;
+  selectedGithubReleaseUrl.value = null;
   showGithubReleaseIsDraftStausBadge.value = false;
   zenodoPreflightError.value = null;
   useRouter().replace({ query: {} });
@@ -1355,6 +1377,25 @@ onBeforeUnmount(() => {
                     @update:value="handleGithubReleaseChange"
                   />
                 </n-form-item>
+
+                <div
+                  v-if="selectedGithubReleaseUrl"
+                  class="mb-4 flex items-center gap-2 text-sm"
+                >
+                  <Icon name="simple-icons:github" size="16" class="shrink-0" />
+
+                  <span class="shrink-0 text-gray-600 dark:text-gray-400"
+                    >View on GitHub:</span
+                  >
+
+                  <NuxtLink
+                    :to="selectedGithubReleaseUrl"
+                    target="_blank"
+                    class="break-all text-blue-500 underline transition-all hover:text-blue-700"
+                  >
+                    {{ selectedGithubReleaseUrl }}
+                  </NuxtLink>
+                </div>
 
                 <n-form-item
                   v-show="githubFormValue.release === 'new'"
