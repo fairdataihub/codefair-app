@@ -819,6 +819,22 @@ export async function beginZenodoPublication(
     }
   };
 
+  // Failures also go to the client over SSE, but it may have disconnected, so
+  // every failure is recorded here too.
+  const logFailure = (step: string, error: any, zenodoRecordId?: number) => {
+    logwatch.error({
+      action: "zenodo.publish",
+      error: error?.message ?? String(error),
+      message: `Zenodo publication failed at the ${step} step`,
+      owner,
+      repo,
+      stack: error?.stack,
+      step,
+      userId,
+      ...(zenodoRecordId && { zenodoRecordId }),
+    });
+  };
+
   // Zenodo may already be published while GitHub is still a draft. Resume the
   // local half of the transaction instead of minting another Zenodo version.
   if (
@@ -852,6 +868,7 @@ export async function beginZenodoPublication(
       });
       return { data, success: true };
     } catch (error: any) {
+      logFailure("publish", error, checkpoint.zenodo_id);
       await onProgress?.({
         message: error.message,
         status: "error",
@@ -876,6 +893,7 @@ export async function beginZenodoPublication(
       repositoryId,
     ));
   } catch (error: any) {
+    logFailure("metadata", error);
     await onProgress?.({
       message: error.message,
       status: "error",
@@ -966,6 +984,7 @@ export async function beginZenodoPublication(
         });
       });
     }
+    logFailure("deposition", error, workingRecordId || undefined);
     await onProgress?.({
       message: error.message,
       status: "error",
@@ -985,6 +1004,7 @@ export async function beginZenodoPublication(
     step: "upload_metadata" | "update_repo" | "upload_files" | "publish",
   ) => {
     const message = error?.message ?? String(error);
+    logFailure(step, error, workingRecordId);
     if (
       workingDraft.origin === "new_deposition" &&
       !repositoryMutationStarted
@@ -1284,6 +1304,7 @@ export async function beginZenodoPublication(
       where: { repository_id: repositoryId },
     });
     if (latest?.status === "zenodo-published") {
+      logFailure("publish", error, workingRecordId);
       await onProgress?.({
         message: error.message,
         status: "error",
