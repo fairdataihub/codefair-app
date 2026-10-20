@@ -86,12 +86,12 @@ const UPLOAD_PROGRESS_INTERVAL_MS = 1000;
  * Updates the database record with the new tokens and expiry.
  * @param userId - Codefair user ID whose token should be refreshed.
  * @param refreshToken - The stored OAuth refresh token.
- * @returns Resolves when the token has been updated in the database.
+ * @returns The new access token, or null if the refresh failed.
  */
 async function refreshZenodoToken(
   userId: string,
   refreshToken: string,
-): Promise<void> {
+): Promise<string | null> {
   const body = new URLSearchParams({
     client_id: process.env.ZENODO_CLIENT_ID ?? "",
     client_secret: process.env.ZENODO_CLIENT_SECRET ?? "",
@@ -99,11 +99,22 @@ async function refreshZenodoToken(
     refresh_token: refreshToken,
   });
 
-  const res = await fetch(`${zenodoEndpoint()}/oauth/token`, {
-    body: body.toString(),
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    method: "POST",
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${zenodoEndpoint()}/oauth/token`, {
+      body: body.toString(),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      method: "POST",
+    });
+  } catch (error: any) {
+    logwatch.warn({
+      action: "zenodo.refreshToken",
+      error: error?.message,
+      message: `Token refresh request failed for user ${userId}`,
+      userId,
+    });
+    return null;
+  }
 
   if (!res.ok) {
     let body = "";
@@ -118,7 +129,7 @@ async function refreshZenodoToken(
       message: `Token refresh failed (${res.status}) for user ${userId}`,
       userId,
     });
-    return;
+    return null;
   }
 
   const tokenBody = await res.json();
@@ -142,6 +153,41 @@ async function refreshZenodoToken(
     message: "Token refreshed successfully",
     userId,
   });
+  return accessToken;
+}
+
+/** Access tokens are refreshed once they are this close to expiring. */
+const TOKEN_REFRESH_MARGIN_MS = 5 * 60_000;
+/** In-flight refreshes, shared so concurrent callers refresh only once. */
+const tokenRefreshes = new Map<string, Promise<string | null>>();
+
+/**
+ * Returns a usable access token for the user, refreshing it only when it is
+ * about to expire. Zenodo revokes a user's previous token whenever it issues a
+ * new one, so refreshing more often would break uploads still using the old
+ * token, and concurrent refreshes would revoke each other.
+ * @param userId - Codefair user ID.
+ * @returns The access token, or null when the user has no Zenodo token.
+ */
+export async function getZenodoAccessToken(
+  userId: string,
+): Promise<string | null> {
+  const record = await prisma.zenodoToken.findFirst({
+    where: { user_id: userId },
+  });
+  if (!record) return null;
+  if (record.expires_at.getTime() - Date.now() > TOKEN_REFRESH_MARGIN_MS) {
+    return record.token;
+  }
+
+  let refresh = tokenRefreshes.get(userId);
+  if (!refresh) {
+    refresh = refreshZenodoToken(userId, record.refresh_token).finally(() =>
+      tokenRefreshes.delete(userId),
+    );
+    tokenRefreshes.set(userId, refresh);
+  }
+  return (await refresh) ?? record.token;
 }
 
 /**
@@ -149,18 +195,17 @@ async function refreshZenodoToken(
  *
  * - If no token is stored: returns `{ valid: false }`.
  * - If the token is invalid / Zenodo rejects it: deletes the token and returns `{ valid: false }`.
- * - If the token is valid: refreshes the session and returns `{ valid: true, existingDepositions }`.
+ * - If the token is valid: returns `{ valid: true, existingDepositions }`. The
+ *   token is refreshed first only when it is about to expire.
  * @param userId - Codefair user ID to validate.
  * @returns Token validation result including existing depositions on success.
  */
 export async function validateZenodoToken(
   userId: string,
 ): Promise<ArchivalTokenValidation> {
-  const tokenRecord = await prisma.zenodoToken.findFirst({
-    where: { user_id: userId },
-  });
+  const token = await getZenodoAccessToken(userId);
 
-  if (!tokenRecord) {
+  if (!token) {
     return {
       existingDepositions: [],
       message: "No Zenodo token found",
@@ -172,7 +217,7 @@ export async function validateZenodoToken(
   try {
     records = await new ZenodoRdmClient(
       zenodoApiEndpoint(),
-      tokenRecord.token,
+      token,
     ).listUserRecords();
   } catch (error: any) {
     const status = error instanceof HttpError ? error.status : undefined;
@@ -201,8 +246,6 @@ export async function validateZenodoToken(
       valid: false,
     };
   }
-
-  await refreshZenodoToken(userId, tokenRecord.refresh_token);
 
   const existingDepositions: ExistingDeposition[] = records.map((record) => ({
     id: record.id,
@@ -934,7 +977,12 @@ export async function beginZenodoPublication(
   if (!tokenRecord)
     return { error: "Zenodo token not found for user", success: false };
 
-  const client = new ZenodoRdmClient(zenodoApiEndpoint(), tokenRecord.token);
+  // Publications can outlive an access token, so each request asks for the
+  // current one; a refresh mid-run is then picked up instead of revoked.
+  const client = new ZenodoRdmClient(
+    zenodoApiEndpoint(),
+    async () => (await getZenodoAccessToken(userId)) ?? tokenRecord.token,
+  );
   const checkpoint = await prisma.zenodoDeposition.findFirst({
     where: { repository_id: repositoryId },
   });

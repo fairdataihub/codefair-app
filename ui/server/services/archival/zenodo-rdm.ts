@@ -78,6 +78,8 @@ export interface UploadOptions {
 
 type FetchLike = typeof fetch;
 
+export type ZenodoToken = string | (() => Promise<string>);
+
 function recordId(record: RdmRecord): number | undefined {
   const id = Number(record.id);
   return Number.isFinite(id) ? id : undefined;
@@ -169,12 +171,17 @@ function uploadFailure(filename: string, error: unknown) {
 export class ZenodoRdmClient {
   private readonly baseUrl: string;
   private readonly fetchImpl: FetchLike;
-  private readonly token: string;
+  private readonly token: ZenodoToken;
   private readonly wait: (milliseconds: number) => Promise<void>;
 
+  /**
+   * @param token - An access token, or a function returning the current one.
+   *   Long publications pass a function so requests made after the token is
+   *   refreshed use the new token rather than the revoked one.
+   */
   constructor(
     baseUrl: string,
-    token: string,
+    token: ZenodoToken,
     fetchImpl: FetchLike = fetch,
     wait: (milliseconds: number) => Promise<void> = (ms) =>
       new Promise((resolve) => setTimeout(resolve, ms)),
@@ -185,17 +192,19 @@ export class ZenodoRdmClient {
     this.wait = wait;
   }
 
-  private headers(extra?: Record<string, string>) {
+  private async headers(extra?: Record<string, string>) {
+    const token =
+      typeof this.token === "function" ? await this.token() : this.token;
     return {
       Accept: RDM_ACCEPT,
-      Authorization: `Bearer ${this.token}`,
+      Authorization: `Bearer ${token}`,
       ...extra,
     };
   }
 
-  private get(path: string) {
+  private async get(path: string) {
     return this.fetchImpl(`${this.baseUrl}${path}`, {
-      headers: this.headers(),
+      headers: await this.headers(),
     });
   }
 
@@ -208,7 +217,7 @@ export class ZenodoRdmClient {
     });
     const response = await this.fetchImpl(
       `${this.baseUrl}/user/records?${query.toString()}`,
-      { headers: this.headers() },
+      { headers: await this.headers() },
     );
     if (!response.ok) throw await httpError("listUserRecords", response);
 
@@ -262,7 +271,7 @@ export class ZenodoRdmClient {
   async createDraft(seed: object): Promise<RdmRecord> {
     const response = await this.fetchImpl(`${this.baseUrl}/records`, {
       body: JSON.stringify(seed),
-      headers: this.headers({ "Content-Type": "application/json" }),
+      headers: await this.headers({ "Content-Type": "application/json" }),
       method: "POST",
     });
     if (!response.ok) throw await httpError("create draft", response);
@@ -273,7 +282,7 @@ export class ZenodoRdmClient {
     const response = await this.fetchImpl(
       `${this.baseUrl}/records/${id}/versions`,
       {
-        headers: this.headers({ "Content-Type": "application/json" }),
+        headers: await this.headers({ "Content-Type": "application/json" }),
         method: "POST",
       },
     );
@@ -324,7 +333,7 @@ export class ZenodoRdmClient {
       if (!entry.key) continue;
       const response = await this.fetchImpl(
         `${this.baseUrl}/records/${id}/draft/files/${encodeURIComponent(entry.key)}`,
-        { headers: this.headers(), method: "DELETE" },
+        { headers: await this.headers(), method: "DELETE" },
       );
       if (!response.ok && response.status !== 404) {
         throw await httpError(`delete draft file ${entry.key}`, response);
@@ -340,7 +349,7 @@ export class ZenodoRdmClient {
       draft?.links?.reserve_doi ??
         `${this.baseUrl}/records/${id}/draft/pids/doi`,
       {
-        headers: this.headers({ "Content-Type": "application/json" }),
+        headers: await this.headers({ "Content-Type": "application/json" }),
         method: "POST",
       },
     );
@@ -377,7 +386,7 @@ export class ZenodoRdmClient {
       `${this.baseUrl}/records/${id}/draft`,
       {
         body: JSON.stringify(payload),
-        headers: this.headers({ "Content-Type": "application/json" }),
+        headers: await this.headers({ "Content-Type": "application/json" }),
         method: "PUT",
       },
     );
@@ -396,7 +405,7 @@ export class ZenodoRdmClient {
   private async deleteDraftFile(id: number, filename: string) {
     const response = await this.fetchImpl(
       `${this.baseUrl}/records/${id}/draft/files/${encodeURIComponent(filename)}`,
-      { headers: this.headers(), method: "DELETE" },
+      { headers: await this.headers(), method: "DELETE" },
     );
     if (!response.ok && response.status !== 404) {
       throw await httpError(`delete draft file ${filename}`, response);
@@ -432,7 +441,7 @@ export class ZenodoRdmClient {
         const uploaded = await this.fetchImpl(links.content, {
           body,
           duplex: "half",
-          headers: this.headers({
+          headers: await this.headers({
             "Content-Length": String(source.size),
             "Content-Type": "application/octet-stream",
           }),
@@ -449,7 +458,7 @@ export class ZenodoRdmClient {
         await onPhase?.({ attempt, phase: "committing" });
         const committed = await this.fetchImpl(
           uploadedBody?.links?.commit ?? links.commit,
-          { headers: this.headers(), method: "POST" },
+          { headers: await this.headers(), method: "POST" },
         );
         if (!committed.ok) {
           throw await httpError(`commit draft file ${filename}`, committed);
@@ -476,7 +485,7 @@ export class ZenodoRdmClient {
       `${this.baseUrl}/records/${id}/draft/files`,
       {
         body: JSON.stringify([{ key: filename }]),
-        headers: this.headers({ "Content-Type": "application/json" }),
+        headers: await this.headers({ "Content-Type": "application/json" }),
         method: "POST",
       },
     );
@@ -502,7 +511,7 @@ export class ZenodoRdmClient {
     const response = await this.fetchImpl(
       `${this.baseUrl}/records/${id}/draft/actions/publish`,
       {
-        headers: this.headers({ "Content-Type": "application/json" }),
+        headers: await this.headers({ "Content-Type": "application/json" }),
         method: "POST",
       },
     );
@@ -540,7 +549,7 @@ export class ZenodoRdmClient {
     const response = await this.fetchImpl(
       `${this.baseUrl}/records/${id}/draft`,
       {
-        headers: this.headers(),
+        headers: await this.headers(),
         method: "DELETE",
       },
     );
