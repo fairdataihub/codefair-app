@@ -32,6 +32,7 @@ import {
   extractRecordDoi,
   HttpError,
   type RdmRecord,
+  uniqueZenodoFileKeys,
   UPLOAD_MAX_ATTEMPTS,
   type UploadSource,
   type WorkingDraft,
@@ -1386,14 +1387,20 @@ export async function beginZenodoPublication(
 
     // Release assets stream straight from GitHub to Zenodo. The source archive
     // goes first: GitHub only reveals its size once it has been downloaded,
-    // so starting it early completes the byte totals sooner.
+    // so starting it early completes the byte totals sooner. Zenodo file
+    // keys must be unique: assets keep their names, and the generated source
+    // archive is renamed if one of them already uses its name.
+    const keys = uniqueZenodoFileKeys([
+      ...assets.map((asset) => asset.name),
+      `${repo}-${tag}.zip`,
+    ]);
     const sources: Array<{
       name: string;
       prepare: (signal: AbortSignal) => Promise<UploadSource>;
       size?: number;
     }> = [
       {
-        name: `${repo}-${tag}.zip`,
+        name: keys.at(-1)!,
         prepare: async (signal) => ({
           open: () =>
             Promise.resolve(
@@ -1410,8 +1417,8 @@ export async function beginZenodoPublication(
           ),
         }),
       },
-      ...assets.map((asset) => ({
-        name: asset.name,
+      ...assets.map((asset, index) => ({
+        name: keys[index]!,
         prepare: () =>
           Promise.resolve({
             open: (signal?: AbortSignal) =>

@@ -113,6 +113,27 @@ export function sanitizeZenodoFileKey(name: string): string {
   return cleaned.length ? cleaned.slice(0, 255) : "release-file";
 }
 
+/**
+ * Sanitizes file names into Zenodo file keys that are unique within a record.
+ * A name that collides with an earlier one gets "-2", "-3", ... before its
+ * extension, so earlier names keep theirs.
+ */
+export function uniqueZenodoFileKeys(names: string[]): string[] {
+  const used = new Set<string>();
+  return names.map((name) => {
+    const key = sanitizeZenodoFileKey(name);
+    const extension = key.match(/(\.tar)?\.[A-Za-z0-9]+$/)?.[0] ?? "";
+    const base = key.slice(0, key.length - extension.length);
+    let candidate = key;
+    for (let n = 2; used.has(candidate); n++) {
+      const suffix = `-${n}`;
+      candidate = `${base.slice(0, 255 - suffix.length - extension.length)}${suffix}${extension}`;
+    }
+    used.add(candidate);
+    return candidate;
+  });
+}
+
 // InvenioRDM saves invalid drafts and only rejects them at publish, listing the
 // problems in `errors`. "Missing uploaded files" is expected until the files
 // step, so only non-file problems count here.
