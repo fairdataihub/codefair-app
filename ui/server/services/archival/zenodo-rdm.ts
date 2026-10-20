@@ -208,30 +208,51 @@ export class ZenodoRdmClient {
     });
   }
 
-  async listUserRecords(size = 25): Promise<RdmUserRecord[]> {
-    const query = new URLSearchParams({
-      allversions: "false",
-      page: "1",
-      size: String(size),
-      sort: "newest",
-    });
-    const response = await this.fetchImpl(
-      `${this.baseUrl}/user/records?${query.toString()}`,
-      { headers: await this.headers() },
-    );
-    if (!response.ok) throw await httpError("listUserRecords", response);
-
-    const body = (await response.json()) as {
-      hits?: { hits?: RdmRecord[] };
+  /**
+   * Lists the user's records, newest first, following pagination so older
+   * records can still be picked. The first page reports the total, so the
+   * remaining pages are fetched in parallel; at most `maxPages` are read.
+   */
+  async listUserRecords(
+    pageSize = 100,
+    maxPages = 10,
+  ): Promise<RdmUserRecord[]> {
+    const fetchPage = async (page: number) => {
+      const query = new URLSearchParams({
+        allversions: "false",
+        page: String(page),
+        size: String(pageSize),
+        sort: "newest",
+      });
+      const response = await this.fetchImpl(
+        `${this.baseUrl}/user/records?${query.toString()}`,
+        { headers: await this.headers() },
+      );
+      if (!response.ok) throw await httpError("listUserRecords", response);
+      return (await response.json()) as {
+        hits?: { hits?: RdmRecord[]; total?: number };
+      };
     };
-    const records: RdmUserRecord[] = [];
-    for (const hit of body.hits?.hits ?? []) {
+
+    const first = await fetchPage(1);
+    const total = first.hits?.total;
+    const pageCount =
+      typeof total === "number"
+        ? Math.min(maxPages, Math.max(1, Math.ceil(total / pageSize)))
+        : 1;
+    const rest = await Promise.all(
+      Array.from({ length: pageCount - 1 }, (_, i) => fetchPage(i + 2)),
+    );
+
+    // Keyed by ID: a record created mid-listing shifts later pages by one.
+    const records = new Map<number, RdmUserRecord>();
+    for (const hit of [first, ...rest].flatMap((p) => p.hits?.hits ?? [])) {
       const id = recordId(hit);
-      if (id === undefined) continue;
+      if (id === undefined || records.has(id)) continue;
       const conceptDoi = extractConceptDoi(hit);
       const version = hit.metadata?.version?.trim();
       const versionIndex = hit.versions?.index;
-      records.push({
+      records.set(id, {
         id,
         title: hit.metadata?.title ?? "Untitled record",
         isPublished: isPublishedRecord(hit),
@@ -240,7 +261,7 @@ export class ZenodoRdmClient {
         ...(Number.isInteger(versionIndex) && { versionIndex }),
       });
     }
-    return records;
+    return [...records.values()];
   }
 
   async resolveState(

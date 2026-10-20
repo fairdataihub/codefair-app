@@ -198,10 +198,13 @@ export async function getZenodoAccessToken(
  * - If the token is valid: returns `{ valid: true, existingDepositions }`. The
  *   token is refreshed first only when it is about to expire.
  * @param userId - Codefair user ID to validate.
+ * @param options.listRecords - False to only check the token, skipping the
+ *   full record listing (which can take several requests).
  * @returns Token validation result including existing depositions on success.
  */
 export async function validateZenodoToken(
   userId: string,
+  { listRecords = true }: { listRecords?: boolean } = {},
 ): Promise<ArchivalTokenValidation> {
   const token = await getZenodoAccessToken(userId);
 
@@ -216,10 +219,10 @@ export async function validateZenodoToken(
 
   let records;
   try {
-    records = await new ZenodoRdmClient(
-      zenodoApiEndpoint(),
-      token,
-    ).listUserRecords();
+    const client = new ZenodoRdmClient(zenodoApiEndpoint(), token);
+    records = listRecords
+      ? await client.listUserRecords()
+      : await client.listUserRecords(1, 1);
   } catch (error: any) {
     const status = error instanceof HttpError ? error.status : undefined;
     if (status === 401 || status === 403) {

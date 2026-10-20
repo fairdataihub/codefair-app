@@ -115,7 +115,10 @@ export default defineEventHandler(async (event) => {
   }
 
   // Zenodo token check
-  const zenodoToken = await validateZenodoToken(user?.id ?? "");
+  // Publishing only needs a working token, not the full record list.
+  const zenodoToken = await validateZenodoToken(user?.id ?? "", {
+    listRecords: false,
+  });
 
   if (!zenodoToken.valid) {
     // An outage says nothing about the token, so don't send the user to
