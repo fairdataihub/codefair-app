@@ -158,6 +158,8 @@ model ZenodoDeposition {
   repository_id                 Int          @unique
   existing_zenodo_deposition_id Boolean?
   zenodo_id                     Int?
+  draft_zenodo_id               Int?
+  draft_target_zenodo_id        Int?
   zenodo_metadata               Json         @default("{}")
   last_published_zenodo_doi     String?
   github_release_id             Int?

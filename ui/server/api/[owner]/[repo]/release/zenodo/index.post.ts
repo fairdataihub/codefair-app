@@ -12,6 +12,7 @@ import { z } from "zod";
 import type { User } from "lucia";
 import {
   beginZenodoPublication,
+  saveZenodoReleaseSelection,
   validateZenodoToken,
 } from "~/server/services/archival/zenodo";
 import type { PublicationProgressEvent } from "~/server/services/archival/interface";
@@ -199,44 +200,14 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Persist to DB (draft state)
-  const matchingCheckpoint =
-    publish &&
-    existingDep?.github_release_id === (parseInt(release) || null) &&
-    existingDep.github_tag_name === tag &&
-    existingDep.zenodo_id &&
-    [
-      "draft",
-      "draft-new",
-      "draft-version",
-      "error",
-      "zenodo-published",
-    ].includes(existingDep.status);
-
-  const depositionData = {
-    existing_zenodo_deposition_id: matchingCheckpoint
-      ? existingDep.existing_zenodo_deposition_id
-      : useExistingDeposition,
-    github_release_id: parseInt(release) || null,
-    github_tag_name: tag,
-    status: matchingCheckpoint ? existingDep.status : "draft",
-    user_id: user?.id ?? "",
-    zenodo_id: matchingCheckpoint
-      ? existingDep.zenodo_id
-      : parseInt(zenodoDepositionId) || null,
-    zenodo_metadata: metadata,
-  };
-
-  if (existingDep) {
-    await prisma.zenodoDeposition.update({
-      data: depositionData,
-      where: { repository_id: installation.id },
-    });
-  } else {
-    await prisma.zenodoDeposition.create({
-      data: { ...depositionData, repository_id: installation.id },
-    });
-  }
+  await saveZenodoReleaseSelection({
+    metadata,
+    release,
+    repositoryId: installation.id,
+    tag,
+    useExistingDeposition,
+    userId: user?.id ?? "",
+  });
 
   // Save-only path
   if (!publish) {

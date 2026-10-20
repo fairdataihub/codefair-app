@@ -781,6 +781,53 @@ async function loadPublicationMetadata(
   return { codemeta, licenseId };
 }
 
+/**
+ * Saves the release form for a repository. An in-progress publication's draft
+ * and status are kept unless the user moves to a different release or tag, so
+ * saving never orphans a draft or a published record that a retry would finish.
+ * @returns The saved deposition row.
+ */
+export async function saveZenodoReleaseSelection(selection: {
+  metadata: { accessRight: string; version: string };
+  release: string;
+  repositoryId: number;
+  tag: string;
+  useExistingDeposition: boolean;
+  userId: string;
+}) {
+  const releaseId = parseInt(selection.release) || null;
+  const form = {
+    existing_zenodo_deposition_id: selection.useExistingDeposition,
+    github_release_id: releaseId,
+    github_tag_name: selection.tag,
+    user_id: selection.userId,
+    zenodo_metadata: selection.metadata,
+  };
+  const existing = await prisma.zenodoDeposition.findFirst({
+    where: { repository_id: selection.repositoryId },
+  });
+  if (!existing) {
+    return prisma.zenodoDeposition.create({
+      data: { ...form, repository_id: selection.repositoryId, status: "draft" },
+    });
+  }
+
+  const sameRelease =
+    existing.github_release_id === releaseId &&
+    existing.github_tag_name === selection.tag;
+  return prisma.zenodoDeposition.update({
+    data: sameRelease
+      ? form
+      : {
+          ...form,
+          draft_target_zenodo_id: null,
+          draft_zenodo_id: null,
+          status: "draft",
+        },
+    where: { repository_id: selection.repositoryId },
+  });
+}
+
 /** Runs the active Zenodo publication workflow through the InvenioRDM API. */
 export async function beginZenodoPublication(
   opts: ArchivalPublicationOptions,
@@ -805,7 +852,7 @@ export async function beginZenodoPublication(
     return { error: "Zenodo token not found for user", success: false };
 
   const client = new ZenodoRdmClient(zenodoApiEndpoint(), tokenRecord.token);
-  let checkpoint = await prisma.zenodoDeposition.findFirst({
+  const checkpoint = await prisma.zenodoDeposition.findFirst({
     where: { repository_id: repositoryId },
   });
 
@@ -840,15 +887,12 @@ export async function beginZenodoPublication(
     });
   };
 
-  // Zenodo may already be published while GitHub is still a draft. Resume the
-  // local half of the transaction instead of minting another Zenodo version.
-  if (
-    checkpoint?.status === "zenodo-published" &&
-    checkpoint.github_release_id === (parseInt(release) || null) &&
-    checkpoint.github_tag_name === tag &&
-    checkpoint.zenodo_id &&
-    checkpoint.last_published_zenodo_doi
-  ) {
+  // Zenodo is published while GitHub is still a draft: finish only the local
+  // half of the transaction instead of minting another Zenodo version.
+  const finishGitHubRelease = async (
+    publishedDoi: string,
+    recordId: number,
+  ): Promise<PublicationResult> => {
     await onProgress?.({
       message: "Finishing the GitHub release for the published Zenodo record…",
       status: "in_progress",
@@ -862,8 +906,8 @@ export async function beginZenodoPublication(
       });
       await refreshDashboard();
       const data = {
-        doi: checkpoint.last_published_zenodo_doi,
-        htmlUrl: `${zenodoEndpoint()}/records/${checkpoint.zenodo_id}`,
+        doi: publishedDoi,
+        htmlUrl: `${zenodoEndpoint()}/records/${recordId}`,
       };
       await onProgress?.({
         data,
@@ -873,7 +917,7 @@ export async function beginZenodoPublication(
       });
       return { data, success: true };
     } catch (error: any) {
-      logFailure("publish", error, checkpoint.zenodo_id);
+      logFailure("publish", error, recordId);
       await onProgress?.({
         message: error.message,
         status: "error",
@@ -881,6 +925,19 @@ export async function beginZenodoPublication(
       });
       return { error: error.message, success: false };
     }
+  };
+
+  if (
+    checkpoint?.status === "zenodo-published" &&
+    checkpoint.github_release_id === (parseInt(release) || null) &&
+    checkpoint.github_tag_name === tag &&
+    checkpoint.zenodo_id &&
+    checkpoint.last_published_zenodo_doi
+  ) {
+    return finishGitHubRelease(
+      checkpoint.last_published_zenodo_doi,
+      checkpoint.zenodo_id,
+    );
   }
 
   await onProgress?.({
@@ -918,62 +975,110 @@ export async function beginZenodoPublication(
     step: "deposition",
   });
 
-  const sameReleaseCheckpoint =
-    checkpoint?.github_release_id === (parseInt(release) || null) &&
-    checkpoint.github_tag_name === tag &&
-    checkpoint.zenodo_id &&
-    ["draft", "draft-new", "draft-version", "error"].includes(
-      checkpoint.status,
-    );
-  const workingMode = sameReleaseCheckpoint ? "existing" : opts.mode;
-  const workingId = sameReleaseCheckpoint
-    ? (checkpoint!.zenodo_id ?? undefined)
-    : opts.depositionId;
+  // The record the user asked for: an existing record to version, or null for
+  // a new deposition.
+  const target = opts.mode === "existing" ? (opts.depositionId ?? null) : null;
+
+  // The user changed their target after a failed attempt. Drafts this workflow
+  // created are discarded; a draft the user picked themselves is left alone.
+  const abandonDraft = async (draftId: number, draftTarget: number | null) => {
+    if (draftId === draftTarget) return;
+    await client.discardDraft(draftId).catch((cleanupError: any) => {
+      logwatch.warn({
+        action: "zenodo.abandonDraft",
+        error: cleanupError.message,
+        message: `Could not discard abandoned draft ${draftId}`,
+        owner,
+        repo,
+      });
+    });
+  };
 
   let workingDraft!: WorkingDraft;
   let workingRecordId = 0;
   let draftCheckpointSaved = false;
   let repositoryMutationStarted = false;
   try {
-    workingDraft = await client.acquireWorkingDraft(
-      workingMode,
-      workingId,
-      buildRdmDraftSeed(codemeta),
-    );
+    // A retry for the same target resumes the previous attempt's draft. Its
+    // state on Zenodo decides what happens next, since an attempt can fail
+    // after Zenodo publishes, or the user can publish it on zenodo.org.
+    let resumedDraft: WorkingDraft | undefined;
+    const previousDraftId = checkpoint?.draft_zenodo_id ?? null;
+    const previousTarget = checkpoint?.draft_target_zenodo_id ?? null;
+    if (previousDraftId && previousTarget === target) {
+      const state = await client.resolveState(previousDraftId);
+      if (state.kind === "published") {
+        const publishedDoi = extractRecordDoi(state.record);
+        if (!publishedDoi) {
+          throw new Error(
+            `Zenodo record ${previousDraftId} is published but has no DOI`,
+          );
+        }
+        await prisma.zenodoDeposition.update({
+          data: {
+            draft_target_zenodo_id: null,
+            draft_zenodo_id: null,
+            existing_zenodo_deposition_id: true,
+            last_published_zenodo_doi: publishedDoi,
+            status: "zenodo-published",
+            zenodo_id: previousDraftId,
+          },
+          where: { repository_id: repositoryId },
+        });
+        await onProgress?.({
+          message: "The Zenodo record was already published",
+          status: "completed",
+          step: "deposition",
+        });
+        return finishGitHubRelease(publishedDoi, previousDraftId);
+      }
+      if (state.kind === "missing") {
+        throw new Error(
+          `Zenodo draft ${previousDraftId} from the previous attempt was not found, or is not yours`,
+        );
+      }
+      resumedDraft = { origin: "reused_draft", record: state.record };
+    } else if (previousDraftId) {
+      await abandonDraft(previousDraftId, previousTarget);
+    }
+
+    workingDraft =
+      resumedDraft ??
+      (await client.acquireWorkingDraft(
+        opts.mode,
+        opts.depositionId,
+        buildRdmDraftSeed(codemeta),
+      ));
     workingRecordId = Number(workingDraft.record.id);
     if (!Number.isFinite(workingRecordId) || workingRecordId <= 0) {
       throw new Error("Zenodo returned a draft without a usable record ID");
     }
 
-    const draftStatus =
-      workingDraft.origin === "new_deposition"
-        ? "draft-new"
-        : workingDraft.origin === "new_version"
-          ? "draft-version"
-          : "draft";
-    const checkpointData = {
-      existing_zenodo_deposition_id: workingDraft.origin !== "new_deposition",
-      github_release_id: parseInt(release) || null,
-      github_tag_name: tag,
-      status: draftStatus,
-      user_id: userId,
-      zenodo_id: workingRecordId,
-      zenodo_metadata: metadata,
+    // zenodo_id stays the last published record (the dashboard badge links to
+    // it); the draft and the record it versions are tracked separately.
+    const draftCheckpoint = {
+      draft_target_zenodo_id: target,
+      draft_zenodo_id: workingRecordId,
+      status: "draft",
     };
     if (checkpoint) {
       await prisma.zenodoDeposition.update({
-        data: checkpointData,
+        data: draftCheckpoint,
         where: { repository_id: repositoryId },
       });
     } else {
       await prisma.zenodoDeposition.create({
-        data: { ...checkpointData, repository_id: repositoryId },
+        data: {
+          ...draftCheckpoint,
+          github_release_id: parseInt(release) || null,
+          github_tag_name: tag,
+          repository_id: repositoryId,
+          user_id: userId,
+          zenodo_metadata: metadata,
+        },
       });
     }
     draftCheckpointSaved = true;
-    checkpoint = await prisma.zenodoDeposition.findFirst({
-      where: { repository_id: repositoryId },
-    });
     await client.purgeDraftFiles(workingRecordId);
   } catch (error: any) {
     if (
@@ -1017,7 +1122,11 @@ export async function beginZenodoPublication(
       try {
         await client.discardDraft(workingRecordId);
         await prisma.zenodoDeposition.update({
-          data: { status: "error", zenodo_id: null },
+          data: {
+            draft_target_zenodo_id: null,
+            draft_zenodo_id: null,
+            status: "error",
+          },
           where: { repository_id: repositoryId },
         });
       } catch (cleanupError: any) {
@@ -1289,6 +1398,8 @@ export async function beginZenodoPublication(
 
     await prisma.zenodoDeposition.update({
       data: {
+        draft_target_zenodo_id: null,
+        draft_zenodo_id: null,
         existing_zenodo_deposition_id: true,
         last_published_zenodo_doi: publishedDoi,
         status: "zenodo-published",
