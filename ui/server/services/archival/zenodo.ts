@@ -602,41 +602,51 @@ async function fetchReleaseAssets(
   releaseId: string,
   userToken: string,
 ): Promise<Array<{ id: number; name: string; size: number; url: string }>> {
-  const res = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/releases/${releaseId}/assets`,
-    {
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${userToken}`,
-        "X-GitHub-Api-Version": "2022-11-28",
+  // GitHub pages release assets (30 by default, at most 100 per page), so keep
+  // reading pages until one comes back short.
+  const perPage = 100;
+  const assets: Array<{ id: number; name: string; size: number; url: string }> =
+    [];
+  for (let page = 1; ; page++) {
+    const res = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/releases/${releaseId}/assets?per_page=${perPage}&page=${page}`,
+      {
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${userToken}`,
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
       },
-    },
-  );
-
-  if (!res.ok) {
-    logwatch.error({
-      action: "zenodo.fetchReleaseAssets",
-      message: `Failed to fetch release assets (${res.status})`,
-      owner,
-      releaseId,
-      repo,
-      stack: new Error(
-        `Failed to fetch release assets: ${res.status} ${res.statusText}`,
-      ).stack,
-    });
-    throw new HttpError(
-      `Failed to fetch release assets: ${res.status} ${res.statusText}`,
-      res.status,
     );
-  }
 
-  const data = await res.json();
-  const assets = (data ?? []).map((a: any) => ({
-    id: a.id,
-    name: a.name,
-    size: a.size,
-    url: a.url,
-  }));
+    if (!res.ok) {
+      logwatch.error({
+        action: "zenodo.fetchReleaseAssets",
+        message: `Failed to fetch release assets (${res.status})`,
+        owner,
+        releaseId,
+        repo,
+        stack: new Error(
+          `Failed to fetch release assets: ${res.status} ${res.statusText}`,
+        ).stack,
+      });
+      throw new HttpError(
+        `Failed to fetch release assets: ${res.status} ${res.statusText}`,
+        res.status,
+      );
+    }
+
+    const data: any[] = (await res.json()) ?? [];
+    assets.push(
+      ...data.map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        size: a.size,
+        url: a.url,
+      })),
+    );
+    if (data.length < perPage) break;
+  }
   logwatch.info({
     action: "zenodo.fetchReleaseAssets",
     assetCount: assets.length,
