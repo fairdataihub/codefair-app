@@ -30,6 +30,7 @@ import type {
 } from "./interface";
 import {
   extractRecordDoi,
+  HttpError,
   type RdmRecord,
   UPLOAD_MAX_ATTEMPTS,
   type UploadSource,
@@ -174,7 +175,7 @@ export async function validateZenodoToken(
       tokenRecord.token,
     ).listUserRecords();
   } catch (error: any) {
-    const status = Number(error?.message?.match(/:\s+(401|403)\b/)?.[1]);
+    const status = error instanceof HttpError ? error.status : undefined;
     if (status === 401 || status === 403) {
       await prisma.zenodoToken.delete({ where: { user_id: userId } });
       logwatch.warn({
@@ -519,8 +520,9 @@ async function downloadRepositoryZip(
         `Failed to download repository zip: ${res.status} ${res.statusText}`,
       ).stack,
     });
-    throw new Error(
+    throw new HttpError(
       `Failed to download repository zip: ${res.status} ${res.statusText}`,
+      res.status,
     );
   }
 
@@ -576,8 +578,9 @@ async function fetchReleaseAssets(
         `Failed to fetch release assets: ${res.status} ${res.statusText}`,
       ).stack,
     });
-    throw new Error(
+    throw new HttpError(
       `Failed to fetch release assets: ${res.status} ${res.statusText}`,
+      res.status,
     );
   }
 
@@ -628,8 +631,9 @@ async function openReleaseAsset(
         `Failed to download release asset: ${res.status} ${res.statusText}`,
       ).stack,
     });
-    throw new Error(
+    throw new HttpError(
       `Failed to download release asset: ${res.status} ${res.statusText}`,
+      res.status,
     );
   }
 
@@ -714,8 +718,9 @@ async function publishGitHubRelease(
         `Failed to publish GitHub release: ${res.status} ${res.statusText}`,
       ).stack,
     });
-    throw new Error(
+    throw new HttpError(
       `Failed to publish GitHub release: ${res.status} ${res.statusText}`,
+      res.status,
     );
   }
 

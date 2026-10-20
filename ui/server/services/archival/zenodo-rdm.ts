@@ -122,9 +122,23 @@ export function draftMetadataErrors(record: RdmRecord): string[] {
     );
 }
 
-async function responseError(operation: string, response: Response) {
+/** A failed HTTP response, keeping its status for retry and auth decisions. */
+export class HttpError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "HttpError";
+    this.status = status;
+  }
+}
+
+async function httpError(operation: string, response: Response) {
   const body = await response.text().catch(() => "");
-  return `${operation}: ${response.status} ${response.statusText}${body ? ` - ${body}` : ""}`;
+  return new HttpError(
+    `${operation}: ${response.status} ${response.statusText}${body ? ` - ${body}` : ""}`,
+    response.status,
+  );
 }
 
 // Node's fetch reports network failures as a bare "fetch failed" and keeps
@@ -137,10 +151,19 @@ function describeError(error: unknown) {
   return detail ? `${message} (${detail})` : message;
 }
 
-function shouldRetry(message: string) {
-  return /\b(500|502|503|504)\b|please try again|transfer failed/i.test(
-    message,
-  );
+const RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
+
+// HTTP failures are retried only for transient statuses. Anything without a
+// status (a dropped connection, a timeout, a broken stream) is assumed transient.
+function isRetryable(error: unknown) {
+  const status = (error as { status?: unknown } | null)?.status;
+  return typeof status === "number" ? RETRYABLE_STATUSES.has(status) : true;
+}
+
+function uploadFailure(filename: string, error: unknown) {
+  return error instanceof HttpError
+    ? error.message
+    : `File upload transfer failed for ${filename}: ${describeError(error)}`;
 }
 
 export class ZenodoRdmClient {
@@ -187,8 +210,7 @@ export class ZenodoRdmClient {
       `${this.baseUrl}/user/records?${query.toString()}`,
       { headers: this.headers() },
     );
-    if (!response.ok)
-      throw new Error(await responseError("listUserRecords", response));
+    if (!response.ok) throw await httpError("listUserRecords", response);
 
     const body = (await response.json()) as {
       hits?: { hits?: RdmRecord[] };
@@ -227,14 +249,14 @@ export class ZenodoRdmClient {
       };
     }
     if (published.status !== 404) {
-      throw new Error(await responseError(`resolve record ${id}`, published));
+      throw await httpError(`resolve record ${id}`, published);
     }
 
     const draft = await this.get(`/records/${id}/draft`);
     if (draft.ok)
       return { kind: "draft", record: (await draft.json()) as RdmRecord };
     if (draft.status === 404) return { kind: "missing" };
-    throw new Error(await responseError(`resolve draft ${id}`, draft));
+    throw await httpError(`resolve draft ${id}`, draft);
   }
 
   async createDraft(seed: object): Promise<RdmRecord> {
@@ -243,8 +265,7 @@ export class ZenodoRdmClient {
       headers: this.headers({ "Content-Type": "application/json" }),
       method: "POST",
     });
-    if (!response.ok)
-      throw new Error(await responseError("create draft", response));
+    if (!response.ok) throw await httpError("create draft", response);
     return (await response.json()) as RdmRecord;
   }
 
@@ -256,8 +277,7 @@ export class ZenodoRdmClient {
         method: "POST",
       },
     );
-    if (!response.ok)
-      throw new Error(await responseError(`create version ${id}`, response));
+    if (!response.ok) throw await httpError(`create version ${id}`, response);
     return (await response.json()) as RdmRecord;
   }
 
@@ -296,9 +316,7 @@ export class ZenodoRdmClient {
   async purgeDraftFiles(id: number): Promise<void> {
     const listing = await this.get(`/records/${id}/draft/files`);
     if (!listing.ok)
-      throw new Error(
-        await responseError(`list files for draft ${id}`, listing),
-      );
+      throw await httpError(`list files for draft ${id}`, listing);
     const body = (await listing.json()) as {
       entries?: Array<{ key?: string }>;
     };
@@ -309,9 +327,7 @@ export class ZenodoRdmClient {
         { headers: this.headers(), method: "DELETE" },
       );
       if (!response.ok && response.status !== 404) {
-        throw new Error(
-          await responseError(`delete draft file ${entry.key}`, response),
-        );
+        throw await httpError(`delete draft file ${entry.key}`, response);
       }
     }
   }
@@ -345,10 +361,14 @@ export class ZenodoRdmClient {
       );
       if (refreshedDoi) return refreshedDoi;
     }
-    throw new Error(
-      response.ok
-        ? `Zenodo reserved a DOI for record ${id} but returned no DOI`
-        : `Failed to reserve a DOI for record ${id}: ${response.status} ${response.statusText}${raw ? ` - ${raw}` : ""}`,
+    if (response.ok) {
+      throw new Error(
+        `Zenodo reserved a DOI for record ${id} but returned no DOI`,
+      );
+    }
+    throw new HttpError(
+      `Failed to reserve a DOI for record ${id}: ${response.status} ${response.statusText}${raw ? ` - ${raw}` : ""}`,
+      response.status,
     );
   }
 
@@ -362,9 +382,7 @@ export class ZenodoRdmClient {
       },
     );
     if (!response.ok)
-      throw new Error(
-        await responseError(`update metadata for ${id}`, response),
-      );
+      throw await httpError(`update metadata for ${id}`, response);
     const record = (await response.json()) as RdmRecord;
     const errors = draftMetadataErrors(record);
     if (errors.length) {
@@ -381,9 +399,7 @@ export class ZenodoRdmClient {
       { headers: this.headers(), method: "DELETE" },
     );
     if (!response.ok && response.status !== 404) {
-      throw new Error(
-        await responseError(`delete draft file ${filename}`, response),
-      );
+      throw await httpError(`delete draft file ${filename}`, response);
     }
   }
 
@@ -394,98 +410,92 @@ export class ZenodoRdmClient {
     { onBytes, onPhase, signal }: UploadOptions = {},
   ): Promise<void> {
     const filename = sanitizeZenodoFileKey(rawFilename);
-    let lastError = "";
+    let lastError: unknown;
     for (let attempt = 1; attempt <= UPLOAD_MAX_ATTEMPTS; attempt++) {
       signal?.throwIfAborted();
       try {
         if (attempt > 1) await this.deleteDraftFile(id, filename);
         await onPhase?.({ attempt, phase: "uploading" });
-        const initialize = await this.fetchImpl(
-          `${this.baseUrl}/records/${id}/draft/files`,
-          {
-            body: JSON.stringify([{ key: filename }]),
-            headers: this.headers({ "Content-Type": "application/json" }),
-            method: "POST",
-          },
+        const links = await this.initializeDraftFile(id, filename);
+
+        // Streamed rather than buffered so large files don't sit in memory.
+        let sent = 0;
+        const body = (await source.open(signal)).pipeThrough(
+          new TransformStream<Uint8Array, Uint8Array>({
+            transform(chunk, controller) {
+              sent += chunk.byteLength;
+              onBytes?.(sent);
+              controller.enqueue(chunk);
+            },
+          }),
         );
-        if (!initialize.ok) {
-          lastError = await responseError(
-            `initialize draft file ${filename}`,
-            initialize,
-          );
-        } else {
-          const initialized = (await initialize.json()) as {
-            entries?: Array<{
-              key?: string;
-              links?: { commit?: string; content?: string };
-            }>;
-          };
-          const entry = initialized.entries?.find(
-            (item) => item.key === filename,
-          );
-          if (!entry?.links?.content || !entry.links.commit) {
-            lastError = `Zenodo did not return content and commit links for ${filename}`;
-          } else {
-            // Streamed rather than buffered so large files don't sit in memory.
-            let sent = 0;
-            const body = (await source.open(signal)).pipeThrough(
-              new TransformStream<Uint8Array, Uint8Array>({
-                transform(chunk, controller) {
-                  sent += chunk.byteLength;
-                  onBytes?.(sent);
-                  controller.enqueue(chunk);
-                },
-              }),
-            );
-            const uploaded = await this.fetchImpl(entry.links.content, {
-              body,
-              duplex: "half",
-              headers: this.headers({
-                "Content-Length": String(source.size),
-                "Content-Type": "application/octet-stream",
-              }),
-              method: "PUT",
-              signal,
-            } as RequestInit);
-            if (!uploaded.ok) {
-              lastError = await responseError(
-                `upload draft file ${filename}`,
-                uploaded,
-              );
-            } else {
-              const uploadedBody = (await uploaded
-                .json()
-                .catch(() => null)) as {
-                links?: { commit?: string };
-              } | null;
-              await onPhase?.({ attempt, phase: "committing" });
-              const committed = await this.fetchImpl(
-                uploadedBody?.links?.commit ?? entry.links.commit,
-                { headers: this.headers(), method: "POST" },
-              );
-              if (committed.ok) return;
-              lastError = await responseError(
-                `commit draft file ${filename}`,
-                committed,
-              );
-            }
-          }
+        const uploaded = await this.fetchImpl(links.content, {
+          body,
+          duplex: "half",
+          headers: this.headers({
+            "Content-Length": String(source.size),
+            "Content-Type": "application/octet-stream",
+          }),
+          method: "PUT",
+          signal,
+        } as RequestInit);
+        if (!uploaded.ok) {
+          throw await httpError(`upload draft file ${filename}`, uploaded);
         }
+        const uploadedBody = (await uploaded.json().catch(() => null)) as {
+          links?: { commit?: string };
+        } | null;
+
+        await onPhase?.({ attempt, phase: "committing" });
+        const committed = await this.fetchImpl(
+          uploadedBody?.links?.commit ?? links.commit,
+          { headers: this.headers(), method: "POST" },
+        );
+        if (!committed.ok) {
+          throw await httpError(`commit draft file ${filename}`, committed);
+        }
+        return;
       } catch (error) {
         if (signal?.aborted) throw error;
-        lastError = `File upload transfer failed for ${filename}: ${describeError(
-          error,
-        )}`;
+        lastError = error;
       }
-      if (attempt === UPLOAD_MAX_ATTEMPTS || !shouldRetry(lastError)) break;
+      if (attempt === UPLOAD_MAX_ATTEMPTS || !isRetryable(lastError)) break;
       await onPhase?.({
         attempt: attempt + 1,
-        error: lastError,
+        error: uploadFailure(filename, lastError),
         phase: "retrying",
       });
       await this.wait(attempt * 1000);
     }
-    throw new Error(lastError || `Failed to upload ${filename}`);
+    if (lastError instanceof HttpError) throw lastError;
+    throw new Error(uploadFailure(filename, lastError), { cause: lastError });
+  }
+
+  private async initializeDraftFile(id: number, filename: string) {
+    const response = await this.fetchImpl(
+      `${this.baseUrl}/records/${id}/draft/files`,
+      {
+        body: JSON.stringify([{ key: filename }]),
+        headers: this.headers({ "Content-Type": "application/json" }),
+        method: "POST",
+      },
+    );
+    if (!response.ok) {
+      throw await httpError(`initialize draft file ${filename}`, response);
+    }
+    const initialized = (await response.json()) as {
+      entries?: Array<{
+        key?: string;
+        links?: { commit?: string; content?: string };
+      }>;
+    };
+    const entry = initialized.entries?.find((item) => item.key === filename);
+    if (!entry?.links?.content || !entry.links.commit) {
+      throw new Error(
+        `Zenodo did not return content and commit links for ${filename}`,
+      );
+    }
+    return { commit: entry.links.commit, content: entry.links.content };
   }
 
   async publish(id: number): Promise<RdmPublishResult> {
@@ -496,8 +506,7 @@ export class ZenodoRdmClient {
         method: "POST",
       },
     );
-    if (!response.ok)
-      throw new Error(await responseError(`publish record ${id}`, response));
+    if (!response.ok) throw await httpError(`publish record ${id}`, response);
     const record = (await response.json()) as RdmRecord;
     const publishedId = recordId(record);
     if (publishedId === undefined)
@@ -536,7 +545,7 @@ export class ZenodoRdmClient {
       },
     );
     if (!response.ok && response.status !== 404) {
-      throw new Error(await responseError(`discard draft ${id}`, response));
+      throw await httpError(`discard draft ${id}`, response);
     }
   }
 }
