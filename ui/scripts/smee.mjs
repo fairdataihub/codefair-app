@@ -23,8 +23,12 @@ try {
 
 const source = process.env.WEBHOOK_PROXY_URL;
 if (!source) {
-  console.error("WEBHOOK_PROXY_URL is not set in .env or environment");
-  process.exit(1);
+  // Exit cleanly: `yarn dev` runs this alongside Nuxt with npm-run-all, which
+  // stops every task when one fails, so an error here would kill the UI too.
+  console.warn(
+    "WEBHOOK_PROXY_URL is not set in .env or environment; GitHub webhooks will not be forwarded.",
+  );
+  process.exit(0);
 }
 
 const target = "http://localhost:3000/api/webhooks/github";
