@@ -37,6 +37,8 @@ const devMode = process.env.NODE_ENV === "development";
 
 const zenodoLoginUrl = ref("");
 const haveValidZenodoToken = ref(false);
+// Zenodo was down when the token was checked; the saved connection is kept.
+const zenodoUnreachable = ref(false);
 
 const licenseChecked = ref(false);
 const metadataChecked = ref(false);
@@ -128,6 +130,7 @@ if (error.value) {
 if (data.value) {
   zenodoLoginUrl.value = data.value.zenodoLoginUrl;
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
+  zenodoUnreachable.value = data.value.zenodoUnreachable;
 
   license.value.id = data.value?.license?.id || "";
   license.value.status = data.value?.license?.status || "";
@@ -694,6 +697,8 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         "tag-already-released": `A published release already exists for tag "${effectiveTag}". Please choose a different tag or delete the existing release first.`,
         "Zenodo token not found":
           "Your Zenodo connection has expired or been revoked. Please reconnect your Zenodo account using the button above.",
+        "zenodo-unreachable":
+          "Zenodo could not be reached. Your Zenodo connection is still saved, so please try again in a few minutes.",
       };
       zenodoPreflightError.value =
         knownErrors[statusMessage] ??
@@ -1493,7 +1498,14 @@ onBeforeUnmount(() => {
       <CardDashboard title="Check Zenodo connection">
         <template #icon>
           <Icon
-            v-if="!haveValidZenodoToken"
+            v-if="zenodoUnreachable"
+            name="ic:round-warning"
+            size="40"
+            class="text-amber-500"
+          />
+
+          <Icon
+            v-else-if="!haveValidZenodoToken"
             name="clarity:disconnect-line"
             size="40"
             class="text-red-500"
@@ -1509,13 +1521,29 @@ onBeforeUnmount(() => {
               can now continue to the next step.
             </p>
 
+            <p v-else-if="zenodoUnreachable">
+              We couldn't reach Zenodo to check your connection. Your connection
+              is still saved, so please try again in a few minutes.
+            </p>
+
             <p v-else>
               There seems to be an issue with your Zenodo connection. Please
               login to Zenodo to continue.
             </p>
 
             <n-flex>
-              <a v-if="!haveValidZenodoToken" @click="loginToZenodo">
+              <n-button
+                v-if="zenodoUnreachable"
+                type="primary"
+                @click="reloadNuxtApp()"
+              >
+                <template #icon>
+                  <Icon name="mdi:refresh" size="16" />
+                </template>
+                Try again
+              </n-button>
+
+              <a v-else-if="!haveValidZenodoToken" @click="loginToZenodo">
                 <n-button type="primary">
                   <template #icon>
                     <Icon name="simple-icons:zenodo" size="16" />

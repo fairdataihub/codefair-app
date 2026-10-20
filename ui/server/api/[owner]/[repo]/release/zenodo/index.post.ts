@@ -115,13 +115,16 @@ export default defineEventHandler(async (event) => {
   }
 
   // Zenodo token check
-  const { valid: zenodoTokenValid } = await validateZenodoToken(user?.id ?? "");
+  const zenodoToken = await validateZenodoToken(user?.id ?? "");
 
-  if (!zenodoTokenValid) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Zenodo token not found",
-    });
+  if (!zenodoToken.valid) {
+    // An outage says nothing about the token, so don't send the user to
+    // reconnect (which deletes it).
+    throw createError(
+      zenodoToken.reason === "unreachable"
+        ? { statusCode: 503, statusMessage: "zenodo-unreachable" }
+        : { statusCode: 400, statusMessage: "Zenodo token not found" },
+    );
   }
 
   // Validate GitHub release

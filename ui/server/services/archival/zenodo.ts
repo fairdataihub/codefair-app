@@ -209,6 +209,7 @@ export async function validateZenodoToken(
     return {
       existingDepositions: [],
       message: "No Zenodo token found",
+      reason: "missing",
       valid: false,
     };
   }
@@ -231,6 +232,7 @@ export async function validateZenodoToken(
       return {
         existingDepositions: [],
         message: "Zenodo token is invalid or expired",
+        reason: "rejected",
         valid: false,
       };
     }
@@ -243,6 +245,7 @@ export async function validateZenodoToken(
     return {
       existingDepositions: [],
       message: "Could not reach Zenodo, please try again shortly",
+      reason: "unreachable",
       valid: false,
     };
   }
