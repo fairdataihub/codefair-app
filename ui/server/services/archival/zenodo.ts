@@ -994,6 +994,23 @@ export async function beginZenodoPublication(
     });
   };
 
+  // The previous draft may have been deleted on zenodo.org, or belong to
+  // another maintainer whose token cannot read it. Either way it is gone for
+  // this run, which then starts over with the selected target.
+  const resolvePreviousDraft = async (draftId: number) => {
+    try {
+      return await client.resolveState(draftId);
+    } catch (error) {
+      if (
+        error instanceof HttpError &&
+        [403, 404, 410].includes(error.status)
+      ) {
+        return { kind: "missing" as const };
+      }
+      throw error;
+    }
+  };
+
   let workingDraft!: WorkingDraft;
   let workingRecordId = 0;
   let draftCheckpointSaved = false;
@@ -1006,7 +1023,7 @@ export async function beginZenodoPublication(
     const previousDraftId = checkpoint?.draft_zenodo_id ?? null;
     const previousTarget = checkpoint?.draft_target_zenodo_id ?? null;
     if (previousDraftId && previousTarget === target) {
-      const state = await client.resolveState(previousDraftId);
+      const state = await resolvePreviousDraft(previousDraftId);
       if (state.kind === "published") {
         const publishedDoi = extractRecordDoi(state.record);
         if (!publishedDoi) {
@@ -1032,12 +1049,16 @@ export async function beginZenodoPublication(
         });
         return finishGitHubRelease(publishedDoi, previousDraftId);
       }
-      if (state.kind === "missing") {
-        throw new Error(
-          `Zenodo draft ${previousDraftId} from the previous attempt was not found, or is not yours`,
-        );
+      if (state.kind === "draft") {
+        resumedDraft = { origin: "reused_draft", record: state.record };
+      } else {
+        logwatch.warn({
+          action: "zenodo.resumeDraft",
+          message: `Draft ${previousDraftId} from the previous attempt is gone, starting over`,
+          owner,
+          repo,
+        });
       }
-      resumedDraft = { origin: "reused_draft", record: state.record };
     } else if (previousDraftId) {
       await abandonDraft(previousDraftId, previousTarget);
     }
