@@ -272,12 +272,18 @@ function buildRdmCreators(codemeta: Record<string, any>): RdmCreator[] {
         typeof author.affiliation === "string"
           ? author.affiliation
           : author.affiliation?.name;
+      // InvenioRDM rejects people without a family name, so an author listed
+      // with a single name uses it as the family name.
       return {
         person_or_org: {
           name: name || "Unknown",
           type: organization ? "organizational" : "personal",
-          ...(!organization && givenName && { given_name: givenName }),
-          ...(!organization && familyName && { family_name: familyName }),
+          ...(!organization &&
+            familyName &&
+            givenName && { given_name: givenName }),
+          ...(!organization && {
+            family_name: familyName || name || "Unknown",
+          }),
           ...(orcid && {
             identifiers: [{ identifier: orcid, scheme: "orcid" as const }],
           }),
@@ -290,7 +296,15 @@ function buildRdmCreators(codemeta: Record<string, any>): RdmCreator[] {
 
   return creators.length
     ? creators
-    : [{ person_or_org: { name: "Unknown", type: "personal" } }];
+    : [
+        {
+          person_or_org: {
+            name: "Unknown",
+            family_name: "Unknown",
+            type: "personal",
+          },
+        },
+      ];
 }
 
 function buildRdmDraftSeed(codemeta: Record<string, any>) {
@@ -318,6 +332,8 @@ function buildRdmMetadata(
         Boolean(String(keyword ?? "").trim()),
       )
     : [];
+  // Optional in InvenioRDM, but rejected when shorter than 3 characters.
+  const description = String(codemeta.description ?? "").trim();
   return {
     access: {
       files: depositMeta.accessRight === "open" ? "public" : "restricted",
@@ -327,7 +343,7 @@ function buildRdmMetadata(
     metadata: {
       title: codemeta.name ?? "Untitled software",
       creators: buildRdmCreators(codemeta),
-      description: codemeta.description ?? "",
+      ...(description.length >= 3 && { description }),
       publication_date: new Date().toISOString().slice(0, 10),
       publisher: "Zenodo",
       resource_type: { id: "software" },

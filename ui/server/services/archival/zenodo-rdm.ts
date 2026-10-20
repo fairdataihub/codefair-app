@@ -5,6 +5,7 @@ export interface RdmRecord {
   conceptdoi?: string;
   conceptrecid?: number | string;
   doi?: string;
+  errors?: Array<{ field?: string; messages?: string[] }>;
   is_published?: boolean;
   links?: {
     latest_html?: string;
@@ -108,6 +109,17 @@ export function sanitizeZenodoFileKey(name: string): string {
     .replace(/\s+/g, " ")
     .trim();
   return cleaned.length ? cleaned.slice(0, 255) : "release-file";
+}
+
+// InvenioRDM saves invalid drafts and only rejects them at publish, listing the
+// problems in `errors`. "Missing uploaded files" is expected until the files
+// step, so only non-file problems count here.
+export function draftMetadataErrors(record: RdmRecord): string[] {
+  return (record.errors ?? [])
+    .filter((error) => !error.field?.startsWith("files"))
+    .map((error) =>
+      `${error.field ?? "record"}: ${(error.messages ?? []).join(" ")}`.trim(),
+    );
 }
 
 async function responseError(operation: string, response: Response) {
@@ -353,7 +365,14 @@ export class ZenodoRdmClient {
       throw new Error(
         await responseError(`update metadata for ${id}`, response),
       );
-    return (await response.json()) as RdmRecord;
+    const record = (await response.json()) as RdmRecord;
+    const errors = draftMetadataErrors(record);
+    if (errors.length) {
+      throw new Error(
+        `Zenodo rejected the record metadata: ${errors.join("; ")}`,
+      );
+    }
+    return record;
   }
 
   private async deleteDraftFile(id: number, filename: string) {
