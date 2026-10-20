@@ -6,6 +6,11 @@ import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 
 const devMode = process.env.NODE_ENV === "development";
 
+// Zenodo requires a family name for people; without one, the author's name is
+// sent as their family name when the release is archived.
+const missingFamilyNameWarning =
+  "Zenodo requires a family name, so this author's given name will be used as their family name.";
+
 definePageMeta({
   middleware: ["protected"],
 });
@@ -772,6 +777,14 @@ const navigateToPR = () => {
                     <n-form-item
                       label="Family Name"
                       :path="`authors[${index}].familyName`"
+                      :validation-status="
+                        author.familyName?.trim() ? undefined : 'warning'
+                      "
+                      :feedback="
+                        author.familyName?.trim()
+                          ? undefined
+                          : missingFamilyNameWarning
+                      "
                     >
                       <n-input
                         v-model:value="author.familyName"
