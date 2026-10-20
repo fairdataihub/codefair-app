@@ -384,15 +384,12 @@ if (
 const checkIfGithubReleaseIsDraft = async () => {
   const releaseId = githubFormValue.value.release;
 
-  if (!releaseId) {
+  if (!releaseId || releaseId === "new") {
     selectedGithubReleaseUrl.value = null;
     showGithubReleaseIsDraftStausBadge.value = false;
-    return null;
-  }
-
-  if (releaseId === "new") {
-    selectedGithubReleaseUrl.value = null;
-    showGithubReleaseIsDraftStausBadge.value = false;
+    // A check for the previous selection may still be running; it no longer
+    // owns the spinner.
+    checkGithubReleaseSpinner.value = false;
     return null;
   }
 
@@ -413,6 +410,7 @@ const checkIfGithubReleaseIsDraft = async () => {
       }
       selectedGithubReleaseUrl.value =
         response.htmlUrl ?? selectedGithubReleaseUrl.value;
+      showGithubReleaseIsDraftStausBadge.value = true;
     })
     .catch((error) => {
       if (githubFormValue.value.release !== releaseId) return;
@@ -423,7 +421,8 @@ const checkIfGithubReleaseIsDraft = async () => {
       console.error("Failed to fetch GitHub release:", error);
     })
     .finally(() => {
-      showGithubReleaseIsDraftStausBadge.value = true;
+      // A newer selection owns the spinner now.
+      if (githubFormValue.value.release !== releaseId) return;
       checkGithubReleaseSpinner.value = false;
     });
 };
