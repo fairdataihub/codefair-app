@@ -828,6 +828,89 @@ export async function saveZenodoReleaseSelection(selection: {
   });
 }
 
+/** How often a running publication refreshes its lock. */
+const PUBLISH_LOCK_HEARTBEAT_MS = 60_000;
+/** A lock not refreshed for this long belongs to a publication that died. */
+const PUBLISH_LOCK_STALE_MS = 5 * 60_000;
+
+/**
+ * Whether a publication is running for the repository, judged by a lock that
+ * is still being refreshed.
+ * @returns True while another publication holds a live lock.
+ */
+export async function isPublicationRunning(
+  repositoryId: number,
+): Promise<boolean> {
+  const row = await prisma.zenodoDeposition.findFirst({
+    where: { repository_id: repositoryId },
+  });
+  return Boolean(
+    row?.publish_lock_at &&
+    row.publish_lock_at.getTime() > Date.now() - PUBLISH_LOCK_STALE_MS,
+  );
+}
+
+/**
+ * Claims the repository's publication lock so only one publication runs at a
+ * time. The claim is a single conditional update, so concurrent requests
+ * cannot both win. The lock is refreshed until released; if the server dies
+ * mid-publication it goes stale and can be claimed again.
+ * @returns A function that releases the lock, or null when it is held.
+ */
+export async function claimPublicationLock(
+  repositoryId: number,
+): Promise<(() => Promise<void>) | null> {
+  const now = new Date();
+  const { count } = await prisma.zenodoDeposition.updateMany({
+    data: { publish_lock_at: now },
+    where: {
+      OR: [
+        { publish_lock_at: null },
+        {
+          publish_lock_at: {
+            lt: new Date(now.getTime() - PUBLISH_LOCK_STALE_MS),
+          },
+        },
+      ],
+      repository_id: repositoryId,
+    },
+  });
+  if (!count) return null;
+
+  const heartbeat = setInterval(() => {
+    prisma.zenodoDeposition
+      .updateMany({
+        data: { publish_lock_at: new Date() },
+        where: { repository_id: repositoryId },
+      })
+      .catch((error: any) => {
+        logwatch.warn({
+          action: "zenodo.publishLock",
+          error: error?.message,
+          message: "Could not refresh the publication lock",
+          repositoryId,
+        });
+      });
+  }, PUBLISH_LOCK_HEARTBEAT_MS);
+
+  return async () => {
+    clearInterval(heartbeat);
+    await prisma.zenodoDeposition
+      .updateMany({
+        data: { publish_lock_at: null },
+        where: { repository_id: repositoryId },
+      })
+      .catch((error: any) => {
+        logwatch.warn({
+          action: "zenodo.publishLock",
+          error: error?.message,
+          message: "Could not release the publication lock",
+          repositoryId,
+        });
+      });
+  };
+}
+
 /** Runs the active Zenodo publication workflow through the InvenioRDM API. */
 export async function beginZenodoPublication(
   opts: ArchivalPublicationOptions,

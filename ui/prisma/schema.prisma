@@ -160,6 +160,7 @@ model ZenodoDeposition {
   zenodo_id                     Int?
   draft_zenodo_id               Int?
   draft_target_zenodo_id        Int?
+  publish_lock_at               DateTime?
   zenodo_metadata               Json         @default("{}")
   last_published_zenodo_doi     String?
   github_release_id             Int?

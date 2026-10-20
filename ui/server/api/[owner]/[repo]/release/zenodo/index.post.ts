@@ -12,6 +12,8 @@ import { z } from "zod";
 import type { User } from "lucia";
 import {
   beginZenodoPublication,
+  claimPublicationLock,
+  isPublicationRunning,
   saveZenodoReleaseSelection,
   validateZenodoToken,
 } from "~/server/services/archival/zenodo";
@@ -103,6 +105,14 @@ export default defineEventHandler(async (event) => {
   const existingDep = await prisma.zenodoDeposition.findFirst({
     where: { repository: { owner, repo } },
   });
+
+  // Nothing may change while a publication for this repository is running:
+  // not the release tag, not the saved form, and no second publication.
+  const publishInProgress = () =>
+    createError({ statusCode: 409, statusMessage: "publish-in-progress" });
+  if (existingDep && (await isPublicationRunning(installation.id))) {
+    throw publishInProgress();
+  }
 
   // Zenodo token check
   const { valid: zenodoTokenValid } = await validateZenodoToken(user?.id ?? "");
@@ -200,18 +210,30 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  await saveZenodoReleaseSelection({
+  const selection = {
     metadata,
     release,
     repositoryId: installation.id,
     tag,
     useExistingDeposition,
     userId: user?.id ?? "",
-  });
+  };
 
   // Save-only path
   if (!publish) {
+    await saveZenodoReleaseSelection(selection);
     return { message: "Zenodo details saved" };
+  }
+
+  // The lock lives on the deposition row, so a first publication creates it.
+  if (!existingDep) await saveZenodoReleaseSelection(selection);
+  const releasePublishLock = await claimPublicationLock(installation.id);
+  if (!releasePublishLock) throw publishInProgress();
+  if (existingDep) {
+    await saveZenodoReleaseSelection(selection).catch(async (error) => {
+      await releasePublishLock();
+      throw error;
+    });
   }
 
   // SSE publication path
@@ -295,6 +317,7 @@ export default defineEventHandler(async (event) => {
     });
   } finally {
     clearInterval(heartbeat);
+    await releasePublishLock();
   }
 
   if (!res.writableEnded) {

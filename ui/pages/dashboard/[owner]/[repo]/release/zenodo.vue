@@ -689,6 +689,8 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
           "The selected GitHub release is no longer a draft and cannot be used. Please select a different release.",
         "GitHub release not found":
           "The selected GitHub release could not be found. Please refresh the page and try again.",
+        "publish-in-progress":
+          "A Zenodo publication is already running for this repository. Please wait for it to finish, then refresh the page.",
         "tag-already-released": `A published release already exists for tag "${effectiveTag}". Please choose a different tag or delete the existing release first.`,
         "Zenodo token not found":
           "Your Zenodo connection has expired or been revoked. Please reconnect your Zenodo account using the button above.",
