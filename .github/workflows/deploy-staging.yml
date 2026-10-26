@@ -12,7 +12,8 @@ on:
 
 jobs:
   deploy-ui:
-    runs-on: ubuntu-latest
+    # Pinned: setup-ruby has no Ruby 3.3.1 build for ubuntu-latest (26.04)
+    runs-on: ubuntu-24.04
     environment: stg
     defaults:
       run:
@@ -86,7 +87,8 @@ jobs:
       # - run: kamal redeploy --verbose
 
   deploy-validator:
-    runs-on: ubuntu-latest
+    # Pinned: setup-ruby has no Ruby 3.3.1 build for ubuntu-latest (26.04)
+    runs-on: ubuntu-24.04
     environment: stg
     defaults:
       run:
