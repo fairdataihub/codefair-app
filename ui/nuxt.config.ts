@@ -2,6 +2,20 @@ import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
 import Components from "unplugin-vue-components/vite";
 import AutoImport from "unplugin-auto-import/vite";
 
+/**
+ * The port in CODEFAIR_APP_DOMAIN, which GitHub login redirects back to.
+ * Undefined when the domain has no explicit port (production) or is unset.
+ */
+const appDomainPort = (() => {
+  try {
+    return (
+      Number(new URL(process.env.CODEFAIR_APP_DOMAIN ?? "").port) || undefined
+    );
+  } catch {
+    return undefined;
+  }
+})();
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   app: {
@@ -54,6 +68,10 @@ export default defineNuxtConfig({
     "notivue/notification.css", // Only needed if using built-in notifications
     "notivue/animations.css", // Only needed if using built-in animations
   ],
+
+  // The dev server tries the sign-in callback port first and moves to the next
+  // free port when it is taken
+  devServer: { port: appDomainPort },
 
   devtools: { enabled: true },
 
