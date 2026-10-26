@@ -26,6 +26,7 @@
     "prune:branches": "npx git-removed-branches --prune --force",
     "reset": "rm -rf node_modules && rm -rf .nuxt && rm -rf .output && rm -rf dist && yarn install",
     "test": "jest",
+    "typecheck": "nuxt typecheck",
     "analytics": "tsx ./scripts/analytics.ts"
   },
   "dependencies": {
@@ -120,7 +121,8 @@
     "tailwindcss-animate": "^1.0.7",
     "tailwindcss-debug-screens": "^2.2.1",
     "tsx": "^4.19.1",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vue-tsc": "3.3.13"
   },
   "engines": {
     "node": ">=24.0.0"
