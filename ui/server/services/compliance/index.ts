@@ -50,6 +50,22 @@ export interface ComplianceSubjects {
   readme: ReadmeResult;
 }
 
+/**
+ * Thrown when the installation cannot reach the repository, for example
+ * because GitHub refused the installation token or the repository is not
+ * shared with the app. No checks have run when this is thrown.
+ */
+export class RepositoryAccessError extends Error {
+  constructor(owner: string, repo: string, cause: unknown) {
+    const reason = cause instanceof Error ? cause.message : String(cause);
+    super(
+      `Cannot access ${owner}/${repo}, so compliance checks were not run: ${reason}`,
+      { cause },
+    );
+    this.name = "RepositoryAccessError";
+  }
+}
+
 // == Helpers ========================================================
 
 /**
@@ -78,6 +94,7 @@ function shouldRun(name: CheckName, opts: RunComplianceOptions): boolean {
  * @param repositoryId - The numeric database ID of the repository.
  * @param opts - Options controlling which checks to run and whether to include CWL.
  * @returns A `ComplianceSubjects` object containing results for all requested checks.
+ * @throws {RepositoryAccessError} If the repository cannot be reached.
  */
 export async function runComplianceChecks(
   provider: RepositoryProvider,
@@ -86,6 +103,14 @@ export async function runComplianceChecks(
   repositoryId: number,
   opts: RunComplianceOptions = {},
 ): Promise<ComplianceSubjects> {
+  // The checks read a 404 as "file missing", so without this a refused token
+  // or an inaccessible repo would be reported (and saved) as every file absent
+  try {
+    await provider.getRepoInfo(owner, repo);
+  } catch (error) {
+    throw new RepositoryAccessError(owner, repo, error);
+  }
+
   const runCwl =
     opts.fullCodefairRun === true ||
     (opts.checks ? opts.checks.includes("cwl") : true);
