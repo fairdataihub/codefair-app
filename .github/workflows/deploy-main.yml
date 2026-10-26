@@ -12,8 +12,7 @@ on:
 
 jobs:
   deploy-ui:
-    # Pinned: setup-ruby has no Ruby 3.3.1 build for ubuntu-latest (26.04)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     environment: prd
     defaults:
       run:
@@ -49,7 +48,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.3.1
+          ruby-version: "3.3"
           bundler-cache: true
 
       - run: gem install kamal
@@ -87,8 +86,7 @@ jobs:
       # - run: kamal redeploy --verbose
 
   deploy-validator:
-    # Pinned: setup-ruby has no Ruby 3.3.1 build for ubuntu-latest (26.04)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     environment: prd
     defaults:
       run:
@@ -108,7 +106,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.3.1
+          ruby-version: "3.3"
           bundler-cache: true
 
       - run: gem install kamal
