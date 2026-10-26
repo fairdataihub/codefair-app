@@ -33,6 +33,8 @@ breadcrumbsStore.setFeature({
 
 const { owner, repo } = route.params as { owner: string; repo: string };
 
+const logwatch = useLogwatch();
+
 const devMode = process.env.NODE_ENV === "development";
 
 const zenodoLoginUrl = ref("");
@@ -344,6 +346,11 @@ const createDraftGithubRelease = () => {
         })
         .catch((error) => {
           console.error("Failed to create draft GitHub release:", error);
+          logwatch.error(
+            "zenodo.createGithubRelease",
+            "Failed to create draft GitHub release",
+            { error, owner, repo },
+          );
           push.error({
             title: "Failed to create draft GitHub release",
             message: "Please try again later",
@@ -353,8 +360,12 @@ const createDraftGithubRelease = () => {
           createDraftGithubReleaseSpinner.value = false;
         });
     } else {
-      console.error("Form validation failed");
-      console.error(errors);
+      console.warn("GitHub release form is invalid:", errors);
+      logwatch.warn(
+        "zenodo.validateGithubForm",
+        "GitHub release form is invalid",
+        { errors, owner, repo },
+      );
     }
   });
 };
@@ -381,6 +392,10 @@ if (
     )?.htmlUrl ?? null;
 }
 
+// The draft check polls every 3s, so only the first failure in a row for a
+// release is forwarded to logwatch
+let failingGithubReleaseCheck: string | null = null;
+
 const checkIfGithubReleaseIsDraft = async () => {
   const releaseId = githubFormValue.value.release;
 
@@ -403,6 +418,8 @@ const checkIfGithubReleaseIsDraft = async () => {
       // Ignore responses for a release that is no longer selected
       if (githubFormValue.value.release !== releaseId) return;
 
+      failingGithubReleaseCheck = null;
+
       if (response.draft) {
         githubReleaseIsDraft.value = true;
       } else {
@@ -419,6 +436,14 @@ const checkIfGithubReleaseIsDraft = async () => {
       showGithubReleaseIsDraftStausBadge.value = false;
 
       console.error("Failed to fetch GitHub release:", error);
+      if (failingGithubReleaseCheck !== releaseId) {
+        logwatch.error(
+          "zenodo.checkGithubRelease",
+          "Failed to fetch GitHub release",
+          { error, owner, releaseId, repo },
+        );
+      }
+      failingGithubReleaseCheck = releaseId;
     })
     .finally(() => {
       // A newer selection owns the spinner now.
@@ -769,6 +794,11 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     }
   } catch (error) {
     console.error("Failed to start Zenodo publish process:", error);
+    logwatch.error("zenodo.publish", "Failed to start Zenodo publish process", {
+      error,
+      owner,
+      repo,
+    });
     push.error({
       title: "Failed to start Zenodo publish process",
       message: "Please try again later",
@@ -795,7 +825,14 @@ const copyText = (text: string) => {
         message: "Text copied to clipboard",
       });
     })
-    .catch((err) => console.error("Failed to copy text: ", err));
+    .catch((err) => {
+      console.error("Failed to copy text: ", err);
+      logwatch.error("zenodo.copyText", "Failed to copy text", {
+        error: err,
+        owner,
+        repo,
+      });
+    });
 };
 
 function zenodoDoiUrl(doi: string): string {
@@ -826,12 +863,16 @@ const fetchZenodoBadge = () => {
     .then((badge) => {
       if (badge) {
         // Provide a modal to show the badge
-        console.log(badge);
         zenodoBadgeShield.value = badge;
       }
     })
     .catch((error) => {
       console.error("Error fetching badge:", error);
+      logwatch.error("zenodo.fetchBadge", "Error fetching badge", {
+        error,
+        owner,
+        repo,
+      });
     });
 };
 
@@ -863,8 +904,12 @@ const validateZenodoForm = () => {
         message: "Your Zenodo metadata has been validated.",
       });
     } else {
-      console.error("Form validation failed");
-      console.error(errors);
+      console.warn("Zenodo metadata form is invalid:", errors);
+      logwatch.warn(
+        "zenodo.validateMetadata",
+        "Zenodo metadata form is invalid",
+        { errors, owner, repo },
+      );
 
       push.error({
         title: "Error",
@@ -890,6 +935,11 @@ const signOutOfZenodo = async () => {
     })
     .catch((error) => {
       console.error("Failed to sign out of Zenodo:", error);
+      logwatch.error("zenodo.signOut", "Failed to sign out of Zenodo", {
+        error,
+        owner,
+        repo,
+      });
       push.error({
         title: "Failed to sign out of Zenodo",
         message: "Please try again later",
@@ -932,6 +982,11 @@ const loginToZenodo = async () => {
             };
           } catch (error) {
             console.error("Failed to parse existing state:", error);
+            logwatch.error(
+              "zenodo.parseState",
+              "Failed to parse existing Zenodo login state",
+              { error, owner, repo },
+            );
             throw new Error("Invalid state format");
           }
         } else {
@@ -981,6 +1036,11 @@ const loginToZenodo = async () => {
     })
     .catch((error) => {
       console.error("Failed to purge Zenodo token:", error);
+      logwatch.error("zenodo.purgeToken", "Failed to purge Zenodo token", {
+        error,
+        owner,
+        repo,
+      });
       push.error({
         title: "Failed to purge Zenodo token",
         message: "Please try again later",
@@ -1635,18 +1695,7 @@ onBeforeUnmount(() => {
           </template>
         </CardDashboard>
 
-        <div
-          v-if="
-            (console.log('debug:', {
-              selectedExistingDeposition,
-              selectedDeposition,
-              selectableDepositions,
-              githubTag: githubFormValue.tag,
-              githubRelease: githubFormValue.release,
-            }),
-            selectedExistingDeposition === 'new' || selectedDeposition)
-          "
-        >
+        <div v-if="selectedExistingDeposition === 'new' || selectedDeposition">
           <n-divider />
 
           <h2 class="pb-6">Zenodo metadata</h2>

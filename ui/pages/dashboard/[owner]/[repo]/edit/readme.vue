@@ -44,6 +44,8 @@ const route = useRoute();
 
 const { owner, repo } = route.params as { owner: string; repo: string };
 
+const logwatch = useLogwatch();
+
 const readmeContent = ref("");
 
 const displayReadmeEditor = ref(false);
@@ -64,6 +66,11 @@ if (error.value) {
   });
 
   console.error("Failed to fetch readme details:", error.value);
+  logwatch.error("readme.fetch", "Failed to fetch readme details", {
+    error: error.value,
+    owner,
+    repo,
+  });
 
   throw createError(error.value);
 }
@@ -95,6 +102,11 @@ const saveReadmeDraft = async () => {
     })
     .catch((error) => {
       console.error("Failed to save README draft:", error);
+      logwatch.error("readme.saveDraft", "Failed to save README draft", {
+        error,
+        owner,
+        repo,
+      });
       push.error({
         title: "Failed to save README draft",
         message: "Please try again later",
@@ -135,6 +147,11 @@ const saveReadmeAndPush = async () => {
     })
     .catch((error) => {
       console.error("Failed to push README to repository:", error);
+      logwatch.error("readme.push", "Failed to push README to repository", {
+        error,
+        owner,
+        repo,
+      });
       push.error({
         title: "Failed to push README to repository",
         message: "Please try again later",

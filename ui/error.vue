@@ -50,6 +50,8 @@ if (props.error) {
         query: { redirect: redirectPath },
       });
     } catch (error) {
+      // Console only: this runs for signed-out users, and /api/log requires
+      // sign-in, so a logwatch call could never arrive
       console.error("Redirection error:", error);
     }
   } else {

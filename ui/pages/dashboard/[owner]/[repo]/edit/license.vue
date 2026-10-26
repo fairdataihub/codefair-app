@@ -45,6 +45,8 @@ const route = useRoute();
 
 const { owner, repo } = route.params as { owner: string; repo: string };
 
+const logwatch = useLogwatch();
+
 const licenseId = ref<string | null>(null);
 const licenseContent = ref("");
 const customLicenseTitle = ref("");
@@ -87,6 +89,11 @@ if (error.value) {
   });
 
   console.error("Failed to fetch license details:", error.value);
+  logwatch.error("license.fetch", "Failed to fetch license details", {
+    error: error.value,
+    owner,
+    repo,
+  });
 
   throw createError(error.value);
 }
@@ -172,6 +179,11 @@ const confirmLicenseKeepContent = async () => {
     })
     .catch((error) => {
       console.error("Failed to save license:", error);
+      logwatch.error("license.save", "Failed to save license", {
+        error,
+        owner,
+        repo,
+      });
       push.error({
         title: "Failed to save license",
         message: "Please try again later",
@@ -230,6 +242,16 @@ const fetchLicenseTemplate = async (licenseIdValue: string) => {
       })
       .catch((error) => {
         console.error("Failed to fetch license details:", error);
+        logwatch.error(
+          "license.fetchTemplate",
+          "Failed to fetch license template",
+          {
+            error,
+            licenseId: licenseIdValue,
+            owner,
+            repo,
+          },
+        );
         notification.reject({
           title: "Failed to fetch license details",
           message: "Please try again later",
@@ -271,6 +293,11 @@ const saveLicenseDraft = async () => {
     })
     .catch((error) => {
       console.error("Failed to save license draft:", error);
+      logwatch.error("license.saveDraft", "Failed to save license draft", {
+        error,
+        owner,
+        repo,
+      });
       push.error({
         title: "Failed to save license draft",
         message: "Please try again later",
@@ -310,6 +337,15 @@ const saveCustomTitle = async () => {
     })
     .catch((error) => {
       console.error("Failed to save custom license title:", error);
+      logwatch.error(
+        "license.saveCustomTitle",
+        "Failed to save custom license title",
+        {
+          error,
+          owner,
+          repo,
+        },
+      );
       push.error({
         title: "Failed to save custom license title",
         message: "Please try again later",
@@ -360,6 +396,11 @@ const saveLicenseAndPush = async () => {
     })
     .catch((error) => {
       console.error("Failed to push license to repository:", error);
+      logwatch.error("license.push", "Failed to push license to repository", {
+        error,
+        owner,
+        repo,
+      });
       push.error({
         title: "Failed to push license to repository",
         message: "Please try again later",

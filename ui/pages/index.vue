@@ -7,6 +7,8 @@ import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 const breadcrumbsStore = useBreadcrumbsStore();
 breadcrumbsStore.hideBreadcrumbs();
 
+const logwatch = useLogwatch();
+
 const repositoriesManaged = ref<number | null>(null);
 const userInstallations = ref<number | null>(null);
 
@@ -59,6 +61,9 @@ watch(
   (err) => {
     if (err) {
       console.error("Error fetching stats:", err);
+      logwatch.error("home.fetchStats", "Error fetching stats", {
+        error: err,
+      });
     }
   },
 );

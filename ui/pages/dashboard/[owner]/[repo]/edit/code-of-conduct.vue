@@ -45,6 +45,8 @@ const route = useRoute();
 
 const { owner, repo } = route.params as { owner: string; repo: string };
 
+const logwatch = useLogwatch();
+
 const cofcContent = ref("");
 const cofcTitle = ref("");
 
@@ -73,6 +75,15 @@ if (error.value) {
   });
 
   console.error("Failed to fetch Code of Conduct details:", error.value);
+  logwatch.error(
+    "codeOfConduct.fetch",
+    "Failed to fetch Code of Conduct details",
+    {
+      error: error.value,
+      owner,
+      repo,
+    },
+  );
 
   throw createError(error.value);
 }
@@ -120,6 +131,15 @@ const saveDraft = async () => {
     })
     .catch((error) => {
       console.error("Failed to save Code of Conduct draft:", error);
+      logwatch.error(
+        "codeOfConduct.saveDraft",
+        "Failed to save Code of Conduct draft",
+        {
+          error,
+          owner,
+          repo,
+        },
+      );
       push.error({
         title: "Failed to save Code of Conduct draft",
         message: "Please try again later",
@@ -161,6 +181,15 @@ const saveAndPush = async () => {
     })
     .catch((error) => {
       console.error("Failed to push Code of Conduct to repository:", error);
+      logwatch.error(
+        "codeOfConduct.push",
+        "Failed to push Code of Conduct to repository",
+        {
+          error,
+          owner,
+          repo,
+        },
+      );
       push.error({
         title: "Failed to push Code of Conduct to repository",
         message: "Please try again later",

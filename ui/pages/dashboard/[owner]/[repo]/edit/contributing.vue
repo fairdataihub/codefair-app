@@ -44,6 +44,8 @@ const route = useRoute();
 
 const { owner, repo } = route.params as { owner: string; repo: string };
 
+const logwatch = useLogwatch();
+
 const contribContent = ref("");
 const contribTitle = ref("");
 
@@ -69,6 +71,15 @@ if (error.value) {
   });
 
   console.error("Failed to fetch CONTRIBUTING.md details:", error.value);
+  logwatch.error(
+    "contributing.fetch",
+    "Failed to fetch CONTRIBUTING.md details",
+    {
+      error: error.value,
+      owner,
+      repo,
+    },
+  );
 
   throw createError(error.value);
 }
@@ -116,6 +127,15 @@ const saveDraft = async () => {
     })
     .catch((error) => {
       console.error("Failed to save CONTRIBUTING.md draft:", error);
+      logwatch.error(
+        "contributing.saveDraft",
+        "Failed to save CONTRIBUTING.md draft",
+        {
+          error,
+          owner,
+          repo,
+        },
+      );
       push.error({
         title: "Failed to save CONTRIBUTING.md draft",
         message: "Please try again later",
@@ -157,6 +177,15 @@ const saveAndPush = async () => {
     })
     .catch((error) => {
       console.error("Failed to push CONTRIBUTING.md to repository:", error);
+      logwatch.error(
+        "contributing.push",
+        "Failed to push CONTRIBUTING.md to repository",
+        {
+          error,
+          owner,
+          repo,
+        },
+      );
       push.error({
         title: "Failed to push CONTRIBUTING.md to repository",
         message: "Please try again later",

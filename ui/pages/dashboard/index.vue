@@ -5,12 +5,17 @@ const breadcrumbsStore = useBreadcrumbsStore();
 
 breadcrumbsStore.hideBreadcrumbs();
 
+const logwatch = useLogwatch();
+
 const { data, error } = await useFetch(`/api/dashboard`, {
   headers: useRequestHeaders(["cookie"]),
 });
 
 if (error.value) {
-  console.error(error.value);
+  console.error("Failed to fetch the dashboard:", error.value);
+  logwatch.error("dashboard.fetch", "Failed to fetch the dashboard", {
+    error: error.value,
+  });
 
   push.error({
     title: "Something went wrong",

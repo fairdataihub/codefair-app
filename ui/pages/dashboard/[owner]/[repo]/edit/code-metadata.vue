@@ -373,6 +373,8 @@ const pullRequestURL = ref<string>("");
 
 const { owner, repo } = route.params as { owner: string; repo: string };
 
+const logwatch = useLogwatch();
+
 const { data, error } = await useFetch(`/api/${owner}/${repo}/code-metadata`, {
   headers: useRequestHeaders(["cookie"]),
 });
@@ -385,6 +387,15 @@ breadcrumbsStore.setFeature({
 
 if (error.value) {
   console.error("Failed to fetch code metadata details:", error.value);
+  logwatch.error(
+    "codeMetadata.fetch",
+    "Failed to fetch code metadata details",
+    {
+      error: error.value,
+      owner,
+      repo,
+    },
+  );
 
   push.error({
     title: "Failed to fetch code metadata details",
@@ -441,6 +452,15 @@ const saveCodeMetadataDraft = async (e: MouseEvent) => {
     })
     .catch((error) => {
       console.error("Failed to save code metadata draft:", error);
+      logwatch.error(
+        "codeMetadata.saveDraft",
+        "Failed to save code metadata draft",
+        {
+          error,
+          owner,
+          repo,
+        },
+      );
       push.error({
         title: "Failed to save code metadata draft",
         message: "Please try again later",
@@ -492,6 +512,15 @@ const pushToRepository = (e: MouseEvent) => {
                   "Failed to push code metadata to repository:",
                   response,
                 );
+                logwatch.error(
+                  "codeMetadata.push",
+                  "Push did not return a pull request URL",
+                  {
+                    owner,
+                    repo,
+                    response,
+                  },
+                );
                 notification.error({
                   title: "Failed to push code metadata to repository",
                   message: "Please try again later",
@@ -503,6 +532,15 @@ const pushToRepository = (e: MouseEvent) => {
                 "Failed to push code metadata to repository:",
                 error,
               );
+              logwatch.error(
+                "codeMetadata.push",
+                "Failed to push code metadata to repository",
+                {
+                  error,
+                  owner,
+                  repo,
+                },
+              );
               push.error({
                 title: "Failed to push code metadata to repository",
                 message: "Please try again later",
@@ -511,6 +549,15 @@ const pushToRepository = (e: MouseEvent) => {
         })
         .catch((error) => {
           console.error("Failed to save and push code metadata:", error);
+          logwatch.error(
+            "codeMetadata.saveAndPush",
+            "Failed to save and push code metadata",
+            {
+              error,
+              owner,
+              repo,
+            },
+          );
           push.error({
             title: "Failed to save and push code metadata",
             message: "Please try again later",
@@ -520,7 +567,12 @@ const pushToRepository = (e: MouseEvent) => {
           submitLoading.value = false;
         });
     } else {
-      console.error(errors);
+      console.warn("Code metadata form is invalid:", errors);
+      logwatch.warn("codeMetadata.validate", "Code metadata form is invalid", {
+        errors,
+        owner,
+        repo,
+      });
       markErrorTabs(errors as Array<Array<{ field?: string }>>);
       push.error({
         title: "Invalid",

@@ -15,6 +15,8 @@ breadcrumbsStore.setFeature({
 
 const { owner } = route.params as { owner: string };
 
+const logwatch = useLogwatch();
+
 const botNotInstalled = ref(false);
 const renderIcon = (icon: string) => {
   return () => {
@@ -27,12 +29,17 @@ const { data, error } = await useFetch(`/api/${owner}/dashboard`, {
 });
 
 if (error.value) {
-  console.error(error.value);
-
   if (error.value.statusMessage === "installation-not-found") {
     // codefair bot is not installed on the repo.
     botNotInstalled.value = true;
   } else {
+    console.error("Failed to fetch the owner dashboard:", error.value);
+    logwatch.error(
+      "dashboard.fetchOwner",
+      "Failed to fetch the owner dashboard",
+      { error: error.value, owner },
+    );
+
     push.error({
       title: "Something went wrong",
       message:
@@ -105,7 +112,11 @@ const handleSettingsSelect = (key: string) => {
       });
       break;
     default:
-      console.log("Unknown action");
+      console.warn("Unknown action:", key);
+      logwatch.warn("dashboard.ownerAction", "Unknown action", {
+        key,
+        owner,
+      });
   }
 };
 </script>
