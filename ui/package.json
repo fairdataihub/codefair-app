@@ -5,11 +5,10 @@
   "type": "module",
   "scripts": {
     "tunnel": "lt --port 3000 --subdomain codefair",
-    "smee": "node scripts/smee.mjs",
-    "dev:webhook": "npm-run-all --parallel dev smee",
+    "db:activate-central-api": "tsx scripts/activate-central-api.ts",
     "build-full": "yarn prisma:migrate:deploy && nuxt build && yarn prisma:generate",
     "build": "nuxt build",
-    "dev": "nuxt dev -p 3000",
+    "dev": "nuxt dev",
     "start": "node .output/server/index.mjs",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -27,6 +26,7 @@
     "prune:branches": "npx git-removed-branches --prune --force",
     "reset": "rm -rf node_modules && rm -rf .nuxt && rm -rf .output && rm -rf dist && yarn install",
     "test": "jest",
+    "typecheck": "nuxt typecheck",
     "analytics": "tsx ./scripts/analytics.ts"
   },
   "dependencies": {
@@ -121,7 +121,8 @@
     "tailwindcss-animate": "^1.0.7",
     "tailwindcss-debug-screens": "^2.2.1",
     "tsx": "^4.19.1",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vue-tsc": "3.3.13"
   },
   "engines": {
     "node": ">=24.0.0"

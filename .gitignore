@@ -5,10 +5,8 @@ npm-debug.log
 !mock-cert.pem
 .env
 coverage
-bot/node_modules
 public/assets/css/styles.css
 .DS_Store
 nuxt-app/.nuxt/
 .vercel
-bot/yarn-error.log
 .vscode/

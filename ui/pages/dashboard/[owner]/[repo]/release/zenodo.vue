@@ -33,10 +33,14 @@ breadcrumbsStore.setFeature({
 
 const { owner, repo } = route.params as { owner: string; repo: string };
 
+const logwatch = useLogwatch();
+
 const devMode = process.env.NODE_ENV === "development";
 
 const zenodoLoginUrl = ref("");
 const haveValidZenodoToken = ref(false);
+// Zenodo was down when the token was checked; the saved connection is kept.
+const zenodoUnreachable = ref(false);
 
 const licenseChecked = ref(false);
 const metadataChecked = ref(false);
@@ -103,6 +107,7 @@ const githubFormRules = ref({
 
 const githubTagOptions = ref<Array<SelectOption | SelectGroupOption>>([]);
 const githubReleaseOptions = ref<Array<SelectOption | SelectGroupOption>>([]);
+const selectedGithubReleaseUrl = ref<string | null>(null);
 
 const lastSelectedUser = ref<string | null>(null);
 const lastSelectedGithubTag = ref<string | null>(null);
@@ -127,6 +132,7 @@ if (error.value) {
 if (data.value) {
   zenodoLoginUrl.value = data.value.zenodoLoginUrl;
   haveValidZenodoToken.value = data.value.haveValidZenodoToken;
+  zenodoUnreachable.value = data.value.zenodoUnreachable;
 
   license.value.id = data.value?.license?.id || "";
   license.value.status = data.value?.license?.status || "";
@@ -158,6 +164,7 @@ if (data.value) {
       ? [
           {
             children: draftReleases.map((r) => ({
+              htmlUrl: r.htmlUrl,
               label: r.name || "Untitled release",
               prerelease: r.prerelease,
               value: r.id.toString(),
@@ -287,6 +294,7 @@ const createDraftGithubRelease = () => {
             (o) => (o as any).key === "available",
           ) as SelectGroupOption | undefined;
           const newReleaseOption = {
+            htmlUrl: response.htmlUrl,
             label: githubFormValue.value.releaseTitle,
             value: response.releaseId.toString(),
           };
@@ -329,6 +337,7 @@ const createDraftGithubRelease = () => {
 
           // Select the new release
           githubFormValue.value.release = response.releaseId.toString();
+          selectedGithubReleaseUrl.value = response.htmlUrl;
 
           const htmlUrl = response.htmlUrl;
           const editUrl = htmlUrl.replace("/tag/", "/edit/");
@@ -337,6 +346,11 @@ const createDraftGithubRelease = () => {
         })
         .catch((error) => {
           console.error("Failed to create draft GitHub release:", error);
+          logwatch.error(
+            "zenodo.createGithubRelease",
+            "Failed to create draft GitHub release",
+            { error, owner, repo },
+          );
           push.error({
             title: "Failed to create draft GitHub release",
             message: "Please try again later",
@@ -346,8 +360,12 @@ const createDraftGithubRelease = () => {
           createDraftGithubReleaseSpinner.value = false;
         });
     } else {
-      console.error("Form validation failed");
-      console.error(errors);
+      console.warn("GitHub release form is invalid:", errors);
+      logwatch.warn(
+        "zenodo.validateGithubForm",
+        "GitHub release form is invalid",
+        { errors, owner, repo },
+      );
     }
   });
 };
@@ -368,18 +386,25 @@ if (
   githubFormValue.value.release = githubRelease.toString();
   zenodoDraftIsReadyForRelease.value = true;
   githubReleaseIsDraft.value = true;
+  selectedGithubReleaseUrl.value =
+    data.value?.githubReleases.find(
+      (r) => r.id.toString() === githubRelease.toString(),
+    )?.htmlUrl ?? null;
 }
+
+// The draft check polls every 3s, so only the first failure in a row for a
+// release is forwarded to logwatch
+let failingGithubReleaseCheck: string | null = null;
 
 const checkIfGithubReleaseIsDraft = async () => {
   const releaseId = githubFormValue.value.release;
 
-  if (!releaseId) {
+  if (!releaseId || releaseId === "new") {
+    selectedGithubReleaseUrl.value = null;
     showGithubReleaseIsDraftStausBadge.value = false;
-    return null;
-  }
-
-  if (releaseId === "new") {
-    showGithubReleaseIsDraftStausBadge.value = false;
+    // A check for the previous selection may still be running; it no longer
+    // owns the spinner.
+    checkGithubReleaseSpinner.value = false;
     return null;
   }
 
@@ -390,28 +415,51 @@ const checkIfGithubReleaseIsDraft = async () => {
     method: "GET",
   })
     .then((response) => {
+      // Ignore responses for a release that is no longer selected
+      if (githubFormValue.value.release !== releaseId) return;
+
+      failingGithubReleaseCheck = null;
+
       if (response.draft) {
         githubReleaseIsDraft.value = true;
       } else {
         githubReleaseIsDraft.value = false;
       }
+      selectedGithubReleaseUrl.value =
+        response.htmlUrl ?? selectedGithubReleaseUrl.value;
+      showGithubReleaseIsDraftStausBadge.value = true;
     })
     .catch((error) => {
+      if (githubFormValue.value.release !== releaseId) return;
+
       githubReleaseIsDraft.value = false;
       showGithubReleaseIsDraftStausBadge.value = false;
 
       console.error("Failed to fetch GitHub release:", error);
+      if (failingGithubReleaseCheck !== releaseId) {
+        logwatch.error(
+          "zenodo.checkGithubRelease",
+          "Failed to fetch GitHub release",
+          { error, owner, releaseId, repo },
+        );
+      }
+      failingGithubReleaseCheck = releaseId;
     })
     .finally(() => {
-      showGithubReleaseIsDraftStausBadge.value = true;
+      // A newer selection owns the spinner now.
+      if (githubFormValue.value.release !== releaseId) return;
       checkGithubReleaseSpinner.value = false;
     });
 };
 
-const handleGithubReleaseChange = () => {
+const handleGithubReleaseChange = (
+  _value: string | null,
+  option: SelectOption | null,
+) => {
   zenodoDraftIsReadyForRelease.value = false;
   zenodoPreflightError.value = null;
   githubFormValue.value.releaseTitle = "";
+  selectedGithubReleaseUrl.value = (option?.htmlUrl as string) ?? null;
   checkIfGithubReleaseIsDraft();
 };
 
@@ -470,6 +518,8 @@ const zenodoDraftSpinner = ref(false);
 const showZenodoPublishProgressModal = ref(false);
 const zenodoPublishStatus = ref<string>("");
 const zenodoPublishDOI = ref<string>("");
+// Captured at publish time because resetForm() clears the form on success
+const zenodoPublishTag = ref<string>("");
 const zenodoPublishErrorMessage = ref<string>("");
 const zenodoBadgeShield = ref<string>("");
 const zenodoPreflightError = ref<string | null>(null);
@@ -480,18 +530,19 @@ interface PublishStep {
   label: string;
   message: string;
   status: "pending" | "in_progress" | "completed" | "error";
+  upload?: ZenodoUploadProgress;
 }
 
 const publishSteps = ref<PublishStep[]>([
   {
-    key: "deposition",
-    label: "Create Zenodo deposition",
+    key: "metadata",
+    label: "Prepare metadata",
     message: "",
     status: "pending",
   },
   {
-    key: "metadata",
-    label: "Prepare metadata",
+    key: "deposition",
+    label: "Prepare Zenodo record draft",
     message: "",
     status: "pending",
   },
@@ -515,7 +566,7 @@ const publishSteps = ref<PublishStep[]>([
   },
   {
     key: "publish",
-    label: "Publish deposition",
+    label: "Publish Zenodo record",
     message: "",
     status: "pending",
   },
@@ -525,8 +576,25 @@ const resetPublishSteps = () => {
   for (const step of publishSteps.value) {
     step.status = "pending";
     step.message = "";
+    step.upload = undefined;
   }
   zenodoPublishErrorMessage.value = "";
+};
+
+// Flags the file that was in flight when its step failed.
+const failActiveUpload = (step: PublishStep) => {
+  const active = step.upload?.files.find(
+    (file) => file.status !== "pending" && file.status !== "completed",
+  );
+  if (active) active.status = "error";
+};
+
+const applyUploadUpdate = (step: PublishStep, update: ZenodoUploadUpdate) => {
+  if (update.type === "list") {
+    step.upload = { files: update.files, maxAttempts: update.maxAttempts };
+  } else if (step.upload) {
+    step.upload.files[update.index] = update.file;
+  }
 };
 
 const resetForm = () => {
@@ -539,6 +607,7 @@ const resetForm = () => {
   zenodoFormValue.value = { accessRight: null, version: "" };
   zenodoDraftIsReadyForRelease.value = false;
   githubReleaseIsDraft.value = false;
+  selectedGithubReleaseUrl.value = null;
   showGithubReleaseIsDraftStausBadge.value = false;
   zenodoPreflightError.value = null;
   useRouter().replace({ query: {} });
@@ -549,6 +618,7 @@ const handleSSEEvent = (event: {
   message: string;
   status: string;
   step: string;
+  upload?: ZenodoUploadUpdate;
 }) => {
   if (event.step === "complete") {
     zenodoPublishStatus.value = "published";
@@ -573,6 +643,7 @@ const handleSSEEvent = (event: {
     if (inProgress) {
       inProgress.status = "error";
       inProgress.message = event.message;
+      failActiveUpload(inProgress);
     }
     return;
   }
@@ -581,12 +652,14 @@ const handleSSEEvent = (event: {
   if (!step) return;
 
   step.message = event.message;
+  if (event.upload) applyUploadUpdate(step, event.upload);
   if (event.status === "in_progress") {
     step.status = "in_progress";
   } else if (event.status === "completed") {
     step.status = "completed";
   } else if (event.status === "error") {
     step.status = "error";
+    failActiveUpload(step);
     zenodoPublishStatus.value = "error";
     zenodoPublishErrorMessage.value = event.message;
   }
@@ -603,14 +676,16 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     zenodoDraftSpinner.value = true;
   }
 
+  const effectiveTag =
+    githubFormValue.value.tag !== "new"
+      ? githubFormValue.value.tag
+      : githubFormValue.value.tagTitle;
+
   const body = JSON.stringify({
     metadata: zenodoFormValue.value,
     publish: shouldPublish,
     release: githubFormValue.value.release,
-    tag:
-      githubFormValue.value.tag !== "new"
-        ? githubFormValue.value.tag
-        : githubFormValue.value.tagTitle,
+    tag: effectiveTag,
     useExistingDeposition: selectedExistingDeposition.value === "existing",
     zenodoDepositionId:
       selectedExistingDeposition.value === "existing"
@@ -636,18 +711,18 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
       } catch {
         // ignore parse errors
       }
-      const effectiveTag =
-        githubFormValue.value.tag !== "new"
-          ? githubFormValue.value.tag
-          : githubFormValue.value.tagTitle;
       const knownErrors: Record<string, string> = {
         "GitHub release is not a draft":
           "The selected GitHub release is no longer a draft and cannot be used. Please select a different release.",
         "GitHub release not found":
           "The selected GitHub release could not be found. Please refresh the page and try again.",
+        "publish-in-progress":
+          "A Zenodo publication is already running for this repository. Please wait for it to finish, then refresh the page.",
         "tag-already-released": `A published release already exists for tag "${effectiveTag}". Please choose a different tag or delete the existing release first.`,
         "Zenodo token not found":
           "Your Zenodo connection has expired or been revoked. Please reconnect your Zenodo account using the button above.",
+        "zenodo-unreachable":
+          "Zenodo could not be reached. Your Zenodo connection is still saved, so please try again in a few minutes.",
       };
       zenodoPreflightError.value =
         knownErrors[statusMessage] ??
@@ -691,6 +766,7 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     // Open the progress modal and reset steps before streaming begins
     showZenodoPublishProgressModal.value = true;
     zenodoPublishStatus.value = "inProgress";
+    zenodoPublishTag.value = effectiveTag ?? "";
     resetPublishSteps();
 
     const reader = response.body!.getReader();
@@ -718,6 +794,11 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
     }
   } catch (error) {
     console.error("Failed to start Zenodo publish process:", error);
+    logwatch.error("zenodo.publish", "Failed to start Zenodo publish process", {
+      error,
+      owner,
+      repo,
+    });
     push.error({
       title: "Failed to start Zenodo publish process",
       message: "Please try again later",
@@ -744,7 +825,14 @@ const copyText = (text: string) => {
         message: "Text copied to clipboard",
       });
     })
-    .catch((err) => console.error("Failed to copy text: ", err));
+    .catch((err) => {
+      console.error("Failed to copy text: ", err);
+      logwatch.error("zenodo.copyText", "Failed to copy text", {
+        error: err,
+        owner,
+        repo,
+      });
+    });
 };
 
 function zenodoDoiUrl(doi: string): string {
@@ -760,6 +848,11 @@ const zenodoDepositionUrl = computed(() => {
   return zenodoDoiUrl(zenodoPublishDOI.value);
 });
 
+const githubReleaseUrl = computed(
+  () =>
+    `https://github.com/${owner}/${repo}/releases/tag/${zenodoPublishTag.value}`,
+);
+
 const fetchZenodoBadge = () => {
   zenodoBadgeShield.value = "";
   $fetch(`/api/badge/${owner}/${repo}`, {
@@ -770,12 +863,16 @@ const fetchZenodoBadge = () => {
     .then((badge) => {
       if (badge) {
         // Provide a modal to show the badge
-        console.log(badge);
         zenodoBadgeShield.value = badge;
       }
     })
     .catch((error) => {
       console.error("Error fetching badge:", error);
+      logwatch.error("zenodo.fetchBadge", "Error fetching badge", {
+        error,
+        owner,
+        repo,
+      });
     });
 };
 
@@ -807,8 +904,12 @@ const validateZenodoForm = () => {
         message: "Your Zenodo metadata has been validated.",
       });
     } else {
-      console.error("Form validation failed");
-      console.error(errors);
+      console.warn("Zenodo metadata form is invalid:", errors);
+      logwatch.warn(
+        "zenodo.validateMetadata",
+        "Zenodo metadata form is invalid",
+        { errors, owner, repo },
+      );
 
       push.error({
         title: "Error",
@@ -834,6 +935,11 @@ const signOutOfZenodo = async () => {
     })
     .catch((error) => {
       console.error("Failed to sign out of Zenodo:", error);
+      logwatch.error("zenodo.signOut", "Failed to sign out of Zenodo", {
+        error,
+        owner,
+        repo,
+      });
       push.error({
         title: "Failed to sign out of Zenodo",
         message: "Please try again later",
@@ -876,6 +982,11 @@ const loginToZenodo = async () => {
             };
           } catch (error) {
             console.error("Failed to parse existing state:", error);
+            logwatch.error(
+              "zenodo.parseState",
+              "Failed to parse existing Zenodo login state",
+              { error, owner, repo },
+            );
             throw new Error("Invalid state format");
           }
         } else {
@@ -925,6 +1036,11 @@ const loginToZenodo = async () => {
     })
     .catch((error) => {
       console.error("Failed to purge Zenodo token:", error);
+      logwatch.error("zenodo.purgeToken", "Failed to purge Zenodo token", {
+        error,
+        owner,
+        repo,
+      });
       push.error({
         title: "Failed to purge Zenodo token",
         message: "Please try again later",
@@ -1328,6 +1444,25 @@ onBeforeUnmount(() => {
                   />
                 </n-form-item>
 
+                <div
+                  v-if="selectedGithubReleaseUrl"
+                  class="mb-4 flex items-center gap-2 text-sm"
+                >
+                  <Icon name="simple-icons:github" size="16" class="shrink-0" />
+
+                  <span class="shrink-0 text-gray-600 dark:text-gray-400"
+                    >View on GitHub:</span
+                  >
+
+                  <NuxtLink
+                    :to="selectedGithubReleaseUrl"
+                    target="_blank"
+                    class="break-all text-blue-500 underline transition-all hover:text-blue-700"
+                  >
+                    {{ selectedGithubReleaseUrl }}
+                  </NuxtLink>
+                </div>
+
                 <n-form-item
                   v-show="githubFormValue.release === 'new'"
                   label="Release title"
@@ -1422,7 +1557,14 @@ onBeforeUnmount(() => {
       <CardDashboard title="Check Zenodo connection">
         <template #icon>
           <Icon
-            v-if="!haveValidZenodoToken"
+            v-if="zenodoUnreachable"
+            name="ic:round-warning"
+            size="40"
+            class="text-amber-500"
+          />
+
+          <Icon
+            v-else-if="!haveValidZenodoToken"
             name="clarity:disconnect-line"
             size="40"
             class="text-red-500"
@@ -1438,13 +1580,29 @@ onBeforeUnmount(() => {
               can now continue to the next step.
             </p>
 
+            <p v-else-if="zenodoUnreachable">
+              We couldn't reach Zenodo to check your connection. Your connection
+              is still saved, so please try again in a few minutes.
+            </p>
+
             <p v-else>
               There seems to be an issue with your Zenodo connection. Please
               login to Zenodo to continue.
             </p>
 
             <n-flex>
-              <a v-if="!haveValidZenodoToken" @click="loginToZenodo">
+              <n-button
+                v-if="zenodoUnreachable"
+                type="primary"
+                @click="reloadNuxtApp()"
+              >
+                <template #icon>
+                  <Icon name="mdi:refresh" size="16" />
+                </template>
+                Try again
+              </n-button>
+
+              <a v-else-if="!haveValidZenodoToken" @click="loginToZenodo">
                 <n-button type="primary">
                   <template #icon>
                     <Icon name="simple-icons:zenodo" size="16" />
@@ -1537,18 +1695,7 @@ onBeforeUnmount(() => {
           </template>
         </CardDashboard>
 
-        <div
-          v-if="
-            (console.log('debug:', {
-              selectedExistingDeposition,
-              selectedDeposition,
-              selectableDepositions,
-              githubTag: githubFormValue.tag,
-              githubRelease: githubFormValue.release,
-            }),
-            selectedExistingDeposition === 'new' || selectedDeposition)
-          "
-        >
+        <div v-if="selectedExistingDeposition === 'new' || selectedDeposition">
           <n-divider />
 
           <h2 class="pb-6">Zenodo metadata</h2>
@@ -1874,47 +2021,52 @@ onBeforeUnmount(() => {
           Please do not close this window while the process is ongoing.
         </p>
 
-        <ul class="space-y-2">
-          <li
-            v-for="step in publishSteps"
-            :key="step.key"
-            class="flex items-center space-x-3"
-          >
-            <Icon
-              v-if="step.status === 'completed'"
-              name="mdi:check-circle"
-              class="h-5 w-5 shrink-0 text-green-500"
-            />
+        <ul class="list-none space-y-2">
+          <li v-for="step in publishSteps" :key="step.key">
+            <div class="flex items-center space-x-3">
+              <Icon
+                v-if="step.status === 'completed'"
+                name="mdi:check-circle"
+                class="h-5 w-5 shrink-0 text-green-500"
+              />
 
-            <Icon
-              v-else-if="step.status === 'error'"
-              name="mdi:alert-circle"
-              class="h-5 w-5 shrink-0 text-red-500"
-            />
+              <Icon
+                v-else-if="step.status === 'error'"
+                name="mdi:alert-circle"
+                class="h-5 w-5 shrink-0 text-red-500"
+              />
 
-            <Icon
-              v-else-if="step.status === 'in_progress'"
-              name="mdi:loading"
-              class="h-5 w-5 shrink-0 animate-spin text-blue-500"
-            />
+              <Icon
+                v-else-if="step.status === 'in_progress'"
+                name="mdi:loading"
+                class="h-5 w-5 shrink-0 animate-spin text-blue-500"
+              />
 
-            <Icon
-              v-else
-              name="mdi:circle-outline"
-              class="h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600"
-            />
+              <Icon
+                v-else
+                name="mdi:circle-outline"
+                class="h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600"
+              />
 
-            <span
-              :class="{
-                'font-medium text-gray-900 dark:text-gray-100':
-                  step.status === 'in_progress',
-                'text-gray-400 dark:text-gray-500': step.status === 'pending',
-                'text-gray-700 dark:text-gray-300': step.status === 'completed',
-                'text-red-600 dark:text-red-400': step.status === 'error',
-              }"
-            >
-              {{ step.label }}
-            </span>
+              <span
+                :class="{
+                  'font-medium text-gray-900 dark:text-gray-100':
+                    step.status === 'in_progress',
+                  'text-gray-400 dark:text-gray-500': step.status === 'pending',
+                  'text-gray-700 dark:text-gray-300':
+                    step.status === 'completed',
+                  'text-red-600 dark:text-red-400': step.status === 'error',
+                }"
+              >
+                {{ step.label }}
+              </span>
+            </div>
+
+            <ZenodoUploadProgress
+              v-if="step.upload"
+              :upload="step.upload"
+              class="ml-8 mt-2"
+            />
           </li>
         </ul>
       </n-flex>
@@ -1933,39 +2085,44 @@ onBeforeUnmount(() => {
           {{ zenodoPublishErrorMessage }}
         </n-alert>
 
-        <ul class="space-y-2">
-          <li
-            v-for="step in publishSteps"
-            :key="step.key"
-            class="flex items-center space-x-3"
-          >
-            <Icon
-              v-if="step.status === 'completed'"
-              name="mdi:check-circle"
-              class="h-5 w-5 shrink-0 text-green-500"
-            />
+        <ul class="list-none space-y-2">
+          <li v-for="step in publishSteps" :key="step.key">
+            <div class="flex items-center space-x-3">
+              <Icon
+                v-if="step.status === 'completed'"
+                name="mdi:check-circle"
+                class="h-5 w-5 shrink-0 text-green-500"
+              />
 
-            <Icon
-              v-else-if="step.status === 'error'"
-              name="mdi:alert-circle"
-              class="h-5 w-5 shrink-0 text-red-500"
-            />
+              <Icon
+                v-else-if="step.status === 'error'"
+                name="mdi:alert-circle"
+                class="h-5 w-5 shrink-0 text-red-500"
+              />
 
-            <Icon
-              v-else
-              name="mdi:circle-outline"
-              class="h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600"
-            />
+              <Icon
+                v-else
+                name="mdi:circle-outline"
+                class="h-5 w-5 shrink-0 text-gray-300 dark:text-gray-600"
+              />
 
-            <span
-              :class="{
-                'text-gray-400 dark:text-gray-500': step.status === 'pending',
-                'text-gray-700 dark:text-gray-300': step.status === 'completed',
-                'text-red-600 dark:text-red-400': step.status === 'error',
-              }"
-            >
-              {{ step.label }}
-            </span>
+              <span
+                :class="{
+                  'text-gray-400 dark:text-gray-500': step.status === 'pending',
+                  'text-gray-700 dark:text-gray-300':
+                    step.status === 'completed',
+                  'text-red-600 dark:text-red-400': step.status === 'error',
+                }"
+              >
+                {{ step.label }}
+              </span>
+            </div>
+
+            <ZenodoUploadProgress
+              v-if="step.upload"
+              :upload="step.upload"
+              class="ml-8 mt-2"
+            />
           </li>
         </ul>
       </n-flex>
@@ -1985,7 +2142,7 @@ onBeforeUnmount(() => {
             and adding additional metadata to make your software more FAIR. You
             can also view the
             <NuxtLink
-              :to="`https://github.com/${owner}/${repo}/releases/tag/${githubFormValue.tag === 'new' ? githubFormValue.tagTitle : githubFormValue.tag}`"
+              :to="githubReleaseUrl"
               target="_blank"
               class="text-blue-500 underline transition-all hover:text-blue-700"
               >GitHub release</NuxtLink
@@ -2090,11 +2247,7 @@ onBeforeUnmount(() => {
             </n-button>
           </NuxtLink>
 
-          <NuxtLink
-            :to="`https://github.com/${owner}/${repo}/releases/tag/${githubFormValue.tag === 'new' ? githubFormValue.tagTitle : githubFormValue.tag}`"
-            target="_blank"
-            class="w-full"
-          >
+          <NuxtLink :to="githubReleaseUrl" target="_blank" class="w-full">
             <n-button type="primary" dashed class="w-full">
               <template #icon>
                 <Icon name="simple-icons:github" size="16" />

@@ -36,8 +36,11 @@ export default defineEventHandler(async (event) => {
   const zenRaw = installation.ZenodoDeposition;
 
   // Validate Zenodo token and retrieve existing depositions
-  const { existingDepositions, valid: haveValidZenodoToken } =
-    await validateZenodoToken(user?.id ?? "");
+  const {
+    existingDepositions,
+    reason: tokenProblem,
+    valid: haveValidZenodoToken,
+  } = await validateZenodoToken(user?.id ?? "");
 
   // Build Zenodo OAuth login URL
   const zenodoProvider = new ZenodoProvider();
@@ -71,6 +74,7 @@ export default defineEventHandler(async (event) => {
     id: number;
     name: string;
     draft: boolean;
+    html_url: string;
     prerelease: boolean;
     tag_name: string;
   }> = releasesRes.ok ? await releasesRes.json() : [];
@@ -111,6 +115,7 @@ export default defineEventHandler(async (event) => {
       id: r.id,
       name: r.name,
       draft: r.draft,
+      htmlUrl: r.html_url,
       prerelease: r.prerelease,
     })),
     githubTags,
@@ -129,6 +134,8 @@ export default defineEventHandler(async (event) => {
     zenodoEndpoint: process.env.ZENODO_ENDPOINT ?? "",
     zenodoLoginUrl,
     zenodoMetadata: zenRaw?.zenodo_metadata ?? {},
+    // Zenodo could not be reached to check the token, which is kept.
+    zenodoUnreachable: tokenProblem === "unreachable",
     zenodoWorkflowStatus: zenRaw?.status ?? "",
   };
 });

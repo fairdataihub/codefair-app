@@ -6,6 +6,7 @@ import { Icon } from "#components";
 // User-related states and utilities
 const user = useUser();
 const orgs = useOrgs();
+const logwatch = useLogwatch();
 
 const loggedIn = computed(() => !!user.value);
 const loading = ref(true); // Tracks loading state for data fetching
@@ -149,6 +150,11 @@ if (loggedIn.value) {
       buildSettingOptions(uniqueOrgs);
     } catch (error) {
       console.error("Error fetching organizations or user data:", error);
+      logwatch.error(
+        "profile.fetchOrgs",
+        "Error fetching organizations or user data",
+        { error },
+      );
     } finally {
       loading.value = false;
     }
@@ -159,7 +165,6 @@ if (loggedIn.value) {
 
 // Handle dropdown item selection
 const handleSettingsSelect = (key: string) => {
-  console.log("Selected:", key);
   switch (key) {
     case "view-profile":
       navigateTo("/profile");

@@ -24,6 +24,7 @@ export interface PublicationProgressEvent {
   message: string;
   status: ProgressStatus;
   step: ProgressStep;
+  upload?: ZenodoUploadUpdate; // Per-file progress for the `upload_files` step
 }
 
 export type ProgressCallback = (
@@ -43,6 +44,8 @@ export interface ExistingDeposition {
 export interface ArchivalTokenValidation {
   existingDepositions: ExistingDeposition[];
   message: string;
+  /** Why the token is not valid. "unreachable" means it may still be fine. */
+  reason?: "missing" | "rejected" | "unreachable";
   valid: boolean;
 }
 

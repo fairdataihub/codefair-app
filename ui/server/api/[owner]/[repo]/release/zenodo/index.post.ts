@@ -12,6 +12,9 @@ import { z } from "zod";
 import type { User } from "lucia";
 import {
   beginZenodoPublication,
+  claimPublicationLock,
+  isPublicationRunning,
+  saveZenodoReleaseSelection,
   validateZenodoToken,
 } from "~/server/services/archival/zenodo";
 import type { PublicationProgressEvent } from "~/server/services/archival/interface";
@@ -99,14 +102,32 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Zenodo token check
-  const { valid: zenodoTokenValid } = await validateZenodoToken(user?.id ?? "");
+  const existingDep = await prisma.zenodoDeposition.findFirst({
+    where: { repository: { owner, repo } },
+  });
 
-  if (!zenodoTokenValid) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Zenodo token not found",
-    });
+  // Nothing may change while a publication for this repository is running:
+  // not the release tag, not the saved form, and no second publication.
+  const publishInProgress = () =>
+    createError({ statusCode: 409, statusMessage: "publish-in-progress" });
+  if (existingDep && (await isPublicationRunning(installation.id))) {
+    throw publishInProgress();
+  }
+
+  // Zenodo token check
+  // Publishing only needs a working token, not the full record list.
+  const zenodoToken = await validateZenodoToken(user?.id ?? "", {
+    listRecords: false,
+  });
+
+  if (!zenodoToken.valid) {
+    // An outage says nothing about the token, so don't send the user to
+    // reconnect (which deletes it).
+    throw createError(
+      zenodoToken.reason === "unreachable"
+        ? { statusCode: 503, statusMessage: "zenodo-unreachable" }
+        : { statusCode: 400, statusMessage: "Zenodo token not found" },
+    );
   }
 
   // Validate GitHub release
@@ -130,7 +151,12 @@ export default defineEventHandler(async (event) => {
 
   const ghReleaseJson = await ghRelease.json();
 
-  if (!ghReleaseJson.draft) {
+  const isPublicationReconciliation =
+    existingDep?.status === "zenodo-published" &&
+    existingDep.github_release_id === (parseInt(release) || null) &&
+    existingDep.github_tag_name === tag;
+
+  if (!ghReleaseJson.draft && !isPublicationReconciliation) {
     throw createError({
       statusCode: 400,
       statusMessage: "GitHub release is not a draft",
@@ -153,7 +179,7 @@ export default defineEventHandler(async (event) => {
       },
     },
   );
-  if (allReleasesRes.ok) {
+  if (allReleasesRes.ok && !isPublicationReconciliation) {
     const allReleases: any[] = await allReleasesRes.json();
     const conflict = allReleases.find(
       (r) => !r.draft && r.tag_name === tagName,
@@ -167,7 +193,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Sync tag name if it changed
-  if (ghReleaseJson.tag_name !== tag) {
+  if (ghReleaseJson.draft && ghReleaseJson.tag_name !== tag) {
     const patchRes = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/releases/${release}`,
       {
@@ -190,35 +216,30 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Persist to DB (draft state)
-  const existingDep = await prisma.zenodoDeposition.findFirst({
-    where: { repository: { owner, repo } },
-  });
-
-  const depositionData = {
-    existing_zenodo_deposition_id: useExistingDeposition,
-    github_release_id: parseInt(release) || null,
-    github_tag_name: tag,
-    status: "draft",
-    user_id: user?.id ?? "",
-    zenodo_id: parseInt(zenodoDepositionId) || null,
-    zenodo_metadata: metadata,
+  const selection = {
+    metadata,
+    release,
+    repositoryId: installation.id,
+    tag,
+    useExistingDeposition,
+    userId: user?.id ?? "",
   };
-
-  if (existingDep) {
-    await prisma.zenodoDeposition.update({
-      data: depositionData,
-      where: { repository_id: installation.id },
-    });
-  } else {
-    await prisma.zenodoDeposition.create({
-      data: { ...depositionData, repository_id: installation.id },
-    });
-  }
 
   // Save-only path
   if (!publish) {
+    await saveZenodoReleaseSelection(selection);
     return { message: "Zenodo details saved" };
+  }
+
+  // The lock lives on the deposition row, so a first publication creates it.
+  if (!existingDep) await saveZenodoReleaseSelection(selection);
+  const releasePublishLock = await claimPublicationLock(installation.id);
+  if (!releasePublishLock) throw publishInProgress();
+  if (existingDep) {
+    await saveZenodoReleaseSelection(selection).catch(async (error) => {
+      await releasePublishLock();
+      throw error;
+    });
   }
 
   // SSE publication path
@@ -252,6 +273,12 @@ export default defineEventHandler(async (event) => {
   const onProgress = (progress: PublicationProgressEvent) => {
     sendEvent(progress as unknown as Record<string, unknown>);
   };
+
+  // SSE comment frames keep idle proxies and browsers from dropping the stream
+  // while Zenodo works without reporting progress (e.g. publishing).
+  const heartbeat = setInterval(() => {
+    if (clientConnected && !res.writableEnded) res.write(": keep-alive\n\n");
+  }, 15_000);
 
   try {
     const result = await beginZenodoPublication(
@@ -294,6 +321,9 @@ export default defineEventHandler(async (event) => {
       status: "error",
       step: "error",
     });
+  } finally {
+    clearInterval(heartbeat);
+    await releasePublishLock();
   }
 
   if (!res.writableEnded) {

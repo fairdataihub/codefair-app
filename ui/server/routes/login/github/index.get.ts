@@ -5,8 +5,10 @@ export default defineEventHandler(async (event) => {
   const headers = getHeaders(event);
   const hostHeader = headers.host;
 
+  // Locally, GitHub's callback goes to CODEFAIR_APP_DOMAIN, which must match
+  // the callback URL in the GitHub app settings
   const domain = hostHeader?.includes("localhost")
-    ? "http://localhost:3000"
+    ? (process.env.CODEFAIR_APP_DOMAIN ?? "").replace(/\/$/, "")
     : `https://${hostHeader}`;
 
   const query = getQuery(event);
