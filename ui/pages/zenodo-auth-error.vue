@@ -5,14 +5,20 @@ const reason = route.query.reason as string | undefined;
 
 const reasonMessages: Record<string, string> = {
   incomplete_state:
-    "The OAuth state was missing required fields (user, owner, or repo).",
+    "The OAuth state was missing required fields (owner or repo).",
   invalid_state: "The OAuth state parameter could not be parsed.",
   invalid_token_response:
     "Zenodo's response did not include the expected access and refresh tokens.",
   missing_params:
     "The authorization code or state parameter was missing from the callback.",
+  not_signed_in:
+    "You were not signed in to Codefair when Zenodo sent you back. Sign in and try again.",
   oauth_paused:
     "Signing in with your Zenodo account is paused for maintenance.",
+  state_expired:
+    "This sign-in was started more than 30 minutes ago. Start again from the release page.",
+  state_mismatch:
+    "This sign-in was started by a different Codefair account. Start again from the release page while signed in to your own account.",
   token_exchange_error:
     "An unexpected error occurred while exchanging the authorization code.",
   token_exchange_failed: "Zenodo rejected the authorization code exchange.",
@@ -37,7 +43,13 @@ const personalTokenLink = computed(() => {
   return `/dashboard/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/release/zenodo?${params.toString()}#zenodo-connection`;
 });
 
-const oauthPaused = reason === "oauth_paused";
+// Failures caused by Zenodo's intermittent OAuth bug, which a retry often
+// gets past. Other reasons need a fresh start from the release page.
+const zenodoSideFailure = [
+  "invalid_token_response",
+  "token_exchange_error",
+  "token_exchange_failed",
+].includes(reason ?? "");
 </script>
 
 <template>
@@ -52,14 +64,19 @@ const oauthPaused = reason === "oauth_paused";
       </div>
 
       <n-alert
-        v-if="!oauthPaused"
+        v-if="zenodoSideFailure"
         type="warning"
-        title="This is a known intermittent issue"
+        title="This is a known Zenodo issue"
       >
-        Zenodo authentication occasionally fails on the first attempt. This is a
-        known issue and we are currently working with the Zenodo team to resolve
-        it. This is not caused by anything you did wrong. You can also skip
-        Zenodo sign-in and connect with a personal access token instead.
+        Zenodo sign-in currently fails at times, often on the first attempt,
+        because of a bug on Zenodo's side. It's not caused by anything you did.
+        We've reported it to Zenodo and they have scheduled a fix (<NuxtLink
+          to="https://github.com/zenodo/zenodo-rdm/issues/1484"
+          target="_blank"
+          class="text-blue-500 underline transition-all hover:text-blue-700"
+          >zenodo/zenodo-rdm#1484</NuxtLink
+        >). Until then, you can try again or connect with a personal access
+        token instead.
       </n-alert>
 
       <n-alert v-if="reasonMessage" type="error" title="Error details">
@@ -87,7 +104,7 @@ const oauthPaused = reason === "oauth_paused";
         </NuxtLink>
       </div>
 
-      <div v-if="!oauthPaused" class="flex flex-col gap-3">
+      <div v-if="zenodoSideFailure" class="flex flex-col gap-3">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Or try signing in again
         </h2>
@@ -115,7 +132,7 @@ const oauthPaused = reason === "oauth_paused";
 
       <n-flex justify="center" class="gap-3 pt-2">
         <n-button
-          v-if="!oauthPaused"
+          v-if="zenodoSideFailure"
           :type="personalTokenLink ? 'default' : 'primary'"
           size="large"
           @click="router.go(-1)"

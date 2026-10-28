@@ -38,7 +38,7 @@ const logwatch = useLogwatch();
 
 const devMode = process.env.NODE_ENV === "development";
 
-const zenodoLoginUrl = ref("");
+const zenodoOAuthSignIn = ref(false);
 const haveValidZenodoToken = ref(false);
 // Zenodo was down when the token was checked; the saved connection is kept.
 const zenodoUnreachable = ref(false);
@@ -162,13 +162,13 @@ const setZenodoDepositions = (
 
 const setZenodoConnection = (details: {
   haveValidZenodoToken: boolean;
-  zenodoLoginUrl: string | null;
+  zenodoOAuthSignIn: boolean;
   zenodoTokenMessage: string;
   zenodoTokenSignIn: boolean;
   zenodoTokenType: "oauth" | "personal" | null;
   zenodoUnreachable: boolean;
 }) => {
-  zenodoLoginUrl.value = details.zenodoLoginUrl ?? "";
+  zenodoOAuthSignIn.value = details.zenodoOAuthSignIn;
   haveValidZenodoToken.value = details.haveValidZenodoToken;
   zenodoTokenMessage.value = details.zenodoTokenMessage;
   zenodoTokenSignIn.value = details.zenodoTokenSignIn;
@@ -1056,104 +1056,42 @@ const signOutOfZenodo = async () => {
 };
 
 const loginToZenodo = async () => {
-  // Send api request to purge the Zenodo token
-  await $fetch(`/api/zenodo/disconnect`, {
-    headers: useRequestHeaders(["cookie"]),
-    method: "POST",
-  })
-    .then(() => {
-      const githubDetails = {
-        githubRelease: githubFormValue.value.release,
-        githubTag:
-          githubFormValue.value.tag === "new"
-            ? githubFormValue.value.tagTitle
-            : githubFormValue.value.tag,
-      };
-      // Extract the existing state from the Zenodo login URL
-      const existingStateMatch =
-        zenodoLoginUrl.value.match(/[?&]state=([^&]+)/);
-      let originalState: { owner: string; repo: string; userId: string } = {
-        owner,
-        repo,
-        userId: "",
-      };
-
-      if (existingStateMatch) {
-        const decodedState = decodeURIComponent(existingStateMatch[1]);
-        if (decodedState.startsWith("{")) {
-          try {
-            const parsed = JSON.parse(decodedState);
-            originalState = {
-              owner: parsed.owner ?? owner,
-              repo: parsed.repo ?? repo,
-              userId: parsed.userId ?? "",
-            };
-          } catch (error) {
-            console.error("Failed to parse existing state:", error);
-            logwatch.error(
-              "zenodo.parseState",
-              "Failed to parse existing Zenodo login state",
-              { error, owner, repo },
-            );
-            throw new Error("Invalid state format");
-          }
-        } else {
-          // Legacy format: "userId:owner:repo"
-          const parts = decodedState.split(":");
-          originalState = {
-            owner: parts[1] ?? owner,
-            repo: parts[2] ?? repo,
-            userId: parts[0] ?? "",
-          };
-        }
-      } else {
-        throw new Error("No existing state found in the Zenodo login URL");
-      }
-
-      const updatedState = {
-        ...originalState,
-        githubDetails,
-      };
-      // Encode the updated state as a JSON string
-      const encodedState = encodeURIComponent(JSON.stringify(updatedState));
-      // Replace the existing state parameter in the Zenodo login URL
-      let zenodoLoginUrlWithState;
-
-      if (zenodoLoginUrl.value.includes("state=")) {
-        // Replace the existing state parameter with the updated one
-        zenodoLoginUrlWithState = zenodoLoginUrl.value.replace(
-          /([?&]state=)[^&]+/,
-          `$1${encodedState}`,
-        );
-      } else {
-        // Fallback* If no state parameter exists, add it
-        zenodoLoginUrlWithState = `${zenodoLoginUrl.value}${
-          zenodoLoginUrl.value.includes("?") ? "&" : "?"
-        }state=${encodedState}`;
-      }
-
-      if (!zenodoLoginUrlWithState.includes("state=")) {
-        throw createError({
-          statusCode: 404,
-          statusMessage: "Zenodo login URL not configured properly",
-        });
-      }
-
-      // Redirect to the updated URL
-      window.location.href = zenodoLoginUrlWithState;
-    })
-    .catch((error) => {
-      console.error("Failed to purge Zenodo token:", error);
-      logwatch.error("zenodo.purgeToken", "Failed to purge Zenodo token", {
-        error,
-        owner,
-        repo,
-      });
-      push.error({
-        title: "Failed to purge Zenodo token",
-        message: "Please try again later",
-      });
+  try {
+    // Purge the stored Zenodo token before signing in again
+    await $fetch(`/api/zenodo/disconnect`, {
+      headers: useRequestHeaders(["cookie"]),
+      method: "POST",
     });
+
+    // The server signs the sign-in for this account and returns the Zenodo
+    // URL to continue at
+    const { url } = await $fetch("/api/zenodo/login", {
+      body: {
+        githubRelease: githubFormValue.value.release ?? "",
+        githubTag:
+          (githubFormValue.value.tag === "new"
+            ? githubFormValue.value.tagTitle
+            : githubFormValue.value.tag) ?? "",
+        owner,
+        repo,
+      },
+      headers: useRequestHeaders(["cookie"]),
+      method: "POST",
+    });
+
+    window.location.href = url;
+  } catch (error: any) {
+    console.error("Failed to start Zenodo sign-in:", error);
+    logwatch.error("zenodo.login", "Failed to start Zenodo sign-in", {
+      error,
+      owner,
+      repo,
+    });
+    push.error({
+      title: "Could not start Zenodo sign-in",
+      message: error?.data?.statusMessage ?? "Please try again later",
+    });
+  }
 };
 
 const githubReleaseInterval = ref<any>(null);
@@ -1741,13 +1679,19 @@ onBeforeUnmount(() => {
 
             <template v-else>
               <n-flex
-                v-if="zenodoLoginUrl"
+                v-if="zenodoOAuthSignIn"
                 justify="space-between"
                 align="center"
               >
                 <p>
                   Connect your Zenodo account to continue. Zenodo sign-in may
-                  need more than one attempt.
+                  currently need more than one attempt because of a
+                  <NuxtLink
+                    to="https://github.com/zenodo/zenodo-rdm/issues/1484"
+                    target="_blank"
+                    class="text-blue-500 underline transition-all hover:text-blue-700"
+                    >known Zenodo issue</NuxtLink
+                  >.
                 </p>
 
                 <a @click="loginToZenodo">
@@ -1764,18 +1708,18 @@ onBeforeUnmount(() => {
                 v-if="zenodoTokenSignIn"
                 :class="{
                   'border-t border-slate-200 pt-4 dark:border-slate-700':
-                    zenodoLoginUrl,
+                    zenodoOAuthSignIn,
                 }"
               >
                 <h3 class="pb-2 text-lg font-semibold">
                   {{
-                    zenodoLoginUrl
+                    zenodoOAuthSignIn
                       ? "Or connect with a personal access token"
                       : "Connect with a personal access token"
                   }}
                 </h3>
 
-                <p v-if="!zenodoLoginUrl" class="pb-2">
+                <p v-if="!zenodoOAuthSignIn" class="pb-2">
                   {{ maintenanceMessageFor("zenodoOAuth") }}
                   Connect your Zenodo account with a personal access token
                   instead.
@@ -1856,7 +1800,7 @@ onBeforeUnmount(() => {
               </div>
 
               <n-alert
-                v-if="!zenodoLoginUrl && !zenodoTokenSignIn"
+                v-if="!zenodoOAuthSignIn && !zenodoTokenSignIn"
                 type="warning"
                 title="Connecting to Zenodo is paused"
               >
@@ -2042,7 +1986,6 @@ onBeforeUnmount(() => {
                   <n-flex justify="space-between">
                     <n-button
                       :loading="zenodoDraftSpinner"
-                      :disabled="zenodoPaused"
                       type="primary"
                       @click="startZenodoPublishProcess(false)"
                     >

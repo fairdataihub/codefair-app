@@ -1,8 +1,5 @@
 import type { User } from "lucia";
-import {
-  validateZenodoToken,
-  ZenodoProvider,
-} from "~/server/services/archival/zenodo";
+import { validateZenodoToken } from "~/server/services/archival/zenodo";
 import prisma from "~/server/utils/prisma";
 import { getActiveMaintenance } from "~/server/utils/maintenance";
 
@@ -49,19 +46,10 @@ export default defineEventHandler(async (event) => {
   const paused = new Set(
     (await getActiveMaintenance()).map((entry) => entry.key),
   );
+  // The OAuth sign-in URL itself comes from POST /api/zenodo/login when the
+  // user clicks the button, so it can be tied to their browser
+  const zenodoOAuthSignIn = !paused.has("zenodoOAuth");
   const zenodoTokenSignIn = !paused.has("zenodoToken");
-
-  // Build Zenodo OAuth login URL, unless OAuth sign-in is paused
-  let zenodoLoginUrl: string | null = null;
-  if (!paused.has("zenodoOAuth")) {
-    const zenodoProvider = new ZenodoProvider();
-    const state = JSON.stringify({
-      owner,
-      repo,
-      userId: user?.id ?? "",
-    });
-    zenodoLoginUrl = zenodoProvider.getLoginUrl(state);
-  }
 
   // Fetch GitHub releases
   const ghHeaders = {
@@ -144,8 +132,8 @@ export default defineEventHandler(async (event) => {
     },
     zenodoDepositions: existingDepositions,
     zenodoEndpoint: process.env.ZENODO_ENDPOINT ?? "",
-    zenodoLoginUrl,
     zenodoMetadata: zenRaw?.zenodo_metadata ?? {},
+    zenodoOAuthSignIn,
     // Only explains a connection that Zenodo rejected and that was removed; an
     // unreachable Zenodo has its own notice and a user who never connected
     // needs no message

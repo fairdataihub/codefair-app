@@ -25,13 +25,18 @@ const searchLoading = ref(false);
 const selectedUserId = ref<string | null>(null);
 const searchResults = ref<AdminUserRow[]>([]);
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
+// Bumped on every search, so a slower response to an older query can't
+// replace the results for what the admin typed last
+let latestSearch = 0;
 
 const searchUsers = (query: string) => {
   if (searchTimer) clearTimeout(searchTimer);
+  const search = ++latestSearch;
 
   if (!query.trim()) {
     searchOptions.value = [];
     searchResults.value = [];
+    searchLoading.value = false;
     return;
   }
 
@@ -47,6 +52,8 @@ const searchUsers = (query: string) => {
         },
       );
 
+      if (search !== latestSearch) return;
+
       searchResults.value = data;
       searchOptions.value = data.map((row) => ({
         disabled: row.role === "admin",
@@ -57,13 +64,15 @@ const searchUsers = (query: string) => {
         value: row.id,
       }));
     } catch (error) {
+      if (search !== latestSearch) return;
+
       console.error("Failed to search users:", error);
       logwatch.error("admin.searchUsers", "Failed to search users", {
         error,
       });
       searchOptions.value = [];
     } finally {
-      searchLoading.value = false;
+      if (search === latestSearch) searchLoading.value = false;
     }
   }, 250);
 };

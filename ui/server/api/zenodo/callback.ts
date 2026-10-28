@@ -6,19 +6,26 @@
  * stores them in the database. Redirects back to the release page on success,
  * or to `/zenodo-auth-error` on failure.
  *
- * The `state` parameter is a JSON-encoded object:
- *   { userId, owner, repo, githubDetails: { githubTag, githubRelease } }
+ * The `state` parameter is a JSON-encoded object built by POST /api/zenodo/login:
+ *   { owner, repo, githubDetails: { githubTag, githubRelease }, issuedAt, sig }
  *
- * This matches the encoding produced by the GET /api/[owner]/[repo]/release/zenodo
- * endpoint when it builds the Zenodo login URL.
+ * The state must be signed for the signed-in user and less than 30 minutes
+ * old, and the token is stored for that user, so a crafted callback URL cannot
+ * attach a Zenodo account to someone else's Codefair account. The same state
+ * can be retried after Zenodo's intermittent failures until it expires.
  *
  * Once the state is parsed, error redirects carry the owner, repo and GitHub
  * details so the error page can send the user back to connect with a personal
  * access token instead.
  */
+import type { User } from "lucia";
 import { logwatch } from "~/server/utils/logwatch";
 import { isUnderMaintenance } from "~/server/utils/maintenance";
 import { encryptToken, zenodoTokenContext } from "~/server/utils/tokenCrypto";
+import {
+  checkZenodoOAuthState,
+  type ZenodoOAuthState,
+} from "~/server/utils/zenodoOAuthState";
 
 export default defineEventHandler(async (event) => {
   const ZENODO_ENDPOINT = process.env.ZENODO_ENDPOINT ?? "";
@@ -38,13 +45,8 @@ export default defineEventHandler(async (event) => {
     return sendRedirect(event, "/zenodo-auth-error?reason=missing_params");
   }
 
-  // Parse state produced by ZenodoProvider.getLoginUrl as JSON
-  let parsedState: {
-    githubDetails: { githubRelease?: string; githubTag?: string };
-    owner: string;
-    repo: string;
-    userId: string;
-  };
+  // Parse state produced by POST /api/zenodo/login as JSON
+  let parsedState: ZenodoOAuthState;
 
   try {
     parsedState = JSON.parse(decodeURIComponent(state as string));
@@ -58,7 +60,7 @@ export default defineEventHandler(async (event) => {
     return sendRedirect(event, "/zenodo-auth-error?reason=invalid_state");
   }
 
-  const { githubDetails, owner, repo, userId } = parsedState;
+  const { githubDetails, owner, repo } = parsedState;
 
   // Lets the error page link back to the release page
   const errorRedirect = (reason: string) => {
@@ -72,16 +74,47 @@ export default defineEventHandler(async (event) => {
     return sendRedirect(event, `/zenodo-auth-error?${params.toString()}`);
   };
 
-  if (!userId || !owner || !repo) {
+  if (!owner || !repo) {
     logwatch.warn({
       action: "zenodo_callback",
       message: "OAuth state is missing required fields",
       owner: owner ?? null,
       reason: "incomplete_state",
       repo: repo ?? null,
-      userId: userId ?? null,
     });
     return sendRedirect(event, "/zenodo-auth-error?reason=incomplete_state");
+  }
+
+  // The token is saved for whoever is signed in, never for an ID in the state
+  const sessionUser = event.context.user as User | null;
+  if (!sessionUser) {
+    logwatch.warn({
+      action: "zenodo_callback",
+      message: "OAuth callback received without a signed-in Codefair user",
+      owner,
+      reason: "not_signed_in",
+      repo,
+    });
+    return errorRedirect("not_signed_in");
+  }
+  const userId = sessionUser.id;
+
+  // Only a sign-in this user started, in the last 30 minutes, can finish
+  const stateCheck = checkZenodoOAuthState(parsedState, userId);
+  if (stateCheck !== "valid") {
+    const reason =
+      stateCheck === "expired" ? "state_expired" : "state_mismatch";
+    logwatch.warn({
+      action: "zenodo_callback",
+      message:
+        stateCheck === "expired"
+          ? "OAuth state is more than 30 minutes old"
+          : "OAuth state was not signed for the signed-in user",
+      owner,
+      reason,
+      repo,
+    });
+    return errorRedirect(reason);
   }
 
   // An admin paused OAuth sign-in from /admin
@@ -202,8 +235,13 @@ export default defineEventHandler(async (event) => {
     tag,
   });
 
+  const releaseQuery = new URLSearchParams({
+    githubRelease: releaseId,
+    githubTag: tag,
+  });
+
   return sendRedirect(
     event,
-    `/dashboard/${owner}/${repo}/release/zenodo?githubTag=${tag}&githubRelease=${releaseId}`,
+    `/dashboard/${owner}/${repo}/release/zenodo?${releaseQuery.toString()}`,
   );
 });

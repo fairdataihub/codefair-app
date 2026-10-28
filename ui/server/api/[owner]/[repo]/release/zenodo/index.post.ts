@@ -38,10 +38,6 @@ const bodySchema = z
 export default defineEventHandler(async (event) => {
   protectRoute(event);
 
-  // Zenodo off (both sign-in switches paused) blocks publishing too, even for
-  // users who are already connected
-  await assertZenodoNotOff();
-
   const user = event.context.user as User | null;
 
   const { owner, repo } = event.context.params as {
@@ -74,6 +70,10 @@ export default defineEventHandler(async (event) => {
     useExistingDeposition,
     zenodoDepositionId,
   } = parsed.data;
+
+  // Zenodo off (both sign-in switches paused) blocks publishing, even for users
+  // who are already connected. Saving the release settings stays available.
+  if (publish) await assertZenodoNotOff();
 
   // When the caller wants to link an existing deposition, the ID must be a
   // valid positive integer (empty string or "new" would produce NaN downstream)
