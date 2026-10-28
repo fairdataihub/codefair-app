@@ -38,7 +38,12 @@ const githubRelease = (route.query.githubRelease as string | undefined) ?? "";
 const personalTokenLink = computed(() => {
   if (!owner || !repo) return null;
 
-  const params = new URLSearchParams({ githubRelease, githubTag });
+  // Opens the personal access token tab on the release page
+  const params = new URLSearchParams({
+    githubRelease,
+    githubTag,
+    zenodoSignIn: "token",
+  });
 
   return `/dashboard/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/release/zenodo?${params.toString()}#zenodo-connection`;
 });

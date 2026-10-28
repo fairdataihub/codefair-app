@@ -46,6 +46,24 @@ const zenodoTokenType = ref<"oauth" | "personal" | null>(null);
 const zenodoTokenMessage = ref("");
 const zenodoTokenSignIn = ref(true);
 
+// OAuth sign-in and personal access tokens are tabs when both are offered.
+// When a maintenance switch pauses one, the other shows without tabs.
+type ZenodoSignInMethod = "oauth" | "token";
+
+// The Zenodo error page links here with zenodoSignIn=token
+const zenodoSignInTab = ref<ZenodoSignInMethod>(
+  route.query.zenodoSignIn === "token" ? "token" : "oauth",
+);
+const zenodoSignInMethod = computed<ZenodoSignInMethod | null>(() => {
+  if (zenodoOAuthSignIn.value && zenodoTokenSignIn.value) {
+    return zenodoSignInTab.value;
+  }
+  if (zenodoOAuthSignIn.value) return "oauth";
+  if (zenodoTokenSignIn.value) return "token";
+
+  return null;
+});
+
 // Personal access token form, the workaround for Zenodo's intermittent OAuth
 // failures (zenodo/zenodo-rdm#1484)
 const zenodoPersonalToken = ref("");
@@ -174,6 +192,9 @@ const setZenodoConnection = (details: {
   zenodoTokenSignIn.value = details.zenodoTokenSignIn;
   zenodoTokenType.value = details.zenodoTokenType;
   zenodoUnreachable.value = details.zenodoUnreachable;
+
+  // Zenodo rejected the saved personal token, so open the tab to replace it
+  if (details.zenodoTokenMessage) zenodoSignInTab.value = "token";
 };
 
 if (data.value) {
@@ -1678,47 +1699,90 @@ onBeforeUnmount(() => {
             </n-alert>
 
             <template v-else>
-              <n-flex
-                v-if="zenodoOAuthSignIn"
-                justify="space-between"
-                align="center"
-              >
+              <!-- Applies to both ways of connecting -->
+              <div class="flex flex-col gap-2">
                 <p>
-                  Connect your Zenodo account to continue. Zenodo sign-in may
-                  currently need more than one attempt because of a
+                  <NuxtLink
+                    to="https://zenodo.org"
+                    target="_blank"
+                    class="text-blue-500 underline transition-all hover:text-blue-700"
+                    >Zenodo</NuxtLink
+                  >
+                  is a free and open-source general-purpose repository developed
+                  and maintained by the European Organization for Nuclear
+                  Research (CERN) in partnership with OpenAIRE. It is one of the
+                  most popular repositories for archiving research software.
+                </p>
+
+                <p v-if="zenodoSignInMethod">
+                  If you don't have a Zenodo account yet,
+                  <NuxtLink
+                    :to="zenodoEndpoint || 'https://zenodo.org'"
+                    target="_blank"
+                    class="text-blue-500 underline transition-all hover:text-blue-700"
+                    >create one for free</NuxtLink
+                  >
+                  before continuing.
+                </p>
+              </div>
+
+              <n-tabs
+                v-if="zenodoOAuthSignIn && zenodoTokenSignIn"
+                v-model:value="zenodoSignInTab"
+                type="line"
+              >
+                <n-tab name="oauth">
+                  <span class="flex items-center gap-2">
+                    <Icon name="simple-icons:zenodo" size="16" />
+                    Sign in with Zenodo
+                  </span>
+                </n-tab>
+
+                <n-tab name="token">
+                  <span class="flex items-center gap-2">
+                    <Icon name="material-symbols:key" size="16" />
+                    Personal access token
+                  </span>
+                </n-tab>
+              </n-tabs>
+
+              <!-- OAuth sign-in -->
+              <template v-if="zenodoSignInMethod === 'oauth'">
+                <n-alert
+                  type="warning"
+                  title="Zenodo sign-in may need more than one attempt"
+                >
+                  Zenodo sign-in can currently fail at times because of a
                   <NuxtLink
                     to="https://github.com/zenodo/zenodo-rdm/issues/1484"
                     target="_blank"
                     class="text-blue-500 underline transition-all hover:text-blue-700"
                     >known Zenodo issue</NuxtLink
-                  >.
-                </p>
+                  >, and we are working with the Zenodo team to resolve it.
 
-                <a @click="loginToZenodo">
-                  <n-button type="primary">
-                    <template #icon>
-                      <Icon name="simple-icons:zenodo" size="16" />
-                    </template>
-                    Login to Zenodo
-                  </n-button>
-                </a>
-              </n-flex>
+                  <template v-if="zenodoTokenSignIn">
+                    If it keeps failing, use the
+                    <strong>Personal access token</strong> tab instead.
+                  </template>
+                </n-alert>
 
-              <div
-                v-if="zenodoTokenSignIn"
-                :class="{
-                  'border-t border-slate-200 pt-4 dark:border-slate-700':
-                    zenodoOAuthSignIn,
-                }"
-              >
-                <h3 class="pb-2 text-lg font-semibold">
-                  {{
-                    zenodoOAuthSignIn
-                      ? "Or connect with a personal access token"
-                      : "Connect with a personal access token"
-                  }}
-                </h3>
+                <n-flex justify="space-between" align="center">
+                  <p>Ready to publish to Zenodo? Sign in to get started.</p>
 
+                  <a @click="loginToZenodo">
+                    <n-button type="primary">
+                      <template #icon>
+                        <Icon name="simple-icons:zenodo" size="16" />
+                      </template>
+                      Sign in to Zenodo
+                    </n-button>
+                  </a>
+                </n-flex>
+              </template>
+
+              <!-- Personal access token -->
+              <div v-else-if="zenodoSignInMethod === 'token'">
+                <!-- Only shown on its own, when OAuth sign-in is paused -->
                 <p v-if="!zenodoOAuthSignIn" class="pb-2">
                   {{ maintenanceMessageFor("zenodoOAuth") }}
                   Connect your Zenodo account with a personal access token
@@ -1726,10 +1790,7 @@ onBeforeUnmount(() => {
                 </p>
 
                 <ol class="list-inside list-decimal space-y-1 pb-4 text-sm">
-                  <li>
-                    Sign in to Zenodo, or create a free account first if you
-                    don't have one.
-                  </li>
+                  <li>Sign in to your Zenodo account.</li>
 
                   <li>
                     Open the
@@ -1799,8 +1860,9 @@ onBeforeUnmount(() => {
                 </p>
               </div>
 
+              <!-- Neither way of connecting is available -->
               <n-alert
-                v-if="!zenodoOAuthSignIn && !zenodoTokenSignIn"
+                v-else
                 type="warning"
                 title="Connecting to Zenodo is paused"
               >
