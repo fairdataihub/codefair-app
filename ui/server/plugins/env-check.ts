@@ -1,4 +1,5 @@
 import { logwatch } from "../utils/logwatch";
+import { parseTokenEncryptionKey } from "../utils/tokenCrypto";
 
 const REQUIRED_ENV_VARS = [
   "CODEFAIR_APP_DOMAIN",
@@ -10,6 +11,7 @@ const REQUIRED_ENV_VARS = [
   "GH_OAUTH_CLIENT_SECRET",
   "UI_LOGWATCH_URL",
   "VALIDATOR_URL",
+  "TOKEN_ENCRYPTION_KEY",
   "WEBHOOK_SECRET",
   "ZENODO_API_ENDPOINT",
   "ZENODO_CLIENT_ID",
@@ -23,6 +25,19 @@ export default defineNitroPlugin(() => {
 
   if (missing.length > 0) {
     const message = `Missing required environment variables: ${missing.join(", ")}`;
+
+    logwatch.error({
+      action: "startup:env-check",
+      message,
+    });
+
+    throw new Error(`[env-check] ${message}`);
+  }
+
+  // Stored GitHub and Zenodo tokens are encrypted with this key
+  if (!parseTokenEncryptionKey(process.env.TOKEN_ENCRYPTION_KEY)) {
+    const message =
+      "TOKEN_ENCRYPTION_KEY must be 32 random bytes encoded as base64";
 
     logwatch.error({
       action: "startup:env-check",

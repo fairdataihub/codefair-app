@@ -46,6 +46,8 @@ export interface ArchivalTokenValidation {
   message: string;
   /** Why the token is not valid. "unreachable" means it may still be fine. */
   reason?: "missing" | "rejected" | "unreachable";
+  /** How the stored token was issued, or null when none is stored. */
+  tokenType: "oauth" | "personal" | null;
   valid: boolean;
 }
 

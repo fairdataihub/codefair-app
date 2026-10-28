@@ -11,9 +11,10 @@ const logwatch = useLogwatch();
 const loggedIn = computed(() => !!user.value);
 const loading = ref(true); // Tracks loading state for data fetching
 
-// Utility to render icons
+// Utility to render icons. 20px fills the dropdown's icon column better than
+// Naive UI's 16px default and sits closer to the 24px organization avatars.
 const renderIcon = (icon: string) => {
-  return () => h(Icon, { name: icon });
+  return () => h(Icon, { name: icon, size: "20" });
 };
 
 type DropdownOption = {
@@ -59,6 +60,16 @@ function buildSettingOptions(uniqueOrgs: any[]) {
       key: "view-profile",
       label: "View Profile",
     },
+    // Convenience link only: /admin and /api/admin are guarded on the server
+    ...(user.value?.role === "admin"
+      ? [
+          {
+            icon: renderIcon("material-symbols:admin-panel-settings"),
+            key: "admin",
+            label: "Admin",
+          },
+        ]
+      : []),
     {
       icon: renderIcon("mdi:logout"),
       key: "logout",
@@ -169,6 +180,9 @@ const handleSettingsSelect = (key: string) => {
     case "view-profile":
       navigateTo("/profile");
       break;
+    case "admin":
+      navigateTo("/admin");
+      break;
     case "logout":
       logout();
       break;
@@ -198,14 +212,23 @@ async function logout() {
       class="rounded-md shadow-md"
       @select="handleSettingsSelect"
     >
-      <!-- User Avatar -->
-      <n-avatar
-        v-if="user?.github_id"
-        round
-        :src="`https://avatars.githubusercontent.com/u/${user?.github_id}?v=4`"
-        :fallback-src="`https://api.dicebear.com/8.x/adventurer/svg?seed=${user?.github_id}`"
-        class="transition-transform hover:scale-110 hover:shadow-sm hover:shadow-gray-400"
-      />
+      <!-- User Avatar, with a crown badge for admins -->
+      <div v-if="user?.github_id" class="relative inline-flex">
+        <n-avatar
+          round
+          :src="`https://avatars.githubusercontent.com/u/${user?.github_id}?v=4`"
+          :fallback-src="`https://api.dicebear.com/8.x/adventurer/svg?seed=${user?.github_id}`"
+          class="transition-transform hover:scale-110 hover:shadow-sm hover:shadow-gray-400"
+        />
+
+        <span
+          v-if="user?.role === 'admin'"
+          title="Admin"
+          class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 ring-2 ring-white dark:ring-gray-900"
+        >
+          <Icon name="material-symbols:crown" size="10" class="text-white" />
+        </span>
+      </div>
     </n-dropdown>
   </n-flex>
 

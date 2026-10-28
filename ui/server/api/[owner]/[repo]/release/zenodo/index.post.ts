@@ -18,6 +18,7 @@ import {
   validateZenodoToken,
 } from "~/server/services/archival/zenodo";
 import type { PublicationProgressEvent } from "~/server/services/archival/interface";
+import { assertZenodoNotOff } from "~/server/utils/maintenance";
 
 const bodySchema = z
   .object({
@@ -69,6 +70,10 @@ export default defineEventHandler(async (event) => {
     useExistingDeposition,
     zenodoDepositionId,
   } = parsed.data;
+
+  // Zenodo off (both sign-in switches paused) blocks publishing, even for users
+  // who are already connected. Saving the release settings stays available.
+  if (publish) await assertZenodoNotOff();
 
   // When the caller wants to link an existing deposition, the ID must be a
   // valid positive integer (empty string or "new" would produce NaN downstream)

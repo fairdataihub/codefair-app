@@ -27,7 +27,9 @@
     "reset": "rm -rf node_modules && rm -rf .nuxt && rm -rf .output && rm -rf dist && yarn install",
     "test": "jest",
     "typecheck": "nuxt typecheck",
-    "analytics": "tsx ./scripts/analytics.ts"
+    "analytics": "tsx ./scripts/analytics.ts",
+    "tokens:encrypt": "tsx ./scripts/encrypt-tokens.ts",
+    "admin:role": "tsx ./scripts/admin-role.ts"
   },
   "dependencies": {
     "@lucia-auth/adapter-prisma": "^4.0.1",
