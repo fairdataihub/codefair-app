@@ -18,6 +18,7 @@ import {
   validateZenodoToken,
 } from "~/server/services/archival/zenodo";
 import type { PublicationProgressEvent } from "~/server/services/archival/interface";
+import { assertZenodoNotOff } from "~/server/utils/maintenance";
 
 const bodySchema = z
   .object({
@@ -36,6 +37,10 @@ const bodySchema = z
 
 export default defineEventHandler(async (event) => {
   protectRoute(event);
+
+  // Zenodo off (both sign-in switches paused) blocks publishing too, even for
+  // users who are already connected
+  await assertZenodoNotOff();
 
   const user = event.context.user as User | null;
 

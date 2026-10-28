@@ -5,6 +5,7 @@ import {
   type SelectGroupOption,
   NTag,
 } from "naive-ui";
+import type { InputHTMLAttributes } from "vue";
 import { useBreadcrumbsStore } from "@/stores/breadcrumbs";
 // import { faker } from "@faker-js/faker";
 
@@ -41,6 +42,27 @@ const zenodoLoginUrl = ref("");
 const haveValidZenodoToken = ref(false);
 // Zenodo was down when the token was checked; the saved connection is kept.
 const zenodoUnreachable = ref(false);
+const zenodoTokenType = ref<"oauth" | "personal" | null>(null);
+const zenodoTokenMessage = ref("");
+const zenodoTokenSignIn = ref(true);
+
+// Personal access token form, the workaround for Zenodo's intermittent OAuth
+// failures (zenodo/zenodo-rdm#1484)
+const zenodoPersonalToken = ref("");
+const zenodoTokenConnecting = ref(false);
+const zenodoTokenError = ref("");
+// Keeps browsers and password managers from saving or filling in the token
+const zenodoTokenInputProps = {
+  autocomplete: "off",
+  "data-1p-ignore": "true",
+  "data-lpignore": "true",
+  spellcheck: "false",
+} as InputHTMLAttributes;
+
+const { messageFor: maintenanceMessageFor, zenodo: zenodoMaintenance } =
+  useMaintenance();
+// Both Zenodo sign-in switches paused: nobody can connect or publish
+const zenodoPaused = computed(() => zenodoMaintenance.value.off !== null);
 
 const licenseChecked = ref(false);
 const metadataChecked = ref(false);
@@ -129,24 +151,41 @@ if (error.value) {
   throw createError(error.value);
 }
 
+const setZenodoDepositions = (
+  depositions: Array<{ id: number; title: string }>,
+) => {
+  selectableDepositions.value = depositions.map((deposition) => ({
+    label: deposition.title,
+    value: deposition.id.toString(),
+  }));
+};
+
+const setZenodoConnection = (details: {
+  haveValidZenodoToken: boolean;
+  zenodoLoginUrl: string | null;
+  zenodoTokenMessage: string;
+  zenodoTokenSignIn: boolean;
+  zenodoTokenType: "oauth" | "personal" | null;
+  zenodoUnreachable: boolean;
+}) => {
+  zenodoLoginUrl.value = details.zenodoLoginUrl ?? "";
+  haveValidZenodoToken.value = details.haveValidZenodoToken;
+  zenodoTokenMessage.value = details.zenodoTokenMessage;
+  zenodoTokenSignIn.value = details.zenodoTokenSignIn;
+  zenodoTokenType.value = details.zenodoTokenType;
+  zenodoUnreachable.value = details.zenodoUnreachable;
+};
+
 if (data.value) {
-  zenodoLoginUrl.value = data.value.zenodoLoginUrl;
-  haveValidZenodoToken.value = data.value.haveValidZenodoToken;
-  zenodoUnreachable.value = data.value.zenodoUnreachable;
+  setZenodoConnection(data.value);
 
   license.value.id = data.value?.license?.id || "";
   license.value.status = data.value?.license?.status || "";
   license.value.customLicenseTitle =
     data.value?.license?.customLicenseTitle || "";
 
-  selectableDepositions.value = [];
   zenodoEndpoint.value = data.value.zenodoEndpoint || "";
-  for (const deposition of data.value.zenodoDepositions) {
-    selectableDepositions.value.push({
-      label: deposition.title,
-      value: deposition.id.toString(),
-    });
-  }
+  setZenodoDepositions(data.value.zenodoDepositions);
 
   lastSelectedUser.value = data.value.lastSelectedUser;
   lastSelectedGithubTag.value = data.value.lastSelectedGithubTag;
@@ -251,8 +290,10 @@ if (data.value) {
   // githubFormValue.value.release = "new";
   // githubFormValue.value.releaseTitle = faker.lorem.sentence();
 
-  // slight hack but login step comes after the license and metadata checks
-  if (haveValidZenodoToken.value) {
+  // slight hack but login step comes after the license and metadata checks.
+  // The GitHub query params mean the user is coming back from that step,
+  // including from a failed Zenodo sign-in on /zenodo-auth-error.
+  if (haveValidZenodoToken.value || (githubTag && githubRelease)) {
     licenseChecked.value = true;
     metadataChecked.value = true;
   }
@@ -720,13 +761,17 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
           "A Zenodo publication is already running for this repository. Please wait for it to finish, then refresh the page.",
         "tag-already-released": `A published release already exists for tag "${effectiveTag}". Please choose a different tag or delete the existing release first.`,
         "Zenodo token not found":
-          "Your Zenodo connection has expired or been revoked. Please reconnect your Zenodo account using the button above.",
+          "Your Zenodo connection has expired or been revoked. Please reconnect your Zenodo account above.",
         "zenodo-unreachable":
           "Zenodo could not be reached. Your Zenodo connection is still saved, so please try again in a few minutes.",
       };
+      // Other 503s carry a message written for users, such as a
+      // maintenance pause
       zenodoPreflightError.value =
         knownErrors[statusMessage] ??
-        `Something went wrong (${response.status}). Please try again.`;
+        (response.status === 503 && statusMessage
+          ? statusMessage
+          : `Something went wrong (${response.status}). Please try again.`);
       return;
     }
 
@@ -921,16 +966,79 @@ const validateZenodoForm = () => {
   });
 };
 
+// Zenodo builds this page on whichever site is configured, sandbox or production
+const zenodoNewTokenUrl = computed(
+  () =>
+    `${zenodoEndpoint.value || "https://zenodo.org"}/account/settings/applications/tokens/new/`,
+);
+
+const refreshZenodoConnection = async () => {
+  const latest = await $fetch(`/api/${owner}/${repo}/release/zenodo`, {
+    headers: useRequestHeaders(["cookie"]),
+  });
+
+  setZenodoConnection(latest);
+  setZenodoDepositions(latest.zenodoDepositions);
+};
+
+const connectZenodoWithToken = async () => {
+  const token = zenodoPersonalToken.value.trim();
+  if (!token || zenodoTokenConnecting.value) return;
+
+  zenodoTokenConnecting.value = true;
+  zenodoTokenError.value = "";
+
+  try {
+    await $fetch("/api/zenodo/token", {
+      body: { token },
+      headers: useRequestHeaders(["cookie"]),
+      method: "POST",
+    });
+
+    // Cleared as soon as it is stored so the page holds no copy of it
+    zenodoPersonalToken.value = "";
+
+    await refreshZenodoConnection();
+
+    push.success({
+      title: "Connected to Zenodo",
+      message: "Your personal access token was accepted.",
+    });
+  } catch (error: any) {
+    // Only the status is logged: the request body holds the token
+    console.error(
+      "Failed to connect Zenodo with a personal access token:",
+      error?.statusCode,
+    );
+    logwatch.error(
+      "zenodo.connectToken",
+      "Failed to connect Zenodo with a personal access token",
+      { owner, repo, statusCode: error?.statusCode },
+    );
+    zenodoTokenError.value =
+      error?.data?.statusMessage ??
+      "Could not connect to Zenodo. Please try again.";
+  } finally {
+    zenodoTokenConnecting.value = false;
+  }
+};
+
 const signOutOfZenodo = async () => {
+  const wasPersonalToken = zenodoTokenType.value === "personal";
+
   await $fetch(`/api/zenodo/disconnect`, {
     headers: useRequestHeaders(["cookie"]),
     method: "POST",
   })
     .then(() => {
       haveValidZenodoToken.value = false;
+      zenodoTokenType.value = null;
+      zenodoTokenMessage.value = "";
       push.success({
-        title: "Signed out",
-        message: "You have been signed out of Zenodo.",
+        title: "Disconnected from Zenodo",
+        message: wasPersonalToken
+          ? "To revoke access completely, also delete the token in your Zenodo account settings under Applications."
+          : "You have been disconnected from Zenodo.",
       });
     })
     .catch((error) => {
@@ -1114,6 +1222,8 @@ onBeforeUnmount(() => {
           >Need help?</NuxtLink
         >
       </div>
+
+      <MaintenanceNotice maintenance-key="zenodo" />
 
       <p>
         Create a release of your repository on Zenodo. We will also create a
@@ -1554,7 +1664,7 @@ onBeforeUnmount(() => {
 
       <h2 class="pb-6">Zenodo deposition</h2>
 
-      <CardDashboard title="Check Zenodo connection">
+      <CardDashboard id="zenodo-connection" title="Check Zenodo connection">
         <template #icon>
           <Icon
             v-if="zenodoUnreachable"
@@ -1574,54 +1684,185 @@ onBeforeUnmount(() => {
         </template>
 
         <template #content>
-          <n-flex justify="space-between" class="w-full" align="center">
-            <p v-if="haveValidZenodoToken">
-              Looks like we have a valid Zenodo connection to your account. You
-              can now continue to the next step.
+          <n-flex
+            v-if="haveValidZenodoToken"
+            justify="space-between"
+            class="w-full"
+            align="center"
+          >
+            <p>
+              {{
+                zenodoTokenType === "personal"
+                  ? "Connected to Zenodo with a personal access token."
+                  : "Connected to your Zenodo account."
+              }}
+              You can now continue to the next step.
             </p>
 
-            <p v-else-if="zenodoUnreachable">
+            <n-button type="primary" @click="signOutOfZenodo">
+              <template #icon>
+                <Icon name="material-symbols:logout" size="16" />
+              </template>
+              Disconnect
+            </n-button>
+          </n-flex>
+
+          <n-flex
+            v-else-if="zenodoUnreachable"
+            justify="space-between"
+            class="w-full"
+            align="center"
+          >
+            <p>
               We couldn't reach Zenodo to check your connection. Your connection
               is still saved, so please try again in a few minutes.
             </p>
 
-            <p v-else>
-              There seems to be an issue with your Zenodo connection. Please
-              login to Zenodo to continue.
-            </p>
+            <n-button type="primary" @click="reloadNuxtApp()">
+              <template #icon>
+                <Icon name="mdi:refresh" size="16" />
+              </template>
+              Try again
+            </n-button>
+          </n-flex>
 
-            <n-flex>
-              <n-button
-                v-if="zenodoUnreachable"
-                type="primary"
-                @click="reloadNuxtApp()"
+          <n-flex v-else vertical size="large" class="w-full">
+            <n-alert v-if="zenodoTokenMessage" type="warning">
+              {{ zenodoTokenMessage }}
+            </n-alert>
+
+            <n-alert
+              v-if="zenodoPaused"
+              type="warning"
+              title="Connecting to Zenodo is paused"
+            >
+              {{ zenodoMaintenance.off?.message }}
+            </n-alert>
+
+            <template v-else>
+              <n-flex
+                v-if="zenodoLoginUrl"
+                justify="space-between"
+                align="center"
               >
-                <template #icon>
-                  <Icon name="mdi:refresh" size="16" />
-                </template>
-                Try again
-              </n-button>
+                <p>
+                  Connect your Zenodo account to continue. Zenodo sign-in may
+                  need more than one attempt.
+                </p>
 
-              <a v-else-if="!haveValidZenodoToken" @click="loginToZenodo">
-                <n-button type="primary">
-                  <template #icon>
-                    <Icon name="simple-icons:zenodo" size="16" />
-                  </template>
-                  Login to Zenodo
-                </n-button>
-              </a>
+                <a @click="loginToZenodo">
+                  <n-button type="primary">
+                    <template #icon>
+                      <Icon name="simple-icons:zenodo" size="16" />
+                    </template>
+                    Login to Zenodo
+                  </n-button>
+                </a>
+              </n-flex>
 
-              <n-button
-                v-if="haveValidZenodoToken"
-                type="primary"
-                @click="signOutOfZenodo"
+              <div
+                v-if="zenodoTokenSignIn"
+                :class="{
+                  'border-t border-slate-200 pt-4 dark:border-slate-700':
+                    zenodoLoginUrl,
+                }"
               >
-                <template #icon>
-                  <Icon name="material-symbols:logout" size="16" />
-                </template>
-                Sign out of Zenodo
-              </n-button>
-            </n-flex>
+                <h3 class="pb-2 text-lg font-semibold">
+                  {{
+                    zenodoLoginUrl
+                      ? "Or connect with a personal access token"
+                      : "Connect with a personal access token"
+                  }}
+                </h3>
+
+                <p v-if="!zenodoLoginUrl" class="pb-2">
+                  {{ maintenanceMessageFor("zenodoOAuth") }}
+                  Connect your Zenodo account with a personal access token
+                  instead.
+                </p>
+
+                <ol class="list-inside list-decimal space-y-1 pb-4 text-sm">
+                  <li>
+                    Sign in to Zenodo, or create a free account first if you
+                    don't have one.
+                  </li>
+
+                  <li>
+                    Open the
+                    <NuxtLink
+                      :to="zenodoNewTokenUrl"
+                      target="_blank"
+                      class="text-blue-500 underline hover:text-blue-600"
+                      >new personal access token page</NuxtLink
+                    >
+                    (Account settings, then Applications, then New token).
+                  </li>
+
+                  <li>
+                    Give it a name like <strong>Codefair</strong>
+                    and tick both
+                    <strong>deposit:write</strong>
+                    and
+                    <strong>deposit:actions</strong>. You can leave user:email
+                    unticked.
+                  </li>
+
+                  <li>
+                    Click <strong>Create</strong>, then copy the token and paste
+                    it below. Zenodo only shows it once.
+                  </li>
+                </ol>
+
+                <n-form-item
+                  label="Personal access token"
+                  :show-feedback="false"
+                >
+                  <n-flex :wrap="false" class="w-full max-w-xl">
+                    <n-input
+                      v-model:value="zenodoPersonalToken"
+                      type="password"
+                      show-password-on="click"
+                      placeholder="Paste your token"
+                      autocomplete="off"
+                      :input-props="zenodoTokenInputProps"
+                      @keyup.enter="connectZenodoWithToken"
+                    />
+
+                    <n-button
+                      type="primary"
+                      :disabled="!zenodoPersonalToken.trim()"
+                      :loading="zenodoTokenConnecting"
+                      @click="connectZenodoWithToken"
+                    >
+                      Connect to Zenodo
+                    </n-button>
+                  </n-flex>
+                </n-form-item>
+
+                <n-alert
+                  v-if="zenodoTokenError"
+                  type="error"
+                  class="mt-3 max-w-xl"
+                >
+                  {{ zenodoTokenError }}
+                </n-alert>
+
+                <p class="pt-3 text-xs text-[var(--gray-700-200)]">
+                  We check the token with Zenodo, store it encrypted, and only
+                  use it to publish the releases you choose. You can disconnect
+                  at any time, and deleting the token on Zenodo revokes our
+                  access completely.
+                </p>
+              </div>
+
+              <n-alert
+                v-if="!zenodoLoginUrl && !zenodoTokenSignIn"
+                type="warning"
+                title="Connecting to Zenodo is paused"
+              >
+                {{ maintenanceMessageFor("zenodoToken") }}
+              </n-alert>
+            </template>
           </n-flex>
         </template>
       </CardDashboard>
@@ -1801,6 +2042,7 @@ onBeforeUnmount(() => {
                   <n-flex justify="space-between">
                     <n-button
                       :loading="zenodoDraftSpinner"
+                      :disabled="zenodoPaused"
                       type="primary"
                       @click="startZenodoPublishProcess(false)"
                     >
@@ -1813,6 +2055,7 @@ onBeforeUnmount(() => {
 
                     <n-button
                       :loading="zenodoPublishSpinner"
+                      :disabled="zenodoPaused"
                       type="primary"
                       @click="startZenodoPublishProcess(true)"
                     >

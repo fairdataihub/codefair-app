@@ -11,8 +11,14 @@
  *
  * This matches the encoding produced by the GET /api/[owner]/[repo]/release/zenodo
  * endpoint when it builds the Zenodo login URL.
+ *
+ * Once the state is parsed, error redirects carry the owner, repo and GitHub
+ * details so the error page can send the user back to connect with a personal
+ * access token instead.
  */
 import { logwatch } from "~/server/utils/logwatch";
+import { isUnderMaintenance } from "~/server/utils/maintenance";
+import { encryptToken, zenodoTokenContext } from "~/server/utils/tokenCrypto";
 
 export default defineEventHandler(async (event) => {
   const ZENODO_ENDPOINT = process.env.ZENODO_ENDPOINT ?? "";
@@ -54,6 +60,18 @@ export default defineEventHandler(async (event) => {
 
   const { githubDetails, owner, repo, userId } = parsedState;
 
+  // Lets the error page link back to the release page
+  const errorRedirect = (reason: string) => {
+    const params = new URLSearchParams({ reason });
+    if (owner && repo) {
+      params.set("owner", owner);
+      params.set("repo", repo);
+      params.set("githubTag", githubDetails?.githubTag ?? "");
+      params.set("githubRelease", githubDetails?.githubRelease ?? "");
+    }
+    return sendRedirect(event, `/zenodo-auth-error?${params.toString()}`);
+  };
+
   if (!userId || !owner || !repo) {
     logwatch.warn({
       action: "zenodo_callback",
@@ -64,6 +82,18 @@ export default defineEventHandler(async (event) => {
       userId: userId ?? null,
     });
     return sendRedirect(event, "/zenodo-auth-error?reason=incomplete_state");
+  }
+
+  // An admin paused OAuth sign-in from /admin
+  if (await isUnderMaintenance("zenodoOAuth")) {
+    logwatch.warn({
+      action: "zenodo_callback",
+      message: "OAuth callback received while Zenodo OAuth sign-in is paused",
+      owner,
+      reason: "oauth_paused",
+      repo,
+    });
+    return errorRedirect("oauth_paused");
   }
 
   logwatch.info({
@@ -83,8 +113,8 @@ export default defineEventHandler(async (event) => {
     scope: "deposit:actions deposit:write",
   });
 
-  let access_token: string;
-  let refresh_token: string;
+  let accessToken: string;
+  let refreshToken: string;
 
   try {
     const oauthTokenRes = await fetch(`${ZENODO_ENDPOINT}/oauth/token`, {
@@ -103,10 +133,7 @@ export default defineEventHandler(async (event) => {
         repo,
         status: oauthTokenRes.status,
       });
-      return sendRedirect(
-        event,
-        "/zenodo-auth-error?reason=token_exchange_failed",
-      );
+      return errorRedirect("token_exchange_failed");
     }
 
     const tokens = await oauthTokenRes.json();
@@ -122,14 +149,11 @@ export default defineEventHandler(async (event) => {
         reason: "invalid_token_response",
         repo,
       });
-      return sendRedirect(
-        event,
-        "/zenodo-auth-error?reason=invalid_token_response",
-      );
+      return errorRedirect("invalid_token_response");
     }
 
-    access_token = tokens.access_token;
-    refresh_token = tokens.refresh_token;
+    accessToken = tokens.access_token;
+    refreshToken = tokens.refresh_token;
   } catch (err) {
     logwatch.error({
       action: "zenodo_callback",
@@ -139,44 +163,32 @@ export default defineEventHandler(async (event) => {
       repo,
       stack: err instanceof Error ? err.stack : undefined,
     });
-    return sendRedirect(
-      event,
-      "/zenodo-auth-error?reason=token_exchange_error",
-    );
+    return errorRedirect("token_exchange_error");
   }
 
-  // Persist token — upsert by user_id
+  // Persist token, encrypted. Replaces any earlier connection, OAuth or personal.
   const tokenData = {
     expires_at: new Date(Date.now() + 3600 * 1000),
-    refresh_token,
-    token: access_token,
-    user_id: userId,
+    refresh_token: encryptToken(
+      refreshToken,
+      zenodoTokenContext(userId, "refresh_token"),
+    ),
+    token: encryptToken(accessToken, zenodoTokenContext(userId, "token")),
+    token_type: "oauth",
   };
 
-  const existingToken = await prisma.zenodoToken.findFirst({
+  await prisma.zenodoToken.upsert({
+    create: { ...tokenData, user_id: userId },
+    update: tokenData,
     where: { user_id: userId },
   });
 
-  if (existingToken) {
-    await prisma.zenodoToken.update({
-      data: tokenData,
-      where: { id: existingToken.id },
-    });
-    logwatch.info({
-      action: "zenodo_callback",
-      message: "Updated existing Zenodo token for user",
-      owner,
-      repo,
-    });
-  } else {
-    await prisma.zenodoToken.create({ data: tokenData });
-    logwatch.info({
-      action: "zenodo_callback",
-      message: "Created new Zenodo token for user",
-      owner,
-      repo,
-    });
-  }
+  logwatch.info({
+    action: "zenodo_callback",
+    message: "Stored Zenodo OAuth token for user",
+    owner,
+    repo,
+  });
 
   // Redirect back to the release page, preserving the GitHub context
   const tag = githubDetails?.githubTag ?? "";

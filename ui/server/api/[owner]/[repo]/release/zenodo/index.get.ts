@@ -4,6 +4,7 @@ import {
   ZenodoProvider,
 } from "~/server/services/archival/zenodo";
 import prisma from "~/server/utils/prisma";
+import { getActiveMaintenance } from "~/server/utils/maintenance";
 
 export default defineEventHandler(async (event) => {
   protectRoute(event);
@@ -38,18 +39,29 @@ export default defineEventHandler(async (event) => {
   // Validate Zenodo token and retrieve existing depositions
   const {
     existingDepositions,
+    message: zenodoTokenMessage,
     reason: tokenProblem,
+    tokenType: zenodoTokenType,
     valid: haveValidZenodoToken,
   } = await validateZenodoToken(user?.id ?? "");
 
-  // Build Zenodo OAuth login URL
-  const zenodoProvider = new ZenodoProvider();
-  const state = JSON.stringify({
-    owner,
-    repo,
-    userId: user?.id ?? "",
-  });
-  const zenodoLoginUrl = zenodoProvider.getLoginUrl(state);
+  // Admins can pause either way of connecting from /admin
+  const paused = new Set(
+    (await getActiveMaintenance()).map((entry) => entry.key),
+  );
+  const zenodoTokenSignIn = !paused.has("zenodoToken");
+
+  // Build Zenodo OAuth login URL, unless OAuth sign-in is paused
+  let zenodoLoginUrl: string | null = null;
+  if (!paused.has("zenodoOAuth")) {
+    const zenodoProvider = new ZenodoProvider();
+    const state = JSON.stringify({
+      owner,
+      repo,
+      userId: user?.id ?? "",
+    });
+    zenodoLoginUrl = zenodoProvider.getLoginUrl(state);
+  }
 
   // Fetch GitHub releases
   const ghHeaders = {
@@ -134,6 +146,12 @@ export default defineEventHandler(async (event) => {
     zenodoEndpoint: process.env.ZENODO_ENDPOINT ?? "",
     zenodoLoginUrl,
     zenodoMetadata: zenRaw?.zenodo_metadata ?? {},
+    // Only explains a connection that Zenodo rejected and that was removed; an
+    // unreachable Zenodo has its own notice and a user who never connected
+    // needs no message
+    zenodoTokenMessage: tokenProblem === "rejected" ? zenodoTokenMessage : "",
+    zenodoTokenSignIn,
+    zenodoTokenType,
     // Zenodo could not be reached to check the token, which is kept.
     zenodoUnreachable: tokenProblem === "unreachable",
     zenodoWorkflowStatus: zenRaw?.status ?? "",
