@@ -158,6 +158,23 @@ const overrides: GlobalThemeOverrides = {
     textColor2: "var(--cf-text-2)",
     textColor3: "var(--cf-text-3)",
   },
+  DataTable: {
+    borderColor: "var(--cf-divider)",
+    peers: {
+      Pagination: {
+        buttonBorder: "1px solid var(--cf-field-border)",
+        buttonBorderHover: "1px solid var(--cf-field-border-hover)",
+        buttonBorderPressed: "1px solid var(--cf-field-border-hover)",
+        itemBorderActive: "1px solid var(--cf-accent-text)",
+        itemTextColorActive: "var(--cf-accent-text)",
+        itemTextColorHover: "var(--cf-accent-text)",
+        itemTextColorPressed: "var(--cf-accent-text)",
+      },
+    },
+    tdColor: "var(--cf-card-bg)",
+    tdColorHover: "var(--cf-table-row-hover-bg)",
+    thColor: "var(--cf-table-header-bg)",
+  },
   DatePicker: {
     calendarTitleColorHover: "var(--cf-datepicker-item-hover-bg)",
     calendarTitleTextColor: "var(--cf-calendar-title-text-color)",
@@ -228,6 +245,10 @@ const overrides: GlobalThemeOverrides = {
     placeholderColor: "var(--cf-field-placeholder)",
     suffixTextColor: "var(--cf-suffix)",
     textColor: "var(--cf-field-text)",
+  },
+  List: {
+    borderColor: "var(--cf-divider)",
+    color: "var(--cf-card-bg)",
   },
   Menu: {
     color: "var(--cf-menu-bg)",
@@ -308,6 +329,12 @@ const overrides: GlobalThemeOverrides = {
         optionTextColorPressed: "var(--cf-dropdown-option-text-hover)",
       },
     },
+  },
+  Tabs: {
+    barColor: "var(--cf-accent-text)",
+    tabBorderColor: "var(--cf-divider)",
+    tabTextColorActiveLine: "var(--cf-accent-text)",
+    tabTextColorHoverLine: "var(--cf-accent-text)",
   },
   Tag: {
     border: "1px solid var(--cf-tag-border)",
