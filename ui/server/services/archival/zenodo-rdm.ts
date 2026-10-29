@@ -238,11 +238,11 @@ export class ZenodoRdmClient {
     pageSize = 100,
     maxPages = 10,
   ): Promise<RdmUserRecord[]> {
-    const fetchPage = async (page: number) => {
+    const fetchPage = async (page: number, size = pageSize) => {
       const query = new URLSearchParams({
         allversions: "false",
         page: String(page),
-        size: String(pageSize),
+        size: String(size),
         sort: "newest",
       });
       const response = await this.fetchImpl(
@@ -255,7 +255,18 @@ export class ZenodoRdmClient {
       };
     };
 
-    const first = await fetchPage(1);
+    let first;
+    try {
+      first = await fetchPage(1);
+    } catch (error) {
+      // Zenodo treats an expired or revoked token as anonymous and checks the
+      // anonymous page size limit (25) before permissions, so a dead token
+      // fails with a 400 instead of a 403. A one-record page gets the 403.
+      if (error instanceof HttpError && error.status === 400 && pageSize > 1) {
+        await fetchPage(1, 1);
+      }
+      throw error;
+    }
     const total = first.hits?.total;
     const pageCount =
       typeof total === "number"
