@@ -14,7 +14,7 @@ export const MAINTENANCE_LABELS: Record<MaintenanceKey, string> = {
 };
 
 export const MAINTENANCE_DESCRIPTIONS: Record<MaintenanceKey, string> = {
-  zenodoOAuth: "The Login to Zenodo button on the release page.",
+  zenodoOAuth: "The Sign in to Zenodo button.",
   zenodoToken: "Connecting Zenodo by pasting a personal access token.",
 };
 
@@ -125,11 +125,11 @@ export const ZENODO_MODE_LABELS: Record<ZenodoMode, string> = {
 };
 
 export const ZENODO_MODE_DESCRIPTIONS: Record<ZenodoMode, string> = {
-  live: "Users connect with the Login to Zenodo button or a personal access token.",
+  live: "Users connect with the Sign in to Zenodo button or a personal access token.",
   oauthPaused:
     "Users connect with a personal access token only. Use this when Zenodo's OAuth is failing.",
   off: "Nobody can connect or publish to Zenodo, including users who are already connected.",
-  tokenPaused: "Users connect with the Login to Zenodo button only.",
+  tokenPaused: "Users connect with the Sign in to Zenodo button only.",
 };
 
 /** Title of the one notice users see while Zenodo is off. */

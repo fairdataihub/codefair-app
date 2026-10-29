@@ -39,12 +39,12 @@ const previewMessage = computed(
 );
 
 const PREVIEW_NOTES: Record<ZenodoMode, string> = {
-  live: "No notice. The release page offers the Login to Zenodo button with the personal access token form below it.",
+  live: "No notice. The release page offers the personal access token form and the Sign in to Zenodo button as two tabs, personal tokens first.",
   oauthPaused:
-    "Shown on the release page in place of the Login to Zenodo button, followed by the steps to create a token. Users who are already connected are not affected.",
+    "Shown on the release page in place of the Sign in to Zenodo button, followed by the steps to create a token. Users who are already connected are not affected.",
   off: "Shown at the top of the release page. Connecting and publishing to Zenodo are blocked.",
   tokenPaused:
-    "No notice. The release page offers the Login to Zenodo button only. Users who are already connected are not affected.",
+    "No notice. The release page offers the Sign in to Zenodo button only. Users who are already connected are not affected.",
 };
 
 const modeTagType = (value: ZenodoMode) => {
@@ -106,8 +106,8 @@ const formatDateTime = (value: string | null) =>
 
     <n-flex vertical size="large">
       <p class="text-sm text-[var(--gray-700-200)]">
-        Users connect Zenodo with the Login to Zenodo button (OAuth) or a
-        personal access token. Pause OAuth while Zenodo's sign-in is failing, or
+        Users connect Zenodo with a personal access token or the Sign in to
+        Zenodo button (OAuth). Pause OAuth while Zenodo's sign-in is failing, or
         turn Zenodo off to stop all connecting and publishing.
       </p>
 
