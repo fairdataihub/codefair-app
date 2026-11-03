@@ -145,7 +145,6 @@ export function draftMetadataErrors(record: RdmRecord): string[] {
     );
 }
 
-/** A failed HTTP response, keeping its status for retry and auth decisions. */
 // zenodo.org sits behind a traffic filter that answers requests carrying a
 // generic client User-Agent, such as Node's default, with an HTML 403 page
 // about "unusual traffic". Every request to Zenodo names the app instead.
@@ -159,6 +158,7 @@ export const zenodoFetch: FetchLike = (input, init) => {
 
 const MAX_HTML_ERROR_BODY = 300;
 
+/** A failed HTTP response, keeping its status for retry and auth decisions. */
 export class HttpError extends Error {
   readonly status: number;
   /**
