@@ -145,22 +145,48 @@ export function draftMetadataErrors(record: RdmRecord): string[] {
     );
 }
 
+// zenodo.org sits behind a traffic filter that answers requests carrying a
+// generic client User-Agent, such as Node's default, with an HTML 403 page
+// about "unusual traffic". Every request to Zenodo names the app instead.
+const ZENODO_USER_AGENT = "Codefair (+https://codefair.io)";
+
+export const zenodoFetch: FetchLike = (input, init) => {
+  const headers = new Headers(init?.headers);
+  headers.set("User-Agent", ZENODO_USER_AGENT);
+  return fetch(input, { ...init, headers });
+};
+
+const MAX_HTML_ERROR_BODY = 300;
+
 /** A failed HTTP response, keeping its status for retry and auth decisions. */
 export class HttpError extends Error {
   readonly status: number;
+  /**
+   * True when Zenodo's API refused the token itself, which it does with a JSON
+   * body. The traffic filter also answers 403, with an HTML page, and that says
+   * nothing about the token.
+   */
+  readonly tokenRejected: boolean;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, tokenRejected = false) {
     super(message);
     this.name = "HttpError";
     this.status = status;
+    this.tokenRejected = tokenRejected;
   }
 }
 
 async function httpError(operation: string, response: Response) {
-  const body = await response.text().catch(() => "");
+  const isJson = (response.headers.get("content-type") ?? "").includes("json");
+  const text = await response.text().catch(() => "");
+  // These messages reach the user, so an HTML error page is not shown whole
+  const body = isJson
+    ? text
+    : text.replace(/\s+/g, " ").trim().slice(0, MAX_HTML_ERROR_BODY);
   return new HttpError(
     `${operation}: ${response.status} ${response.statusText}${body ? ` - ${body}` : ""}`,
     response.status,
+    isJson && (response.status === 401 || response.status === 403),
   );
 }
 
@@ -203,7 +229,7 @@ export class ZenodoRdmClient {
   constructor(
     baseUrl: string,
     token: ZenodoToken,
-    fetchImpl: FetchLike = fetch,
+    fetchImpl: FetchLike = zenodoFetch,
     wait: (milliseconds: number) => Promise<void> = (ms) =>
       new Promise((resolve) => setTimeout(resolve, ms)),
   ) {
@@ -238,11 +264,11 @@ export class ZenodoRdmClient {
     pageSize = 100,
     maxPages = 10,
   ): Promise<RdmUserRecord[]> {
-    const fetchPage = async (page: number) => {
+    const fetchPage = async (page: number, size = pageSize) => {
       const query = new URLSearchParams({
         allversions: "false",
         page: String(page),
-        size: String(pageSize),
+        size: String(size),
         sort: "newest",
       });
       const response = await this.fetchImpl(
@@ -255,7 +281,18 @@ export class ZenodoRdmClient {
       };
     };
 
-    const first = await fetchPage(1);
+    let first;
+    try {
+      first = await fetchPage(1);
+    } catch (error) {
+      // Zenodo treats an expired or revoked token as anonymous and checks the
+      // anonymous page size limit (25) before permissions, so a dead token
+      // fails with a 400 instead of a 403. A one-record page gets the 403.
+      if (error instanceof HttpError && error.status === 400 && pageSize > 1) {
+        await fetchPage(1, 1);
+      }
+      throw error;
+    }
     const total = first.hits?.total;
     const pageCount =
       typeof total === "number"

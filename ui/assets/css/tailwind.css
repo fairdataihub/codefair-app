@@ -92,6 +92,12 @@ body {
     --cf-tag-close: oklch(87.233% 0.03544 273.224);
     --cf-tag-close-hover: oklch(45% 0.15 270);
 
+    /* Primary color for active tabs, pagination and similar indicators */
+    --cf-accent-text: #4f46e5;
+
+    --cf-table-header-bg: oklch(97% 0.01 260);
+    --cf-table-row-hover-bg: oklch(96% 0.01 260);
+
     --cf-breadcrumb-item-text: oklch(27% 0.02 260);
     --cf-breadcrumb-item-text-hover: oklch(18% 0.02 260);
     --cf-breadcrumb-item-text-active: oklch(22% 0.02 260);
@@ -373,6 +379,12 @@ body {
     --cf-tag-border: oklch(46% 0.03 265);
     --cf-tag-close: oklch(67.3% 0.182 276.935);
     --cf-tag-close-hover: oklch(67.3% 0.182 276.935);
+
+    /* The primary indigo is too dark to read on dark backgrounds */
+    --cf-accent-text: oklch(78.5% 0.115 274.713);
+
+    --cf-table-header-bg: oklch(27% 0.02 260);
+    --cf-table-row-hover-bg: oklch(28% 0.02 260);
 
     --cf-breadcrumb-item-text: oklch(92% 0.01 260);
     --cf-breadcrumb-item-text-hover: oklch(98% 0.01 260);

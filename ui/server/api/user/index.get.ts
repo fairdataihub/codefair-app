@@ -8,6 +8,7 @@ export default defineEventHandler((event) => {
         id: user?.id,
         username: user?.username,
         github_id: user?.github_id,
+        role: user?.role,
       }
     : null;
 });

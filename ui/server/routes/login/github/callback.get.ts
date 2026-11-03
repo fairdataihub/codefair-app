@@ -2,6 +2,7 @@ import { OAuth2RequestError } from "arctic";
 import { generateIdFromEntropySize } from "lucia";
 import { PrismaClient } from "@prisma/client";
 import { github } from "~/server/utils/auth";
+import { encryptToken, githubTokenContext } from "~/server/utils/tokenCrypto";
 const prisma = new PrismaClient();
 
 interface GitHubUser {
@@ -33,10 +34,17 @@ export default defineEventHandler(async (event) => {
       },
     });
     const githubUser: GitHubUser = await githubUserResponse.json();
+    const githubId = parseInt(githubUser.id);
+
+    // Stored encrypted, bound to this GitHub account
+    const encryptedAccessToken = encryptToken(
+      tokens.accessToken,
+      githubTokenContext(githubId),
+    );
 
     const existingUser = await prisma.user.findFirst({
       where: {
-        github_id: parseInt(githubUser.id),
+        github_id: githubId,
       },
     });
 
@@ -48,7 +56,7 @@ export default defineEventHandler(async (event) => {
       // Add a last login timestamp to the user
       await prisma.user.update({
         data: {
-          access_token: tokens.accessToken,
+          access_token: encryptedAccessToken,
           last_login: new Date(),
         },
         where: {
@@ -76,8 +84,8 @@ export default defineEventHandler(async (event) => {
       data: {
         id: userId,
         username: githubUser.login,
-        access_token: tokens.accessToken,
-        github_id: parseInt(githubUser.id),
+        access_token: encryptedAccessToken,
+        github_id: githubId,
         last_login: new Date(),
       },
     });

@@ -13,6 +13,9 @@ on:
 jobs:
   deploy-ui:
     runs-on: ubuntu-latest
+    # The new code reads columns added by the migrations (User.role on
+    # every request), so it must not go live before they are applied
+    needs: migrate-db
     environment: stg
     defaults:
       run:
@@ -42,6 +45,7 @@ jobs:
       ZENODO_CLIENT_ID: ${{ secrets.ZENODO_CLIENT_ID }}
       ZENODO_CLIENT_SECRET: ${{ secrets.ZENODO_CLIENT_SECRET }}
       ZENODO_REDIRECT_URI: ${{ secrets.ZENODO_REDIRECT_URI }}
+      TOKEN_ENCRYPTION_KEY: ${{ secrets.TOKEN_ENCRYPTION_KEY }}
 
     steps:
       - uses: actions/checkout@v6

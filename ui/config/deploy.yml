@@ -63,6 +63,7 @@ env:
     - VALIDATOR_URL
     - CODEFAIR_APP_DOMAIN
     - GH_APP_NAME
+    - TOKEN_ENCRYPTION_KEY
   clear:
     NODE_ENV: production
 

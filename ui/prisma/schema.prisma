@@ -8,15 +8,20 @@ datasource db {
 }
 
 model User {
-  id               String             @id
-  username         String
-  access_token     String             @default("")
-  github_id        Int                @unique
-  created_at       DateTime           @default(now())
-  last_login       DateTime
-  sessions         Session[]
-  ZenodoDeposition ZenodoDeposition[]
-  ZenodoToken      ZenodoToken?
+  id                     String             @id
+  username               String
+  // Encrypted at rest (server/utils/tokenCrypto.ts). Rows written before
+  // encryption was added hold plain text until scripts/encrypt-tokens.ts runs.
+  access_token           String             @default("")
+  github_id              Int                @unique
+  role                   String             @default("user") // user | admin
+  created_at             DateTime           @default(now())
+  last_login             DateTime
+  sessions               Session[]
+  ZenodoDeposition       ZenodoDeposition[]
+  ZenodoToken            ZenodoToken?
+  adminAuditLogs         AdminAuditLog[]    @relation("AdminAuditActions")
+  maintenanceFlagUpdates MaintenanceFlag[]  @relation("MaintenanceFlagUpdates")
 }
 
 model Session {
@@ -145,12 +150,13 @@ model CwlValidation {
 }
 
 model ZenodoToken {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
+  token_type    String    @default("oauth") // oauth | personal
   token         String
-  expires_at    DateTime
-  refresh_token String
-  user_id       String   @unique
-  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  expires_at    DateTime?
+  refresh_token String?
+  user_id       String    @unique
+  user          User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model ZenodoDeposition {
@@ -185,4 +191,35 @@ model Analytics {
   update_readme            Int      @default(0)
   update_code_of_conduct   Int      @default(0)
   update_contributing      Int      @default(0)
+}
+
+model MaintenanceFlag {
+  // One row per pausable workflow. A missing row means the workflow is live.
+  // Keys are defined in shared/utils/maintenance.ts.
+  key           String    @id
+  enabled       Boolean   @default(false)
+  message       String    @default("") // Admin authored copy shown to users while paused
+  enabled_at    DateTime? // When the flag was most recently switched on
+  updated_by_id String?
+  updated_by    User?     @relation("MaintenanceFlagUpdates", fields: [updated_by_id], references: [id], onDelete: SetNull)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  @@index([enabled])
+}
+
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  actor_id    String?
+  actor       User?    @relation("AdminAuditActions", fields: [actor_id], references: [id], onDelete: SetNull)
+  actor_label String
+  action      String // e.g. UPDATE_MAINTENANCE, GRANT_ADMIN, ENCRYPT_TOKENS
+  entity_type String // e.g. maintenance, user, tokens
+  entity_id   String
+  details     Json?
+  created_at  DateTime @default(now())
+
+  @@index([actor_id])
+  @@index([action])
+  @@index([created_at])
 }
