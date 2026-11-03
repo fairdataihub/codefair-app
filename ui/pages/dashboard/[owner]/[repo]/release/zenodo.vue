@@ -769,6 +769,19 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
       } catch {
         // ignore parse errors
       }
+      // The token stopped working since the page loaded, and the server has
+      // deleted it. The publish form is hidden once disconnected, so the card
+      // says why and offers the sign-in options.
+      if (statusMessage === "Zenodo token not found") {
+        haveValidZenodoToken.value = false;
+        zenodoTokenType.value = null;
+        zenodoTokenMessage.value =
+          "Your Zenodo connection has expired or been revoked. Please connect your Zenodo account again.";
+        document
+          .getElementById("zenodo-connection")
+          ?.scrollIntoView({ behavior: "smooth" });
+        return;
+      }
       const knownErrors: Record<string, string> = {
         "GitHub release is not a draft":
           "The selected GitHub release is no longer a draft and cannot be used. Please select a different release.",
@@ -777,8 +790,6 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         "publish-in-progress":
           "A Zenodo publication is already running for this repository. Please wait for it to finish, then refresh the page.",
         "tag-already-released": `A published release already exists for tag "${effectiveTag}". Please choose a different tag or delete the existing release first.`,
-        "Zenodo token not found":
-          "Your Zenodo connection has expired or been revoked. Please reconnect your Zenodo account above.",
         "zenodo-unreachable":
           "Zenodo could not be reached. Your Zenodo connection is still saved, so please try again in a few minutes.",
       };
