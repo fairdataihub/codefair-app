@@ -5,7 +5,7 @@
  * workflow.
  *
  * Improvements over the original bot implementation:
- *  - Token validation auto-refreshes valid OAuth sessions (posters-science pattern)
+ *  - OAuth tokens are refreshed only when they are about to expire
  *  - Personal access tokens are supported as an alternative to OAuth, a
  *    workaround for Zenodo's intermittent OAuth failures (zenodo/zenodo-rdm#1484)
  *  - Tokens are encrypted at rest (server/utils/tokenCrypto.ts)
@@ -40,6 +40,7 @@ import {
   type UploadSource,
   type WorkingDraft,
   ZenodoRdmClient,
+  zenodoFetch,
 } from "./zenodo-rdm";
 import { runConcurrently } from "./run-concurrently";
 import { GitHubRepositoryProvider } from "~/server/services/providers/github";
@@ -164,7 +165,7 @@ async function refreshZenodoToken(
 
   let res: Response;
   try {
-    res = await fetch(`${zenodoEndpoint()}/oauth/token`, {
+    res = await zenodoFetch(`${zenodoEndpoint()}/oauth/token`, {
       body: body.toString(),
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       method: "POST",
@@ -187,21 +188,32 @@ async function refreshZenodoToken(
     } catch {
       // ignore
     }
+    // invalid_grant means no retry will work: the grant is revoked or spent, or
+    // the Zenodo OAuth app is set to Public, which Zenodo never refreshes. The
+    // access token keeps working until it expires, then the user signs in again.
+    if (/invalid_grant/i.test(body)) {
+      logwatch.warn({
+        action: "zenodo.refreshToken",
+        message: `Token refresh rejected (invalid_grant) for user ${userId}. This connection can no longer renew itself. Check the Zenodo OAuth app's client type is Confidential.`,
+        userId,
+      });
+      return null;
+    }
     logwatch.warn({
       action: "zenodo.refreshToken",
-      body,
+      body: body.slice(0, 1000),
       message: `Token refresh failed (${res.status}) for user ${userId}`,
       userId,
     });
     return null;
   }
 
-  const tokenBody = await res.json();
+  const tokenBody = await res.json().catch(() => null);
   const {
     access_token: accessToken,
     expires_in: expiresIn,
     refresh_token: rotatedRefreshToken,
-  } = tokenBody;
+  } = tokenBody ?? {};
 
   if (
     typeof accessToken !== "string" ||
@@ -249,8 +261,15 @@ async function refreshZenodoToken(
 
 /** Access tokens are refreshed once they are this close to expiring. */
 const TOKEN_REFRESH_MARGIN_MS = 5 * 60_000;
+/** How long to keep using the stored token before retrying a failed refresh. */
+const TOKEN_REFRESH_RETRY_MS = 5 * 60_000;
 /** In-flight refreshes, shared so concurrent callers refresh only once. */
 const tokenRefreshes = new Map<string, Promise<string | null>>();
+/**
+ * When each user's last refresh failed. A publication asks for the token before
+ * every request, which would otherwise be a failing refresh for each of them.
+ */
+const tokenRefreshFailures = new Map<string, number>();
 
 /**
  * Returns a usable access token from a stored token, refreshing OAuth tokens
@@ -272,11 +291,20 @@ async function currentAccessToken(
     return record.token;
   }
 
+  const failedAt = tokenRefreshFailures.get(userId);
+  if (failedAt && Date.now() - failedAt < TOKEN_REFRESH_RETRY_MS) {
+    return record.token;
+  }
+
   let refresh = tokenRefreshes.get(userId);
   if (!refresh) {
-    refresh = refreshZenodoToken(userId, storedRefreshToken).finally(() =>
-      tokenRefreshes.delete(userId),
-    );
+    refresh = refreshZenodoToken(userId, storedRefreshToken)
+      .then((token) => {
+        if (token) tokenRefreshFailures.delete(userId);
+        else tokenRefreshFailures.set(userId, Date.now());
+        return token;
+      })
+      .finally(() => tokenRefreshes.delete(userId));
     tokenRefreshes.set(userId, refresh);
   }
   return (await refresh) ?? record.token;
@@ -301,8 +329,8 @@ export async function getZenodoAccessToken(
  * Validates the stored Zenodo token for `userId`.
  *
  * - If no token is stored: returns `{ valid: false }`.
- * - If Zenodo rejects the token (401/403): deletes the token and returns `{ valid: false }`.
- * - If Zenodo cannot be reached: keeps the token and returns `{ valid: false }`.
+ * - If Zenodo's API rejects the token (401/403 with a JSON body): deletes the token and returns `{ valid: false }`.
+ * - If Zenodo cannot be reached, or its traffic filter blocks the request: keeps the token and returns `{ valid: false }`.
  * - If the token is valid: returns `{ valid: true, existingDepositions }`. OAuth
  *   tokens are refreshed first only when they are about to expire.
  * @param userId - Codefair user ID to validate.
@@ -337,7 +365,7 @@ export async function validateZenodoToken(
       : await client.listUserRecords(1, 1);
   } catch (error: any) {
     const status = error instanceof HttpError ? error.status : undefined;
-    if (status === 401 || status === 403) {
+    if (error instanceof HttpError && error.tokenRejected) {
       await prisma.zenodoToken.delete({ where: { user_id: userId } });
       logwatch.warn({
         action: "zenodo.validateToken",
@@ -416,13 +444,13 @@ export async function connectZenodoPersonalToken(
       zenodoApiEndpoint(),
       token,
       (url, init) =>
-        fetch(url, { ...init, signal: AbortSignal.timeout(15_000) }),
+        zenodoFetch(url, { ...init, signal: AbortSignal.timeout(15_000) }),
     );
     await client.listUserRecords(1, 1);
   } catch (error) {
     const status = error instanceof HttpError ? error.status : undefined;
 
-    if (status === 401 || status === 403) {
+    if (error instanceof HttpError && error.tokenRejected) {
       logwatch.info({
         action: "zenodo.token.connect",
         message: `Personal token rejected by Zenodo (${status}), not stored`,
@@ -1749,7 +1777,11 @@ export async function beginZenodoPublication(
       if (state.kind !== "published") {
         // A personal access token can connect without deposit:actions, which
         // only publishing needs
-        if (publishError instanceof HttpError && publishError.status === 403) {
+        if (
+          publishError instanceof HttpError &&
+          publishError.tokenRejected &&
+          publishError.status === 403
+        ) {
           publishError.message +=
             " If you connected with a personal access token, make sure it has the deposit:actions scope.";
         }

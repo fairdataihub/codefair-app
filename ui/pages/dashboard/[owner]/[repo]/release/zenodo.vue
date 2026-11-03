@@ -50,10 +50,9 @@ const zenodoTokenSignIn = ref(true);
 // When a maintenance switch pauses one, the other shows without tabs.
 type ZenodoSignInMethod = "oauth" | "token";
 
-// The Zenodo error page links here with zenodoSignIn=token
-const zenodoSignInTab = ref<ZenodoSignInMethod>(
-  route.query.zenodoSignIn === "token" ? "token" : "oauth",
-);
+// Personal access tokens come first while Zenodo's OAuth sign-in is
+// unreliable (zenodo/zenodo-rdm#1484)
+const zenodoSignInTab = ref<ZenodoSignInMethod>("token");
 const zenodoSignInMethod = computed<ZenodoSignInMethod | null>(() => {
   if (zenodoOAuthSignIn.value && zenodoTokenSignIn.value) {
     return zenodoSignInTab.value;
@@ -192,9 +191,6 @@ const setZenodoConnection = (details: {
   zenodoTokenSignIn.value = details.zenodoTokenSignIn;
   zenodoTokenType.value = details.zenodoTokenType;
   zenodoUnreachable.value = details.zenodoUnreachable;
-
-  // Zenodo rejected the saved personal token, so open the tab to replace it
-  if (details.zenodoTokenMessage) zenodoSignInTab.value = "token";
 };
 
 if (data.value) {
@@ -773,6 +769,19 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
       } catch {
         // ignore parse errors
       }
+      // The token stopped working since the page loaded, and the server has
+      // deleted it. The publish form is hidden once disconnected, so the card
+      // says why and offers the sign-in options.
+      if (statusMessage === "Zenodo token not found") {
+        haveValidZenodoToken.value = false;
+        zenodoTokenType.value = null;
+        zenodoTokenMessage.value =
+          "Your Zenodo connection has expired or been revoked. Please connect your Zenodo account again.";
+        document
+          .getElementById("zenodo-connection")
+          ?.scrollIntoView({ behavior: "smooth" });
+        return;
+      }
       const knownErrors: Record<string, string> = {
         "GitHub release is not a draft":
           "The selected GitHub release is no longer a draft and cannot be used. Please select a different release.",
@@ -781,8 +790,6 @@ const startZenodoPublishProcess = async (shouldPublish: boolean = false) => {
         "publish-in-progress":
           "A Zenodo publication is already running for this repository. Please wait for it to finish, then refresh the page.",
         "tag-already-released": `A published release already exists for tag "${effectiveTag}". Please choose a different tag or delete the existing release first.`,
-        "Zenodo token not found":
-          "Your Zenodo connection has expired or been revoked. Please reconnect your Zenodo account above.",
         "zenodo-unreachable":
           "Zenodo could not be reached. Your Zenodo connection is still saved, so please try again in a few minutes.",
       };
@@ -987,10 +994,19 @@ const validateZenodoForm = () => {
   });
 };
 
-// Zenodo builds this page on whichever site is configured, sandbox or production
+// Zenodo builds these pages on whichever site is configured, sandbox or
+// production
+const zenodoSiteUrl = computed(
+  () => zenodoEndpoint.value || "https://zenodo.org",
+);
+const zenodoSiteHost = computed(() =>
+  zenodoSiteUrl.value.replace(/^https?:\/\//, ""),
+);
 const zenodoNewTokenUrl = computed(
-  () =>
-    `${zenodoEndpoint.value || "https://zenodo.org"}/account/settings/applications/tokens/new/`,
+  () => `${zenodoSiteUrl.value}/account/settings/applications/tokens/new/`,
+);
+const zenodoTokensUrl = computed(
+  () => `${zenodoSiteUrl.value}/account/settings/applications/`,
 );
 
 const refreshZenodoConnection = async () => {
@@ -1714,16 +1730,29 @@ onBeforeUnmount(() => {
                   most popular repositories for archiving research software.
                 </p>
 
-                <p v-if="zenodoSignInMethod">
-                  If you don't have a Zenodo account yet,
-                  <NuxtLink
-                    :to="zenodoEndpoint || 'https://zenodo.org'"
-                    target="_blank"
-                    class="text-blue-500 underline transition-all hover:text-blue-700"
-                    >create one for free</NuxtLink
-                  >
-                  before continuing.
-                </p>
+                <template v-if="zenodoSignInMethod">
+                  <p>
+                    If you don't have a Zenodo account already, please create
+                    one first at
+                    <NuxtLink
+                      :to="zenodoSiteUrl"
+                      target="_blank"
+                      class="text-blue-500 underline transition-all hover:text-blue-700"
+                      >{{ zenodoSiteHost }}</NuxtLink
+                    >
+                    before continuing.
+                  </p>
+
+                  <p>
+                    To archive your software on Zenodo, you will first need to
+                    connect your Zenodo account with Codefair
+                    {{
+                      zenodoOAuthSignIn && zenodoTokenSignIn
+                        ? "using one of the two options below:"
+                        : "using the option below:"
+                    }}
+                  </p>
+                </template>
               </div>
 
               <n-tabs
@@ -1731,65 +1760,33 @@ onBeforeUnmount(() => {
                 v-model:value="zenodoSignInTab"
                 type="line"
               >
-                <n-tab name="oauth">
-                  <span class="flex items-center gap-2">
-                    <Icon name="simple-icons:zenodo" size="16" />
-                    Sign in with Zenodo
-                  </span>
-                </n-tab>
-
                 <n-tab name="token">
                   <span class="flex items-center gap-2">
                     <Icon name="material-symbols:key" size="16" />
-                    Personal access token
+                    Connect with a personal token
+                  </span>
+                </n-tab>
+
+                <n-tab name="oauth">
+                  <span class="flex items-center gap-2">
+                    <Icon name="material-symbols:login" size="16" />
+                    Connect with email and password
                   </span>
                 </n-tab>
               </n-tabs>
 
-              <!-- OAuth sign-in -->
-              <template v-if="zenodoSignInMethod === 'oauth'">
-                <n-alert
-                  type="warning"
-                  title="Zenodo sign-in may need more than one attempt"
-                >
-                  Zenodo sign-in can currently fail at times because of a
-                  <NuxtLink
-                    to="https://github.com/zenodo/zenodo-rdm/issues/1484"
-                    target="_blank"
-                    class="text-blue-500 underline transition-all hover:text-blue-700"
-                    >known Zenodo issue</NuxtLink
-                  >, and we are working with the Zenodo team to resolve it.
-
-                  <template v-if="zenodoTokenSignIn">
-                    If it keeps failing, use the
-                    <strong>Personal access token</strong> tab instead.
-                  </template>
-                </n-alert>
-
-                <n-flex justify="space-between" align="center">
-                  <p>Ready to publish to Zenodo? Sign in to get started.</p>
-
-                  <a @click="loginToZenodo">
-                    <n-button type="primary">
-                      <template #icon>
-                        <Icon name="simple-icons:zenodo" size="16" />
-                      </template>
-                      Sign in to Zenodo
-                    </n-button>
-                  </a>
-                </n-flex>
-              </template>
-
               <!-- Personal access token -->
-              <div v-else-if="zenodoSignInMethod === 'token'">
-                <!-- Only shown on its own, when OAuth sign-in is paused -->
-                <p v-if="!zenodoOAuthSignIn" class="pb-2">
-                  {{ maintenanceMessageFor("zenodoOAuth") }}
+              <div v-if="zenodoSignInMethod === 'token'">
+                <h4 class="pb-4 font-semibold">
                   Connect your Zenodo account with a personal access token
-                  instead.
+                </h4>
+
+                <!-- Only shown on its own, when OAuth sign-in is paused -->
+                <p v-if="!zenodoOAuthSignIn" class="pb-4">
+                  {{ maintenanceMessageFor("zenodoOAuth") }}
                 </p>
 
-                <ol class="list-inside list-decimal space-y-1 pb-4 text-sm">
+                <ol class="list-inside list-decimal space-y-2 pb-5 text-sm">
                   <li>Sign in to your Zenodo account.</li>
 
                   <li>
@@ -1820,7 +1817,9 @@ onBeforeUnmount(() => {
 
                 <n-form-item
                   label="Personal access token"
-                  :show-feedback="false"
+                  :show-feedback="!!zenodoTokenError"
+                  :feedback="zenodoTokenError"
+                  :validation-status="zenodoTokenError ? 'error' : undefined"
                 >
                   <n-flex :wrap="false" class="w-full max-w-xl">
                     <n-input
@@ -1845,19 +1844,57 @@ onBeforeUnmount(() => {
                 </n-form-item>
 
                 <n-alert
-                  v-if="zenodoTokenError"
-                  type="error"
-                  class="mt-3 max-w-xl"
+                  type="info"
+                  title="We keep your token until you disconnect"
+                  class="mt-5"
                 >
-                  {{ zenodoTokenError }}
+                  We check the token with Zenodo, store it encrypted and only
+                  use it to publish the releases you choose. We delete it from
+                  Codefair when you disconnect. The token stays active on Zenodo
+                  until you delete it there. To delete it, open
+                  <NuxtLink
+                    :to="zenodoTokensUrl"
+                    target="_blank"
+                    class="text-blue-500 underline transition-all hover:text-blue-700"
+                    >Applications in your Zenodo account settings</NuxtLink
+                  >, select the token under Personal access tokens and click
+                  Delete.
+                </n-alert>
+              </div>
+
+              <!-- Email and password (OAuth) -->
+              <div v-else-if="zenodoSignInMethod === 'oauth'">
+                <h4 class="pb-4 font-semibold">
+                  Connect your Zenodo account with your email and password
+                </h4>
+
+                <n-alert
+                  type="warning"
+                  title="Zenodo sign-in with email and password may require more than one attempt and may fail completely"
+                  class="mb-5"
+                >
+                  There is a known issue where Zenodo authentication with your
+                  email and password (OAuth) can fail. We have reported this to
+                  the Zenodo team through this
+                  <NuxtLink
+                    to="https://github.com/zenodo/zenodo-rdm/issues/1484"
+                    target="_blank"
+                    class="text-blue-500 underline transition-all hover:text-blue-700"
+                    >GitHub issue</NuxtLink
+                  >.
+
+                  <template v-if="zenodoTokenSignIn">
+                    In the meantime, we highly recommend using the option to
+                    sign in with a personal access token.
+                  </template>
                 </n-alert>
 
-                <p class="pt-3 text-xs text-[var(--gray-700-200)]">
-                  We check the token with Zenodo, store it encrypted, and only
-                  use it to publish the releases you choose. You can disconnect
-                  at any time, and deleting the token on Zenodo revokes our
-                  access completely.
-                </p>
+                <n-button type="primary" @click="loginToZenodo">
+                  <template #icon>
+                    <Icon name="simple-icons:zenodo" size="16" />
+                  </template>
+                  Sign in to Zenodo
+                </n-button>
               </div>
 
               <!-- Neither way of connecting is available -->
