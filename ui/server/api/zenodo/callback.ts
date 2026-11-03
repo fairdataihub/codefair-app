@@ -19,6 +19,7 @@
  * access token instead.
  */
 import type { User } from "lucia";
+import { zenodoFetch } from "~/server/services/archival/zenodo-rdm";
 import { logwatch } from "~/server/utils/logwatch";
 import { isUnderMaintenance } from "~/server/utils/maintenance";
 import { encryptToken, zenodoTokenContext } from "~/server/utils/tokenCrypto";
@@ -143,14 +144,14 @@ export default defineEventHandler(async (event) => {
     code: code as string,
     grant_type: "authorization_code",
     redirect_uri: ZENODO_REDIRECT_URI,
-    scope: "deposit:actions deposit:write",
   });
 
   let accessToken: string;
+  let expiresIn: number;
   let refreshToken: string;
 
   try {
-    const oauthTokenRes = await fetch(`${ZENODO_ENDPOINT}/oauth/token`, {
+    const oauthTokenRes = await zenodoFetch(`${ZENODO_ENDPOINT}/oauth/token`, {
       body: urlEncoded,
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       method: "POST",
@@ -186,6 +187,7 @@ export default defineEventHandler(async (event) => {
     }
 
     accessToken = tokens.access_token;
+    expiresIn = Number(tokens.expires_in) || 3600;
     refreshToken = tokens.refresh_token;
   } catch (err) {
     logwatch.error({
@@ -201,7 +203,7 @@ export default defineEventHandler(async (event) => {
 
   // Persist token, encrypted. Replaces any earlier connection, OAuth or personal.
   const tokenData = {
-    expires_at: new Date(Date.now() + 3600 * 1000),
+    expires_at: new Date(Date.now() + expiresIn * 1000),
     refresh_token: encryptToken(
       refreshToken,
       zenodoTokenContext(userId, "refresh_token"),

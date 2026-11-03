@@ -146,21 +146,47 @@ export function draftMetadataErrors(record: RdmRecord): string[] {
 }
 
 /** A failed HTTP response, keeping its status for retry and auth decisions. */
+// zenodo.org sits behind a traffic filter that answers requests carrying a
+// generic client User-Agent, such as Node's default, with an HTML 403 page
+// about "unusual traffic". Every request to Zenodo names the app instead.
+const ZENODO_USER_AGENT = "Codefair (+https://codefair.io)";
+
+export const zenodoFetch: FetchLike = (input, init) => {
+  const headers = new Headers(init?.headers);
+  headers.set("User-Agent", ZENODO_USER_AGENT);
+  return fetch(input, { ...init, headers });
+};
+
+const MAX_HTML_ERROR_BODY = 300;
+
 export class HttpError extends Error {
   readonly status: number;
+  /**
+   * True when Zenodo's API refused the token itself, which it does with a JSON
+   * body. The traffic filter also answers 403, with an HTML page, and that says
+   * nothing about the token.
+   */
+  readonly tokenRejected: boolean;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, tokenRejected = false) {
     super(message);
     this.name = "HttpError";
     this.status = status;
+    this.tokenRejected = tokenRejected;
   }
 }
 
 async function httpError(operation: string, response: Response) {
-  const body = await response.text().catch(() => "");
+  const isJson = (response.headers.get("content-type") ?? "").includes("json");
+  const text = await response.text().catch(() => "");
+  // These messages reach the user, so an HTML error page is not shown whole
+  const body = isJson
+    ? text
+    : text.replace(/\s+/g, " ").trim().slice(0, MAX_HTML_ERROR_BODY);
   return new HttpError(
     `${operation}: ${response.status} ${response.statusText}${body ? ` - ${body}` : ""}`,
     response.status,
+    isJson && (response.status === 401 || response.status === 403),
   );
 }
 
@@ -203,7 +229,7 @@ export class ZenodoRdmClient {
   constructor(
     baseUrl: string,
     token: ZenodoToken,
-    fetchImpl: FetchLike = fetch,
+    fetchImpl: FetchLike = zenodoFetch,
     wait: (milliseconds: number) => Promise<void> = (ms) =>
       new Promise((resolve) => setTimeout(resolve, ms)),
   ) {
